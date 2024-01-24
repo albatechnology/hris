@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\EducationLevel;
+use App\Enums\EducationType;
+use App\Traits\BelongsToUser;
+
+class UserEducation extends BaseModel
+{
+    use BelongsToUser;
+
+    public $table = 'user_educations';
+
+    protected $fillable = [
+        'user_id',
+        'type',
+        'level',
+        'institution_name',
+        'majors',
+        'end_date',
+        'end_date',
+        'score',
+        'fee',
+    ];
+
+    protected $casts = [
+        'type' => EducationType::class,
+        'level' => EducationLevel::class,
+    ];
+}

@@ -6,7 +6,12 @@ use Spatie\Permission\Models\Permission as ModelsPermission;
 
 class Permission extends ModelsPermission
 {
-    public $table = 'permissions';
+    protected $fillable = [
+        'name',
+        'guard_name',
+        'parent_id'
+    ];
+
     public function childs()
     {
         return $this->hasMany(self::class, 'parent_id');

@@ -11,7 +11,7 @@ class PermissionService
         return collect(static::permissions());
     }
 
-    public static function getPermissionsData() : array
+    public static function getPermissionsData(): array
     {
         $persmissions = self::permissions();
 
@@ -37,156 +37,51 @@ class PermissionService
         return $data;
     }
 
-    public static function permissions() : array
+    public static function permissions(): array
     {
         return [
-            // 'dashboard_access',
+            'dashboard_access',
 
             'user_access' => [
                 'user_create',
                 'user_edit',
                 'user_delete',
             ],
-
-            'internal_department_access' => [
-                'internal_department_create',
-                'internal_department_edit',
-                'internal_department_delete',
+            'group_access' => [
+                'group_create',
+                'group_edit',
+                'group_delete',
             ],
-
-            'company_management_access' => [
-                'company_access' => [
-                    'company_create',
-                    'company_edit',
-                    'company_delete',
-                ],
-
-                'department_access' => [
-                    'department_create',
-                    'department_edit',
-                    'department_delete',
-                ],
+            'company_access' => [
+                'company_create',
+                'company_edit',
+                'company_delete',
             ],
-
-            'category_access' => [
-                'category_create',
-                'category_edit',
-                'category_delete',
+            'branch_access' => [
+                'branch_create',
+                'branch_edit',
+                'branch_delete',
             ],
-
-            'archive_management_access' => [
-                'archive_type_access' => [
-                    'archive_type_create',
-                    'archive_type_edit',
-                    'archive_type_delete',
-                ],
-
-                'archive_access' => [
-                    'archive_create',
-                    'archive_edit',
-                    'archive_delete',
-                ],
+            'division_access' => [
+                'division_create',
+                'division_edit',
+                'division_delete',
             ],
-
-
-            'file_access' => [
-                'file_create',
-                'file_edit',
-                'file_delete',
+            'position_access' => [
+                'position_create',
+                'position_edit',
+                'position_delete',
             ],
-
-            'surat_masuk_access' => [
-                'surat_masuk_create',
-                'surat_masuk_edit',
-                'surat_masuk_delete',
-            ],
-
-            'surat_keluar_access' => [
-                'surat_keluar_create',
-                'surat_keluar_edit',
-                'surat_keluar_delete',
-            ],
-
-            'file_borrow_access' => [
-                'file_borrow_create',
-                'file_borrow_edit',
-                'file_borrow_delete',
-            ],
-
-            'approval_access' => [
-                'approval_create',
-                'approval_edit',
-                'approval_delete',
-            ],
-
-            'setting_access' => [
-                'setting_edit'
+            'department_access' => [
+                'department_create',
+                'department_edit',
+                'department_delete',
             ],
             'role_access' => [
                 'role_create',
                 'role_edit',
                 'role_delete',
             ],
-        ];
-    }
-
-    public static function userPermissions() : array
-    {
-        return [
-            'file_access',
-            'file_create',
-            'file_edit',
-            'file_delete',
-
-            'surat_masuk_access',
-            'surat_masuk_create',
-            'surat_masuk_edit',
-            'surat_masuk_delete',
-
-            'surat_keluar_access',
-            'surat_keluar_create',
-            'surat_keluar_edit',
-            'surat_keluar_delete',
-
-            'file_borrow_access',
-            'file_borrow_create',
-            'file_borrow_edit',
-            'file_borrow_delete',
-
-            'approval_access',
-            'approval_create',
-            'approval_edit',
-            'approval_delete',
-        ];
-    }
-
-    public static function visitorPermissions() : array
-    {
-        return [
-            'file_access',
-            'file_create',
-            'file_edit',
-            // 'file_delete',
-
-            'surat_masuk_access',
-            // 'surat_masuk_create',
-            // 'surat_masuk_edit',
-            // 'surat_masuk_delete',
-
-            'surat_keluar_access',
-            // 'surat_keluar_create',
-            // 'surat_keluar_edit',
-            // 'surat_keluar_delete',
-
-            'file_borrow_access',
-            'file_borrow_create',
-            'file_borrow_edit',
-            // 'file_borrow_delete',
-
-            'approval_access',
-            // 'approval_create',
-            'approval_edit',
-            // 'approval_delete',
         ];
     }
 
@@ -211,5 +106,38 @@ class PermissionService
 
             return;
         });
+    }
+
+    public static function getMyPermissions()
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $allPermissions = [];
+        if ($user->hasRole('admin')) {
+            foreach (self::getAllPermissions() as $parent => $childs) {
+                if (is_array($childs)) {
+                    $allPermissions[$parent][$parent] = true;
+                    foreach ($childs as $child) {
+                        $allPermissions[$parent][$child] = true;
+                    }
+                } else {
+                    $allPermissions[$childs] = true;
+                }
+            }
+        } else {
+            $myPermissions = $user?->getAllPermissions()?->pluck('name') ?? collect([]);
+            foreach (self::getAllPermissions() as $parent => $childs) {
+                if (is_array($childs)) {
+                    $allPermissions[$parent][$parent] = $myPermissions->search($parent) === false ? false : true;
+                    foreach ($childs as $child) {
+                        $allPermissions[$parent][$child] = $myPermissions->search($child) === false ? false : true;
+                    }
+                } else {
+                    $allPermissions[$childs] = $myPermissions->search($childs) === false ? false : true;
+                }
+            }
+        }
+
+        return $allPermissions;
     }
 }

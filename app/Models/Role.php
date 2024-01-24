@@ -9,8 +9,10 @@ class Role extends ModelsRole
 {
     public $table = 'roles';
 
-    protected $fillabe = [
-        'name'
+    protected $fillable = [
+        'group_id',
+        'name',
+        'guard_name',
     ];
 
     protected function serializeDate(DateTimeInterface $date): string
