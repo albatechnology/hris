@@ -140,7 +140,6 @@ class GroupSeeder extends Seeder
         ]);
 
         $group = Group::create([
-            'id' => 10,
             'name' => 'ALBA GROUP'
         ]);
 

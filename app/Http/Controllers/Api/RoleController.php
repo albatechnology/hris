@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Services\PermissionService;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Artisan;
 
 class RoleController extends BaseController
 {
@@ -28,10 +29,10 @@ class RoleController extends BaseController
      */
     public function index()
     {
-        $roles = QueryBuilder::for(Role::class)
+        $roles = QueryBuilder::for(Role::tenanted())
             ->with('permissions')
-            ->allowedFilters(['name'])
-            ->allowedSorts(['id', 'name', 'created_at'])
+            ->allowedFilters(['name', 'group_id'])
+            ->allowedSorts(['id', 'name', 'group_id', 'created_at'])
             ->paginate($this->per_page);
 
         return RoleResource::collection($roles);
@@ -47,17 +48,16 @@ class RoleController extends BaseController
     {
         $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
         $role = DB::transaction(function () use ($request, $permissionNames) {
-            $role = new Role();
-            $role->name = $request->name;
-            $role->guard_name = 'web';
-            $role->save();
+            $data = $request->validated();
+            $data['guard_name'] = 'web';
+            $role = Role::create($data);
 
             $role->syncPermissions($permissionNames ?? []);
 
             return $role;
         });
 
-        cache()->flush();
+        Artisan::call('permission:cache-reset');
 
         return new RoleResource($role);
     }
@@ -81,20 +81,20 @@ class RoleController extends BaseController
      */
     public function update(Role $role, StoreRequest $request)
     {
-        if ($role->id == 1)
-            return response()->json(['message' => 'Role admin tidak dapat diupdate!']);
+        if ($role->id == 1) return response()->json(['message' => 'Role administrator tidak dapat diupdate!']);
 
         $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
-        $role = DB::transaction(function () use ($role, $request, $permissionNames) {
-            $role->name = $request->name;
-            $role->save();
+        $role = DB::transaction(function () use ($request, $permissionNames, $role) {
+            $data = $request->validated();
+            $data['guard_name'] = 'web';
+            $role->update($data);
 
             $role->syncPermissions($permissionNames ?? []);
 
             return $role;
         });
 
-        cache()->flush();
+        Artisan::call('permission:cache-reset');
 
         return new RoleResource($role);
     }
@@ -106,8 +106,7 @@ class RoleController extends BaseController
      */
     public function destroy(Role $role)
     {
-        if ($role->id == 1)
-            return response()->json(['message' => 'Role admin tidak dapat dihapus!']);
+        if ($role->id == 1) return response()->json(['message' => 'Role administrator tidak dapat dihapus!']);
         $role->delete();
         return $this->deletedResponse();
     }

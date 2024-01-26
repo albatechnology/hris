@@ -6,6 +6,7 @@ use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
+use App\Services\PermissionService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -26,7 +27,7 @@ class UserController extends BaseController
 
     public function index()
     {
-        $users = QueryBuilder::for(User::with(['roles' => fn ($q) => $q->select('id', 'name')]))
+        $users = QueryBuilder::for(User::tenanted()->with(['roles' => fn ($q) => $q->select('id', 'name')]))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
@@ -44,9 +45,12 @@ class UserController extends BaseController
 
     public function me()
     {
+        /** @var User $user */
         $user = auth()->user();
-        return new UserResource($user);
-        // return new UserResource(auth()->user()?->load(['roles' => fn ($q) => $q->select('id', 'name')]));
+        // dump($user->getAllPermissions()->pluck('name'));
+        // dd($user);
+        // return new UserResource($user);
+        return new UserResource($user->load(['roles' => fn ($q) => $q->select('id', 'name')]));
     }
 
     public function show(User $user)

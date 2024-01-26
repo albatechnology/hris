@@ -24,7 +24,7 @@ class PositionController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Position::class)
+        $data = QueryBuilder::for(Position::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),

@@ -24,7 +24,7 @@ class DepartmentController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Department::class)
+        $data = QueryBuilder::for(Department::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('division_id'),

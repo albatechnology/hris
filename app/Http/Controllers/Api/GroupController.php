@@ -24,7 +24,7 @@ class GroupController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Group::class)
+        $data = QueryBuilder::for(Group::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 'name'

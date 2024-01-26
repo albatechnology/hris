@@ -25,7 +25,7 @@ class BranchController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Branch::class)
+        $data = QueryBuilder::for(Branch::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),

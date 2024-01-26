@@ -25,7 +25,7 @@ class CompanyController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Company::class)
+        $data = QueryBuilder::for(Company::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('group_id'),

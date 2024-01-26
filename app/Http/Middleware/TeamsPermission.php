@@ -16,11 +16,11 @@ class TeamsPermission
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth('sanctum')->user();
-        // dd($user);
-        // if (!empty(auth()->user())) {
-        //     // session value set on login
-        //     setPermissionsTeamId(session('team_id'));
-        // }
+        if (!empty($user) && !$user->is_super_admin) {
+            // dd($user->branch->company->group_id);
+            // session value set on login
+            setPermissionsTeamId($user->group_id);
+        }
         // other custom ways to get team_id
         /*if(!empty(auth('api')->user())){
             // `getTeamIdFromToken()` example of custom method for getting the set team_id

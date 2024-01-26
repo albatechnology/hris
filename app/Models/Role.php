@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use DateTimeInterface;
+use App\Interfaces\TenantedInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role as ModelsRole;
 
-class Role extends ModelsRole
+class Role extends ModelsRole implements TenantedInterface
 {
     public $table = 'roles';
 
@@ -15,9 +16,33 @@ class Role extends ModelsRole
         'guard_name',
     ];
 
-    protected function serializeDate(DateTimeInterface $date): string
+    protected static function booted(): void
     {
-        return $date->format('d-m-Y H:i');
+        static::saving(function (self $model) {
+            $user = auth('sanctum')->user();
+            if (empty($model->group_id) && !$user->is_super_admin) $model->group_id = $user->group_id;
+        });
+    }
+
+
+    public function scopeTenanted(Builder $query): Builder
+    {
+        $user = auth('sanctum')->user();
+        if ($user->is_super_admin) return $query;
+
+        return $query->where('group_id', $user->group_id);
+    }
+
+    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
+    {
+        $query->tenanted()->where('id', $id);
+        if ($fail) return $query->firstOrFail();
+        return $query->first();
+    }
+
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
     }
 
     // public function scopeTenanted($query)

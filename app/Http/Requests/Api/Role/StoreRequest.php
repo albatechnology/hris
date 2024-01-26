@@ -23,6 +23,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'name' => 'required',
+            'group_id' => 'nullable|exists:groups,id',
             'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'exists:permissions,id',
         ];
