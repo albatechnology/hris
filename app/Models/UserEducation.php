@@ -18,7 +18,7 @@ class UserEducation extends BaseModel
         'level',
         'institution_name',
         'majors',
-        'end_date',
+        'start_date',
         'end_date',
         'score',
         'fee',
@@ -27,5 +27,6 @@ class UserEducation extends BaseModel
     protected $casts = [
         'type' => EducationType::class,
         'level' => EducationLevel::class,
+        'fee' => 'double'
     ];
 }

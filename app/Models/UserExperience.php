@@ -10,7 +10,7 @@ class UserExperience extends BaseModel
 
     protected $fillable = [
         'user_id',
-        'company_name',
+        'company',
         'department',
         'position',
         'start_date',

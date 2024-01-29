@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_experiences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->string('company_name');
+            $table->string('company');
             $table->string('department');
             $table->string('position');
             $table->date('start_date');

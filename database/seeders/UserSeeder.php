@@ -49,6 +49,21 @@ class UserSeeder extends Seeder
             'model_id' => $admin->id,
             'group_id' => $group->id,
         ]);
+        $admin = User::create([
+            'group_id' => $group->id,
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => 'Administrator 12 - ' . $group->name,
+            'email' => 'admin12@gmail.com',
+            'password' => '12345678',
+            'type' => UserType::ADMINISTRATOR,
+        ]);
+        DB::table('model_has_roles')->insert([
+            'role_id' => $adminRole->id,
+            'model_type' => get_class($admin),
+            'model_id' => $admin->id,
+            'group_id' => $group->id,
+        ]);
 
         $group = Group::findOrFail(2);
         $admin = User::create([

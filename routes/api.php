@@ -8,7 +8,10 @@ use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserEducationController;
+use App\Http\Controllers\Api\UserExperienceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,8 +30,13 @@ Route::group(['prefix' => 'auth', 'controller' => AuthController::class], functi
 });
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::group(['prefix' => 'users'], function () {
-        Route::get('me', [UserController::class, 'me']);
+    Route::get('users/me', [UserController::class, 'me']);
+    Route::group(['prefix' => 'users/{user}'], function () {
+        Route::post('detail', [UserController::class, 'detail']);
+        Route::post('payroll-info', [UserController::class, 'payrollInfo']);
+        Route::resource('experiences', UserExperienceController::class)->except('create', 'edit');
+        Route::resource('educations', UserEducationController::class)->except('create', 'edit');
+        Route::resource('contacts', UserContactController::class)->except('create', 'edit');
     });
     Route::resource('users', UserController::class)->except('create', 'edit');
     Route::resource('roles', RoleController::class)->except('create', 'edit');

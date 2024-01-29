@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->string('score');
-            $table->string('fee');
+            $table->double('fee', 12, 2, true)->default(0);
             $table->timestamps();
         });
     }

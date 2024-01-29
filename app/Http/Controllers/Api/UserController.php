@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\User\DetailStoreRequest;
+use App\Http\Requests\Api\User\ExperienceStoreRequest;
+use App\Http\Requests\Api\User\PayrollInfoStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
-use App\Services\PermissionService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -55,49 +57,50 @@ class UserController extends BaseController
 
     public function show(User $user)
     {
+        // dump($user->roles);
+        // dump($user->permissions);
+        // dump($user->getPermissionNames());
+        // dump($user->getDirectPermissions());
+        // dump($user->getPermissionsViaRoles());
+        // dump($user->getAllPermissions());
+        // dump($user->getRoleNames());
         // abort_if(!auth()->user()->tokenCan('user_access'), 403);
-        return new UserResource($user->load(['roles' => fn ($q) => $q->select('id', 'name')]));
+        $user = QueryBuilder::for(User::where('id', $user->id))
+            ->allowedIncludes(['detail', 'payrollInfo', 'experiences', 'educations', 'contacts'])
+            ->firstOrFail();
+
+        return new UserResource($user);
     }
 
     public function store(StoreRequest $request)
     {
-        dd($request->validated());
-        $user = DB::transaction(function () use ($request) {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => $request->password ?? null,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'tax_address' => $request->tax_address,
-                'provider_id' => $request->provider_id,
-                'provider_name' => $request->provider_name,
-                'city' => $request->city,
-                'province' => $request->province,
-                'zip_code' => $request->zip_code,
-                'country' => $request->country,
-                'contact_person' => $request->contact_person,
-                'web_page' => $request->web_page,
-                'type' => $request->type,
-            ]);
-            $user->syncRoles($request->role_ids);
-            return $user;
-        });
+        // dd($request->validated());
+        DB::beginTransaction();
+        try {
+            $user = User::create($request->validated());
+            $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new UserResource($user);
     }
 
     public function update(User $user, UpdateRequest $request)
     {
-        $data = $request->validated();
-
-        if ($request->password) {
-            $data['password'] = $request->password;
+        DB::beginTransaction();
+        try {
+            $user->update($request->validated());
+            $user->deleteRoles();
+            $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
         }
 
-        $user->update($data);
-
-        $user->syncRoles($request->role_ids);
         return (new UserResource($user))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
@@ -124,5 +127,31 @@ class UserController extends BaseController
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
         return new UserResource($user);
+    }
+
+    public function detail(User $user, DetailStoreRequest $request)
+    {
+        if ($user->detail) {
+            $user->detail->update($request->validated());
+        } else {
+            $user->detail()->create($request->validated());
+        }
+        return new UserResource($user->load('detail'));
+    }
+
+    public function payrollInfo(User $user, PayrollInfoStoreRequest $request)
+    {
+        if ($user->payrollInfo) {
+            $user->payrollInfo->update($request->validated());
+        } else {
+            $user->payrollInfo()->create($request->validated());
+        }
+        return new UserResource($user->load('payrollInfo'));
+    }
+
+    public function storeExperiences(User $user, ExperienceStoreRequest $request)
+    {
+        $user->payrollInfo()->create($request->validated());
+        return new UserResource($user->load('payrollInfo'));
     }
 }

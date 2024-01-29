@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('user_payroll_infos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->string('bpjs_ketenagakerjaan_no');
-            $table->string('bpjs_kesehatan_no');
-            $table->string('npwp');
-            $table->string('bank_name');
-            $table->string('bank_account_no');
-            $table->string('bank_account_holder');
-            $table->string('ptkp_status');
+            $table->foreignId('user_id')->unique()->constrained();
+            $table->string('bpjs_ketenagakerjaan_no')->nullable();
+            $table->string('bpjs_kesehatan_no')->nullable();
+            $table->string('npwp')->nullable();
+            $table->string('bank_name')->nullable();
+            $table->string('bank_account_no')->nullable();
+            $table->string('bank_account_holder')->nullable();
+            $table->string('ptkp_status')->nullable();
             $table->timestamps();
         });
     }

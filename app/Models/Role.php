@@ -20,7 +20,7 @@ class Role extends ModelsRole implements TenantedInterface
     {
         static::saving(function (self $model) {
             $user = auth('sanctum')->user();
-            if (empty($model->group_id) && !$user->is_super_admin) $model->group_id = $user->group_id;
+            // if (empty($model->group_id) && !$user->is_super_admin) $model->group_id = $user->group_id ?? null;
         });
     }
 

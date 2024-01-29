@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('user_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->string('no_ktp', 20);
+            $table->foreignId('user_id')->unique()->constrained();
+            $table->string('no_ktp', 20)->nullable();
             $table->string('kk_no')->nullable();
-            $table->string('job_position');
-            $table->string('job_level');
-            $table->string('employment_status');
-            $table->date('join_date');
-            $table->date('sign_date');
+            $table->string('job_position')->nullable();
+            $table->string('job_level')->nullable();
+            $table->string('employment_status')->nullable();
+            $table->date('join_date')->nullable();
+            $table->date('sign_date')->nullable();
             $table->string('passport_no')->nullable();
             $table->date('passport_expired')->nullable();
             $table->text('address', 20)->nullable();

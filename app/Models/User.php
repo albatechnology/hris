@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements TenantedInterface
 {
@@ -74,6 +75,11 @@ class User extends Authenticatable implements TenantedInterface
     {
         static::creating(function (self $model) {
             if (empty($model->type)) $model->type = UserType::USER;
+        });
+
+        static::created(function (self $model) {
+            $model->detail()->create([]);
+            $model->payrollInfo()->create([]);
         });
     }
 
@@ -166,5 +172,10 @@ class User extends Authenticatable implements TenantedInterface
     public function getIsUserAttribute(): bool
     {
         return $this->type->is(UserType::USER);
+    }
+
+    public function deleteRoles()
+    {
+        DB::table('model_has_roles')->where('model_type', get_class($this))->where('model_id', $this->id)->delete();
     }
 }
