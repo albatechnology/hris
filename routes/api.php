@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
@@ -47,4 +49,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::resource('positions', PositionController::class)->except('create', 'edit');
     Route::resource('divisions', DivisionController::class)->except('create', 'edit');
     Route::resource('departments', DepartmentController::class)->except('create', 'edit');
+
+    Route::resource('shifts', ShiftController::class)->except('create', 'edit');
+    Route::resource('schedules', ScheduleController::class)->except('create', 'edit');
 });

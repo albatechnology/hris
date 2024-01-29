@@ -90,6 +90,19 @@ class PermissionService
                 'role_edit',
                 'role_delete',
             ],
+
+            'shift_access' => [
+                'shift_read',
+                'shift_create',
+                'shift_edit',
+                'shift_delete',
+            ],
+            'schedule_access' => [
+                'schedule_read',
+                'schedule_create',
+                'schedule_edit',
+                'schedule_delete',
+            ],
         ];
     }
 
