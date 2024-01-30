@@ -15,7 +15,6 @@ return new class extends Migration
             $table->foreignId('schedule_id')->constrained();
             $table->foreignId('shift_id')->constrained();
             $table->unsignedSmallInteger('order')->default(0);
-            $table->timestamps();
         });
     }
 

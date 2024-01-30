@@ -6,6 +6,8 @@ use App\Enums\BloodType;
 use App\Enums\MaritalStatus;
 use App\Enums\Religion;
 use App\Enums\UserType;
+use App\Models\Branch;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,8 +30,8 @@ class UpdateRequest extends FormRequest
     {
         return [
             'group_id' => 'nullable|exists:groups,id',
-            'company_id' => 'nullable|exists:companies,id',
-            'branch_id' => 'nullable|exists:branches,id',
+            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, "Branch not found")],
             'manager_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $this->user->id,
@@ -44,6 +46,11 @@ class UpdateRequest extends FormRequest
             'religion' => ['nullable', Rule::enum(Religion::class)],
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
+
+            'company_ids' => 'nullable|array',
+            'company_ids.*' => ['required', new CompanyTenantedRule()],
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, "Branch not found")],
         ];
     }
 }

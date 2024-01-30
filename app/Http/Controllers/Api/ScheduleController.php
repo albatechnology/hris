@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\Schedule\ScheduleShiftRequest;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
 use App\Models\Schedule;
@@ -41,7 +42,7 @@ class ScheduleController extends BaseController
 
     public function show(Schedule $schedule)
     {
-        return new ScheduleResource($schedule);
+        return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
     }
 
     public function store(StoreRequest $request)
@@ -76,5 +77,16 @@ class ScheduleController extends BaseController
         $schedule = Schedule::withTrashed()->findOrFail($id);
         $schedule->restore();
         return new ScheduleResource($schedule);
+    }
+
+    public function updateShifts(Schedule $schedule, ScheduleShiftRequest $request)
+    {
+        $data = [];
+        foreach ($request->shifts ?? [] as $shift) {
+            $data[$shift['id']] = ['order' => $shift['order']];
+        }
+        $schedule->shifts()->sync($data);
+
+        return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
     }
 }

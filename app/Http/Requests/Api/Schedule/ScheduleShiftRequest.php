@@ -2,10 +2,11 @@
 
 namespace App\Http\Requests\Api\Schedule;
 
+use App\Models\Shift;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRequest extends FormRequest
+class ScheduleShiftRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,9 +24,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['required', new CompanyTenantedRule],
-            'name' => 'required|string',
-            'effective_date' => 'required|date',
+            'shifts' => 'nullable|array',
+            'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
+            'shifts.*.order' => 'required|integer'
         ];
     }
 }

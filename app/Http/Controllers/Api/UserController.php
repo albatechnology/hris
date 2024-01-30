@@ -16,6 +16,8 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
+    const ALLOWED_INCLUDES = ['detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'companies', 'branches'];
+
     public function __construct()
     {
         parent::__construct();
@@ -36,7 +38,7 @@ class UserController extends BaseController
                 AllowedFilter::exact('manager_id'),
                 'name', 'email', 'type', 'nik', 'phone', 'marital_status'
             ])
-            ->allowedIncludes(['detail', 'payrollInfo', 'experiences', 'educations', 'contacts'])
+            ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->allowedSorts([
                 'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'marital_status', 'created_at'
             ])
@@ -66,7 +68,7 @@ class UserController extends BaseController
         // dump($user->getRoleNames());
         // abort_if(!auth()->user()->tokenCan('user_access'), 403);
         $user = QueryBuilder::for(User::where('id', $user->id))
-            ->allowedIncludes(['detail', 'payrollInfo', 'experiences', 'educations', 'contacts'])
+            ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->firstOrFail();
 
         return new UserResource($user);
@@ -74,11 +76,27 @@ class UserController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        // dd($request->validated());
         DB::beginTransaction();
         try {
             $user = User::create($request->validated());
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
+
+            $companyIds = collect($request->company_ids ?? []);
+            if ($user->company_id) $companyIds->push($user->company_id);
+            $companyIds = $companyIds->unique()->values()
+                ->map(function ($companyId) {
+                    return ['company_id' => $companyId];
+                })->all();
+            $user->companies()->createMany($companyIds);
+
+            $branchIds = collect($request->branch_ids ?? []);
+            if ($user->branch_id) $branchIds->push($user->branch_id);
+            $branchIds = $branchIds->unique()->values()
+                ->map(function ($branchId) {
+                    return ['branch_id' => $branchId];
+                })->all();
+            $user->branches()->createMany($branchIds);
+
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -95,6 +113,24 @@ class UserController extends BaseController
             $user->update($request->validated());
             $user->deleteRoles();
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
+
+            $companyIds = collect($request->company_ids ?? []);
+            if ($user->company_id) $companyIds->push($user->company_id);
+            $companyIds = $companyIds->unique()->values()
+                ->map(function ($companyId) {
+                    return ['company_id' => $companyId];
+                })->all();
+            $user->companies()->delete();
+            $user->companies()->createMany($companyIds);
+
+            $branchIds = collect($request->branch_ids ?? []);
+            if ($user->branch_id) $branchIds->push($user->branch_id);
+            $branchIds = $branchIds->unique()->values()
+                ->map(function ($branchId) {
+                    return ['branch_id' => $branchId];
+                })->all();
+            $user->branches()->delete();
+            $user->branches()->createMany($branchIds);
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();

@@ -6,6 +6,8 @@ use App\Enums\BloodType;
 use App\Enums\MaritalStatus;
 use App\Enums\Religion;
 use App\Enums\UserType;
+use App\Models\Branch;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,8 +31,8 @@ class StoreRequest extends FormRequest
         // dd($this->all());
         return [
             'group_id' => 'nullable|exists:groups,id',
-            'company_id' => 'nullable|exists:companies,id',
-            'branch_id' => 'nullable|exists:branches,id',
+            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, "Branch not found")],
             'manager_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
@@ -39,12 +41,17 @@ class StoreRequest extends FormRequest
             'nik' => 'nullable',
             'phone' => 'nullable',
             'birth_place' => 'nullable',
-            'birthdate' => 'nullable',
+            'birthdate' => 'nullable|date_format:Y-m-d',
             'marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
             'blood_type' => ['nullable', Rule::enum(BloodType::class)],
             'religion' => ['nullable', Rule::enum(Religion::class)],
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
+
+            'company_ids' => 'nullable|array',
+            'company_ids.*' => ['required', new CompanyTenantedRule()],
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, "Branch not found")],
         ];
     }
 }

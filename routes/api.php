@@ -51,5 +51,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::resource('departments', DepartmentController::class)->except('create', 'edit');
 
     Route::resource('shifts', ShiftController::class)->except('create', 'edit');
+
+    Route::put('schedules/{schedule}/shifts', [ScheduleController::class, 'updateShifts']);
     Route::resource('schedules', ScheduleController::class)->except('create', 'edit');
 });

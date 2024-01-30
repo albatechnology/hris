@@ -31,6 +31,8 @@ class User extends Authenticatable implements TenantedInterface
      * @var array<int, string>
      */
     protected $fillable = [
+        'group_id',
+        'company_id',
         'branch_id',
         'manager_id',
         'name',
@@ -73,6 +75,13 @@ class User extends Authenticatable implements TenantedInterface
 
     protected static function booted(): void
     {
+        static::saving(function (self $model) {
+            if (!empty($model->branch_id)) {
+                $model->company_id = $model->branch?->company_id;
+                $model->group_id = $model->branch?->company?->group_id;
+            }
+        });
+
         static::creating(function (self $model) {
             if (empty($model->type)) $model->type = UserType::USER;
         });
@@ -88,11 +97,14 @@ class User extends Authenticatable implements TenantedInterface
         /** @var User $user */
         $user = auth('sanctum')->user();
         if ($user->is_super_admin) return $query;
-        return $query->where('group_id', $user->group_id);
-        // return $query->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
+        if ($user->is_administrator) {
+            return $query->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
+                ->whereHas('companies', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id)));
+            // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
+        }
 
-        // $branchIds = $user->branches()->get(['id'])?->pluck('id') ?? [];
-        // return $query->whereIn('id', $branchIds);
+        $companyIds = $user->companies()->get(['id'])?->pluck('id') ?? [];
+        return $query->whereIn('company_id', $companyIds);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -112,6 +124,16 @@ class User extends Authenticatable implements TenantedInterface
         return Attribute::make(
             set: fn (string|null $value) => empty($value) ? null : bcrypt($value),
         );
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function manager(): BelongsTo

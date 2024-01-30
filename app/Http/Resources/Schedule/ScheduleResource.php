@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Schedule;
 
+use App\Http\Resources\Shift\ShiftResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,6 +15,9 @@ class ScheduleResource extends JsonResource
      */
     public function toArray(Request $request)
     {
-        return parent::toArray($request);
+        return [
+            ...parent::toArray($request),
+            'shifts' => ShiftResource::collection($this->whenLoaded('shifts')),
+        ];
     }
 }

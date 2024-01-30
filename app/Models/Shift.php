@@ -19,6 +19,6 @@ class Shift extends BaseModel implements TenantedInterface
 
     public function schedules(): BelongsToMany
     {
-        return $this->belongsToMany(Schedule::class);
+        return $this->belongsToMany(Schedule::class, 'schedule_shifts');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Shift;
 
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -22,7 +23,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => 'nullable|exists:companies,id',
+            'company_id' => ['required', new CompanyTenantedRule],
             'name' => 'required|string',
             'clock_in' => 'required|date_format:H:i',
             'clock_out' => 'required|date_format:H:i',

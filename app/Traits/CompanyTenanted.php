@@ -17,7 +17,10 @@ trait CompanyTenanted
         /** @var User $user */
         $user = auth('sanctum')->user();
         if ($user->is_super_admin) return $query;
-        return $query->where('company_id', $user->company_id);
+        if ($user->is_administrator) return $query->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
+
+        $companyIds = $user->companies()->get(['id'])?->pluck('id') ?? [];
+        return $query->whereIn('company_id', $companyIds);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

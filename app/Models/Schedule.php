@@ -18,6 +18,6 @@ class Schedule extends BaseModel implements TenantedInterface
 
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(Shift::class);
+        return $this->belongsToMany(Shift::class, 'schedule_shifts')->withPivot('order');
     }
 }
