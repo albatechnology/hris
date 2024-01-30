@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\CompanyController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\UserExperienceController;
+use App\Http\Controllers\Api\UserScheduleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -52,6 +54,17 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::resource('shifts', ShiftController::class)->except('create', 'edit');
 
-    Route::put('schedules/{schedule}/shifts', [ScheduleController::class, 'updateShifts']);
+    Route::get('schedules/today', [ScheduleController::class, 'today']);
+    Route::group(['prefix' => 'schedules/{schedule}'], function () {
+        Route::put('shifts', [ScheduleController::class, 'updateShifts']);
+        Route::post('users', [UserScheduleController::class, 'store']);
+        Route::delete('users/{user}', [UserScheduleController::class, 'destroy']);
+    });
     Route::resource('schedules', ScheduleController::class)->except('create', 'edit');
+
+    Route::group(['prefix' => 'attendances'], function () {
+        Route::post('clock-in', [AttendanceController::class, 'clockIn']);
+        Route::post('clock-out', [AttendanceController::class, 'clockOut']);
+    });
+    Route::resource('attendances', AttendanceController::class)->except('create', 'edit', 'store', 'update');
 });

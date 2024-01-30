@@ -103,6 +103,12 @@ class PermissionService
                 'schedule_edit',
                 'schedule_delete',
             ],
+            'attendance_access' => [
+                'attendance_read',
+                'attendance_create',
+                'attendance_edit',
+                'attendance_delete',
+            ],
         ];
     }
 

@@ -2,10 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class ScheduleShift extends Model
+class ScheduleShift extends Pivot
 {
-    use HasFactory;
+    protected $table = 'schedule_shifts';
+    protected $fillable = ['schedule_id', 'shift_id', 'order'];
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
 }

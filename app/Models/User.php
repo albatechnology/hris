@@ -17,6 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
@@ -98,13 +99,13 @@ class User extends Authenticatable implements TenantedInterface
         $user = auth('sanctum')->user();
         if ($user->is_super_admin) return $query;
         if ($user->is_administrator) {
-            return $query->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
-                ->whereHas('companies', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id)));
+            return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::USER])
+                ->whereHas('companies', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('companies.group_id', $user->group_id)));
             // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
-        $companyIds = $user->companies()->get(['id'])?->pluck('id') ?? [];
-        return $query->whereIn('company_id', $companyIds);
+        $companyIds =  $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        return $query->whereIn('users.company_id', $companyIds);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -112,6 +113,11 @@ class User extends Authenticatable implements TenantedInterface
         $query->tenanted()->where('id', $id);
         if ($fail) return $query->firstOrFail();
         return $query->first();
+    }
+
+    public function scopeHasScheduleId(Builder $query, int $scheduleId)
+    {
+        $query->whereHas('schedules', fn ($q) => $q->where('user_schedules.schedule_id', $scheduleId));
     }
 
     protected function serializeDate(\DateTimeInterface $date): string
@@ -156,6 +162,11 @@ class User extends Authenticatable implements TenantedInterface
         return $this->hasOne(UserPayrollInfo::class);
     }
 
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
     public function experiences(): HasMany
     {
         return $this->hasMany(UserExperience::class);
@@ -179,6 +190,11 @@ class User extends Authenticatable implements TenantedInterface
     public function branches(): HasMany
     {
         return $this->hasMany(UserBranch::class);
+    }
+
+    public function schedules(): BelongsToMany
+    {
+        return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');
     }
 
     public function getIsSuperAdminAttribute(): bool

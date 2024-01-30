@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\User\DetailStoreRequest;
-use App\Http\Requests\Api\User\ExperienceStoreRequest;
 use App\Http\Requests\Api\User\PayrollInfoStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
@@ -16,7 +15,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
-    const ALLOWED_INCLUDES = ['detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'companies', 'branches'];
+    const ALLOWED_INCLUDES = ['roles', 'detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'companies', 'branches', 'schedules'];
 
     public function __construct()
     {
@@ -36,6 +35,7 @@ class UserController extends BaseController
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('manager_id'),
+                AllowedFilter::scope('has_schedule_id'),
                 'name', 'email', 'type', 'nik', 'phone', 'marital_status'
             ])
             ->allowedIncludes(self::ALLOWED_INCLUDES)
@@ -51,10 +51,11 @@ class UserController extends BaseController
     {
         /** @var User $user */
         $user = auth()->user();
-        // dump($user->getAllPermissions()->pluck('name'));
-        // dd($user);
-        // return new UserResource($user);
-        return new UserResource($user->load(['roles' => fn ($q) => $q->select('id', 'name')]));
+        $user = QueryBuilder::for(User::where('id', $user->id))
+            ->allowedIncludes(self::ALLOWED_INCLUDES)
+            ->firstOrFail();
+
+        return new UserResource($user);
     }
 
     public function show(User $user)
@@ -182,12 +183,6 @@ class UserController extends BaseController
         } else {
             $user->payrollInfo()->create($request->validated());
         }
-        return new UserResource($user->load('payrollInfo'));
-    }
-
-    public function storeExperiences(User $user, ExperienceStoreRequest $request)
-    {
-        $user->payrollInfo()->create($request->validated());
         return new UserResource($user->load('payrollInfo'));
     }
 }
