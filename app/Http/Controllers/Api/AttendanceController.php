@@ -11,6 +11,8 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class AttendanceController extends BaseController
 {
+    const ALLOWED_INCLUDES = ['user', 'schedule', 'shift'];
+
     public function __construct()
     {
         parent::__construct();
@@ -32,11 +34,11 @@ class AttendanceController extends BaseController
                 AllowedFilter::exact('shift_id'),
                 AllowedFilter::scope('company_id', 'whereCompanyId'),
                 AllowedFilter::scope('shift_id', 'whereShiftId'),
-                'clock_in', 'clock_out'
+                'is_clock_in', 'time', 'type', 'is_approved', 'approved_by'
             ])
-            ->allowedIncludes(['user', 'shift', 'schedule'])
+            ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->allowedSorts([
-                'id', 'user_id', 'schedule_id', 'shift_id', 'clock_in', 'clock_out', 'created_at'
+                'id', 'user_id', 'schedule_id', 'shift_id', 'is_clock_in', 'time', 'type', 'is_approved', 'approved_by', 'created_at'
             ])
             ->paginate($this->per_page);
 
@@ -63,9 +65,9 @@ class AttendanceController extends BaseController
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        $attendance = $user->attendances()->whereDate('clock_in', date('Y-m-d'))->first();
+        $attendance = $user->attendances()->whereDate('time', date('Y-m-d'))->first();
         if (!$attendance) return $this->errorResponse(message: "No attendance today", code: 404);
-        $attendance->update(['clock_out' => $request->clock_out]);
+        $attendance = Attendance::create($request->validated());
 
         return new AttendanceResource($attendance);
     }

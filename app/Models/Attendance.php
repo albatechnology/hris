@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\BelongsToUser;
@@ -16,10 +17,19 @@ class Attendance extends BaseModel implements TenantedInterface
         'user_id',
         'schedule_id',
         'shift_id',
-        'clock_in',
-        'clock_out',
+        'is_clock_in',
+        'time',
+        'type',
+        'is_approved',
+        'approved_by',
         'lat',
         'lng',
+        'note',
+    ];
+
+    protected $casts = [
+        'is_clock_in' => 'boolean',
+        'type' => AttendanceType::class,
     ];
 
     protected static function booted(): void

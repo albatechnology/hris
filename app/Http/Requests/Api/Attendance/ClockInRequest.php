@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Enums\AttendanceType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ClockInRequest extends FormRequest
 {
@@ -12,6 +14,16 @@ class ClockInRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'is_clock_in' => 1,
+        ]);
     }
 
     /**
@@ -25,10 +37,12 @@ class ClockInRequest extends FormRequest
             'user_id' => 'nullable|exists:users,id',
             'schedule_id' => 'required|exists:schedules,id',
             'shift_id' => 'required|exists:shifts,id',
-            'clock_in' => 'required|date_format:Y-m-d H:i:s',
-            // 'clock_out' => 'nullable|date_format:Y-m-d H:i:s',
+            'is_clock_in' => 'required|boolean',
+            'time' => 'required|date_format:Y-m-d H:i:s',
+            'type' => ['required', Rule::enum(AttendanceType::class)],
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
+            'note' => 'nullable|string',
         ];
     }
 }
