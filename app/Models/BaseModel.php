@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseModel extends Model
@@ -12,23 +13,23 @@ abstract class BaseModel extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
-    public function scopeActive($query)
+    public function scopeActive(Builder $query)
     {
-        return $query->where('is_active', true);
+        $query->where('is_active', true);
     }
 
-    public function scopeWhereStatus($query, $value)
+    public function scopeWhereStatus(Builder $query, $value)
     {
-        return $query->where('status', $value);
+        $query->where('status', $value);
     }
 
-    public function scopeWhereLike($query, $column, $value)
+    public function scopeWhereLike(Builder $query, $column, $value)
     {
-        return $query->where($column, 'LIKE', '%'.$value.'%');
+        $query->where($column, 'LIKE', '%'.$value.'%');
     }
 
-    public function scopeOrWhereLike($query, $column, $value)
+    public function scopeOrWhereLike(Builder $query, $column, $value)
     {
-        return $query->orWhere($column, 'LIKE', '%'.$value.'%');
+        $query->orWhere($column, 'LIKE', '%'.$value.'%');
     }
 }

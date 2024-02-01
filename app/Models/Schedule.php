@@ -15,20 +15,31 @@ class Schedule extends BaseModel implements TenantedInterface
         'company_id',
         'name',
         'effective_date',
+        'is_overide_national_holiday',
+        'is_overide_company_holiday',
+        'is_include_late_in',
+        'is_include_early_out',
     ];
 
-    public function shifts(): BelongsToMany
+    protected $casts = [
+        'is_overide_national_holiday' => 'boolean',
+        'is_overide_company_holiday' => 'boolean',
+        'is_include_late_in' => 'boolean',
+        'is_include_early_out' => 'boolean',
+    ];
+
+    public function shifts() : BelongsToMany
     {
         // return $this->belongsToMany(Shift::class, 'schedule_shifts')->using(ScheduleShift::class)->withPivot('order');
         return $this->belongsToMany(Shift::class, 'schedule_shifts')->withPivot('order');
     }
 
-    public function shift(): HasOne
+    public function shift() : HasOne
     {
         return $this->hasOne(ScheduleShift::class)->orderByDesc('order');
     }
 
-    public function users(): BelongsToMany
+    public function users() : BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_schedules', 'schedule_id', 'user_id');
     }

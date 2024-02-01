@@ -17,6 +17,19 @@ return new class extends Migration
             $table->string('name');
             $table->time('clock_in');
             $table->time('clock_out')->nullable();
+            $table->time('break_start')->nullable();
+            $table->time('break_end')->nullable();
+            $table->char('color', 7)->default('#ffffff');
+            $table->text('description')->nullable();
+            $table->boolean('is_enable_validation')->default(0);
+            $table->unsignedSmallInteger('clock_in_min_before')->default(0);
+            $table->unsignedSmallInteger('clock_out_max_after')->default(0);
+            $table->boolean('is_enable_grace_period')->default(0);
+            $table->unsignedSmallInteger('clock_in_dispensation')->default(0);
+            $table->unsignedSmallInteger('clock_out_dispensation')->default(0);
+            $table->boolean('is_enable_auto_overtime')->default(0);
+            $table->time('overtime_before')->nullable();
+            $table->time('overtime_after')->nullable();
             $table->timestamps();
         });
     }

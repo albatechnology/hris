@@ -16,6 +16,10 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('name');
             $table->date('effective_date');
+            $table->boolean('is_overide_national_holiday')->default(0);
+            $table->boolean('is_overide_company_holiday')->default(0);
+            $table->boolean('is_include_late_in')->default(0);
+            $table->boolean('is_include_early_out')->default(0);
             $table->timestamps();
         });
     }
