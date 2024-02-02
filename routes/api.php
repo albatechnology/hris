@@ -38,21 +38,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::post('detail', [UserController::class, 'detail']);
         Route::post('payroll-info', [UserController::class, 'payrollInfo']);
-        Route::resource('experiences', UserExperienceController::class)->except('create', 'edit');
-        Route::resource('educations', UserEducationController::class)->except('create', 'edit');
-        Route::resource('contacts', UserContactController::class)->except('create', 'edit');
+        Route::apiResource('experiences', UserExperienceController::class);
+        Route::apiResource('educations', UserEducationController::class);
+        Route::apiResource('contacts', UserContactController::class);
     });
-    Route::resource('users', UserController::class)->except('create', 'edit');
-    Route::resource('roles', RoleController::class)->except('create', 'edit');
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('roles', RoleController::class);
 
-    Route::resource('groups', GroupController::class)->except('create', 'edit');
-    Route::resource('companies', CompanyController::class)->except('create', 'edit');
-    Route::resource('branches', BranchController::class)->except('create', 'edit');
-    Route::resource('positions', PositionController::class)->except('create', 'edit');
-    Route::resource('divisions', DivisionController::class)->except('create', 'edit');
-    Route::resource('departments', DepartmentController::class)->except('create', 'edit');
+    Route::apiResource('groups', GroupController::class);
+    Route::apiResource('companies', CompanyController::class);
+    Route::apiResource('branches', BranchController::class);
+    Route::apiResource('positions', PositionController::class);
+    Route::apiResource('divisions', DivisionController::class);
+    Route::apiResource('departments', DepartmentController::class);
 
-    Route::resource('shifts', ShiftController::class)->except('create', 'edit');
+    Route::apiResource('shifts', ShiftController::class);
 
     Route::get('schedules/today', [ScheduleController::class, 'today']);
     Route::group(['prefix' => 'schedules/{schedule}'], function () {
@@ -60,11 +60,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('users', [UserScheduleController::class, 'store']);
         Route::delete('users/{user}', [UserScheduleController::class, 'destroy']);
     });
-    Route::resource('schedules', ScheduleController::class)->except('create', 'edit');
+    Route::apiResource('schedules', ScheduleController::class);
 
     Route::group(['prefix' => 'attendances'], function () {
         Route::post('clock-in', [AttendanceController::class, 'clockIn']);
         Route::post('clock-out', [AttendanceController::class, 'clockOut']);
     });
-    Route::resource('attendances', AttendanceController::class)->except('create', 'edit', 'store', 'update');
+    Route::apiResource('attendances', AttendanceController::class)->except('create', 'edit', 'store', 'update');
 });
