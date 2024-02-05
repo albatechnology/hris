@@ -64,6 +64,16 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(Shift::class);
     }
 
+    public function timeoffPolicies(): HasMany
+    {
+        return $this->hasMany(TimeoffPolicy::class);
+    }
+
+    public function timeoffRegulations(): HasMany
+    {
+        return $this->hasMany(TimeoffRegulation::class);
+    }
+
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
