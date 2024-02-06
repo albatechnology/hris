@@ -11,7 +11,7 @@ enum JobLevel: string
     case LEADER = 'leader';
     case FOREMAN = 'foreman';
     case SUPERVISOR = 'supervisor';
-    case ASISTEN_MANAGER = 'asisten manager';
+    case ASSISTANT_MANAGER = 'asisten manager';
     case MANAGER = 'manager';
     case DIRECTOR = 'direktur';
 }
