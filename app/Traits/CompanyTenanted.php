@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait CompanyTenanted
 {
-    public function company() : BelongsTo
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function scopeTenanted(Builder $query) : Builder
+    public function scopeTenanted(Builder $query): Builder
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
@@ -25,7 +25,7 @@ trait CompanyTenanted
         return $query->whereIn('company_id', $companyIds);
     }
 
-    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true) : self
+    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
     {
         $query->tenanted()->where('id', $id);
         if ($fail) return $query->firstOrFail();
