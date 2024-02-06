@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Enums\TimeoffPolicyType;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Interfaces\TenantedInterface;
+use App\Traits\CompanyTenanted;
+use Illuminate\Database\Eloquent\Builder;
 
-class TimeoffPolicy extends BaseModel
+class TimeoffPolicy extends BaseModel implements TenantedInterface
 {
+    use CompanyTenanted;
+
     protected $fillable = [
         'company_id',
         'type',
@@ -26,8 +30,15 @@ class TimeoffPolicy extends BaseModel
         'is_unlimited_day' => 'boolean',
     ];
 
-    public function company(): BelongsTo
+    public function scopeStartEffectiveDate(Builder $query, $date = null)
     {
-        return $this->belongsTo(Company::class);
+        if (is_null($date)) return $query;
+        $query->whereDate('effective_date', '>=', date('Y-m-d', strtotime($date)));
+    }
+
+    public function scopeEndEffectiveDate(Builder $query, $date = null)
+    {
+        if (is_null($date)) return $query;
+        $query->whereDate('effective_date', '<=', date('Y-m-d', strtotime($date)));
     }
 }

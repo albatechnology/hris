@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\TimeoffRegulationController;
 use App\Http\Controllers\Api\TimeoffRegulationMonthController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
+use App\Http\Controllers\Api\TimeoffPolicyController;
 use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
@@ -68,4 +69,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
 
     Route::apiResource('overtimes', OvertimeController::class);
+    Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
 });
