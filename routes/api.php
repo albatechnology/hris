@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
+use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -65,4 +66,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('periods', TimeoffPeriodRegulationController::class);
     });
     Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
+
+    Route::apiResource('overtimes', OvertimeController::class);
 });

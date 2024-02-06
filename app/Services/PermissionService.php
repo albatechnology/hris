@@ -127,6 +127,12 @@ class PermissionService
                 'timeoff_regulation_month_edit',
                 'timeoff_regulation_month_delete',
             ],
+            'overtime_access' => [
+                'overtime_read',
+                'overtime_create',
+                'overtime_edit',
+                'overtime_delete',
+            ],
         ];
     }
 
