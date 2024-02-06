@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->boolean('is_rounding')->default(0);
             $table->integer('compensation_rate_per_day')->nullable();
-            $table->string('rate_type');
-            $table->unsignedFloat('amount')->default(0);
+            $table->string('rate_type')->comment('Enum from RateType::class valid value is (amount, salary, allowances), if the value is allowances then this table has many relation to overtime_allowances table');
+            $table->unsignedFloat('rate_amount')->default(0);
             $table->timestamps();
         });
     }
