@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\TimeoffRegulationController;
+use App\Http\Controllers\Api\TimeoffRegulationMonthController;
+use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
@@ -58,5 +60,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('attendances', AttendanceController::class)->except('store', 'update');
 
+    Route::group(['prefix' => 'timeoff-regulations/{timeoff_regulation}'], function () {
+        Route::apiResource('periods/{period}/months', TimeoffRegulationMonthController::class);
+        Route::apiResource('periods', TimeoffPeriodRegulationController::class);
+    });
     Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
 });

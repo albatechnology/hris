@@ -6,6 +6,7 @@ use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Company extends BaseModel implements TenantedInterface
 {
@@ -69,9 +70,9 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(TimeoffPolicy::class);
     }
 
-    public function timeoffRegulations(): HasMany
+    public function timeoffRegulations(): HasOne
     {
-        return $this->hasMany(TimeoffRegulation::class);
+        return $this->hasOne(TimeoffRegulation::class);
     }
 
     public function group(): BelongsTo

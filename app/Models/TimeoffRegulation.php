@@ -39,11 +39,6 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         'is_expired_in_end_period' => 'boolean',
     ];
 
-    public function timeoffRegulationMonths(): HasMany
-    {
-        return $this->hasMany(TimeoffRegulationMonth::class);
-    }
-
     public function timeoffPeriodRegulations(): HasMany
     {
         return $this->hasMany(TimeoffPeriodRegulation::class);

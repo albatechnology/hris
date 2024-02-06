@@ -115,6 +115,18 @@ class PermissionService
                 'timeoff_regulation_edit',
                 'timeoff_regulation_delete',
             ],
+            'timeoff_period_regulation_access' => [
+                'timeoff_period_regulation_read',
+                'timeoff_period_regulation_create',
+                'timeoff_period_regulation_edit',
+                'timeoff_period_regulation_delete',
+            ],
+            'timeoff_regulation_month_access' => [
+                'timeoff_regulation_month_read',
+                'timeoff_regulation_month_create',
+                'timeoff_regulation_month_edit',
+                'timeoff_regulation_month_delete',
+            ],
         ];
     }
 

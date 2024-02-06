@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TimeoffPeriodRegulation extends BaseModel
 {
@@ -11,6 +12,11 @@ class TimeoffPeriodRegulation extends BaseModel
         'min_working_month',
         'max_working_month',
     ];
+
+    public function timeoffRegulationMonths(): HasMany
+    {
+        return $this->hasMany(TimeoffRegulationMonth::class);
+    }
 
     public function timeoffRegulation(): BelongsTo
     {

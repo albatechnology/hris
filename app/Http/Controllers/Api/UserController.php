@@ -50,8 +50,8 @@ class UserController extends BaseController
     public function me()
     {
         /** @var User $user */
-        $user = auth()->user();
-        $user = QueryBuilder::for(User::findTenanted('id', $user->id))
+        $user = auth('sanctum')->user();
+        $user = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->firstOrFail();
 

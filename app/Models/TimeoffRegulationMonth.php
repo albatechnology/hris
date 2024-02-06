@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TimeoffRegulationMonth extends BaseModel
 {
     protected $fillable = [
-        'timeoff_regulation_id',
+        'timeoff_period_regulation_id',
         'month',
         'amount',
     ];
@@ -16,8 +16,8 @@ class TimeoffRegulationMonth extends BaseModel
         'amount' => 'float',
     ];
 
-    public function timeoffRegulation(): BelongsTo
+    public function timeoffPeriodRegulation(): BelongsTo
     {
-        return $this->belongsTo(TimeoffRegulation::class);
+        return $this->belongsTo(TimeoffPeriodRegulation::class);
     }
 }
