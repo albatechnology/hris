@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CurrencyCode;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->string('lat')->nullable();
             $table->string('lng')->nullable();
             $table->text('address')->nullable();
+            $table->char('currency_code', 3)->default(CurrencyCode::IDR);
             $table->timestamps();
         });
     }

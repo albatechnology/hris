@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('overtime_id')->constrained();
             // $table->foreignId('payroll_category_id')->constrained(); currently commented because payroll_categories is not created yet
             $table->foreignId('payroll_category_id')->nullable();
-            $table->unsignedFloat('amount')->default(0);
+            $table->unsignedDouble('amount', 13, 2)->default(0);
             $table->timestamps();
         });
     }

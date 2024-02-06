@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('overtime_roundings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('overtime_id')->constrained();
-            $table->integer('start_minute');
-            $table->integer('end_minute');
-            $table->integer('rounded')->comment('Round the value between start_minute and end_minute');
+            $table->unsignedSmallInteger('start_minute');
+            $table->unsignedSmallInteger('end_minute');
+            $table->unsignedSmallInteger('rounded')->comment('Round the value between start_minute and end_minute');
             $table->timestamps();
         });
     }
