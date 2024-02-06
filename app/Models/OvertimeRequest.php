@@ -40,11 +40,6 @@ class OvertimeRequest extends BaseModel
         return $this->belongsTo(Overtime::class);
     }
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
