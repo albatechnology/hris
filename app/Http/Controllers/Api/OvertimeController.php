@@ -14,6 +14,7 @@ class OvertimeController extends BaseController
     public function __construct()
     {
         parent::__construct();
+
         $this->middleware('permission:overtime_access', ['only' => ['restore']]);
         $this->middleware('permission:overtime_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:overtime_create', ['only' => 'store']);

@@ -27,9 +27,9 @@ class UpdateRequest extends FormRequest
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'name' => 'required|string',
             'is_rounding' => 'required|boolean',
-            'compensation_rate_per_day' => 'nullable|integer',
+            'compensation_rate_per_day' => 'nullable|numeric',
             'rate_type' => ['nullable', Rule::enum(RateType::class)],
-            'rate_amount' => 'required|string',
+            'rate_amount' => 'required|numeric',
         ];
     }
 }
