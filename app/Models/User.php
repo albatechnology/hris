@@ -192,6 +192,11 @@ class User extends Authenticatable implements TenantedInterface
         return $this->hasMany(UserBranch::class);
     }
 
+    public function timeoffPolicies(): BelongsToMany
+    {
+        return $this->belongsToMany(TimeoffPolicy::class, 'user_timeoff_policies');
+    }
+
     public function schedules(): BelongsToMany
     {
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');

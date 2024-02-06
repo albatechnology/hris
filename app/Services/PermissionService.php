@@ -127,6 +127,12 @@ class PermissionService
                 'timeoff_regulation_month_edit',
                 'timeoff_regulation_month_delete',
             ],
+            'timeoff_policy_access' => [
+                'timeoff_policy_read',
+                'timeoff_policy_create',
+                'timeoff_policy_edit',
+                'timeoff_policy_delete',
+            ],
         ];
     }
 
