@@ -48,9 +48,12 @@ class StoreRequest extends FormRequest
             'code' => 'required|string',
             'description' => 'nullable|string',
             'effective_date' => 'required|date',
+            'expired_date' => 'nullable|date',
             'is_for_all_user' => 'nullable|boolean',
             'is_enable_block_leave' => 'nullable|boolean',
             'is_unlimited_day' => 'nullable|boolean',
+            'user_ids' => 'nullable|array',
+            'user_ids.*' => 'required|exists:users,id',
         ];
     }
 }
