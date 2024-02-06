@@ -33,17 +33,17 @@ class Overtime extends BaseModel
         return $this->hasMany(OvertimeAllowance::class);
     }
 
-    public function overtimeMultiplier(): HasMany
+    public function overtimeMultipliers(): HasMany
     {
         return $this->hasMany(OvertimeMultiplier::class);
     }
 
-    public function overtimeRequest(): HasMany
+    public function overtimeRequests(): HasMany
     {
         return $this->hasMany(OvertimeRequest::class);
     }
 
-    public function overtimeRounding(): HasMany
+    public function overtimeRoundings(): HasMany
     {
         return $this->hasMany(OvertimeRounding::class);
     }
