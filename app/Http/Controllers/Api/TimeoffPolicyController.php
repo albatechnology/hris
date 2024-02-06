@@ -39,7 +39,7 @@ class TimeoffPolicyController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'effective_date', 'type', 'name', 'code', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at'
+                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at'
             ])
             ->paginate($this->per_page);
 
@@ -57,14 +57,30 @@ class TimeoffPolicyController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $timeoffPolicy = TimeoffPolicy::create($request->validated());
+        try {
+            $timeoffPolicy = TimeoffPolicy::create($request->validated());
+
+            if ($request->user_ids && count($request->user_ids) > 0) {
+                $timeoffPolicy->users()->sync($request->user_ids);
+            }
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new TimeoffPolicyResource($timeoffPolicy);
     }
 
     public function update(TimeoffPolicy $timeoffPolicy, StoreRequest $request)
     {
-        $timeoffPolicy->update($request->validated());
+        try {
+            $timeoffPolicy->update($request->validated());
+
+            if ($request->user_ids && count($request->user_ids) > 0) {
+                $timeoffPolicy->users()->sync($request->user_ids);
+            }
+        } catch (\Throwable $th) {
+            return $this->errorResponse($th->getMessage());
+        }
 
         return (new TimeoffPolicyResource($timeoffPolicy))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }

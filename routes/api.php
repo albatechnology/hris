@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\UserExperienceController;
 use App\Http\Controllers\Api\UserScheduleController;
+use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -67,5 +68,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
 
+    Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
+        Route::post('users', [UserTimeoffPolicyController::class, 'store']);
+        Route::delete('users/{user}', [UserTimeoffPolicyController::class, 'destroy']);
+    });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
 });
