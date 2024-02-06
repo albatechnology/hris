@@ -51,7 +51,7 @@ class UserController extends BaseController
     {
         /** @var User $user */
         $user = auth()->user();
-        $user = QueryBuilder::for(User::where('id', $user->id))
+        $user = QueryBuilder::for(User::findTenanted('id', $user->id))
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->firstOrFail();
 

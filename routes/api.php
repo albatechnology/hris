@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\TimeoffRegulationController;
 use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserEducationController;
@@ -66,5 +67,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('clock-in', [AttendanceController::class, 'clockIn']);
         Route::post('clock-out', [AttendanceController::class, 'clockOut']);
     });
-    Route::apiResource('attendances', AttendanceController::class)->except('create', 'edit', 'store', 'update');
+    Route::apiResource('attendances', AttendanceController::class)->except('store', 'update');
+
+    Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
 });

@@ -109,6 +109,12 @@ class PermissionService
                 'attendance_edit',
                 'attendance_delete',
             ],
+            'timeoff_regulation_access' => [
+                'timeoff_regulation_read',
+                'timeoff_regulation_create',
+                'timeoff_regulation_edit',
+                'timeoff_regulation_delete',
+            ],
         ];
     }
 

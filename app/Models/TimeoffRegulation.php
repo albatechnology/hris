@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TimeoffRenewType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\CompanyTenanted;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TimeoffRegulation extends BaseModel implements TenantedInterface
@@ -46,5 +47,17 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
     public function timeoffPeriodRegulations(): HasMany
     {
         return $this->hasMany(TimeoffPeriodRegulation::class);
+    }
+
+    public function scopeStartPeriod(Builder $query, $date = null)
+    {
+        if (is_null($date)) return $query;
+        $query->whereDate('start_period', '>=', $date);
+    }
+
+    public function scopeEndPeriod(Builder $query, $date = null)
+    {
+        if (is_null($date)) return $query;
+        $query->whereDate('end_period', '<=', $date);
     }
 }
