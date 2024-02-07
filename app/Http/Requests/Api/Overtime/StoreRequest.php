@@ -31,6 +31,17 @@ class StoreRequest extends FormRequest
             'compensation_rate_per_day' => 'nullable|numeric',
             'rate_type' => ['nullable', Rule::enum(RateType::class)],
             'rate_amount' => 'required|numeric',
+
+            'overtime_roundings' => 'required_if:is_rounding,true|array',
+            'overtime_roundings.*.start_minute' => 'integer',
+            'overtime_roundings.*.end_minute' => 'integer|gt:overtime_roundings.*.start_minute',
+            'overtime_roundings.*.rounded' => 'integer',
+
+            'overtime_multipliers' => 'required_without:compensation_rate_per_day|array',
+            'overtime_multipliers.*.is_weekday' => 'boolean',
+            'overtime_multipliers.*.start_hour' => 'integer',
+            'overtime_multipliers.*.end_hour' => 'integer|gt:overtime_multipliers.*.start_hour',
+            'overtime_multipliers.*.multiply' => 'integer',
         ];
     }
 }
