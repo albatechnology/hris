@@ -18,11 +18,15 @@ return new class extends Migration
             $table->string('name');
             $table->string('code', 20);
             $table->text('description')->nullable();
-            $table->date('effective_date');
+            $table->date('effective_date')->nullable();
             $table->date('expired_date')->nullable();
+            $table->boolean('is_allow_halfday')->default(1);
             $table->boolean('is_for_all_user')->default(1)->comment('jika false, maka harus isi list user nya di table user_timeoff_policies');
-            $table->boolean('is_enable_block_leave')->default(0);
             $table->boolean('is_unlimited_day')->default(0)->comment('jika false, maka max day akan ambil dari kolom max_consecutively_day table timeoff_regulations');
+            $table->boolean('is_enable_block_leave')->default(0);
+            $table->unsignedSmallInteger('block_leave_take_days')->default(1)->comment('jumlah hari yang wajib diambil');
+            $table->unsignedSmallInteger('block_leave_min_working_month')->default(0)->comment('minimal masa kerja(bulan) untuk dapat me-request. 0 berarti semua user dapat me-request');
+            $table->unsignedSmallInteger('max_used')->nullable()->comment('maksimal policy dapat digunakan');
             $table->timestamps();
         });
     }

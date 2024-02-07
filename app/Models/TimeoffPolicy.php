@@ -20,13 +20,18 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
         'description',
         'effective_date',
         'expired_date',
+        'is_allow_halfday',
         'is_for_all_user',
-        'is_enable_block_leave',
         'is_unlimited_day',
+        'is_enable_block_leave',
+        'block_leave_take_days',
+        'block_leave_min_working_month',
+        'max_used',
     ];
 
     protected $casts = [
         'type' => TimeoffPolicyType::class,
+        'is_allow_halfday' => 'boolean',
         'is_for_all_user' => 'boolean',
         'is_enable_block_leave' => 'boolean',
         'is_unlimited_day' => 'boolean',
@@ -47,5 +52,15 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
     {
         if (is_null($date)) return $query;
         $query->whereDate('effective_date', '<=', date('Y-m-d', strtotime($date)));
+    }
+
+    public function scopeWhereActive(Builder $query, bool|null $isActive = true)
+    {
+        if (is_null($isActive)) return $query;
+        if ($isActive) {
+            return $query->whereDate('effective_date', '<=', date('Y-m-d'))->whereDate('expired_date', '>=', date('Y-m-d'))->orWhere(fn ($q) => $q->whereNull('effective_date')->orWhereNull('expired_date'));
+        }
+
+        $query->whereDate('effective_date', '>=', date('Y-m-d'))->orWhereDate('expired_date', '<=', date('Y-m-d'));
     }
 }

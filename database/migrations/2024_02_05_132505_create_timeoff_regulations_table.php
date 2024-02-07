@@ -19,7 +19,7 @@ return new class extends Migration
             $table->char('start_period', 5)->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == annual');
             $table->char('end_period', 5)->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == annual');
             $table->unsignedSmallInteger('max_consecutively_day')->nullable()->comment('Maksimal pengajuan cuti tahunan (hari) berturut-turut');
-            $table->boolean('is_allow_halfday')->default(1);
+            // $table->boolean('is_allow_halfday')->default(1);
             $table->text('halfday_not_applicable_in')->nullable()->comment('hari(array) yang tidak bisa diajukan cuti setengah hari (is_allow_halfday harus true)');
             $table->boolean('is_expired_in_end_period')->default(1)->comment('jika true, maka cuti akan hangus diakhir periode');
             $table->unsignedSmallInteger('expired_max_month')->nullable()->comment('jika null, maka sisa cuti tahun sebelumnya akan aktif tanpa batas waktu');

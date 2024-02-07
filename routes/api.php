@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\TimeoffController;
 use App\Http\Controllers\Api\TimeoffRegulationController;
 use App\Http\Controllers\Api\TimeoffRegulationMonthController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
@@ -74,5 +75,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('users/{user}', [UserTimeoffPolicyController::class, 'destroy']);
     });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
+    Route::apiResource('timeoffs', TimeoffController::class);
     Route::apiResource('overtimes', OvertimeController::class);
 });

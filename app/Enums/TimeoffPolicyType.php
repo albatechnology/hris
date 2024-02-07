@@ -6,7 +6,7 @@ enum TimeoffPolicyType: string
 {
     use BaseEnum;
 
-    case DEFAULT = 'default';
-    case FREE_LEAVE = 'free_leave';
+    case TIME_OFF = 'time_off';
+    case SPECIAL_LEAVE = 'special_leave';
     case DAY_OFF = 'day_off';
 }

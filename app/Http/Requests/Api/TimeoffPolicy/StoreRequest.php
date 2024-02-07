@@ -28,6 +28,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'is_allow_halfday' => $this->toBoolean($this->is_allow_halfday),
             'is_for_all_user' => $this->toBoolean($this->is_for_all_user),
             'is_enable_block_leave' => $this->toBoolean($this->is_enable_block_leave),
             'is_unlimited_day' => $this->toBoolean($this->is_unlimited_day),
@@ -49,9 +50,14 @@ class StoreRequest extends FormRequest
             'description' => 'nullable|string',
             'effective_date' => 'required|date',
             'expired_date' => 'nullable|date',
+            'is_allow_halfday' => 'nullable|boolean',
             'is_for_all_user' => 'nullable|boolean',
-            'is_enable_block_leave' => 'nullable|boolean',
             'is_unlimited_day' => 'nullable|boolean',
+            'is_enable_block_leave' => 'nullable|boolean',
+            'block_leave_take_days' => 'nullable|integer',
+            'block_leave_min_working_month' => 'nullable|integer',
+            'max_used' => 'nullable|integer',
+
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'required|exists:users,id',
         ];
