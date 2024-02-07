@@ -14,6 +14,11 @@ class OvertimeResource extends JsonResource
      */
     public function toArray(Request $request)
     {
-        return parent::toArray($request);
+        return [
+            ...parent::toArray($request),
+            'overtime_roundings' => OvertimeRoundingResource::collection($this->overtimeRoundings),
+            'overtime_multipliers' => OvertimeMultiplierResource::collection($this->overtimeMultipliers),
+            'overtime_allowances' => OvertimeAllowanceResource::collection($this->overtimeAllowances),
+        ];
     }
 }

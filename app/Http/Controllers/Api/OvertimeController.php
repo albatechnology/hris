@@ -8,6 +8,7 @@ use App\Models\Overtime;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\DB;
 
 class OvertimeController extends BaseController
 {
@@ -49,7 +50,58 @@ class OvertimeController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $overtime = Overtime::create($request->validated());
+        // check correct order for overtime rounding hours
+        foreach ($request->overtime_roundings as $i => $overtimeRounding) {
+            if ($i > 0 && $overtimeRounding['start_minute'] <= $request->overtime_roundings[$i - 1]['end_minute']) {
+                return $this->errorResponse('start_minute and end_minute between the arrays are not in the correct order, please check it first');
+            }
+        }
+
+        // check correct order for overtime multiplier hours
+        foreach ($request->overtime_multipliers as $i => $overtimeMultiplier) {
+            if ($i > 0 && $overtimeMultiplier['start_hour'] <= $request->overtime_multipliers[$i - 1]['end_hour']) {
+                return $this->errorResponse('start_hour and end_hour between the arrays are not in the correct order, please check it first');
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            $overtime = Overtime::create([
+                'company_id' => $request->company_id,
+                'name' => $request->name,
+                'is_rounding' => $request->is_rounding,
+                'compensation_rate_per_day' => $request->compensation_rate_per_day,
+                'rate_type' => $request->rate_type,
+                'rate_amount' => $request->rate_amount,
+            ]);
+
+            foreach ($request->overtime_roundings as $overtimeRounding) {
+                $overtime->overtimeRoundings()->create([
+                    'start_minute' => $overtimeRounding['start_minute'],
+                    'end_minute' => $overtimeRounding['end_minute'],
+                    'rounded' => $overtimeRounding['rounded'],
+                ]);
+            }
+
+            foreach ($request->overtime_multipliers as $overtimeMultiplier) {
+                $overtime->overtimeMultipliers()->create([
+                    'is_weekday' => $overtimeMultiplier['is_weekday'],
+                    'start_hour' => $overtimeMultiplier['start_hour'],
+                    'end_hour' => $overtimeMultiplier['end_hour'],
+                    'multiply' => $overtimeMultiplier['multiply'],
+                ]);
+            }
+
+            foreach ($request->overtime_allowances as $overtimeAllowance) {
+                $overtime->overtimeAllowances()->create([
+                    'amount' => $overtimeAllowance['amount'],
+                ]);
+            }
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new OvertimeResource($overtime);
     }
