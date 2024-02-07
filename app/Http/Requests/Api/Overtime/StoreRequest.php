@@ -42,6 +42,9 @@ class StoreRequest extends FormRequest
             'overtime_multipliers.*.start_hour' => 'integer',
             'overtime_multipliers.*.end_hour' => 'integer|gt:overtime_multipliers.*.start_hour',
             'overtime_multipliers.*.multiply' => 'integer',
+
+            'overtime_allowances' => 'required_without:overtime_allowances|nullable|array',
+            'overtime_allowances.*.amount' => 'required|numeric',
         ];
     }
 }

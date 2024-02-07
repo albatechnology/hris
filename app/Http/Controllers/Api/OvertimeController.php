@@ -91,6 +91,12 @@ class OvertimeController extends BaseController
                     'multiply' => $overtimeMultiplier['multiply'],
                 ]);
             }
+
+            foreach ($request->overtime_allowances as $overtimeAllowance) {
+                $overtime->overtimeAllowances()->create([
+                    'amount' => $overtimeAllowance['amount'],
+                ]);
+            }
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
