@@ -27,19 +27,16 @@ class TimeoffController extends BaseController
         $data = QueryBuilder::for(Timeoff::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                AllowedFilter::exact('company_id'),
-                AllowedFilter::scope('start_effective_date'),
-                AllowedFilter::scope('end_effective_date'),
-                'type',
-                'name',
-                'code',
-                'is_for_all_user',
-                'is_enable_block_leave',
-                'is_unlimited_day'
+                AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('timeoff_policy_id'),
+                AllowedFilter::exact('delegate_to'),
+                AllowedFilter::scope('start_at'),
+                AllowedFilter::scope('end_at'),
+                'request_type'
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['user', 'timeoffPolicy', 'delegateTo'])
             ->allowedSorts([
-                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at'
+                'id', 'user_id', 'timeoff_policy_id', 'delegate_to', 'start_at', 'end_at', 'request_type', 'created_at'
             ])
             ->paginate($this->per_page);
 
@@ -48,11 +45,9 @@ class TimeoffController extends BaseController
 
     public function show(Timeoff $timeoff)
     {
-        $data = QueryBuilder::for(Timeoff::where('id', $timeoff->id))
-            ->allowedIncludes(['user', 'delegateTo'])
-            ->firstOrFail();
+        $timeoff->load(['user', 'timeoffPolicy', 'delegateTo']);
 
-        return new TimeoffResource($data);
+        return new TimeoffResource($timeoff);
     }
 
     public function store(StoreRequest $request)

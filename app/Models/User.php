@@ -202,6 +202,11 @@ class User extends Authenticatable implements TenantedInterface
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');
     }
 
+    public function liveAttendances(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_live_attendances');
+    }
+
     public function getIsSuperAdminAttribute(): bool
     {
         return $this->type->is(UserType::SUPER_ADMIN);

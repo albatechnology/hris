@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
+use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
@@ -77,4 +78,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
     Route::apiResource('timeoffs', TimeoffController::class);
     Route::apiResource('overtimes', OvertimeController::class);
+
+    Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
+        Route::get('locations', [LiveAttendanceController::class, 'locations']);
+    });
+    Route::apiResource('live-attendances', LiveAttendanceController::class);
 });

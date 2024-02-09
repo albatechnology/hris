@@ -22,6 +22,10 @@ class Timeoff extends BaseModel
         'delegate_to',
     ];
 
+    protected $casts = [
+        'request_type' => TimeoffRequestType::class,
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (self $model) {
@@ -49,9 +53,17 @@ class Timeoff extends BaseModel
         return $query->first();
     }
 
-    protected $casts = [
-        'request_type' => TimeoffRequestType::class,
-    ];
+    public function scopeStartAt(Builder $query, $date = null)
+    {
+        if (is_null($date)) return $query;
+        $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($date)));
+    }
+
+    public function scopeEndAt(Builder $query, $date = null)
+    {
+        if (is_null($date)) return $query;
+        $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
+    }
 
     public function timeoffPolicy(): BelongsTo
     {
