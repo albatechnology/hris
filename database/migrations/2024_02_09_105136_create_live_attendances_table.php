@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('live_attendances', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained();
             $table->string('name');
             $table->boolean('is_flexible')->default(0);
             $table->timestamps();

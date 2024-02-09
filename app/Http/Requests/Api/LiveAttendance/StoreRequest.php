@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\LiveAttendance;
 
+use App\Rules\CompanyTenantedRule;
 use App\Traits\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -47,8 +48,11 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
             'is_flexible' => 'required|boolean',
+            'user_ids' => 'nullable|array',
+            'user_ids.*' => 'required|exists:users,id',
             'locations' => 'nullable|array',
             'locations.*.name' => 'required|string',
             'locations.*.radius' => 'nullable|integer',

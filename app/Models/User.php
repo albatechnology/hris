@@ -35,6 +35,7 @@ class User extends Authenticatable implements TenantedInterface
         'group_id',
         'company_id',
         'branch_id',
+        'live_attendance_id',
         'manager_id',
         'name',
         'email',
@@ -202,9 +203,9 @@ class User extends Authenticatable implements TenantedInterface
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');
     }
 
-    public function liveAttendances(): BelongsToMany
+    public function liveAttendance(): BelongsTo
     {
-        return $this->belongsToMany(User::class, 'user_live_attendances');
+        return $this->belongsTo(LiveAttendance::class);
     }
 
     public function getIsSuperAdminAttribute(): bool

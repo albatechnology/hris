@@ -14,6 +14,16 @@ class BaseController extends Controller
         $this->per_page = $perPage > 0 ? $perPage : 20;
     }
 
+    public function createdResponse()
+    {
+        return response()->json(['message' => 'Data created successfully']);
+    }
+
+    public function updatedResponse()
+    {
+        return response()->json(['message' => 'Data updated successfully'], 202);
+    }
+
     public function deletedResponse()
     {
         return response()->json(['message' => 'Data deleted successfully']);

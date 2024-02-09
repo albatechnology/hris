@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\LiveAttendance\StoreRequest;
-use App\Http\Resources\LiveAttendance\LiveAttendanceLocationResource;
 use App\Http\Resources\LiveAttendance\LiveAttendanceResource;
+use App\Http\Resources\User\UserResource;
 use App\Models\LiveAttendance;
+use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -48,13 +49,16 @@ class LiveAttendanceController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        dd($request->validated());
         DB::beginTransaction();
         try {
             $liveAttendance = LiveAttendance::create($request->validated());
 
             if ($request->locations && count($request->locations) > 0) {
                 $liveAttendance->locations()->createMany($request->locations);
+            }
+
+            if ($request->user_ids && count($request->user_ids) > 0) {
+                User::whereIn('id', $request->user_ids)->update(['live_attendance_id' => $liveAttendance->id]);
             }
             DB::commit();
         } catch (\Exception $th) {
@@ -67,14 +71,37 @@ class LiveAttendanceController extends BaseController
 
     public function update(LiveAttendance $liveAttendance, StoreRequest $request)
     {
-        $liveAttendance->update($request->validated());
+        DB::beginTransaction();
+        try {
+            $liveAttendance->update($request->validated());
+
+            if ($liveAttendance->is_flexible) {
+                $liveAttendance->locations()->delete();
+            }
+
+            if ($request->user_ids && count($request->user_ids) > 0) {
+                User::whereIn('id', $request->user_ids)->update(['live_attendance_id' => $liveAttendance->id]);
+            }
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return (new LiveAttendanceResource($liveAttendance))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(LiveAttendance $liveAttendance)
     {
-        $liveAttendance->delete();
+        DB::beginTransaction();
+        try {
+            $liveAttendance->locations()->delete();
+            $liveAttendance->delete();
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
         return $this->deletedResponse();
     }
 
@@ -92,8 +119,21 @@ class LiveAttendanceController extends BaseController
         return new LiveAttendanceResource($liveAttendance);
     }
 
-    public function locations(LiveAttendance $liveAttendance)
+    public function users(LiveAttendance $liveAttendance)
     {
-        return LiveAttendanceLocationResource::collection($liveAttendance->locations);
+        $users = QueryBuilder::for(User::tenanted()->where('live_attendance_id', $liveAttendance->id))
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+                AllowedFilter::exact('branch_id'),
+                AllowedFilter::exact('manager_id'),
+                AllowedFilter::scope('has_schedule_id'),
+                'name', 'email', 'type', 'nik', 'phone', 'marital_status'
+            ])
+            ->allowedSorts([
+                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'marital_status', 'created_at'
+            ])
+            ->paginate($this->per_page);
+
+        return UserResource::collection($users);
     }
 }

@@ -139,6 +139,12 @@ class PermissionService
                 'timeoff_policy_edit',
                 'timeoff_policy_delete',
             ],
+            'live_attendance_access' => [
+                'live_attendance_read',
+                'live_attendance_create',
+                'live_attendance_edit',
+                'live_attendance_delete',
+            ],
         ];
     }
 

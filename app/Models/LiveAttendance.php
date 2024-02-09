@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
 use App\Traits\CompanyTenanted;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LiveAttendance extends BaseModel implements TenantedInterface
@@ -12,6 +11,7 @@ class LiveAttendance extends BaseModel implements TenantedInterface
     use CompanyTenanted;
 
     protected $fillable = [
+        'company_id',
         'name',
         'is_flexible'
     ];
@@ -20,13 +20,20 @@ class LiveAttendance extends BaseModel implements TenantedInterface
         'is_flexible' => 'boolean'
     ];
 
+    protected static function booted(): void
+    {
+        static::deleted(function (self $model) {
+            $model->users()->update(['live_attendance_id' => null]);
+        });
+    }
+
     public function locations(): HasMany
     {
         return $this->hasMany(LiveAttendanceLocation::class);
     }
 
-    public function users(): BelongsToMany
+    public function users(): HasMany
     {
-        return $this->belongsToMany(User::class, 'user_live_attendances');
+        return $this->hasMany(User::class);
     }
 }
