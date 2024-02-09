@@ -89,7 +89,7 @@ class UserSeeder extends Seeder
         /** ================================================================= */
 
         Branch::all()->each(function ($branch) {
-            $faker = \Faker\Factory::create('id_ID');
+            // $faker = \Faker\Factory::create('id_ID');
             for ($i = 1; $i < 4; $i++) {
                 /** @var User $user */
                 $user = $branch->users()->create([
@@ -98,8 +98,8 @@ class UserSeeder extends Seeder
                     'password' => '12345678',
                     'type' => UserType::USER,
                     'nik' => rand(16, 100),
-                    'phone' => str_replace('(+62)','0', str_replace(' ', '', fake()->phoneNumber())),
-                    'birth_place' => fake()->city(),
+                    'phone' => "08569197717$i",
+                    'birth_place' => 'Jakarta',
                     'birthdate' => date('Y-m-d', strtotime('- 20 years')),
                     'marital_status' => MaritalStatus::SINGLE,
                     'blood_type' => BloodType::A,
