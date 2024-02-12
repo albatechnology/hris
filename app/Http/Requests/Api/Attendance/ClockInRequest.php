@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\AttendanceType;
+use App\Models\Schedule;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,7 +37,7 @@ class ClockInRequest extends FormRequest
     {
         return [
             'user_id' => 'nullable|exists:users,id',
-            'schedule_id' => 'required|exists:schedules,id',
+            'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
             'is_clock_in' => 'required|boolean',
             'time' => 'required|date_format:Y-m-d H:i:s',

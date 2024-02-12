@@ -65,8 +65,8 @@ class AttendanceController extends BaseController
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        $attendance = $user->attendances()->whereDate('time', date('Y-m-d'))->first();
-        if (!$attendance) return $this->errorResponse(message: "No attendance today", code: 404);
+        // $attendance = $user->attendances()->whereDate('time', date('Y-m-d'))->first();
+        // if (!$attendance) return $this->errorResponse(message: "No attendance today", code: 404);
         $attendance = Attendance::create($request->validated());
 
         return new AttendanceResource($attendance);
