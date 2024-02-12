@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('group_id')->nullable()->constrained();
             $table->foreignId('company_id')->nullable()->constrained();
             $table->foreignId('branch_id')->nullable()->constrained();
-            $table->foreignId('live_attendance_id')->nullable()->constrained('live_attendances');
+            $table->foreignId('live_attendance_id')->nullable()->constrained();
             $table->foreignId('manager_id')->nullable()->constrained('users');
             $table->string('name');
             $table->string('email')->unique();
