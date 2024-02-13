@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('timeoff_policy_id')->nullable()->constrained();
             $table->string('request_type');
             $table->timestamp('start_at');
-            $table->timestamp('end_at');
+            $table->timestamp('end_at')->nullable();
             $table->text('reason')->nullable();
             $table->foreignId('delegate_to')->nullable();
             $table->timestamps();

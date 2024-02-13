@@ -84,4 +84,9 @@ class Company extends BaseModel implements TenantedInterface
     {
         return $this->belongsTo(Group::class);
     }
+
+    public function supervisorType(): BelongsTo
+    {
+        return $this->belongsTo(SupervisorType::class);
+    }
 }
