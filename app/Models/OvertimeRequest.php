@@ -10,10 +10,10 @@ class OvertimeRequest extends BaseModel
     use BelongsToUser;
 
     protected $fillable = [
-        'overtime_id',
         'user_id',
-        'shift_id',
         'date',
+        'shift_id',
+        'overtime_id',
         'start_at',
         'end_at',
         'note',
@@ -23,13 +23,13 @@ class OvertimeRequest extends BaseModel
     ];
 
     protected $casts = [
-        'overtime_id' => 'integer',
         'user_id' => 'integer',
-        'shift_id' => 'integer',
         'date' => 'date',
-        'start_at' => 'time',
-        'end_at' => 'time',
-        'note' => 'text',
+        'shift_id' => 'integer',
+        'overtime_id' => 'integer',
+        'start_at' => 'datetime:H:i',
+        'end_at' => 'datetime:H:i',
+        'note' => 'string',
         'is_approved' => 'boolean',
         'approved_by' => 'integer',
         'approved_at' => 'datetime',

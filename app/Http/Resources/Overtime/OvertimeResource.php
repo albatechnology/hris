@@ -19,6 +19,7 @@ class OvertimeResource extends JsonResource
             'overtime_roundings' => OvertimeRoundingResource::collection($this->overtimeRoundings),
             'overtime_multipliers' => OvertimeMultiplierResource::collection($this->overtimeMultipliers),
             'overtime_allowances' => OvertimeAllowanceResource::collection($this->overtimeAllowances),
+            'overtime_formulas' => $this->overtimeFormulas->load('overtimeFormulaComponents', 'child'),
         ];
     }
 }

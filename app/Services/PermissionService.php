@@ -133,6 +133,12 @@ class PermissionService
                 'overtime_edit',
                 'overtime_delete',
             ],
+            'overtime_request_access' => [
+                'overtime_request_read',
+                'overtime_request_create',
+                'overtime_request_edit',
+                'overtime_request_delete',
+            ],
             'timeoff_policy_access' => [
                 'timeoff_policy_read',
                 'timeoff_policy_create',
