@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained();
+            $table->foreignId('company_id')->nullable()->constrained();
+            $table->boolean('is_dayoff')->default(0);
             $table->string('name');
             $table->time('clock_in');
             $table->time('clock_out')->nullable();

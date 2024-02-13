@@ -79,7 +79,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('users/{user}', [UserTimeoffPolicyController::class, 'destroy']);
     });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
+
+    Route::group(['prefix' => 'timeoffs/{timeoff}'], function () {
+        Route::put('approve', [TimeoffController::class, 'approve']);
+    });
     Route::apiResource('timeoffs', TimeoffController::class);
+
     Route::apiResource('overtimes', OvertimeController::class);
 
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {

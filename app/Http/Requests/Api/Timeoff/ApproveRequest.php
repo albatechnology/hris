@@ -7,14 +7,28 @@ use App\Traits\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreRequest extends FormRequest
+class ApproveRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_approved' => is_null($this->is_approved) ? null : $this->toBoolean($this->is_approved),
+        ]);
     }
 
     /**
@@ -25,13 +39,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
-            'timeoff_policy_id' => 'required|exists:timeoff_policies,id',
-            'request_type' => ['required', Rule::enum(TimeoffRequestType::class)],
-            'start_at' => 'required|date_format:Y-m-d H:i',
-            'end_at' => 'required|date_format:Y-m-d H:i',
-            'reason' => 'nullable|string',
-            'delegate_to' => 'nullable|exists:users,id',
+            'is_approved' => 'nullable|boolean',
         ];
     }
 }

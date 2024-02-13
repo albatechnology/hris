@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('shift_id')->constrained();
             $table->foreignId('timeoff_id')->nullable();
             $table->foreignId('event_id')->nullable();
+            $table->string('code')->nullable();
             $table->boolean('is_clock_in')->default(1);
             $table->timestamp('time');
             $table->string('type', 20);

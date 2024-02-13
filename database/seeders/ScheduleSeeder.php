@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
+use App\Models\Shift;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,6 +14,14 @@ class ScheduleSeeder extends Seeder
      */
     public function run(): void
     {
+        //global shift for dayoff
+        Shift::create([
+            'name' => 'dayoff',
+            'is_dayoff' => true,
+            'clock_in' => '00:00:00',
+            'clock_out' => '00:00:00',
+        ]);
+
         $dataShifts = [
             [
                 'name' => 'Shift Senin',

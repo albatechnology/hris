@@ -18,8 +18,11 @@ return new class extends Migration
             $table->string('request_type');
             $table->timestamp('start_at');
             $table->timestamp('end_at')->nullable();
-            $table->text('reason')->nullable();
             $table->foreignId('delegate_to')->nullable();
+            $table->text('reason')->nullable();
+            $table->boolean('is_approved')->nullable();
+            $table->foreignId('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
             $table->timestamps();
         });
     }

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
+use App\Models\Attendance;
 use App\Models\Timeoff;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -81,6 +84,38 @@ class TimeoffController extends BaseController
     {
         $timeoff = Timeoff::withTrashed()->findOrFail($id);
         $timeoff->restore();
+        return new TimeoffResource($timeoff);
+    }
+
+    public function approve(Timeoff $timeoff, ApproveRequest $request)
+    {
+        dump($request->validated());
+        dump($timeoff);
+        $originalIsApproved = $timeoff->is_approved;
+        $timeoff->is_approved = $request->is_approved;
+        if (!$timeoff->isDirty('is_approved')) {
+            return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
+        }
+
+        DB::beginTransaction();
+        try {
+            $timeoff->approved_by = auth('sanctum')->user()->id;
+            $timeoff->approved_at = now();
+            $timeoff->save();
+
+            if ($timeoff->is_approved) {
+                Attendance::create([
+
+                ]);
+            }
+            dump('silit');
+            dump($timeoff->getOriginal('is_approved'));
+            dd($timeoff);
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
         return new TimeoffResource($timeoff);
     }
 }

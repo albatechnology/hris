@@ -18,8 +18,11 @@ class Timeoff extends BaseModel
         'request_type',
         'start_at',
         'end_at',
-        'reason',
         'delegate_to',
+        'reason',
+        'is_approved',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
