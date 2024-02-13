@@ -145,6 +145,18 @@ class PermissionService
                 'live_attendance_edit',
                 'live_attendance_delete',
             ],
+            'supervisor_type_access' => [
+                'supervisor_type_read',
+                'supervisor_type_create',
+                'supervisor_type_edit',
+                'supervisor_type_delete',
+            ],
+            'national_holiday_access' => [
+                'national_holiday_read',
+                'national_holiday_create',
+                'national_holiday_edit',
+                'national_holiday_delete',
+            ],
         ];
     }
 
