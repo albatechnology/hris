@@ -70,6 +70,11 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(TimeoffPolicy::class);
     }
 
+    public function liveAttendances(): HasMany
+    {
+        return $this->hasMany(LiveAttendance::class);
+    }
+
     public function timeoffRegulations(): HasOne
     {
         return $this->hasOne(TimeoffRegulation::class);
@@ -78,5 +83,10 @@ class Company extends BaseModel implements TenantedInterface
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    public function supervisorType(): BelongsTo
+    {
+        return $this->belongsTo(SupervisorType::class);
     }
 }

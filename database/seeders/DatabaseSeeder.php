@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             ScheduleSeeder::class,
             UserSeeder::class,
+            LiveAttendanceSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 
