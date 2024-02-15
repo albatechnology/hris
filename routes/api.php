@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\OvertimeController;
+use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -86,6 +87,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('timeoffs', TimeoffController::class);
 
     Route::apiResource('overtimes', OvertimeController::class);
+    Route::apiResource('overtime-requests', OvertimeRequestController::class);
 
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
         Route::get('users', [LiveAttendanceController::class, 'users']);

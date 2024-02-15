@@ -47,4 +47,9 @@ class Overtime extends BaseModel
     {
         return $this->hasMany(OvertimeRounding::class);
     }
+
+    public function overtimeFormulas(): HasMany
+    {
+        return $this->hasMany(OvertimeFormula::class)->whereNull('parent_id');
+    }
 }

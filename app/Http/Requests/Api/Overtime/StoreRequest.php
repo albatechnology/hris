@@ -33,18 +33,24 @@ class StoreRequest extends FormRequest
             'rate_amount' => 'required|numeric',
 
             'overtime_roundings' => 'required_if:is_rounding,true|array',
-            'overtime_roundings.*.start_minute' => 'integer',
-            'overtime_roundings.*.end_minute' => 'integer|gt:overtime_roundings.*.start_minute',
-            'overtime_roundings.*.rounded' => 'integer',
+            'overtime_roundings.*.start_minute' => 'required_with:overtime_roundings|integer',
+            'overtime_roundings.*.end_minute' => 'required_with:overtime_roundings|integer|gt:overtime_roundings.*.start_minute',
+            'overtime_roundings.*.rounded' => 'required_with:overtime_roundings|integer',
 
             'overtime_multipliers' => 'required_without:compensation_rate_per_day|array',
-            'overtime_multipliers.*.is_weekday' => 'boolean',
-            'overtime_multipliers.*.start_hour' => 'integer',
-            'overtime_multipliers.*.end_hour' => 'integer|gt:overtime_multipliers.*.start_hour',
-            'overtime_multipliers.*.multiply' => 'integer',
+            'overtime_multipliers.*.is_weekday' => 'required_with:overtime_multipliers|boolean',
+            'overtime_multipliers.*.start_hour' => 'required_with:overtime_multipliers|integer',
+            'overtime_multipliers.*.end_hour' => 'required_with:overtime_multipliers|integer|gt:overtime_multipliers.*.start_hour',
+            'overtime_multipliers.*.multiply' => 'required_with:overtime_multipliers|integer',
 
-            'overtime_allowances' => 'required_without:overtime_allowances|nullable|array',
-            'overtime_allowances.*.amount' => 'required|numeric',
+            'overtime_allowances' => 'required_if:rate_type,allowances|array',
+            'overtime_allowances.*.amount' => 'required_with:overtime_allowances||numeric',
+
+            'overtime_formulas' => 'nullable|array',
+            'overtime_formulas.*.component' => 'required_with:overtime_formulas|string',
+            'overtime_formulas.*.value' => 'required_with:overtime_formulas|string',
+            'overtime_formulas.*.amount' => 'required_without:overtime_formulas.*.child',
+            'overtime_formulas.*.child' => 'required_without:overtime_formulas.*.amount|array',
         ];
     }
 }

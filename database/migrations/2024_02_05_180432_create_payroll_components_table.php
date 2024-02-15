@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('overtime_formulas', function (Blueprint $table) {
+        Schema::create('payroll_components', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('overtime_id')->constrained();
-            $table->integer('component');
-            $table->foreignId('parent_id')->constrained('overtime_formulas');
-            $table->unsignedFloat('amount')->default(0);
+            $table->string('name');
+            $table->string('type'); // PayrollComponentType::class
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('overtime_formulas');
+        Schema::dropIfExists('payroll_components');
     }
 };
