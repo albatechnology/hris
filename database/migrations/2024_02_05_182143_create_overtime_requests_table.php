@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('overtime_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('overtime_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('shift_id')->constrained();
             $table->date('date');
+            $table->foreignId('shift_id')->constrained();
+            $table->foreignId('overtime_id')->constrained();
             $table->time('start_at');
             $table->time('end_at');
             $table->text('note')->nullable();

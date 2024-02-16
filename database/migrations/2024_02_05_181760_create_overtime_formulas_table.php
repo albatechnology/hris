@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('overtime_allowances', function (Blueprint $table) {
+        Schema::create('overtime_formulas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('overtime_id')->constrained();
-            $table->foreignId('payroll_component_id')->constrained();
-            $table->unsignedDouble('amount', 13, 2)->default(0);
+            $table->foreignId('parent_id')->nullable()->constrained('overtime_formulas');
+            $table->string('component'); // FormulaComponent::class
+            $table->unsignedFloat('amount')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('overtime_allowances');
+        Schema::dropIfExists('overtime_formulas');
     }
 };

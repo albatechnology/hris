@@ -8,13 +8,13 @@ class OvertimeAllowance extends BaseModel
 {
     protected $fillable = [
         'overtime_id',
-        'payroll_category_id',
+        'payroll_component_id',
         'amount',
     ];
 
     protected $casts = [
         'overtime_id' => 'integer',
-        'payroll_category_id' => 'integer',
+        'payroll_component_id' => 'integer',
         'rate_amount' => 'float',
     ];
 
