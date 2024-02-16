@@ -45,6 +45,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
+    Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);
 
     Route::apiResource('groups', GroupController::class);
     Route::apiResource('companies', CompanyController::class);

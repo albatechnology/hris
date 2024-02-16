@@ -40,7 +40,7 @@ class PermissionService
     public static function permissions(): array
     {
         return [
-            'dashboard_access',
+            // 'dashboard_access',
 
             'user_access' => [
                 'user_read',
