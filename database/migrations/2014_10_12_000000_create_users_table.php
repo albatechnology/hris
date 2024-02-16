@@ -26,11 +26,6 @@ return new class extends Migration
             $table->string('type');
             $table->string('nik', 20)->nullable();
             $table->string('phone', 18)->nullable();
-            $table->string('birth_place')->nullable();
-            $table->string('birthdate')->nullable();
-            $table->string('marital_status')->nullable();
-            $table->string('blood_type')->nullable();
-            $table->string('religion')->nullable();
             $table->timestamps();
         });
     }

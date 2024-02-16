@@ -4,10 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Enums\Religion;
 use App\Enums\UserType;
-use App\Enums\MaritalStatus;
-use App\Enums\BloodType;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -44,11 +41,6 @@ class User extends Authenticatable implements TenantedInterface
         'type',
         'nik',
         'phone',
-        'birth_place',
-        'birthdate',
-        'marital_status',
-        'blood_type',
-        'religion',
     ];
 
     /**
@@ -70,9 +62,6 @@ class User extends Authenticatable implements TenantedInterface
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'type' => UserType::class,
-        'blood_type' => BloodType::class,
-        'religion' => Religion::class,
-        'marital_status' => MaritalStatus::class,
     ];
 
     protected static function booted(): void

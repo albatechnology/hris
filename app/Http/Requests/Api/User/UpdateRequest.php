@@ -2,9 +2,6 @@
 
 namespace App\Http\Requests\Api\User;
 
-use App\Enums\BloodType;
-use App\Enums\MaritalStatus;
-use App\Enums\Religion;
 use App\Enums\UserType;
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
@@ -39,11 +36,6 @@ class UpdateRequest extends FormRequest
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
             'phone' => 'nullable',
-            'birth_place' => 'nullable',
-            'birthdate' => 'nullable',
-            'marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
-            'blood_type' => ['nullable', Rule::enum(BloodType::class)],
-            'religion' => ['nullable', Rule::enum(Religion::class)],
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
 
