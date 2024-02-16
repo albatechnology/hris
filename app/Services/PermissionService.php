@@ -163,6 +163,12 @@ class PermissionService
                 'national_holiday_edit',
                 'national_holiday_delete',
             ],
+            'event_access' => [
+                'event_read',
+                'event_create',
+                'event_edit',
+                'event_delete',
+            ],
         ];
     }
 
