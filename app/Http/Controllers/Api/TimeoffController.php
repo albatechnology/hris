@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
 use App\Models\Attendance;
 use App\Models\Timeoff;
+use App\Services\ScheduleService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -55,6 +56,10 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
+        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
+            return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $timeoff = Timeoff::create($request->validated());
 
         return new TimeoffResource($timeoff);
@@ -62,6 +67,10 @@ class TimeoffController extends BaseController
 
     public function update(Timeoff $timeoff, StoreRequest $request)
     {
+        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
+            return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $timeoff->update($request->validated());
 
         return (new TimeoffResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
@@ -89,28 +98,46 @@ class TimeoffController extends BaseController
 
     public function approve(Timeoff $timeoff, ApproveRequest $request)
     {
-        dump($request->validated());
-        dump($timeoff);
-        $originalIsApproved = $timeoff->is_approved;
+        // dump($request->validated());
+        // dump($timeoff);
         $timeoff->is_approved = $request->is_approved;
         if (!$timeoff->isDirty('is_approved')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
 
+        $startSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->start_at);
+        $endSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->end_at);
+        if (!$startSchedule && !$endSchedule) {
+            return $this->errorResponse(message: sprintf('There is a schedule that cannot be found between %s and %s', $timeoff->start_at, $timeoff->end_at), code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $dateRange = new \DatePeriod(date_create($timeoff->start_at), new \DateInterval('P1D'), date_create($timeoff->end_at));
+
         DB::beginTransaction();
         try {
             $timeoff->approved_by = auth('sanctum')->user()->id;
             $timeoff->approved_at = now();
-            $timeoff->save();
 
-            if ($timeoff->is_approved) {
-                Attendance::create([
+            // 1. kalo pending, is_approved=null dan delete attendance
+            // 2. kalo approve, is_approved=1 dan create attendance
+            // 3. kalo reject, is_approved=0 dan delete attendance
 
-                ]);
+            if (is_null($timeoff->is_approved) || $timeoff->is_approved === false) {
+                Attendance::where('timeoff_id', $timeoff->id)->delete();
+            } else {
+                foreach ($dateRange as $date) {
+                    $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
+                    Attendance::create([
+                        'user_id' => $timeoff->user_id,
+                        'schedule_id' => $schedule->id,
+                        'shift_id' => $schedule->shift->shift_id,
+                        'timeoff_id' => $timeoff->id,
+                        'code' => $timeoff->timeoffPolicy->code,
+                    ]);
+                }
             }
-            dump('silit');
-            dump($timeoff->getOriginal('is_approved'));
-            dd($timeoff);
+
+            $timeoff->save();
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();

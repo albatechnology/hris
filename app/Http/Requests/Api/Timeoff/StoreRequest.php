@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Timeoff;
 
 use App\Enums\TimeoffRequestType;
-use App\Traits\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

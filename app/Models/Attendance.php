@@ -8,6 +8,7 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attendance extends BaseModel implements TenantedInterface
 {
@@ -20,19 +21,19 @@ class Attendance extends BaseModel implements TenantedInterface
         'timeoff_id',
         'event_id',
         'code',
-        'is_clock_in',
-        'time',
-        'type',
-        'is_approved',
-        'approved_by',
-        'lat',
-        'lng',
-        'note',
+        // 'is_clock_in',
+        // 'time',
+        // 'type',
+        // 'is_approved',
+        // 'approved_by',
+        // 'lat',
+        // 'lng',
+        // 'note',
     ];
 
     protected $casts = [
-        'is_clock_in' => 'boolean',
-        'type' => AttendanceType::class,
+        // 'is_clock_in' => 'boolean',
+        // 'type' => AttendanceType::class,
     ];
 
     protected static function booted(): void
@@ -80,5 +81,10 @@ class Attendance extends BaseModel implements TenantedInterface
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function details(): HasMany
+    {
+        return $this->hasMany(AttendanceDetail::class);
     }
 }

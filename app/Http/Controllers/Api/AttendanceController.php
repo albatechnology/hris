@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Attendance\ClockInRequest;
 use App\Http\Requests\Api\Attendance\ClockOutRequest;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -56,13 +57,34 @@ class AttendanceController extends BaseController
 
     public function clockIn(ClockInRequest $request)
     {
-        $attendance = Attendance::create($request->validated());
+        $attendance = Attendance::where('schedule_id', $request->schedule_id)
+            ->where('shift_id', $request->shift_id)
+            ->whereHas('details', fn ($q) => $q->whereDate('time', date('Y-m-d', strtotime($request->time))))
+            ->first();
+
+        // dump($attendance);
+
+        DB::beginTransaction();
+        try {
+            if (!$attendance) {
+                $attendance = Attendance::create($request->validated());
+            }
+
+            $attendance->details()->create($request->validated());
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new AttendanceResource($attendance);
     }
 
     public function clockOut(ClockOutRequest $request)
     {
+        dump($request->time);
+        dd($request->validated());
+
         /** @var User $user */
         $user = auth('sanctum')->user();
         // $attendance = $user->attendances()->whereDate('time', date('Y-m-d'))->first();
