@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\OvertimeStatus;
+use App\Observers\OvertimeRequestObserver;
 use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy([OvertimeRequestObserver::class])]
 class OvertimeRequest extends BaseModel
 {
     use BelongsToUser;
@@ -17,9 +21,9 @@ class OvertimeRequest extends BaseModel
         'start_at',
         'end_at',
         'note',
-        'is_approved',
-        'approved_by',
-        'approved_at',
+        'status',
+        'status_updated_by',
+        'status_changed_at',
     ];
 
     protected $casts = [
@@ -30,9 +34,9 @@ class OvertimeRequest extends BaseModel
         'start_at' => 'datetime:H:i',
         'end_at' => 'datetime:H:i',
         'note' => 'string',
-        'is_approved' => 'boolean',
-        'approved_by' => 'integer',
-        'approved_at' => 'datetime',
+        'status' => OvertimeStatus::class,
+        'status_updated_by' => 'integer',
+        'status_updated_at' => 'datetime',
     ];
 
     public function overtime(): BelongsTo
@@ -43,5 +47,10 @@ class OvertimeRequest extends BaseModel
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function statusUpdatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'status_updated_by', 'id');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
+use App\Http\Requests\Api\OvertimeRequest\UpdateStatusRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
 use Illuminate\Http\JsonResponse;
@@ -53,6 +54,19 @@ class OvertimeRequestController extends BaseController
                 'start_at' => $request->start_at,
                 'end_at' => $request->end_at,
                 'note' => $request->note,
+            ]);
+        } catch (\Exception $th) {
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return new OvertimeRequestResource($overtimeRequest);
+    }
+
+    public function updateStatus(UpdateStatusRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource | JsonResponse
+    {
+        try {
+            $overtimeRequest->update([
+                'status' => $request->status,
             ]);
         } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());

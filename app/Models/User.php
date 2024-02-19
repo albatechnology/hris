@@ -33,6 +33,7 @@ class User extends Authenticatable implements TenantedInterface
         'company_id',
         'branch_id',
         'live_attendance_id',
+        'overtime_id',
         'manager_id',
         'name',
         'email',
