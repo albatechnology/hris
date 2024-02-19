@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\UserEventController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -101,5 +102,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('live-attendances', LiveAttendanceController::class);
     Route::apiResource('supervisor-types', SupervisorTypeController::class);
     Route::apiResource('national-holidays', NationalHolidayController::class);
+
+    Route::group(['prefix' => 'events/{event}'], function () {
+        Route::post('users', [UserEventController::class, 'store']);
+        Route::delete('users/{user}', [UserEventController::class, 'destroy']);
+    });
     Route::apiResource('events', EventController::class);
 });
