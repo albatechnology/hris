@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Overtime\StoreRequest;
 use App\Http\Requests\Api\Overtime\UpdateRequest;
+use App\Http\Requests\Api\Overtime\UserSettingRequest;
 use App\Http\Resources\Overtime\OvertimeResource;
 use App\Models\Overtime;
 use App\Models\OvertimeFormula;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
@@ -51,7 +53,7 @@ class OvertimeController extends BaseController
         return new OvertimeResource($data);
     }
 
-    public static function syncOvertimeFormula(Overtime $overtime, array $overtimeFormulas, OvertimeFormula $parent = null): mixed
+    public static function syncOvertimeFormula(Overtime $overtime, array $overtimeFormulas, OvertimeFormula $parent = null)
     {
         foreach ($overtimeFormulas as $overtimeFormula) {
             if (isset($overtimeFormula['child']) && is_array($overtimeFormula['child'])) {
@@ -191,5 +193,18 @@ class OvertimeController extends BaseController
         }
 
         return $this->deletedResponse();
+    }
+
+    public function userSetting(UserSettingRequest $request): JsonResponse
+    {
+        try {
+            User::find($request->user_id)->update([
+                'overtime_id' => $request->overtime_id,
+            ]);
+        } catch (\Exception $th) {
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return $this->updatedResponse();
     }
 }

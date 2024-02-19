@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OvertimeStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,9 +21,9 @@ return new class extends Migration
             $table->time('start_at');
             $table->time('end_at');
             $table->text('note')->nullable();
-            $table->boolean('is_approved')->nullable()->comment('null = pending, 0 = rejected, 1 = approved');
-            $table->foreignId('approved_by')->nullable()->constrained('users');
-            $table->datetime('approved_at')->nullable();
+            $table->string('status')->nullable()->default(OvertimeStatus::PENDING)->comment('Enum from OvertimeStatus::class. Allowed value is (pending, approved, rejected).');
+            $table->foreignId('status_updated_by')->nullable()->constrained('users');
+            $table->datetime('status_updated_at')->nullable();
             $table->timestamps();
         });
     }
