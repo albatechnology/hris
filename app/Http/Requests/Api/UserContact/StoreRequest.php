@@ -28,15 +28,15 @@ class StoreRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(ContactType::class)],
-            'name' => 'required',
-            'id_number' => 'required',
-            'relationship' => ['required', Rule::enum(RelationshipType::class)],
-            'gender' => ['required', Rule::enum(Gender::class)],
-            'job' => 'required',
-            'religion' => ['required', Rule::enum(Religion::class)],
-            'birthdate' => 'required|date',
-            'email' => 'required|email',
+            'name' => 'required|string',
             'phone' => 'required',
+            'relationship' => ['required', Rule::enum(RelationshipType::class)],
+            'email' => 'nullable|email',
+            'id_number' => 'nullable|string',
+            'gender' => ['nullable', Rule::enum(Gender::class)],
+            'job' => 'nullable|string',
+            'religion' => ['nullable', Rule::enum(Religion::class)],
+            'birthdate' => 'nullable|date',
         ];
     }
 }
