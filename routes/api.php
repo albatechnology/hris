@@ -81,8 +81,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
     Route::apiResource('timeoffs', TimeoffController::class);
+
     Route::apiResource('overtimes', OvertimeController::class);
+    Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);
+
     Route::apiResource('overtime-requests', OvertimeRequestController::class);
+    Route::put('overtime-requests/{overtimeRequest}/update-status', [OvertimeRequestController::class, 'updateStatus']);
 
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
         Route::get('users', [LiveAttendanceController::class, 'users']);
