@@ -37,6 +37,15 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
         'is_unlimited_day' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $model) {
+            if (empty($model->code)) {
+                $model->code = collect(explode(' ', $model->name))->map(fn ($name) => strtoupper($name[0]))->join('');
+            }
+        });
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_timeoff_policies');

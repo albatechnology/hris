@@ -6,7 +6,7 @@ use App\Http\Requests\Api\Schedule\ScheduleShiftRequest;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
 use App\Models\Schedule;
-use App\Models\User;
+use App\Services\ScheduleService;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -93,19 +93,9 @@ class ScheduleController extends BaseController
 
     public function today()
     {
-        /** @var User $user */
-        $user = auth('sanctum')->user();
-        $schedule = $user->schedules()->whereDate('effective_date', '<=', date('Y-m-d'))->orderByDesc('effective_date')->first();
+        $schedule = ScheduleService::getTodaySchedule();
         if (!$schedule) return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
 
         return new ScheduleResource($schedule->load('shift.shift'));
-
-        // $schedule->load(['shifts' => fn ($q) => $q->orderByDesc('order')->limit(1)]);
-        // return new ScheduleResource($schedule);
-        // if ($schedule->shifts->count() <= 0) return response()->json(['message' => 'Shift not found'], Response::HTTP_NOT_FOUND);
-        // return response()->json($schedule);
-        // $shift = $schedule->shifts->first();
-        // dd($shift);
-        // return new ShiftResource($shift);
     }
 }

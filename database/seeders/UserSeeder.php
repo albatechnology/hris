@@ -99,11 +99,11 @@ class UserSeeder extends Seeder
                     'type' => UserType::USER,
                     'nik' => rand(16, 100),
                     'phone' => "08569197717$i",
-                    'birth_place' => 'Jakarta',
-                    'birthdate' => date('Y-m-d', strtotime('- 20 years')),
-                    'marital_status' => MaritalStatus::SINGLE,
-                    'blood_type' => BloodType::A,
-                    'religion' => Religion::ISLAM
+                    // 'birth_place' => 'Jakarta',
+                    // 'birthdate' => date('Y-m-d', strtotime('- 20 years')),
+                    // 'marital_status' => MaritalStatus::SINGLE,
+                    // 'blood_type' => BloodType::A,
+                    // 'religion' => Religion::ISLAM
                 ]);
                 $user->branches()->create(['branch_id' => $user->branch_id]);
                 $user->companies()->create(['company_id' => $user->company_id]);

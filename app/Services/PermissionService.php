@@ -40,7 +40,7 @@ class PermissionService
     public static function permissions(): array
     {
         return [
-            'dashboard_access',
+            // 'dashboard_access',
 
             'user_access' => [
                 'user_read',
@@ -162,6 +162,12 @@ class PermissionService
                 'national_holiday_create',
                 'national_holiday_edit',
                 'national_holiday_delete',
+            ],
+            'event_access' => [
+                'event_read',
+                'event_create',
+                'event_edit',
+                'event_delete',
             ],
         ];
     }

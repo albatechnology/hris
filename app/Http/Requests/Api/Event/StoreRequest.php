@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Requests\Api\Timeoff;
+namespace App\Http\Requests\Api\Event;
 
-use App\Enums\TimeoffRequestType;
+use App\Enums\EventType;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,13 +25,14 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
-            'timeoff_policy_id' => 'required|exists:timeoff_policies,id',
-            'request_type' => ['required', Rule::enum(TimeoffRequestType::class)],
-            'start_at' => 'required|date_format:Y-m-d H:i',
-            'end_at' => 'required|date_format:Y-m-d H:i',
-            'reason' => 'nullable|string',
-            'delegate_to' => 'nullable|exists:users,id',
+            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'name' => 'required|string',
+            'type' => ['nullable', Rule::enum(EventType::class)],
+            'start_at' => 'required|date_format:Y-m-d',
+            'end_at' => 'required|date_format:Y-m-d',
+            'is_public' => 'required|boolean',
+            'is_send_email' => 'required|boolean',
+            'description' => 'required|string',
         ];
     }
 }

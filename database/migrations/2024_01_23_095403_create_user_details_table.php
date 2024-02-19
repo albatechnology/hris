@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained();
             $table->string('no_ktp', 20)->nullable();
             $table->string('kk_no')->nullable();
+            $table->text('address', 20)->nullable();
+            $table->text('address_ktp', 20)->nullable();
             $table->string('job_position')->nullable();
             $table->string('job_level')->nullable();
             $table->string('employment_status')->nullable();
@@ -23,7 +25,13 @@ return new class extends Migration
             $table->date('sign_date')->nullable();
             $table->string('passport_no')->nullable();
             $table->date('passport_expired')->nullable();
-            $table->text('address', 20)->nullable();
+            $table->string('birth_place')->nullable();
+            $table->string('birthdate')->nullable();
+            $table->string('marital_status')->nullable();
+            $table->string('blood_type')->nullable();
+            $table->string('religion')->nullable();
+            $table->string('batik_size')->nullable();
+            $table->string('tshirt_size')->nullable();
             $table->timestamps();
         });
     }

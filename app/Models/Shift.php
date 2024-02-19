@@ -12,6 +12,7 @@ class Shift extends BaseModel implements TenantedInterface
 
     protected $fillable = [
         'company_id',
+        'is_dayoff',
         'name',
         'clock_in',
         'clock_out',
@@ -31,6 +32,7 @@ class Shift extends BaseModel implements TenantedInterface
     ];
 
     protected $casts = [
+        'is_dayoff' => 'boolean',
         'is_enable_validation' => 'boolean',
         'is_enable_grace_period' => 'boolean',
         'is_enable_auto_overtime' => 'boolean',
