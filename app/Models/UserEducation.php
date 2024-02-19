@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\EducationLevel;
 use App\Enums\EducationType;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 
 class UserEducation extends BaseModel
 {

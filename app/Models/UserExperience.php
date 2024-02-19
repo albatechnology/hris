@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 
 class UserExperience extends BaseModel
 {

@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Schedule extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted;
+    use CustomSoftDeletes, CompanyTenanted;
 
     protected $fillable = [
         'company_id',
@@ -19,6 +20,7 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_overide_company_holiday',
         'is_include_late_in',
         'is_include_early_out',
+        'deleted_by',
     ];
 
     protected $casts = [

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\TimeoffPolicy;
 
 use App\Enums\TimeoffPolicyType;
 use App\Rules\CompanyTenantedRule;
-use App\Traits\RequestToBoolean;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

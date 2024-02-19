@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\Api\Attendance\ClockInRequest;
-use App\Http\Requests\Api\Attendance\ClockOutRequest;
+use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use App\Services\AttendanceService;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -55,14 +55,9 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
-    public function clockIn(ClockInRequest $request)
+    public function store(StoreRequest $request)
     {
-        $attendance = Attendance::where('schedule_id', $request->schedule_id)
-            ->where('shift_id', $request->shift_id)
-            ->whereHas('details', fn ($q) => $q->whereDate('time', date('Y-m-d', strtotime($request->time))))
-            ->first();
-
-        // dump($attendance);
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
 
         DB::beginTransaction();
         try {
@@ -80,32 +75,14 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
-    public function clockOut(ClockOutRequest $request)
-    {
-        dump($request->time);
-        dd($request->validated());
-
-        /** @var User $user */
-        $user = auth('sanctum')->user();
-        // $attendance = $user->attendances()->whereDate('time', date('Y-m-d'))->first();
-        // if (!$attendance) return $this->errorResponse(message: "No attendance today", code: 404);
-        $attendance = Attendance::create($request->validated());
-
-        return new AttendanceResource($attendance);
-    }
-
     public function destroy(Attendance $attendance)
     {
-        if ($attendance->id == 1) return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
-        // abort_if(!auth()->Attendance()->tokenCan('attendance_delete'), 403);
         $attendance->delete();
         return $this->deletedResponse();
     }
 
     public function forceDelete($id)
     {
-        if ($id == 1) return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
-        // abort_if(!auth()->Attendance()->tokenCan('attendance_delete'), 403);
         $attendance = Attendance::withTrashed()->findOrFail($id);
         $attendance->forceDelete();
         return $this->deletedResponse();
@@ -113,7 +90,6 @@ class AttendanceController extends BaseController
 
     public function restore($id)
     {
-        // abort_if(!auth()->Attendance()->tokenCan('attendance_access'), 403);
         $attendance = Attendance::withTrashed()->findOrFail($id);
         $attendance->restore();
         return new AttendanceResource($attendance);

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
 
 class SupervisorType extends BaseModel implements TenantedInterface
 {

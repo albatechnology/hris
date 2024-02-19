@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AttendanceType;
+use App\Enums\Gender;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GroupController;
@@ -61,15 +63,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'schedules/{schedule}'], function () {
         Route::put('shifts', [ScheduleController::class, 'updateShifts']);
         Route::post('users', [UserScheduleController::class, 'store']);
+        Route::put('restore', [ScheduleController::class, 'restore']);
+        Route::delete('force-delete', [ScheduleController::class, 'forceDelete']);
         Route::delete('users/{user}', [UserScheduleController::class, 'destroy']);
     });
     Route::apiResource('schedules', ScheduleController::class);
 
-    Route::group(['prefix' => 'attendances'], function () {
-        Route::post('clock-in', [AttendanceController::class, 'clockIn']);
-        Route::post('clock-out', [AttendanceController::class, 'clockOut']);
-    });
-    Route::apiResource('attendances', AttendanceController::class)->except('store', 'update');
+    Route::apiResource('attendances', AttendanceController::class)->except('update');
 
     Route::group(['prefix' => 'timeoff-regulations/{timeoff_regulation}'], function () {
         Route::apiResource('periods/{period}/months', TimeoffRegulationMonthController::class);

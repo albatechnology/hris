@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\TimeoffRequestType;
 use App\Enums\UserType;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

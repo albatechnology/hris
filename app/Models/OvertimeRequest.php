@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OvertimeRequest extends BaseModel

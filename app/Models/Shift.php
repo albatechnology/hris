@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Shift extends BaseModel implements TenantedInterface

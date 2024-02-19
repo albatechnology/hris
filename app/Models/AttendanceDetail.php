@@ -14,6 +14,7 @@ class AttendanceDetail extends BaseModel
         'type',
         'is_approved',
         'approved_by',
+        'approved_at',
         'lat',
         'lng',
         'note',

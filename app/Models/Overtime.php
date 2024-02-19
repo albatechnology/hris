@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RateType;
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Overtime extends BaseModel

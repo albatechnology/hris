@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EventType;
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model

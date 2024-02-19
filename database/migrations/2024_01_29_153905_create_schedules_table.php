@@ -21,6 +21,10 @@ return new class extends Migration
             $table->boolean('is_include_late_in')->default(0);
             $table->boolean('is_include_early_out')->default(0);
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 
