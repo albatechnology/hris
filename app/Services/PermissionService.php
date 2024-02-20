@@ -169,6 +169,18 @@ class PermissionService
                 'event_edit',
                 'event_delete',
             ],
+            'custom_field_access' => [
+                'custom_field_read',
+                'custom_field_create',
+                'custom_field_edit',
+                'custom_field_delete',
+            ],
+            'user_custom_field_access' => [
+                'user_custom_field_read',
+                'user_custom_field_create',
+                'user_custom_field_edit',
+                'user_custom_field_delete',
+            ],
         ];
     }
 

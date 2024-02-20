@@ -89,4 +89,9 @@ class Company extends BaseModel implements TenantedInterface
     {
         return $this->belongsTo(SupervisorType::class);
     }
+
+    public function customFields(): HasMany
+    {
+        return $this->hasMany(CustomField::class);
+    }
 }

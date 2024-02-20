@@ -32,6 +32,8 @@ use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\UserEventController;
+use App\Http\Controllers\Api\CustomFieldController;
+use App\Http\Controllers\Api\UserCustomFieldController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -108,4 +110,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('users/{user}', [UserEventController::class, 'destroy']);
     });
     Route::apiResource('events', EventController::class);
+    Route::apiResource('custom-fields', CustomFieldController::class);
+    Route::apiResource('user-custom-fields', UserCustomFieldController::class);
 });
