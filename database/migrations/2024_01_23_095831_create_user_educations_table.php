@@ -16,10 +16,12 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->string('type');
             $table->string('level');
+            $table->string('name')->nullable();
             $table->string('institution_name');
             $table->string('majors');
             $table->date('start_date');
             $table->date('end_date');
+            $table->date('expired_date')->nullable();
             $table->string('score')->nullable();
             $table->unsignedDouble('fee', 12, 2)->nullable();
             $table->timestamps();
