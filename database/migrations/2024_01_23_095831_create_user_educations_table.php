@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->string('score')->nullable();
-            $table->unsignedDouble('fee', 12, 2)->nullable(0);
+            $table->unsignedDouble('fee', 12, 2)->nullable();
             $table->timestamps();
         });
     }
