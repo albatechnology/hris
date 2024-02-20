@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('majors');
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('score');
-            $table->double('fee', 12, 2, true)->default(0);
+            $table->string('score')->nullable();
+            $table->unsignedDouble('fee', 12, 2)->nullable(0);
             $table->timestamps();
         });
     }

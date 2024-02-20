@@ -28,7 +28,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'is_allow_halfday' => $this->toBoolean($this->is_allow_halfday),
+            // 'is_allow_halfday' => $this->toBoolean($this->is_allow_halfday),
             'is_expired_in_end_period' => $this->toBoolean($this->is_expired_in_end_period),
         ]);
     }
@@ -47,7 +47,7 @@ class StoreRequest extends FormRequest
             'start_period' => 'nullable|string|date_format:m-d',
             'end_period' => 'nullable|string|date_format:m-d',
             'max_consecutively_day' => 'nullable|integer',
-            'is_allow_halfday' => 'nullable|boolean',
+            // 'is_allow_halfday' => 'nullable|boolean',
             'is_expired_in_end_period' => 'nullable|boolean',
             'expired_max_month' => 'nullable|integer',
             'min_working_month' => 'required|integer',
