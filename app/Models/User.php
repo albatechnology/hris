@@ -203,6 +203,16 @@ class User extends Authenticatable implements TenantedInterface
         return $this->belongsToMany(Event::class, 'user_events', 'user_id', 'event_id');
     }
 
+    // public function customFields(): BelongsToMany
+    // {
+    //     return $this->belongsToMany(CustomField::class, 'user_custom_fields', 'user_id', 'custom_field_id');
+    // }
+
+    public function customFields(): HasMany
+    {
+        return $this->hasMany(UserCustomField::class);
+    }
+
     public function getIsSuperAdminAttribute(): bool
     {
         return $this->type->is(UserType::SUPER_ADMIN);
