@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\FieldType;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CustomField extends Model
 {
@@ -15,18 +14,13 @@ class CustomField extends Model
         'company_id',
         'key',
         'type',
-        'values',
+        'options',
     ];
 
     protected $casts = [
         'company_id' => 'integer',
         'key' => 'string',
         'type' => FieldType::class,
-        'values' => 'array',
+        'options' => 'array',
     ];
-
-    public function customFields(): BelongsToMany
-    {
-        return $this->belongsToMany(CustomFields::class, 'user_custom_fields', 'custom_field_id', 'user_id');
-    }
 }

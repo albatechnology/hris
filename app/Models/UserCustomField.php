@@ -16,12 +16,6 @@ class UserCustomField extends Model
         'value',
     ];
 
-    protected $casts = [
-        'custom_field_id' => 'string',
-        'user_id' => 'string',
-        'value' => 'string',
-    ];
-
     public function customField(): BelongsTo
     {
         return $this->belongsTo(CustomField::class);

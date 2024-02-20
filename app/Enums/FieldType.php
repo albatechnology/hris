@@ -9,4 +9,12 @@ enum FieldType: string
     case TEXT = 'text';
     case DATE = 'date';
     case SELECT = 'select';
+
+    public function getValidationRules(): string
+    {
+        return match ($this) {
+            self::DATE => 'required|date',
+            default => 'required|string',
+        };
+    }
 }

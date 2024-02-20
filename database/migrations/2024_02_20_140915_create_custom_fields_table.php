@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('key');
             $table->string('type');
-            $table->text('values')->nullable();
+            $table->text('options')->nullable();
             $table->timestamps();
         });
     }

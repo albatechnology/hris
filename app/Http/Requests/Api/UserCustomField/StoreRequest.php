@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests\Api\UserCustomField;
 
-use App\Enums\FieldType;
-use App\Rules\CompanyTenantedRule;
+use App\Models\CustomField;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -24,8 +22,10 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
+        $customField = CustomField::findOrFail($this->custom_field_id);
         return [
-            'value' => 'required|string',
+            'custom_field_id' => 'required|string',
+            'value' => $customField->type->getValidationRules(),
         ];
     }
 }

@@ -48,6 +48,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);
+        Route::apiResource('custom-fields', UserCustomFieldController::class)->except('destroy');
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
@@ -111,5 +112,4 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('events', EventController::class);
     Route::apiResource('custom-fields', CustomFieldController::class);
-    Route::apiResource('user-custom-fields', UserCustomFieldController::class);
 });

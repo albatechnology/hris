@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests\Api\UserCustomField;
 
-use App\Enums\FieldType;
-use App\Rules\CompanyTenantedRule;
+use App\Models\CustomField;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
@@ -25,7 +23,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'value' => 'required|string',
+            'value' => $this->custom_field->customField->type->getValidationRules(),
         ];
     }
 }

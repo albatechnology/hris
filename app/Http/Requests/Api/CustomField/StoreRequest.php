@@ -28,7 +28,7 @@ class StoreRequest extends FormRequest
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'key' => 'required|string',
             'type' => ['nullable', Rule::enum(FieldType::class)],
-            'values' => 'nullable|array',
+            'options' => 'nullable|array',
         ];
     }
 }

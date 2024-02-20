@@ -30,7 +30,7 @@ class CustomFieldController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'key', 'type', 'values', 'created_at'
+                'id', 'company_id', 'key', 'type', 'options', 'created_at'
             ])
             ->paginate($this->per_page);
 

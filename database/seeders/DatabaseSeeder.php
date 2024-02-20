@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             LiveAttendanceSeeder::class,
             TimeoffPolicySeeder::class,
+            CustomFieldSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 

@@ -3,75 +3,57 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\UserCustomField\StoreRequest;
+use App\Http\Requests\Api\UserCustomField\UpdateRequest;
 use App\Http\Resources\UserCustomField\UserCustomFieldResource;
+use App\Models\CustomField;
+use App\Models\User;
 use App\Models\UserCustomField;
 use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class UserCustomFieldController extends BaseController
 {
-    public function __construct()
+    public function index(User $user)
     {
-        parent::__construct();
-        //  $this->middleware('permission:user_cumtom_field_access', ['only' => ['restore']]);
-        //  $this->middleware('permission:user_cumtom_field_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:user_cumtom_field_create', ['only' => 'store']);
-        $this->middleware('permission:user_cumtom_field_edit', ['only' => 'update']);
-        //  $this->middleware('permission:user_cumtom_field_delete', ['only' => ['destroy', 'forceDelete']]);
+        $customFields = CustomField::tenanted()->get();
+
+        $customFields = $customFields->map(function ($customField) use ($user) {
+            $userCustomField = $user->customFields()->where('custom_field_id', $customField->id)->first();
+            $customField->custom_field_id = $customField->id;
+            $customField->id = null;
+            $customField->value = null;
+
+            if ($userCustomField) {
+                $customField->id = $userCustomField->id;
+                $customField->value = $userCustomField->value;
+            }
+
+            return $customField;
+        });
+
+        return UserCustomFieldResource::collection($customFields);
     }
 
-    public function index()
+    public function show(User $user, UserCustomField $customField)
     {
-        $data = QueryBuilder::for(UserCustomField::tenanted())
-            ->allowedFilters([
-                AllowedFilter::exact('id'),
-                AllowedFilter::exact('user_id'),
-            ])
-            ->allowedSorts([
-                'id', 'custom_field_id', 'user_id', 'value', 'created_at'
-            ])
-            ->paginate($this->per_page);
-
-        return UserCustomFieldResource::collection($data);
-    }
-
-    public function show(UserCustomField $userCustomField)
-    {
+        $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
         return new UserCustomFieldResource($userCustomField);
     }
 
-    public function store(StoreRequest $request)
+    public function store(User $user, StoreRequest $request)
     {
-        $userCustomField = UserCustomField::create($request->validated());
+        $userCustomField = $user->customFields()->where('custom_field_id', $request->custom_field_id)->exists();
+        if ($userCustomField) return $this->errorResponse('Custom field already exists', code: Response::HTTP_BAD_REQUEST);
+
+        $userCustomField = $user->customFields()->create($request->validated());
 
         return new UserCustomFieldResource($userCustomField);
     }
 
-    public function update(UserCustomField $userCustomField, StoreRequest $request)
+    public function update(User $user, UserCustomField $customField, UpdateRequest $request)
     {
+        $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
         $userCustomField->update($request->validated());
 
         return (new UserCustomFieldResource($userCustomField))->response()->setStatusCode(Response::HTTP_ACCEPTED);
-    }
-
-    public function destroy(UserCustomField $userCustomField)
-    {
-        $userCustomField->delete();
-        return $this->deletedResponse();
-    }
-
-    public function forceDelete($id)
-    {
-        $userCustomField = UserCustomField::withTrashed()->findOrFail($id);
-        $userCustomField->forceDelete();
-        return $this->deletedResponse();
-    }
-
-    public function restore($id)
-    {
-        $userCustomField = UserCustomField::withTrashed()->findOrFail($id);
-        $userCustomField->restore();
-        return new UserCustomFieldResource($userCustomField);
     }
 }
