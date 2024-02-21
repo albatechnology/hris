@@ -2,48 +2,43 @@
 
 namespace App\Models;
 
-use App\Enums\FormulaComponent;
-use App\Traits\TreeStructure;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\FormulaComponentEnum;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class OvertimeFormula extends BaseModel
+class Formula extends BaseModel
 {
     protected $fillable = [
-        'overtime_id',
+        'formulaable_type',
+        'formulaable_id',
         'parent_id',
         'component',
         'amount',
     ];
 
     protected $casts = [
-        'overtime_id' => 'integer',
+        'formulaable_type' => 'string',
+        'formulaable_id' => 'integer',
         'parent_id' => 'integer',
-        'component' => FormulaComponent::class,
-        'amount' => 'float',
+        'component' => FormulaComponentEnum::class,
+        'amount' => 'double',
     ];
 
-    public function overtime(): BelongsTo
+    public function formulaComponents(): HasMany
     {
-        return $this->belongsTo(Overtime::class);
-    }
-
-    public function overtimeFormulaComponents(): HasMany
-    {
-        return $this->hasMany(OvertimeFormulaComponent::class);
+        return $this->hasMany(FormulaComponent::class);
     }
 
     // recursive
     // loads only 1st level children
     public function mainChild()
     {
-        return $this->hasMany($this, 'parent_id', 'id')->with('overtimeFormulaComponents');
+        return $this->hasMany($this, 'parent_id', 'id')->with('formulaComponents');
     }
 
     // recursive, loads all children
     public function child()
     {
-        return $this->mainChild()->with('child.overtimeFormulaComponents');
+        return $this->mainChild()->with('child.formulaComponents');
     }
 
     // load 1st level parent

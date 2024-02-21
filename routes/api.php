@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\UserCustomFieldController;
@@ -100,6 +101,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('approve', [TimeoffController::class, 'approve']);
     });
     Route::apiResource('timeoffs', TimeoffController::class);
+
+    Route::apiResource('payroll-components', PayrollComponentController::class);
 
     Route::apiResource('overtimes', OvertimeController::class);
     Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);

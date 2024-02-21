@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources\Overtime;
+namespace App\Http\Resources\PayrollComponent;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class OvertimeAllowanceResource  extends JsonResource
+class PayrollComponentResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,7 +16,7 @@ class OvertimeAllowanceResource  extends JsonResource
     {
         return [
             ...parent::toArray($request),
-            'payroll_component' => $this->payrollComponent,
+            'formulas' => $this->formulas->load('formulaComponents', 'child'),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Overtime;
 
+use App\Http\Resources\Formula\FormulaResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +20,7 @@ class OvertimeResource extends JsonResource
             'overtime_roundings' => OvertimeRoundingResource::collection($this->overtimeRoundings),
             'overtime_multipliers' => OvertimeMultiplierResource::collection($this->overtimeMultipliers),
             'overtime_allowances' => OvertimeAllowanceResource::collection($this->overtimeAllowances),
-            'overtime_formulas' => $this->overtimeFormulas->load('overtimeFormulaComponents', 'child'),
+            'formulas' => $this->formulas->load('formulaComponents', 'child'),
         ];
     }
 }

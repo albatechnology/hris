@@ -6,10 +6,14 @@ use App\Http\Requests\Api\Overtime\StoreRequest;
 use App\Http\Requests\Api\Overtime\UpdateRequest;
 use App\Http\Requests\Api\Overtime\UserSettingRequest;
 use App\Http\Resources\Overtime\OvertimeResource;
+use App\Models\Formula;
 use App\Models\Overtime;
 use App\Models\OvertimeFormula;
 use App\Models\User;
+use App\Services\FormulaService;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -48,53 +52,42 @@ class OvertimeController extends BaseController
 
     public function show(Overtime $overtime): OvertimeResource
     {
-        $data = QueryBuilder::for(Overtime::findTenanted($overtime->id))->allowedIncludes(['company'])->firstOrFail();
-
-        return new OvertimeResource($data);
+        return new OvertimeResource($overtime);
     }
 
-    public static function syncOvertimeFormula(Overtime $overtime, array $overtimeFormulas, OvertimeFormula $parent = null)
-    {
-        foreach ($overtimeFormulas as $overtimeFormula) {
-            if (isset($overtimeFormula['child']) && is_array($overtimeFormula['child'])) {
-                $newOvertimeFormula = $overtime->overtimeFormulas()->create([
-                    'parent_id' => $parent->id ?? null,
-                    'component' => $overtimeFormula['component'],
-                    'amount' => $overtimeFormula['amount'] ?? null,
-                ]);
-
-                self::syncOvertimeFormula($overtime, $overtimeFormula['child'], $newOvertimeFormula);
-            } else {
-                $newOvertimeFormula = $overtime->overtimeFormulas()->create([
-                    'parent_id' => $parent->id ?? null,
-                    'component' => $overtimeFormula['component'],
-                    'amount' => $overtimeFormula['amount'],
-                ]);
-            }
-
-            collect(explode(",", $overtimeFormula['value']))->each(function ($overtimeFormulaValue) use ($newOvertimeFormula) {
-                $newOvertimeFormula->overtimeFormulaComponents()->create([
-                    'value' => $overtimeFormulaValue
-                ]);
-            });
-        }
-    }
-
-    public function store(StoreRequest $request): OvertimeResource | JsonResponse
+    public static function validateBeforeSaving(Request $request)
     {
         // check correct order for overtime rounding hours
         collect($request->overtime_roundings)->each(function ($overtimeRounding, $i) use ($request) {
             if ($i > 0 && $overtimeRounding['start_minute'] <= $request->overtime_roundings[$i - 1]['end_minute']) {
-                return $this->errorResponse('start_minute and end_minute between the overtime_roundings are not in the correct order, please check it first');
+                response()->json(['message' => 'start_minute and end_minute between the overtime_roundings are not in the correct order, please check it first'], 500)->send();
+                die;
             }
         });
 
         // check correct order for overtime multiplier hours
         collect($request->overtime_multipliers)->each(function ($overtimeMultiplier, $i) use ($request) {
             if ($i > 0 && $overtimeMultiplier['start_hour'] <= $request->overtime_multipliers[$i - 1]['end_hour']) {
-                return $this->errorResponse('start_hour and end_hour between the overtime_multipliers are not in the correct order, please check it first');
+                response()->json(['message' => 'start_hour and end_hour between the overtime_multipliers are not in the correct order, please check it first'], 500)->send();
+                die;
             }
         });
+    }
+
+    public static function saveRelationship(Overtime $overtime, Request $request)
+    {
+        $overtime->overtimeRoundings()->delete();
+        $overtime->overtimeMultipliers()->delete();
+        $overtime->overtimeAllowances()->delete();
+
+        if ($request->overtime_roundings) $overtime->overtimeRoundings()->createMany($request->overtime_roundings);
+        if ($request->overtime_multipliers) $overtime->overtimeMultipliers()->createMany($request->overtime_multipliers);
+        if ($request->overtime_allowances) $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
+    }
+
+    public function store(StoreRequest $request): OvertimeResource | JsonResponse
+    {
+        self::validateBeforeSaving($request);
 
         DB::beginTransaction();
         try {
@@ -107,10 +100,9 @@ class OvertimeController extends BaseController
                 'rate_amount' => $request->rate_amount,
             ]);
 
-            if ($request->overtime_roundings) $overtime->overtimeRoundings()->createMany($request->overtime_roundings);
-            if ($request->overtime_multiplier) $overtime->overtimeMultiplier()->createMany($request->overtime_multiplier);
-            if ($request->overtime_allowances) $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
-            if ($request->overtime_formulas) self::syncOvertimeFormula($overtime, $request->overtime_formulas);
+            self::saveRelationship($overtime, $request);
+
+            FormulaService::sync($overtime, $request->formulas);
 
             DB::commit();
         } catch (\Exception $th) {
@@ -118,24 +110,12 @@ class OvertimeController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return new OvertimeResource($overtime);
+        return new OvertimeResource($overtime->refresh());
     }
 
     public function update(Overtime $overtime, UpdateRequest $request): OvertimeResource | JsonResponse
     {
-        // check correct order for overtime rounding hours
-        collect($request->overtime_roundings)->each(function ($overtimeRounding, $i) use ($request) {
-            if ($i > 0 && $overtimeRounding['start_minute'] <= $request->overtime_roundings[$i - 1]['end_minute']) {
-                return $this->errorResponse('start_minute and end_minute between the overtime_roundings are not in the correct order, please check it first');
-            }
-        });
-
-        // check correct order for overtime multiplier hours
-        collect($request->overtime_multipliers)->each(function ($overtimeMultiplier, $i) use ($request) {
-            if ($i > 0 && $overtimeMultiplier['start_hour'] <= $request->overtime_multipliers[$i - 1]['end_hour']) {
-                return $this->errorResponse('start_hour and end_hour between the overtime_multipliers are not in the correct order, please check it first');
-            }
-        });
+        self::validateBeforeSaving($request);
 
         DB::beginTransaction();
         try {
@@ -148,22 +128,9 @@ class OvertimeController extends BaseController
                 'rate_amount' => $request->rate_amount,
             ]);
 
-            $overtime->overtimeRoundings()->delete();
-            if ($request->overtime_roundings) $overtime->overtimeRoundings()->createMany($request->overtime_roundings);
+            self::saveRelationship($overtime, $request);
 
-            $overtime->overtimeMultipliers()->delete();
-            if ($request->overtime_multiplier) $overtime->overtimeMultiplier()->createMany($request->overtime_multiplier);
-
-            $overtime->overtimeAllowances()->delete();
-            if ($request->overtime_allowances) $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
-
-            foreach ($overtime->overtimeFormulas as $overtimeFormula) {
-                Schema::disableForeignKeyConstraints();
-                $overtimeFormula->overtimeFormulaComponents()->delete();
-                $overtimeFormula->delete();
-                Schema::enableForeignKeyConstraints();
-            }
-            if ($request->overtime_formulas) self::syncOvertimeFormula($overtime, $request->overtime_formulas);
+            FormulaService::sync($overtime, $request->formulas);
 
             DB::commit();
         } catch (\Exception $th) {
@@ -171,22 +138,23 @@ class OvertimeController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new OvertimeResource($overtime))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new OvertimeResource($overtime->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(Overtime $overtime): JsonResponse
     {
+        DB::beginTransaction();
         try {
-            Schema::disableForeignKeyConstraints();
+            // sync formula with empty data []
+            FormulaService::sync($overtime, []);
 
-            foreach ($overtime->overtimeFormulas as $overtimeFormula) {
-                $overtimeFormula->overtimeFormulaComponents()->delete();
-                $overtimeFormula->delete();
-            }
-
+            // delete overtime
+            $overtime->overtimeRoundings()->delete();
+            $overtime->overtimeMultipliers()->delete();
+            $overtime->overtimeAllowances()->delete();
             $overtime->delete();
 
-            Schema::enableForeignKeyConstraints();
+            DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
             return $this->errorResponse($th->getMessage());

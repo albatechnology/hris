@@ -38,23 +38,13 @@ class OvertimeRequestController extends BaseController
 
     public function show(OvertimeRequest $overtimeRequest): OvertimeRequestResource
     {
-        $data = QueryBuilder::for(OvertimeRequest::where('id', $overtimeRequest->id))->firstOrFail();
-
-        return new OvertimeRequestResource($data);
+        return new OvertimeRequestResource($overtimeRequest);
     }
 
     public function store(StoreRequest $request): OvertimeRequestResource | JsonResponse
     {
         try {
-            $overtimeRequest = OvertimeRequest::create([
-                'user_id' => $request->user_id,
-                'date' => $request->date,
-                'shift_id' => $request->shift_id,
-                'overtime_id' => $request->overtime_id,
-                'start_at' => $request->start_at,
-                'end_at' => $request->end_at,
-                'note' => $request->note,
-            ]);
+            $overtimeRequest = OvertimeRequest::create($request->validated());
         } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }

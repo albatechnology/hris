@@ -15,11 +15,16 @@ class OvertimeAllowance extends BaseModel
     protected $casts = [
         'overtime_id' => 'integer',
         'payroll_component_id' => 'integer',
-        'rate_amount' => 'float',
+        'rate_amount' => 'double',
     ];
 
     public function overtime(): BelongsTo
     {
         return $this->belongsTo(Overtime::class);
+    }
+
+    public function payrollComponent(): BelongsTo
+    {
+        return $this->belongsTo(PayrollComponent::class);
     }
 }

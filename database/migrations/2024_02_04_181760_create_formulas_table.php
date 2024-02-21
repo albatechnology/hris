@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('overtime_formulas', function (Blueprint $table) {
+        Schema::create('formulas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('overtime_id')->constrained();
-            $table->foreignId('parent_id')->nullable()->constrained('overtime_formulas');
-            $table->string('component'); // FormulaComponent::class
+            $table->morphs('formulaable');
+            $table->foreignId('parent_id')->nullable()->constrained('formulas');
+            $table->string('component'); // FormulaComponentEnum::class
             $table->unsignedFloat('amount')->nullable();
             $table->timestamps();
         });
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('overtime_formulas');
+        Schema::dropIfExists('formulas');
     }
 };

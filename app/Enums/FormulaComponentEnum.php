@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum FormulaComponent: string
+enum FormulaComponentEnum: string
 {
     use BaseEnum;
 

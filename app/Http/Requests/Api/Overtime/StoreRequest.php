@@ -44,13 +44,14 @@ class StoreRequest extends FormRequest
             'overtime_multipliers.*.multiply' => 'required_with:overtime_multipliers|integer',
 
             'overtime_allowances' => 'required_if:rate_type,allowances|array',
-            'overtime_allowances.*.amount' => 'required_with:overtime_allowances||numeric',
+            'overtime_allowances.*.payroll_component_id' => 'required_with:overtime_allowances|exists:payroll_components,id|distinct',
+            'overtime_allowances.*.amount' => 'required_with:overtime_allowances|numeric',
 
-            'overtime_formulas' => 'nullable|array',
-            'overtime_formulas.*.component' => 'required_with:overtime_formulas|string',
-            'overtime_formulas.*.value' => 'required_with:overtime_formulas|string',
-            'overtime_formulas.*.amount' => 'required_without:overtime_formulas.*.child',
-            'overtime_formulas.*.child' => 'required_without:overtime_formulas.*.amount|array',
+            'formulas' => 'nullable|array',
+            'formulas.*.component' => 'required_with:formulas|string',
+            'formulas.*.value' => 'required_with:formulas|string',
+            'formulas.*.amount' => 'required_without:formulas.*.child',
+            'formulas.*.child' => 'required_without:formulas.*.amount|array',
         ];
     }
 }
