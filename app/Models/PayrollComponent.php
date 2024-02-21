@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
-use App\Traits\CompanyTenanted;
-use App\Traits\MorphManyFormulas;
+use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\MorphManyFormulas;
 
 class PayrollComponent extends BaseModel
 {
