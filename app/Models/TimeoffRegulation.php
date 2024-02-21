@@ -7,7 +7,6 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TimeoffRegulation extends BaseModel implements TenantedInterface
 {
@@ -47,13 +46,17 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
 
     public function scopeStartPeriod(Builder $query, $date = null)
     {
-        if (is_null($date)) return $query;
+        if (is_null($date)) {
+            return $query;
+        }
         $query->whereDate('start_period', '>=', $date);
     }
 
     public function scopeEndPeriod(Builder $query, $date = null)
     {
-        if (is_null($date)) return $query;
+        if (is_null($date)) {
+            return $query;
+        }
         $query->whereDate('end_period', '<=', $date);
     }
 }

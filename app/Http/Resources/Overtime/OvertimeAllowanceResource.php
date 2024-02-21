@@ -5,7 +5,7 @@ namespace App\Http\Resources\Overtime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class OvertimeAllowanceResource  extends JsonResource
+class OvertimeAllowanceResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

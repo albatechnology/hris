@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserEvent extends BaseModel
 {
     public $incrementing = false;
+
     protected $fillable = ['user_id', 'event_id'];
 
     protected static function booted(): void

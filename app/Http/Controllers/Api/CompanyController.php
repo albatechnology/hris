@@ -31,10 +31,10 @@ class CompanyController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('group_id'),
-                'name', 'country', 'province', 'city', 'zip_code', 'address'
+                'name', 'country', 'province', 'city', 'zip_code', 'address',
             ])
             ->allowedSorts([
-                'id', 'group_id', 'name', 'country', 'province', 'city', 'zip_code', 'address', 'created_at'
+                'id', 'group_id', 'name', 'country', 'province', 'city', 'zip_code', 'address', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -55,6 +55,7 @@ class CompanyController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -71,6 +72,7 @@ class CompanyController extends BaseController
     public function destroy(Company $company)
     {
         $company->delete();
+
         return $this->deletedResponse();
     }
 
@@ -78,6 +80,7 @@ class CompanyController extends BaseController
     {
         $company = Company::withTrashed()->findOrFail($id);
         $company->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -85,6 +88,7 @@ class CompanyController extends BaseController
     {
         $company = Company::withTrashed()->findOrFail($id);
         $company->restore();
+
         return new CompanyResource($company);
     }
 }

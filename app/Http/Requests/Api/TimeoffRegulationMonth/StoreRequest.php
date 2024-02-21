@@ -22,7 +22,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => 'required|numeric|multiple_of:0.5'
+            'amount' => 'required|numeric|multiple_of:0.5',
         ];
     }
 }

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class LiveAttendanceSeeder extends Seeder
@@ -16,12 +15,12 @@ class LiveAttendanceSeeder extends Seeder
     {
         Company::all()->each(function ($company) {
             $company->liveAttendances()->create([
-                'name' => 'Live Attendance Flexible ' . $company->name,
-                'is_flexible' => true
+                'name' => 'Live Attendance Flexible '.$company->name,
+                'is_flexible' => true,
             ]);
             $liveAttendance = $company->liveAttendances()->create([
-                'name' => 'Live Attendance ' . $company->name,
-                'is_flexible' => false
+                'name' => 'Live Attendance '.$company->name,
+                'is_flexible' => false,
             ]);
 
             $liveAttendance->locations()->createMany([

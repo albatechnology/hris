@@ -8,18 +8,15 @@ use App\Http\Requests\Api\Overtime\UserSettingRequest;
 use App\Http\Resources\Overtime\OvertimeResource;
 use App\Models\Formula;
 use App\Models\Overtime;
-use App\Models\OvertimeFormula;
 use App\Models\User;
 use App\Services\FormulaService;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class OvertimeController extends BaseController
 {
@@ -43,7 +40,7 @@ class OvertimeController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'is_rounding', 'compensation_rate_per_day', 'rate_type', 'rate_amount', 'created_at'
+                'id', 'company_id', 'is_rounding', 'compensation_rate_per_day', 'rate_type', 'rate_amount', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -61,7 +58,7 @@ class OvertimeController extends BaseController
         collect($request->overtime_roundings)->each(function ($overtimeRounding, $i) use ($request) {
             if ($i > 0 && $overtimeRounding['start_minute'] <= $request->overtime_roundings[$i - 1]['end_minute']) {
                 response()->json(['message' => 'start_minute and end_minute between the overtime_roundings are not in the correct order, please check it first'], 500)->send();
-                die;
+                exit;
             }
         });
 
@@ -69,7 +66,7 @@ class OvertimeController extends BaseController
         collect($request->overtime_multipliers)->each(function ($overtimeMultiplier, $i) use ($request) {
             if ($i > 0 && $overtimeMultiplier['start_hour'] <= $request->overtime_multipliers[$i - 1]['end_hour']) {
                 response()->json(['message' => 'start_hour and end_hour between the overtime_multipliers are not in the correct order, please check it first'], 500)->send();
-                die;
+                exit;
             }
         });
     }
@@ -80,12 +77,18 @@ class OvertimeController extends BaseController
         $overtime->overtimeMultipliers()->delete();
         $overtime->overtimeAllowances()->delete();
 
-        if ($request->overtime_roundings) $overtime->overtimeRoundings()->createMany($request->overtime_roundings);
-        if ($request->overtime_multipliers) $overtime->overtimeMultipliers()->createMany($request->overtime_multipliers);
-        if ($request->overtime_allowances) $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
+        if ($request->overtime_roundings) {
+            $overtime->overtimeRoundings()->createMany($request->overtime_roundings);
+        }
+        if ($request->overtime_multipliers) {
+            $overtime->overtimeMultipliers()->createMany($request->overtime_multipliers);
+        }
+        if ($request->overtime_allowances) {
+            $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
+        }
     }
 
-    public function store(StoreRequest $request): OvertimeResource | JsonResponse
+    public function store(StoreRequest $request): OvertimeResource|JsonResponse
     {
         self::validateBeforeSaving($request);
 
@@ -107,13 +110,14 @@ class OvertimeController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
         return new OvertimeResource($overtime->refresh());
     }
 
-    public function update(Overtime $overtime, UpdateRequest $request): OvertimeResource | JsonResponse
+    public function update(Overtime $overtime, UpdateRequest $request): OvertimeResource|JsonResponse
     {
         self::validateBeforeSaving($request);
 
@@ -135,6 +139,7 @@ class OvertimeController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -157,6 +162,7 @@ class OvertimeController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 

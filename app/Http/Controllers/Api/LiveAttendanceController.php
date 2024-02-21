@@ -31,11 +31,11 @@ class LiveAttendanceController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 'name',
-                'is_flexible'
+                'is_flexible',
             ])
             ->allowedIncludes(['company', 'locations'])
             ->allowedSorts([
-                'id', 'name', 'is_flexible', 'created_at'
+                'id', 'name', 'is_flexible', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -63,6 +63,7 @@ class LiveAttendanceController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -85,6 +86,7 @@ class LiveAttendanceController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -100,8 +102,10 @@ class LiveAttendanceController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
+
         return $this->deletedResponse();
     }
 
@@ -109,6 +113,7 @@ class LiveAttendanceController extends BaseController
     {
         $liveAttendance = LiveAttendance::withTrashed()->findOrFail($id);
         $liveAttendance->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -116,6 +121,7 @@ class LiveAttendanceController extends BaseController
     {
         $liveAttendance = LiveAttendance::withTrashed()->findOrFail($id);
         $liveAttendance->restore();
+
         return new LiveAttendanceResource($liveAttendance);
     }
 
@@ -127,10 +133,10 @@ class LiveAttendanceController extends BaseController
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('manager_id'),
                 AllowedFilter::scope('has_schedule_id'),
-                'name', 'email', 'type', 'nik', 'phone', 'marital_status'
+                'name', 'email', 'type', 'nik', 'phone', 'marital_status',
             ])
             ->allowedSorts([
-                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'marital_status', 'created_at'
+                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'marital_status', 'created_at',
             ])
             ->paginate($this->per_page);
 

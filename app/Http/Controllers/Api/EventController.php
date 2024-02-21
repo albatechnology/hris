@@ -31,7 +31,7 @@ class EventController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'name', 'type', 'start_at', 'end_at', 'is_public', 'is_send_email', 'description', 'created_at'
+                'id', 'name', 'type', 'start_at', 'end_at', 'is_public', 'is_send_email', 'description', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -60,6 +60,7 @@ class EventController extends BaseController
     public function destroy(Event $event)
     {
         $event->delete();
+
         return $this->deletedResponse();
     }
 
@@ -67,6 +68,7 @@ class EventController extends BaseController
     {
         $event = Event::withTrashed()->findOrFail($id);
         $event->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -74,6 +76,7 @@ class EventController extends BaseController
     {
         $event = Event::withTrashed()->findOrFail($id);
         $event->restore();
+
         return new EventResource($event);
     }
 }

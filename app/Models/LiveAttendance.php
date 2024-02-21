@@ -13,11 +13,11 @@ class LiveAttendance extends BaseModel implements TenantedInterface
     protected $fillable = [
         'company_id',
         'name',
-        'is_flexible'
+        'is_flexible',
     ];
 
     protected $casts = [
-        'is_flexible' => 'boolean'
+        'is_flexible' => 'boolean',
     ];
 
     protected static function booted(): void

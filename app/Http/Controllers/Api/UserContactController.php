@@ -28,10 +28,10 @@ class UserContactController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                'type', 'name', 'id_number', 'email', 'phone'
+                'type', 'name', 'id_number', 'email', 'phone',
             ])
             ->allowedSorts([
-                'id', 'user_id', 'type', 'name', 'id_number', 'email', 'phone', 'created_at'
+                'id', 'user_id', 'type', 'name', 'id_number', 'email', 'phone', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -46,18 +46,21 @@ class UserContactController extends BaseController
     public function store(User $user, StoreRequest $request)
     {
         $contact = $user->contacts()->create($request->validated());
+
         return new UserContactResource($contact);
     }
 
     public function update(User $user, StoreRequest $request, UserContact $contact)
     {
         $contact->update($request->validated());
+
         return new UserContactResource($contact);
     }
 
     public function destroy(User $user, UserContact $contact)
     {
         $contact->delete();
+
         return $this->deletedResponse();
     }
 }

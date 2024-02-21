@@ -9,7 +9,7 @@ class Permission extends ModelsPermission
     protected $fillable = [
         'name',
         'guard_name',
-        'parent_id'
+        'parent_id',
     ];
 
     public function childs()

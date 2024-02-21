@@ -53,19 +53,25 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
 
     public function scopeStartEffectiveDate(Builder $query, $date = null)
     {
-        if (is_null($date)) return $query;
+        if (is_null($date)) {
+            return $query;
+        }
         $query->whereDate('effective_date', '>=', date('Y-m-d', strtotime($date)));
     }
 
     public function scopeEndEffectiveDate(Builder $query, $date = null)
     {
-        if (is_null($date)) return $query;
+        if (is_null($date)) {
+            return $query;
+        }
         $query->whereDate('effective_date', '<=', date('Y-m-d', strtotime($date)));
     }
 
-    public function scopeWhereActive(Builder $query, bool|null $isActive = true)
+    public function scopeWhereActive(Builder $query, ?bool $isActive = true)
     {
-        if (is_null($isActive)) return $query;
+        if (is_null($isActive)) {
+            return $query;
+        }
         if ($isActive) {
             return $query->whereDate('effective_date', '<=', date('Y-m-d'))->whereDate('expired_date', '>=', date('Y-m-d'))->orWhere(fn ($q) => $q->whereNull('effective_date')->orWhereNull('expired_date'));
         }

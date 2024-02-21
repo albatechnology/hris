@@ -27,10 +27,10 @@ class UserEducationController extends BaseController
         $data = QueryBuilder::for(UserEducation::where('user_id', $user->id))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                'type', 'level', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee'
+                'type', 'level', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee',
             ])
             ->allowedSorts([
-                'id', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee', 'created_at'
+                'id', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -45,18 +45,21 @@ class UserEducationController extends BaseController
     public function store(User $user, StoreRequest $request)
     {
         $education = $user->educations()->create($request->validated());
+
         return new UserEducationResource($education);
     }
 
     public function update(User $user, StoreRequest $request, UserEducation $education)
     {
         $education->update($request->validated());
+
         return new UserEducationResource($education);
     }
 
     public function destroy(User $user, UserEducation $education)
     {
         $education->delete();
+
         return $this->deletedResponse();
     }
 }

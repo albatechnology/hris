@@ -36,17 +36,20 @@ class TimeoffRegulationController extends BaseController
     public function update(Company $company, UpdateRequest $request)
     {
         $timeoffRegulation = $this->timeoffRegulation;
-        if (!$timeoffRegulation) return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
+        if (! $timeoffRegulation) {
+            return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
+        }
 
         DB::beginTransaction();
         try {
             $timeoffRegulation->update($request->validated());
-            if (!$timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+            if (! $timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
                 $timeoffRegulation->timeoffPeriodRegulations->each->timeoffRegulationMonths->each->delete();
             }
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 

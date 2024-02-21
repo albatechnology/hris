@@ -29,6 +29,6 @@ class UserEducation extends BaseModel
     protected $casts = [
         'type' => EducationType::class,
         'level' => EducationLevel::class,
-        'fee' => 'double'
+        'fee' => 'double',
     ];
 }

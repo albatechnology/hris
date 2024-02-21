@@ -27,10 +27,10 @@ class GroupController extends BaseController
         $data = QueryBuilder::for(Group::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                'name'
+                'name',
             ])
             ->allowedSorts([
-                'id', 'name', 'created_at'
+                'id', 'name', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -59,6 +59,7 @@ class GroupController extends BaseController
     public function destroy(Group $group)
     {
         $group->delete();
+
         return $this->deletedResponse();
     }
 
@@ -66,6 +67,7 @@ class GroupController extends BaseController
     {
         $group = Group::withTrashed()->findOrFail($id);
         $group->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -73,6 +75,7 @@ class GroupController extends BaseController
     {
         $group = Group::withTrashed()->findOrFail($id);
         $group->restore();
+
         return new GroupResource($group);
     }
 }

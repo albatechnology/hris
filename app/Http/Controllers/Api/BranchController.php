@@ -29,10 +29,10 @@ class BranchController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'country', 'province', 'city', 'zip_code', 'address'
+                'name', 'country', 'province', 'city', 'zip_code', 'address',
             ])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'country', 'province', 'city', 'zip_code', 'address', 'created_at'
+                'id', 'company_id', 'name', 'country', 'province', 'city', 'zip_code', 'address', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -61,6 +61,7 @@ class BranchController extends BaseController
     public function destroy(Branch $branch)
     {
         $branch->delete();
+
         return $this->deletedResponse();
     }
 
@@ -68,6 +69,7 @@ class BranchController extends BaseController
     {
         $branch = Branch::withTrashed()->findOrFail($id);
         $branch->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -75,6 +77,7 @@ class BranchController extends BaseController
     {
         $branch = Branch::withTrashed()->findOrFail($id);
         $branch->restore();
+
         return new BranchResource($branch);
     }
 }

@@ -20,7 +20,7 @@ class TimeoffPeriodRegulationController extends BaseController
         parent::__construct();
 
         $this->timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->firstOrFail();
-        if (!$this->timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+        if (! $this->timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
             return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
         }
 
@@ -37,7 +37,7 @@ class TimeoffPeriodRegulationController extends BaseController
         $data = QueryBuilder::for($this->timeoffRegulation->timeoffPeriodRegulations())
             ->allowedIncludes(['timeoffRegulation', 'timeoffRegulationMonths'])
             ->allowedSorts([
-                'id', 'min_working_month', 'max_working_month', 'created_at'
+                'id', 'min_working_month', 'max_working_month', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -47,6 +47,7 @@ class TimeoffPeriodRegulationController extends BaseController
     public function show(Company $company, TimeoffPeriodRegulation $period)
     {
         $period = $this->timeoffRegulation->timeoffPeriodRegulations()->findOrFail($period->id);
+
         return new TimeoffPeriodRegulationResource($period);
     }
 
@@ -69,6 +70,7 @@ class TimeoffPeriodRegulationController extends BaseController
     {
         $period = $this->timeoffRegulation->timeoffPeriodRegulations()->findOrFail($period->id);
         $period->delete();
+
         return $this->deletedResponse();
     }
 }

@@ -36,11 +36,11 @@ class TimeoffController extends BaseController
                 AllowedFilter::exact('delegate_to'),
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
-                'request_type'
+                'request_type',
             ])
             ->allowedIncludes(['user', 'timeoffPolicy', 'delegateTo'])
             ->allowedSorts([
-                'id', 'user_id', 'timeoff_policy_id', 'delegate_to', 'start_at', 'end_at', 'request_type', 'created_at'
+                'id', 'user_id', 'timeoff_policy_id', 'delegate_to', 'start_at', 'end_at', 'request_type', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -56,7 +56,7 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
+        if (! ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -67,7 +67,7 @@ class TimeoffController extends BaseController
 
     public function update(Timeoff $timeoff, StoreRequest $request)
     {
-        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
+        if (! ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -79,6 +79,7 @@ class TimeoffController extends BaseController
     public function destroy(Timeoff $timeoff)
     {
         $timeoff->delete();
+
         return $this->deletedResponse();
     }
 
@@ -86,6 +87,7 @@ class TimeoffController extends BaseController
     {
         $timeoff = Timeoff::withTrashed()->findOrFail($id);
         $timeoff->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -93,6 +95,7 @@ class TimeoffController extends BaseController
     {
         $timeoff = Timeoff::withTrashed()->findOrFail($id);
         $timeoff->restore();
+
         return new TimeoffResource($timeoff);
     }
 
@@ -101,13 +104,13 @@ class TimeoffController extends BaseController
         // dump($request->validated());
         // dump($timeoff);
         $timeoff->is_approved = $request->is_approved;
-        if (!$timeoff->isDirty('is_approved')) {
+        if (! $timeoff->isDirty('is_approved')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
 
         $startSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->start_at);
         $endSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->end_at);
-        if (!$startSchedule && !$endSchedule) {
+        if (! $startSchedule && ! $endSchedule) {
             return $this->errorResponse(message: sprintf('There is a schedule that cannot be found between %s and %s', $timeoff->start_at, $timeoff->end_at), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -141,8 +144,10 @@ class TimeoffController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
+
         return new TimeoffResource($timeoff);
     }
 }

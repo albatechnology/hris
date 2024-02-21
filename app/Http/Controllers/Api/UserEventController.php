@@ -30,7 +30,7 @@ class UserEventController extends BaseController
                 AllowedFilter::exact('user_id'),
             ])
             ->allowedSorts([
-                'id', 'event_id', 'user_id', 'created_at'
+                'id', 'event_id', 'user_id', 'created_at',
             ])
             ->paginate($this->per_page);
 

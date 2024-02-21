@@ -28,10 +28,10 @@ class UserExperienceController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                'company', 'department', 'position', 'start_date', 'end_date'
+                'company', 'department', 'position', 'start_date', 'end_date',
             ])
             ->allowedSorts([
-                'id', 'user_id', 'company', 'department', 'position', 'start_date', 'end_date', 'created_at'
+                'id', 'user_id', 'company', 'department', 'position', 'start_date', 'end_date', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -46,18 +46,21 @@ class UserExperienceController extends BaseController
     public function store(User $user, StoreRequest $request)
     {
         $experience = $user->experiences()->create($request->validated());
+
         return new UserExperienceResource($experience);
     }
 
     public function update(User $user, StoreRequest $request, UserExperience $experience)
     {
         $experience->update($request->validated());
+
         return new UserExperienceResource($experience);
     }
 
     public function destroy(User $user, UserExperience $experience)
     {
         $experience->delete();
+
         return $this->deletedResponse();
     }
 }

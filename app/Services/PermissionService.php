@@ -34,6 +34,7 @@ class PermissionService
                 $data[] = $persmission;
             }
         }
+
         return $data;
     }
 
@@ -191,7 +192,7 @@ class PermissionService
                 $hsp = Permission::firstOrCreate([
                     'name' => $key,
                     // 'guard_name' => $guard,
-                    'parent_id' => $headSubPermissions->id
+                    'parent_id' => $headSubPermissions->id,
                 ]);
 
                 self::generateChilds($hsp, $permission);
@@ -199,24 +200,22 @@ class PermissionService
                 $hsp = Permission::firstOrCreate([
                     'name' => $permission,
                     // 'guard_name' => $guard,
-                    'parent_id' => $headSubPermissions->id
+                    'parent_id' => $headSubPermissions->id,
                 ]);
             }
 
-            return;
         });
     }
 
     /**
      * filter permissions ids
-     *
-     * @param array $permissionIds
-     * @return array
      */
     public static function getPermissionNames(array $permissionIds = []): array
     {
         $pids = [];
-        if (!is_array($permissionIds) || count($permissionIds) <= 0) return $pids;
+        if (! is_array($permissionIds) || count($permissionIds) <= 0) {
+            return $pids;
+        }
 
         foreach ($permissionIds as $id) {
             $permission = Permission::find($id, ['id', 'name']);

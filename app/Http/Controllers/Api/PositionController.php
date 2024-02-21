@@ -28,10 +28,10 @@ class PositionController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name'
+                'name',
             ])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'order', 'created_at'
+                'id', 'company_id', 'name', 'order', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -60,6 +60,7 @@ class PositionController extends BaseController
     public function destroy(Position $position)
     {
         $position->delete();
+
         return $this->deletedResponse();
     }
 
@@ -67,6 +68,7 @@ class PositionController extends BaseController
     {
         $position = Position::withTrashed()->findOrFail($id);
         $position->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -74,6 +76,7 @@ class PositionController extends BaseController
     {
         $position = Position::withTrashed()->findOrFail($id);
         $position->restore();
+
         return new PositionResource($position);
     }
 }

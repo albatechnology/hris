@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CustomFieldSeeder extends Seeder
@@ -16,12 +15,12 @@ class CustomFieldSeeder extends Seeder
         Company::all()->each(function ($company) {
             $company->customFields()->create([
                 'key' => 'Nama Kucing Peliharaan',
-                'type' => 'text'
+                'type' => 'text',
             ]);
 
             $company->customFields()->create([
                 'key' => 'Tgl Lahir Kucing Peliharaan',
-                'type' => 'date'
+                'type' => 'date',
             ]);
 
             $company->customFields()->create([

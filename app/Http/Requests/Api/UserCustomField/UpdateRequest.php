@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\UserCustomField;
 
-use App\Models\CustomField;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest

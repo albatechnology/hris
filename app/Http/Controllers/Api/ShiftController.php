@@ -28,11 +28,11 @@ class ShiftController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'clock_in', 'clock_out'
+                'name', 'clock_in', 'clock_out',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'clock_in', 'clock_out', 'created_at'
+                'id', 'company_id', 'name', 'clock_in', 'clock_out', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -61,6 +61,7 @@ class ShiftController extends BaseController
     public function destroy(Shift $shift)
     {
         $shift->delete();
+
         return $this->deletedResponse();
     }
 
@@ -68,6 +69,7 @@ class ShiftController extends BaseController
     {
         $shift = Shift::withTrashed()->findOrFail($id);
         $shift->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -75,6 +77,7 @@ class ShiftController extends BaseController
     {
         $shift = Shift::withTrashed()->findOrFail($id);
         $shift->restore();
+
         return new ShiftResource($shift);
     }
 }

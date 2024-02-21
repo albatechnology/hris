@@ -7,8 +7,8 @@ use App\Http\Requests\Api\TimeoffRegulationMonth\StoreRequest;
 use App\Http\Resources\TimeoffRegulationMonth\TimeoffRegulationMonthResource;
 use App\Models\Company;
 use App\Models\TimeoffPeriodRegulation;
-use App\Models\TimeoffRegulationMonth;
 use App\Models\TimeoffRegulation;
+use App\Models\TimeoffRegulationMonth;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -22,7 +22,7 @@ class TimeoffRegulationMonthController extends BaseController
         parent::__construct();
 
         $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->firstOrFail();
-        if (!$timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+        if (! $timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
             return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
         }
 
@@ -41,11 +41,11 @@ class TimeoffRegulationMonthController extends BaseController
         $data = QueryBuilder::for($this->timeoffPeriodRegulation->timeoffRegulationMonths())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                'month'
+                'month',
             ])
             ->allowedIncludes(['timeoffPeriodRegulation'])
             ->allowedSorts([
-                'id', 'month', 'amount', 'created_at'
+                'id', 'month', 'amount', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -55,6 +55,7 @@ class TimeoffRegulationMonthController extends BaseController
     public function show(Company $company, TimeoffPeriodRegulation $period, TimeoffRegulationMonth $month)
     {
         $month = $this->timeoffPeriodRegulation->timeoffRegulationMonths()->findOrFail($month->id);
+
         return new TimeoffRegulationMonthResource($month);
     }
 

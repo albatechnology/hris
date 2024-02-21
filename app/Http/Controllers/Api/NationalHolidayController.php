@@ -29,7 +29,7 @@ class NationalHolidayController extends BaseController
                 AllowedFilter::exact('id'),
             ])
             ->allowedSorts([
-                'id', 'name', 'date', 'created_at'
+                'id', 'name', 'date', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -58,6 +58,7 @@ class NationalHolidayController extends BaseController
     public function destroy(NationalHoliday $nationalHoliday)
     {
         $nationalHoliday->delete();
+
         return $this->deletedResponse();
     }
 
@@ -65,6 +66,7 @@ class NationalHolidayController extends BaseController
     {
         $nationalHoliday = NationalHoliday::withTrashed()->findOrFail($id);
         $nationalHoliday->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -72,6 +74,7 @@ class NationalHolidayController extends BaseController
     {
         $nationalHoliday = NationalHoliday::withTrashed()->findOrFail($id);
         $nationalHoliday->restore();
+
         return new NationalHolidayResource($nationalHoliday);
     }
 }

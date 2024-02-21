@@ -24,11 +24,12 @@ class Role extends ModelsRole implements TenantedInterface
         });
     }
 
-
     public function scopeTenanted(Builder $query): Builder
     {
         $user = auth('sanctum')->user();
-        if ($user->is_super_admin) return $query;
+        if ($user->is_super_admin) {
+            return $query;
+        }
 
         return $query->where('group_id', $user->group_id);
     }
@@ -36,7 +37,10 @@ class Role extends ModelsRole implements TenantedInterface
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
     {
         $query->tenanted()->where('id', $id);
-        if ($fail) return $query->firstOrFail();
+        if ($fail) {
+            return $query->firstOrFail();
+        }
+
         return $query->first();
     }
 

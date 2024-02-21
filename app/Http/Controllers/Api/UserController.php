@@ -36,11 +36,11 @@ class UserController extends BaseController
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('manager_id'),
                 AllowedFilter::scope('has_schedule_id'),
-                'name', 'email', 'type', 'nik', 'phone'
+                'name', 'email', 'type', 'nik', 'phone',
             ])
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->allowedSorts([
-                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at'
+                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -83,7 +83,9 @@ class UserController extends BaseController
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
 
             $companyIds = collect($request->company_ids ?? []);
-            if ($user->company_id) $companyIds->push($user->company_id);
+            if ($user->company_id) {
+                $companyIds->push($user->company_id);
+            }
             $companyIds = $companyIds->unique()->values()
                 ->map(function ($companyId) {
                     return ['company_id' => $companyId];
@@ -91,7 +93,9 @@ class UserController extends BaseController
             $user->companies()->createMany($companyIds);
 
             $branchIds = collect($request->branch_ids ?? []);
-            if ($user->branch_id) $branchIds->push($user->branch_id);
+            if ($user->branch_id) {
+                $branchIds->push($user->branch_id);
+            }
             $branchIds = $branchIds->unique()->values()
                 ->map(function ($branchId) {
                     return ['branch_id' => $branchId];
@@ -101,6 +105,7 @@ class UserController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -116,7 +121,9 @@ class UserController extends BaseController
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
 
             $companyIds = collect($request->company_ids ?? []);
-            if ($user->company_id) $companyIds->push($user->company_id);
+            if ($user->company_id) {
+                $companyIds->push($user->company_id);
+            }
             $companyIds = $companyIds->unique()->values()
                 ->map(function ($companyId) {
                     return ['company_id' => $companyId];
@@ -125,7 +132,9 @@ class UserController extends BaseController
             $user->companies()->createMany($companyIds);
 
             $branchIds = collect($request->branch_ids ?? []);
-            if ($user->branch_id) $branchIds->push($user->branch_id);
+            if ($user->branch_id) {
+                $branchIds->push($user->branch_id);
+            }
             $branchIds = $branchIds->unique()->values()
                 ->map(function ($branchId) {
                     return ['branch_id' => $branchId];
@@ -135,6 +144,7 @@ class UserController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -143,18 +153,24 @@ class UserController extends BaseController
 
     public function destroy(User $user)
     {
-        if ($user->id == 1) return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
+        if ($user->id == 1) {
+            return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
+        }
         // abort_if(!auth()->user()->tokenCan('user_delete'), 403);
         $user->delete();
+
         return $this->deletedResponse();
     }
 
     public function forceDelete($id)
     {
-        if ($id == 1) return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
+        if ($id == 1) {
+            return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
+        }
         // abort_if(!auth()->user()->tokenCan('user_delete'), 403);
         $user = User::withTrashed()->findOrFail($id);
         $user->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -163,6 +179,7 @@ class UserController extends BaseController
         // abort_if(!auth()->user()->tokenCan('user_access'), 403);
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
+
         return new UserResource($user);
     }
 
@@ -173,6 +190,7 @@ class UserController extends BaseController
         } else {
             $user->detail()->create($request->validated());
         }
+
         return new UserResource($user->load('detail'));
     }
 
@@ -183,6 +201,7 @@ class UserController extends BaseController
         } else {
             $user->payrollInfo()->create($request->validated());
         }
+
         return new UserResource($user->load('payrollInfo'));
     }
 }

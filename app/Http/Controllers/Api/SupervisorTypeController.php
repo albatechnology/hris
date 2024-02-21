@@ -31,7 +31,7 @@ class SupervisorTypeController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'order', 'created_at'
+                'id', 'company_id', 'name', 'order', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -64,6 +64,7 @@ class SupervisorTypeController extends BaseController
     public function destroy(SupervisorType $supervisorType)
     {
         $supervisorType->delete();
+
         return $this->deletedResponse();
     }
 
@@ -71,6 +72,7 @@ class SupervisorTypeController extends BaseController
     {
         $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
         $supervisorType->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -78,6 +80,7 @@ class SupervisorTypeController extends BaseController
     {
         $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
         $supervisorType->restore();
+
         return new SupervisorTypeResource($supervisorType);
     }
 }
