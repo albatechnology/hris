@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('level');
             $table->string('name')->nullable();
             $table->string('institution_name');
-            $table->string('majors');
+            $table->string('majors')->nullable();
             $table->date('start_date');
             $table->date('end_date');
             $table->date('expired_date')->nullable();
