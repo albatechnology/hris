@@ -7,6 +7,7 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TimeoffRegulation extends BaseModel implements TenantedInterface
 {

@@ -55,7 +55,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);
 
     Route::apiResource('groups', GroupController::class);
+
+    Route::group(['prefix' => 'companies/{company}'], function () {
+        // Route::group(['prefix' => 'timeoff-regulations/{timeoff_regulation}'], function () {
+        //     Route::apiResource('periods/{period}/months', TimeoffRegulationMonthController::class);
+        //     Route::apiResource('periods', TimeoffPeriodRegulationController::class);
+        // });
+
+        Route::apiResource('timeoff-regulation/periods/{period}/months', TimeoffRegulationMonthController::class)->except('store', 'destroy');
+        Route::apiResource('timeoff-regulation/periods', TimeoffPeriodRegulationController::class);
+        Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
+        Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
+    });
     Route::apiResource('companies', CompanyController::class);
+
     Route::apiResource('branches', BranchController::class);
     Route::apiResource('positions', PositionController::class);
     Route::apiResource('divisions', DivisionController::class);
@@ -75,11 +88,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::apiResource('attendances', AttendanceController::class)->except('update');
 
-    Route::group(['prefix' => 'timeoff-regulations/{timeoff_regulation}'], function () {
-        Route::apiResource('periods/{period}/months', TimeoffRegulationMonthController::class);
-        Route::apiResource('periods', TimeoffPeriodRegulationController::class);
-    });
-    Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
+
 
     Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
         Route::post('users', [UserTimeoffPolicyController::class, 'store']);

@@ -3,12 +3,11 @@
 namespace App\Http\Requests\Api\TimeoffRegulation;
 
 use App\Enums\TimeoffRenewType;
-use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreRequest extends FormRequest
+class UpdateRequest extends FormRequest
 {
     use RequestToBoolean;
 
@@ -41,7 +40,6 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['required', new CompanyTenantedRule()],
             'renew_type' => ['required', Rule::enum(TimeoffRenewType::class)],
             'total_day' => 'nullable|integer',
             'start_period' => 'nullable|string|date_format:m-d',

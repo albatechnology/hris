@@ -27,6 +27,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         OvertimeRequest::observe(OvertimeRequestObserver::class);
+        // Company::observe(CompanyObserver::class);
     }
 
     /**

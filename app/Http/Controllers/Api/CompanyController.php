@@ -6,7 +6,9 @@ use App\Http\Requests\Api\Company\StoreRequest;
 use App\Http\Requests\Api\Company\UpdateRequest;
 use App\Http\Resources\Company\CompanyResource;
 use App\Models\Company;
+use App\Services\TimeoffRegulationService;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -46,7 +48,15 @@ class CompanyController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $company = Company::create($request->validated());
+        DB::beginTransaction();
+        try {
+            $company = Company::create($request->validated());
+            TimeoffRegulationService::create($company, $request->renew_type);
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new CompanyResource($company);
     }
