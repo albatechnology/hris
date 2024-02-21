@@ -33,13 +33,14 @@ class TimeoffPolicyController extends BaseController
                 'type',
                 'name',
                 'code',
+                'is_allow_halfday',
                 'is_for_all_user',
                 'is_enable_block_leave',
                 'is_unlimited_day',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at',
+                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_allow_halfday', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at',
             ])
             ->paginate($this->per_page);
 
