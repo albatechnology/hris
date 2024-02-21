@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->string('type');
-            $table->string('level');
+            $table->string('level')->nullable();
             $table->string('name')->nullable();
             $table->string('institution_name');
             $table->string('majors')->nullable();
