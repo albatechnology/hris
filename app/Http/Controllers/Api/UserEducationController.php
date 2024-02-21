@@ -27,11 +27,10 @@ class UserEducationController extends BaseController
         $data = QueryBuilder::for(UserEducation::where('user_id', $user->id))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                AllowedFilter::exact('user_id'),
-                'company', 'department', 'position', 'start_date', 'end_date'
+                'level', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee'
             ])
             ->allowedSorts([
-                'id', 'user_id', 'company', 'department', 'position', 'start_date', 'end_date', 'created_at'
+                'id', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee', 'created_at'
             ])
             ->paginate($this->per_page);
 

@@ -26,7 +26,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(EducationType::class)],
-            'level' => ['required', Rule::enum(EducationLevel::class)],
+            'level' => ['nullable', Rule::enum(EducationLevel::class)],
             'name' => 'nullable|string',
             'institution_name' => 'required|string',
             'majors' => 'nullable|string',
