@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Enums\RateType;
-use App\Traits\CompanyTenanted;
-use App\Traits\MorphManyFormulas;
+use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\MorphManyFormulas;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Overtime extends BaseModel

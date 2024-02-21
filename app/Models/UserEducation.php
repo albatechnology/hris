@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\EducationLevel;
 use App\Enums\EducationType;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 
 class UserEducation extends BaseModel
 {
@@ -16,10 +16,12 @@ class UserEducation extends BaseModel
         'user_id',
         'type',
         'level',
+        'name',
         'institution_name',
         'majors',
         'start_date',
         'end_date',
+        'expired_date',
         'score',
         'fee',
     ];

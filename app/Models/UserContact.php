@@ -6,7 +6,7 @@ use App\Enums\ContactType;
 use App\Enums\Gender;
 use App\Enums\RelationshipType;
 use App\Enums\Religion;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 
 class UserContact extends BaseModel
 {

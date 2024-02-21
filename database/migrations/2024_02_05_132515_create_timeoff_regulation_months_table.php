@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('timeoff_regulation_months', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('timeoff_period_regulation_id')->constrained();
+            $table->foreignId('timeoff_period_regulation_id')->constrained()->cascadeOnDelete();
             $table->string('month', 2);
             $table->unsignedFloat('amount')->default(0);
             $table->timestamps();

@@ -8,7 +8,7 @@ use App\Enums\EmploymentStatus;
 use App\Enums\JobLevel;
 use App\Enums\MaritalStatus;
 use App\Enums\Religion;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 
 class UserDetail extends BaseModel
 {

@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AttendanceType;
+use App\Enums\Gender;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GroupController;
@@ -30,6 +32,9 @@ use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\PayrollComponentController;
+use App\Http\Controllers\Api\UserEventController;
+use App\Http\Controllers\Api\CustomFieldController;
+use App\Http\Controllers\Api\UserCustomFieldController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -44,13 +49,27 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);
+        Route::apiResource('custom-fields', UserCustomFieldController::class)->except('destroy');
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
     Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);
 
     Route::apiResource('groups', GroupController::class);
+
+    Route::group(['prefix' => 'companies/{company}'], function () {
+        // Route::group(['prefix' => 'timeoff-regulations/{timeoff_regulation}'], function () {
+        //     Route::apiResource('periods/{period}/months', TimeoffRegulationMonthController::class);
+        //     Route::apiResource('periods', TimeoffPeriodRegulationController::class);
+        // });
+
+        Route::apiResource('timeoff-regulation/periods/{period}/months', TimeoffRegulationMonthController::class)->except('store', 'destroy');
+        Route::apiResource('timeoff-regulation/periods', TimeoffPeriodRegulationController::class);
+        Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
+        Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
+    });
     Route::apiResource('companies', CompanyController::class);
+
     Route::apiResource('branches', BranchController::class);
     Route::apiResource('positions', PositionController::class);
     Route::apiResource('divisions', DivisionController::class);
@@ -62,21 +81,15 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'schedules/{schedule}'], function () {
         Route::put('shifts', [ScheduleController::class, 'updateShifts']);
         Route::post('users', [UserScheduleController::class, 'store']);
+        Route::put('restore', [ScheduleController::class, 'restore']);
+        Route::delete('force-delete', [ScheduleController::class, 'forceDelete']);
         Route::delete('users/{user}', [UserScheduleController::class, 'destroy']);
     });
     Route::apiResource('schedules', ScheduleController::class);
 
-    Route::group(['prefix' => 'attendances'], function () {
-        Route::post('clock-in', [AttendanceController::class, 'clockIn']);
-        Route::post('clock-out', [AttendanceController::class, 'clockOut']);
-    });
-    Route::apiResource('attendances', AttendanceController::class)->except('store', 'update');
+    Route::apiResource('attendances', AttendanceController::class)->except('update');
 
-    Route::group(['prefix' => 'timeoff-regulations/{timeoff_regulation}'], function () {
-        Route::apiResource('periods/{period}/months', TimeoffRegulationMonthController::class);
-        Route::apiResource('periods', TimeoffPeriodRegulationController::class);
-    });
-    Route::apiResource('timeoff-regulations', TimeoffRegulationController::class);
+
 
     Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
         Route::post('users', [UserTimeoffPolicyController::class, 'store']);
@@ -104,5 +117,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('live-attendances', LiveAttendanceController::class);
     Route::apiResource('supervisor-types', SupervisorTypeController::class);
     Route::apiResource('national-holidays', NationalHolidayController::class);
+
+    Route::group(['prefix' => 'events/{event}'], function () {
+        Route::post('users', [UserEventController::class, 'store']);
+        Route::delete('users/{user}', [UserEventController::class, 'destroy']);
+    });
     Route::apiResource('events', EventController::class);
+    Route::apiResource('custom-fields', CustomFieldController::class);
 });

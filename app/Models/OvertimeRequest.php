@@ -3,12 +3,9 @@
 namespace App\Models;
 
 use App\Enums\OvertimeStatus;
-use App\Observers\OvertimeRequestObserver;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
-#[ObservedBy([OvertimeRequestObserver::class])]
 class OvertimeRequest extends BaseModel
 {
     use BelongsToUser;

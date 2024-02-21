@@ -13,6 +13,14 @@ class TimeoffPeriodRegulation extends BaseModel
         'max_working_month',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $model) {
+            // dd($model);
+            $model->timeoffRegulationMonths()->delete();
+        });
+    }
+
     public function timeoffRegulationMonths(): HasMany
     {
         return $this->hasMany(TimeoffRegulationMonth::class);

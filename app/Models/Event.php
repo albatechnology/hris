@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\EventType;
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
@@ -31,4 +33,14 @@ class Event extends Model
         'is_send_email' => 'boolean',
         'description' => 'string',
     ];
+
+    public function userEvents(): HasMany
+    {
+        return $this->hasMany(UserEvent::class);
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_events', 'event_id', 'user_id');
+    }
 }

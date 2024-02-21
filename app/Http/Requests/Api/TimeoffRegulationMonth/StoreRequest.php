@@ -22,8 +22,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'month' => 'required|date_format:m',
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|multiple_of:0.5'
         ];
     }
 }

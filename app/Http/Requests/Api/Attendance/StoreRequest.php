@@ -5,11 +5,14 @@ namespace App\Http\Requests\Api\Attendance;
 use App\Enums\AttendanceType;
 use App\Models\Schedule;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ClockOutRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -19,12 +22,14 @@ class ClockOutRequest extends FormRequest
     }
 
     /**
-     * Prepare the data for validation.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    protected function prepareForValidation(): void
+    protected function prepareForValidation()
     {
         $this->merge([
-            'is_clock_in' => 0,
+            'is_clock_in' => $this->toBoolean($this->is_clock_in),
         ]);
     }
 

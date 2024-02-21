@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum SettingKey: string
 {
-    use EnumHelper;
+    use BaseEnum;
 
     case LIVE_ATTENDANCE_MOBILE_SETUP = 'live_attendance_mobile_setup';
 

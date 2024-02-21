@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\TimeoffPolicy;
 
 use App\Enums\TimeoffPolicyType;
 use App\Rules\CompanyTenantedRule;
-use App\Traits\RequestToBoolean;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -58,7 +58,7 @@ class StoreRequest extends FormRequest
             'block_leave_min_working_month' => 'nullable|integer',
             'max_used' => 'nullable|integer',
 
-            'user_ids' => 'nullable|array',
+            'user_ids' => ['required_if:is_for_all_user,false', 'array'],
             'user_ids.*' => 'required|exists:users,id',
         ];
     }

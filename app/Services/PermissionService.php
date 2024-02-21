@@ -175,6 +175,12 @@ class PermissionService
                 'event_edit',
                 'event_delete',
             ],
+            'custom_field_access' => [
+                'custom_field_read',
+                'custom_field_create',
+                'custom_field_edit',
+                'custom_field_delete',
+            ],
         ];
     }
 

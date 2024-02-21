@@ -28,10 +28,10 @@ class UserContactController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                'company', 'department', 'position', 'start_date', 'end_date'
+                'type', 'name', 'id_number', 'email', 'phone'
             ])
             ->allowedSorts([
-                'id', 'user_id', 'company', 'department', 'position', 'start_date', 'end_date', 'created_at'
+                'id', 'user_id', 'type', 'name', 'id_number', 'email', 'phone', 'created_at'
             ])
             ->paginate($this->per_page);
 

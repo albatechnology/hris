@@ -4,9 +4,10 @@ namespace App\Models;
 
 use App\Enums\TimeoffRenewType;
 use App\Interfaces\TenantedInterface;
-use App\Traits\CompanyTenanted;
+use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TimeoffRegulation extends BaseModel implements TenantedInterface
 {
@@ -19,7 +20,7 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         'start_period',
         'end_period',
         'max_consecutively_day',
-        'is_allow_halfday',
+        // 'is_allow_halfday',
         'halfday_not_applicable_in',
         'is_expired_in_end_period',
         'expired_max_month',
@@ -34,7 +35,7 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
     protected $casts = [
         'renew_type' => TimeoffRenewType::class,
         'total_day' => 'float',
-        'is_allow_halfday' => 'boolean',
+        // 'is_allow_halfday' => 'boolean',
         'halfday_not_applicable_in' => 'array',
         'is_expired_in_end_period' => 'boolean',
     ];

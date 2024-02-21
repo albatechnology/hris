@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PtkpStatus;
-use App\Traits\BelongsToUser;
+use App\Traits\Models\BelongsToUser;
 
 class UserPayrollInfo extends BaseModel
 {

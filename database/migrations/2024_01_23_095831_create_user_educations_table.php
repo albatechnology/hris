@@ -15,13 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->string('type');
-            $table->string('level');
+            $table->string('level')->nullable();
+            $table->string('name')->nullable();
             $table->string('institution_name');
-            $table->string('majors');
+            $table->string('majors')->nullable();
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('score');
-            $table->double('fee', 12, 2, true)->default(0);
+            $table->date('expired_date')->nullable();
+            $table->string('score')->nullable();
+            $table->unsignedDouble('fee', 12, 2)->nullable();
             $table->timestamps();
         });
     }

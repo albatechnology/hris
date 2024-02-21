@@ -9,7 +9,7 @@ enum Religion: string
     case ISLAM = 'islam';
     case KRISTEN = 'kristen';
     case KHATOLIK = 'khatolik';
-    case BUDHA = 'budha';
+    case BUDDHA = 'buddha';
     case HINDU = 'hindu';
     case KONGHUCU = 'konghucu';
     case OTHER = 'other';
