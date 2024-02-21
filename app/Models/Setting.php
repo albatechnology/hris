@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\SettingKey;
 use App\Enums\SettingValueType;
+
 // use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Setting extends BaseModel

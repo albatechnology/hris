@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Schedule extends BaseModel implements TenantedInterface
 {
-    use CustomSoftDeletes, CompanyTenanted;
+    use CompanyTenanted, CustomSoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -30,18 +30,18 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_include_early_out' => 'boolean',
     ];
 
-    public function shifts() : BelongsToMany
+    public function shifts(): BelongsToMany
     {
         // return $this->belongsToMany(Shift::class, 'schedule_shifts')->using(ScheduleShift::class)->withPivot('order');
         return $this->belongsToMany(Shift::class, 'schedule_shifts')->withPivot('order');
     }
 
-    public function shift() : HasOne
+    public function shift(): HasOne
     {
         return $this->hasOne(ScheduleShift::class)->orderByDesc('order');
     }
 
-    public function users() : BelongsToMany
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_schedules', 'schedule_id', 'user_id');
     }

@@ -35,11 +35,11 @@ class AttendanceController extends BaseController
                 AllowedFilter::exact('shift_id'),
                 AllowedFilter::scope('company_id', 'whereCompanyId'),
                 AllowedFilter::scope('shift_id', 'whereShiftId'),
-                'is_clock_in', 'time', 'type', 'is_approved', 'approved_by'
+                'is_clock_in', 'time', 'type', 'is_approved', 'approved_by',
             ])
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->allowedSorts([
-                'id', 'user_id', 'schedule_id', 'shift_id', 'is_clock_in', 'time', 'type', 'is_approved', 'approved_by', 'created_at'
+                'id', 'user_id', 'schedule_id', 'shift_id', 'is_clock_in', 'time', 'type', 'is_approved', 'approved_by', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -61,7 +61,7 @@ class AttendanceController extends BaseController
 
         DB::beginTransaction();
         try {
-            if (!$attendance) {
+            if (! $attendance) {
                 $attendance = Attendance::create($request->validated());
             }
 
@@ -69,6 +69,7 @@ class AttendanceController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -78,6 +79,7 @@ class AttendanceController extends BaseController
     public function destroy(Attendance $attendance)
     {
         $attendance->delete();
+
         return $this->deletedResponse();
     }
 
@@ -85,6 +87,7 @@ class AttendanceController extends BaseController
     {
         $attendance = Attendance::withTrashed()->findOrFail($id);
         $attendance->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -92,6 +95,7 @@ class AttendanceController extends BaseController
     {
         $attendance = Attendance::withTrashed()->findOrFail($id);
         $attendance->restore();
+
         return new AttendanceResource($attendance);
     }
 }

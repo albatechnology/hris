@@ -13,7 +13,7 @@ trait CustomSoftDeletes
     public static function bootCustomSoftDeletes()
     {
         static::deleted(function (self $model) {
-            if (!str_contains(request()->url(), 'force-delete')) {
+            if (! str_contains(request()->url(), 'force-delete')) {
                 $model->deleted_by = auth('sanctum')->user()->id;
                 $model->saveQuietly();
             }

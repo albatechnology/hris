@@ -37,7 +37,7 @@ class PayrollComponentController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'type', 'amount', 'is_taxable', 'period_type', 'is_monthly_prorate', 'is_daily_default', 'daily_maximum_amount_type', 'daily_maximum_amount', 'is_one_time_bonus', 'created_at'
+                'id', 'company_id', 'name', 'type', 'amount', 'is_taxable', 'period_type', 'is_monthly_prorate', 'is_daily_default', 'daily_maximum_amount_type', 'daily_maximum_amount', 'is_one_time_bonus', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -49,7 +49,7 @@ class PayrollComponentController extends BaseController
         return new PayrollComponentResource($payrollComponent);
     }
 
-    public function store(StoreRequest $request): PayrollComponentResource | JsonResponse
+    public function store(StoreRequest $request): PayrollComponentResource|JsonResponse
     {
         DB::beginTransaction();
         try {
@@ -72,13 +72,14 @@ class PayrollComponentController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
         return new PayrollComponentResource($payrollComponent->refresh());
     }
 
-    public function update(PayrollComponent $payrollComponent, UpdateRequest $request): PayrollComponentResource | JsonResponse
+    public function update(PayrollComponent $payrollComponent, UpdateRequest $request): PayrollComponentResource|JsonResponse
     {
         DB::beginTransaction();
         try {
@@ -101,6 +102,7 @@ class PayrollComponentController extends BaseController
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 
@@ -117,6 +119,7 @@ class PayrollComponentController extends BaseController
             $payrollComponent->delete();
         } catch (\Exception $th) {
             DB::rollBack();
+
             return $this->errorResponse($th->getMessage());
         }
 

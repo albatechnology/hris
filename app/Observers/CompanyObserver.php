@@ -12,7 +12,7 @@ class CompanyObserver
      */
     public function created(Company $company): void
     {
-        if (!$company->timeoffRegulation) {
+        if (! $company->timeoffRegulation) {
             $company->timeoffRegulation()->create([
                 'renew_type' => TimeoffRenewType::ANNUAL,
                 'total_day' => 12,

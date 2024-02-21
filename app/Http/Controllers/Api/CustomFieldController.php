@@ -30,7 +30,7 @@ class CustomFieldController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'key', 'type', 'options', 'created_at'
+                'id', 'company_id', 'key', 'type', 'options', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -59,6 +59,7 @@ class CustomFieldController extends BaseController
     public function destroy(CustomField $customField)
     {
         $customField->delete();
+
         return $this->deletedResponse();
     }
 
@@ -66,6 +67,7 @@ class CustomFieldController extends BaseController
     {
         $customField = CustomField::withTrashed()->findOrFail($id);
         $customField->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -73,6 +75,7 @@ class CustomFieldController extends BaseController
     {
         $customField = CustomField::withTrashed()->findOrFail($id);
         $customField->restore();
+
         return new CustomFieldResource($customField);
     }
 }

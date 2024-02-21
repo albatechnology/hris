@@ -26,7 +26,7 @@ class ScheduleShiftRequest extends FormRequest
         return [
             'shifts' => 'nullable|array',
             'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
-            'shifts.*.order' => 'required|integer'
+            'shifts.*.order' => 'required|integer',
         ];
     }
 }

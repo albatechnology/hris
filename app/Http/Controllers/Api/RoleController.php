@@ -6,9 +6,9 @@ use App\Http\Requests\Api\Role\StoreRequest;
 use App\Http\Resources\Role\RoleResource;
 use App\Models\Role;
 use App\Services\PermissionService;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
-use Illuminate\Support\Facades\Artisan;
 
 class RoleController extends BaseController
 {
@@ -41,7 +41,6 @@ class RoleController extends BaseController
     /**
      * Store a newly created resource in storage.
      *
-     * @param  StoreRequest  $request
      * @return RoleResource
      */
     public function store(StoreRequest $request)
@@ -61,10 +60,10 @@ class RoleController extends BaseController
 
         return new RoleResource($role);
     }
+
     /**
      * Display the specified resource.
      *
-     * @param  Role  $role
      * @return RoleResource
      */
     public function show(Role $role)
@@ -75,13 +74,13 @@ class RoleController extends BaseController
     /**
      * Update the specified resource in storage.
      *
-     * @param  Role  $role
-     * @param  StoreRequest  $request
      * @return RoleResource
      */
     public function update(Role $role, StoreRequest $request)
     {
-        if ($role->id == 1) return response()->json(['message' => 'Role administrator tidak dapat diupdate!']);
+        if ($role->id == 1) {
+            return response()->json(['message' => 'Role administrator tidak dapat diupdate!']);
+        }
 
         $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
         $role = DB::transaction(function () use ($request, $permissionNames, $role) {
@@ -98,6 +97,7 @@ class RoleController extends BaseController
 
         return new RoleResource($role);
     }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -106,8 +106,11 @@ class RoleController extends BaseController
      */
     public function destroy(Role $role)
     {
-        if ($role->id == 1) return response()->json(['message' => 'Role administrator tidak dapat dihapus!']);
+        if ($role->id == 1) {
+            return response()->json(['message' => 'Role administrator tidak dapat dihapus!']);
+        }
         $role->delete();
+
         return $this->deletedResponse();
     }
 }

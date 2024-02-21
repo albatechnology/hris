@@ -7,9 +7,9 @@ use App\Models\User;
 
 class AttendanceService
 {
-    public static function getTodayAttendance(int|string $scheduleId, int|string $shiftId, User $user = null, $date = null): Attendance | null
+    public static function getTodayAttendance(int|string $scheduleId, int|string $shiftId, ?User $user = null, $date = null): ?Attendance
     {
-        if (!$user) {
+        if (! $user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }
@@ -21,7 +21,9 @@ class AttendanceService
             ->whereHas('details', fn ($q) => $q->whereDate('time', $date))
             ->first();
 
-        if (!$attendance) return null;
+        if (! $attendance) {
+            return null;
+        }
 
         return $attendance;
     }

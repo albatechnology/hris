@@ -9,13 +9,10 @@ class ScheduleService
 {
     /**
      * get user today schedule.
-     *
-     * @param User|null $user
-     * @return Schedule|null
      */
-    public static function getTodaySchedule(User $user = null, $date = null): Schedule | null
+    public static function getTodaySchedule(?User $user = null, $date = null): ?Schedule
     {
-        if (!$user) {
+        if (! $user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }
@@ -23,7 +20,9 @@ class ScheduleService
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
 
         $schedule = $user->schedules()->whereDate('effective_date', '<=', $date)->orderByDesc('effective_date')->first();
-        if (!$schedule) return null;
+        if (! $schedule) {
+            return null;
+        }
 
         return $schedule->load('shift');
     }
@@ -31,14 +30,13 @@ class ScheduleService
     /**
      * Check the availability of user's schedule within a given date range.
      *
-     * @param User|null $user The user for whom the schedule availability is being checked.
-     * @param mixed $startDate The effective_date for the schedule availability check.
-     * @param mixed $endDate The effective_date for the schedule availability check.
-     * @return bool
+     * @param  User|null  $user  The user for whom the schedule availability is being checked.
+     * @param  mixed  $startDate  The effective_date for the schedule availability check.
+     * @param  mixed  $endDate  The effective_date for the schedule availability check.
      */
-    public static function checkAvailableSchedule(User $user = null, $startDate = null, $endDate = null): bool
+    public static function checkAvailableSchedule(?User $user = null, $startDate = null, $endDate = null): bool
     {
-        if (!$user) {
+        if (! $user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }

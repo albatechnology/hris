@@ -11,7 +11,6 @@ use App\Models\Group;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\PermissionService;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +26,7 @@ class UserSeeder extends Seeder
             'name' => 'Super Admin',
             'email' => 'superadmin@gmail.com',
             'password' => '12345678',
-            'type' => UserType::SUPER_ADMIN
+            'type' => UserType::SUPER_ADMIN,
         ]);
 
         $adminRole = Role::create([
@@ -42,7 +41,7 @@ class UserSeeder extends Seeder
             'group_id' => $group->id,
             'company_id' => null,
             'branch_id' => null,
-            'name' => 'Administrator - ' . $group->name,
+            'name' => 'Administrator - '.$group->name,
             'email' => 'admin1@gmail.com',
             'password' => '12345678',
             'type' => UserType::ADMINISTRATOR,
@@ -57,7 +56,7 @@ class UserSeeder extends Seeder
             'group_id' => $group->id,
             'company_id' => null,
             'branch_id' => null,
-            'name' => 'Administrator 12 - ' . $group->name,
+            'name' => 'Administrator 12 - '.$group->name,
             'email' => 'admin12@gmail.com',
             'password' => '12345678',
             'type' => UserType::ADMINISTRATOR,
@@ -74,7 +73,7 @@ class UserSeeder extends Seeder
             'group_id' => $group->id,
             'company_id' => null,
             'branch_id' => null,
-            'name' => 'Administrator - ' . $group->name,
+            'name' => 'Administrator - '.$group->name,
             'email' => 'admin2@gmail.com',
             'password' => '12345678',
             'type' => UserType::ADMINISTRATOR,
@@ -87,7 +86,6 @@ class UserSeeder extends Seeder
         ]);
 
         /** ================================================================= */
-
         Branch::all()->each(function ($branch) {
             // $faker = \Faker\Factory::create('id_ID');
             for ($i = 1; $i < 4; $i++) {

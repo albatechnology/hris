@@ -29,7 +29,7 @@ class OvertimeRequestController extends BaseController
                 AllowedFilter::exact('id'),
             ])
             ->allowedSorts([
-                'id', 'date'
+                'id', 'date',
             ])
             ->paginate($this->per_page);
 
@@ -41,7 +41,7 @@ class OvertimeRequestController extends BaseController
         return new OvertimeRequestResource($overtimeRequest);
     }
 
-    public function store(StoreRequest $request): OvertimeRequestResource | JsonResponse
+    public function store(StoreRequest $request): OvertimeRequestResource|JsonResponse
     {
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
@@ -52,7 +52,7 @@ class OvertimeRequestController extends BaseController
         return new OvertimeRequestResource($overtimeRequest);
     }
 
-    public function updateStatus(UpdateStatusRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource | JsonResponse
+    public function updateStatus(UpdateStatusRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
     {
         try {
             $overtimeRequest->update([

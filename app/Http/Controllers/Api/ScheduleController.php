@@ -30,11 +30,11 @@ class ScheduleController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'effective_date'
+                'name', 'effective_date',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'effective_date', 'created_at'
+                'id', 'company_id', 'name', 'effective_date', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -63,6 +63,7 @@ class ScheduleController extends BaseController
     public function destroy(Schedule $schedule)
     {
         $schedule->delete();
+
         return $this->deletedResponse();
     }
 
@@ -70,6 +71,7 @@ class ScheduleController extends BaseController
     {
         $schedule = Schedule::withTrashed()->findOrFail($id);
         $schedule->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -77,6 +79,7 @@ class ScheduleController extends BaseController
     {
         $schedule = Schedule::withTrashed()->findOrFail($id);
         $schedule->restore();
+
         return new ScheduleResource($schedule);
     }
 
@@ -94,7 +97,9 @@ class ScheduleController extends BaseController
     public function today()
     {
         $schedule = ScheduleService::getTodaySchedule();
-        if (!$schedule) return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
+        if (! $schedule) {
+            return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
+        }
 
         return new ScheduleResource($schedule->load('shift.shift'));
     }

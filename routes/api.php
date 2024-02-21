@@ -1,40 +1,38 @@
 <?php
 
-use App\Enums\AttendanceType;
-use App\Enums\Gender;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\GroupController;
-use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
+use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
+use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
+use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\TimeoffController;
-use App\Http\Controllers\Api\TimeoffRegulationController;
-use App\Http\Controllers\Api\TimeoffRegulationMonthController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\TimeoffPolicyController;
+use App\Http\Controllers\Api\TimeoffRegulationController;
+use App\Http\Controllers\Api\TimeoffRegulationMonthController;
 use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserCustomFieldController;
 use App\Http\Controllers\Api\UserEducationController;
+use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\UserExperienceController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserTimeoffPolicyController;
-use App\Http\Controllers\Api\SupervisorTypeController;
-use App\Http\Controllers\Api\NationalHolidayController;
-use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\Api\PayrollComponentController;
-use App\Http\Controllers\Api\UserEventController;
-use App\Http\Controllers\Api\CustomFieldController;
-use App\Http\Controllers\Api\UserCustomFieldController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -88,8 +86,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('schedules', ScheduleController::class);
 
     Route::apiResource('attendances', AttendanceController::class)->except('update');
-
-
 
     Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
         Route::post('users', [UserTimeoffPolicyController::class, 'store']);

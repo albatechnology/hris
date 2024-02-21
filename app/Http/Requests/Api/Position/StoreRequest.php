@@ -24,7 +24,7 @@ class StoreRequest extends FormRequest
         return [
             'company_id' => 'required|exists:companies,id',
             'name' => 'required|string',
-            'order' => 'required|integer'
+            'order' => 'required|integer',
         ];
     }
 }

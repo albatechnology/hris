@@ -8,19 +8,16 @@ use App\Models\Setting;
 
 class SettingService
 {
-
     public static function getFileTypes()
     {
         $fileTypes = self::getValueOf(SettingKey::FILE_TYPE);
         if (is_array($fileTypes) && count($fileTypes) > 0) {
-            return '(' . implode(', ', $fileTypes) . ')';
+            return '('.implode(', ', $fileTypes).')';
         }
+
         return '';
     }
-    /**
-     * @param SettingKey|string $key
-     * @return mixed
-     */
+
     public static function getValueOf(SettingKey|string $key, $expectedValue = null): mixed
     {
         if ($key instanceof SettingKey) {
@@ -28,7 +25,10 @@ class SettingService
         }
 
         $setting = Setting::firstWhere('key', $key);
-        if (!$setting) return $expectedValue;
+        if (! $setting) {
+            return $expectedValue;
+        }
+
         return self::get($setting);
     }
 
@@ -81,33 +81,34 @@ class SettingService
 
     public static function string(Setting $setting)
     {
-        return '<input type="text" name="value" class="form-control" value="' . $setting->value . '" required>';
+        return '<input type="text" name="value" class="form-control" value="'.$setting->value.'" required>';
     }
 
     public static function toggle(Setting $setting)
     {
         return '<div class="form-group clearfix">
         <div class="icheck-primary d-inline">
-        <input type="radio" id="' . $setting->key->value . '-1" name="value" value="1" ' . ((bool) $setting->value == true ? 'checked' : '') . '>
-        <label for="' . $setting->key->value . '-1">ON</label>
+        <input type="radio" id="'.$setting->key->value.'-1" name="value" value="1" '.((bool) $setting->value == true ? 'checked' : '').'>
+        <label for="'.$setting->key->value.'-1">ON</label>
         </div>
         </br>
         <div class="icheck-primary d-inline">
-        <input type="radio" id="' . $setting->key->value . '-2" name="value" value="0" ' . ((bool) $setting->value == false ? 'checked' : '') . '>
-        <label for="' . $setting->key->value . '-2">OFF</label>
+        <input type="radio" id="'.$setting->key->value.'-2" name="value" value="0" '.((bool) $setting->value == false ? 'checked' : '').'>
+        <label for="'.$setting->key->value.'-2">OFF</label>
         </div>';
         // return '<input name="value" type="checkbox" ' . $checked . '>';
     }
 
     public static function singleSelect(Setting $setting)
     {
-        $options = ["a1", "a2", "a3", "s4"];
+        $options = ['a1', 'a2', 'a3', 's4'];
         $html = '<select name="value" class="form-control select2" required>';
         foreach ($options as $value) {
             $checked = $setting->value == $value ? 'selected' : '';
-            $html .= '<option value="' . $value . '" ' . $checked . '>' . $value . '</option>';
+            $html .= '<option value="'.$value.'" '.$checked.'>'.$value.'</option>';
         }
         $html .= '</select>';
+
         return $html;
     }
 
@@ -118,16 +119,18 @@ class SettingService
         //     $html .= '<option value="' . $value . '">' . $value . '</option>';
         // }
         $html .= '</select>';
+
         return $html;
     }
 
     public static function multipleSelectTags(Setting $setting)
     {
         $html = '<select name="value[]" class="form-control select2Tags" multiple required style="width: 100%">';
-        foreach (json_decode($setting->value ?? "[]") as $value) {
-            $html .= '<option value="' . $value . '" selected>' . $value . '</option>';
+        foreach (json_decode($setting->value ?? '[]') as $value) {
+            $html .= '<option value="'.$value.'" selected>'.$value.'</option>';
         }
         $html .= '</select>';
+
         return $html;
     }
 }

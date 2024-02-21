@@ -35,11 +35,11 @@ class TimeoffPolicyController extends BaseController
                 'code',
                 'is_for_all_user',
                 'is_enable_block_leave',
-                'is_unlimited_day'
+                'is_unlimited_day',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at'
+                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -88,6 +88,7 @@ class TimeoffPolicyController extends BaseController
     public function destroy(TimeoffPolicy $timeoffPolicy)
     {
         $timeoffPolicy->delete();
+
         return $this->deletedResponse();
     }
 
@@ -95,6 +96,7 @@ class TimeoffPolicyController extends BaseController
     {
         $timeoffPolicy = TimeoffPolicy::withTrashed()->findOrFail($id);
         $timeoffPolicy->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -102,6 +104,7 @@ class TimeoffPolicyController extends BaseController
     {
         $timeoffPolicy = TimeoffPolicy::withTrashed()->findOrFail($id);
         $timeoffPolicy->restore();
+
         return new TimeoffPolicyResource($timeoffPolicy);
     }
 }

@@ -7,21 +7,21 @@ namespace App\Models;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements TenantedInterface
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -68,14 +68,16 @@ class User extends Authenticatable implements TenantedInterface
     protected static function booted(): void
     {
         static::saving(function (self $model) {
-            if (!empty($model->branch_id)) {
+            if (! empty($model->branch_id)) {
                 $model->company_id = $model->branch?->company_id;
                 $model->group_id = $model->branch?->company?->group_id;
             }
         });
 
         static::creating(function (self $model) {
-            if (empty($model->type)) $model->type = UserType::USER;
+            if (empty($model->type)) {
+                $model->type = UserType::USER;
+            }
         });
 
         static::created(function (self $model) {
@@ -88,21 +90,27 @@ class User extends Authenticatable implements TenantedInterface
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        if ($user->is_super_admin) return $query;
+        if ($user->is_super_admin) {
+            return $query;
+        }
         if ($user->is_administrator) {
             return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->whereHas('companies', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('companies.group_id', $user->group_id)));
             // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
-        $companyIds =  $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+
         return $query->whereIn('users.company_id', $companyIds);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
     {
         $query->tenanted()->where('id', $id);
-        if ($fail) return $query->firstOrFail();
+        if ($fail) {
+            return $query->firstOrFail();
+        }
+
         return $query->first();
     }
 
@@ -119,7 +127,7 @@ class User extends Authenticatable implements TenantedInterface
     protected function password(): Attribute
     {
         return Attribute::make(
-            set: fn (string|null $value) => empty($value) ? null : bcrypt($value),
+            set: fn (?string $value) => empty($value) ? null : bcrypt($value),
         );
     }
 

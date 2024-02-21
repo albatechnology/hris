@@ -23,6 +23,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         $customField = CustomField::findOrFail($this->custom_field_id);
+
         return [
             'custom_field_id' => 'required|string',
             'value' => $customField->type->getValidationRules(),

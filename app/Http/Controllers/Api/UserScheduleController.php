@@ -28,11 +28,11 @@ class UserScheduleController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'effective_date'
+                'name', 'effective_date',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'effective_date', 'created_at'
+                'id', 'company_id', 'name', 'effective_date', 'created_at',
             ])
             ->paginate($this->per_page);
 

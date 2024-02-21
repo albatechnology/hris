@@ -36,13 +36,16 @@ class UserCustomFieldController extends BaseController
     public function show(User $user, UserCustomField $customField)
     {
         $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
+
         return new UserCustomFieldResource($userCustomField);
     }
 
     public function store(User $user, StoreRequest $request)
     {
         $userCustomField = $user->customFields()->where('custom_field_id', $request->custom_field_id)->exists();
-        if ($userCustomField) return $this->errorResponse('Custom field already exists', code: Response::HTTP_BAD_REQUEST);
+        if ($userCustomField) {
+            return $this->errorResponse('Custom field already exists', code: Response::HTTP_BAD_REQUEST);
+        }
 
         $userCustomField = $user->customFields()->create($request->validated());
 

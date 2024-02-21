@@ -29,7 +29,7 @@ class StoreRequest extends FormRequest
         return [
             'group_id' => 'nullable|exists:groups,id',
             'company_id' => ['nullable', new CompanyTenantedRule()],
-            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, "Branch not found")],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'manager_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
@@ -43,7 +43,7 @@ class StoreRequest extends FormRequest
             'company_ids' => 'nullable|array',
             'company_ids.*' => ['required', new CompanyTenantedRule()],
             'branch_ids' => 'nullable|array',
-            'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, "Branch not found")],
+            'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
         ];
     }
 }

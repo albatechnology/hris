@@ -28,10 +28,10 @@ class DepartmentController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('division_id'),
-                'name'
+                'name',
             ])
             ->allowedSorts([
-                'id', 'division_id', 'name', 'created_at'
+                'id', 'division_id', 'name', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -60,6 +60,7 @@ class DepartmentController extends BaseController
     public function destroy(Department $Department)
     {
         $Department->delete();
+
         return $this->deletedResponse();
     }
 
@@ -67,6 +68,7 @@ class DepartmentController extends BaseController
     {
         $Department = Department::withTrashed()->findOrFail($id);
         $Department->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -74,6 +76,7 @@ class DepartmentController extends BaseController
     {
         $Department = Department::withTrashed()->findOrFail($id);
         $Department->restore();
+
         return new DepartmentResource($Department);
     }
 }

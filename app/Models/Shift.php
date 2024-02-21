@@ -38,7 +38,7 @@ class Shift extends BaseModel implements TenantedInterface
         'is_enable_auto_overtime' => 'boolean',
     ];
 
-    protected static function booted() : void
+    protected static function booted(): void
     {
         static::saving(function (self $model) {
             if (! $model->is_enable_validation) {
@@ -58,7 +58,7 @@ class Shift extends BaseModel implements TenantedInterface
         });
     }
 
-    public function schedules() : BelongsToMany
+    public function schedules(): BelongsToMany
     {
         return $this->belongsToMany(Schedule::class, 'schedule_shifts');
     }

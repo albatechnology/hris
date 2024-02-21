@@ -11,12 +11,10 @@ class FormulaService
     /**
      * sync formula with related model
      *
-     * @param Model $model
-     * @param array|null $formulas
-     * @param Formula|null $parent, used for insert recursively (nested $formulas)
-     * @return void
+     * @param  array|null  $formulas
+     * @param  Formula|null  $parent,  used for insert recursively (nested $formulas)
      */
-    public static function sync(Model $model, array $formulas = [], Formula $parent = null): void
+    public static function sync(Model $model, array $formulas = [], ?Formula $parent = null): void
     {
         // delete all existing formulas
         self::destroy($model);
@@ -27,9 +25,6 @@ class FormulaService
 
     /**
      * destroy formula from related model
-     *
-     * @param Model $model
-     * @return void
      */
     public static function destroy(Model $model): void
     {
@@ -46,12 +41,9 @@ class FormulaService
     /**
      * sync formula with related model
      *
-     * @param Model $model
-     * @param array $formulas
-     * @param Formula|null $parent, used for insert recursively (nested $formulas)
-     * @return void
+     * @param  Formula|null  $parent,  used for insert recursively (nested $formulas)
      */
-    public static function create(Model $model, array $formulas, Formula $parent = null): void
+    public static function create(Model $model, array $formulas, ?Formula $parent = null): void
     {
         foreach ($formulas as $formula) {
             if (isset($formula['child']) && is_array($formula['child'])) {
@@ -72,9 +64,9 @@ class FormulaService
             }
 
             // create the component of it's formula
-            collect(explode(",", $formula['value']))->each(function ($formulaValue) use ($newFormula) {
+            collect(explode(',', $formula['value']))->each(function ($formulaValue) use ($newFormula) {
                 $newFormula->formulaComponents()->create([
-                    'value' => $formulaValue
+                    'value' => $formulaValue,
                 ]);
             });
         }

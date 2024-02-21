@@ -31,11 +31,11 @@ class LiveAttendanceLocationController extends BaseController
                 AllowedFilter::exact('id'),
                 'radius',
                 'lat',
-                'lng'
+                'lng',
             ])
             ->allowedIncludes(['liveAttendance'])
             ->allowedSorts([
-                'id', 'radius', 'lat', 'lng', 'created_at'
+                'id', 'radius', 'lat', 'lng', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -64,18 +64,21 @@ class LiveAttendanceLocationController extends BaseController
     public function destroy(LiveAttendance $liveAttendance, LiveAttendanceLocation $location)
     {
         $liveAttendance->locations()->findOrFail($location->id)->delete();
+
         return $this->deletedResponse();
     }
 
     public function forceDelete(LiveAttendance $liveAttendance, $id)
     {
         $liveAttendance->locations()->withTrashed()->findOrFail($id)->forceDelete();
+
         return $this->deletedResponse();
     }
 
     public function restore(LiveAttendance $liveAttendance, $id)
     {
         $location = $liveAttendance->locations()->withTrashed()->findOrFail($id)->restore();
+
         return new LiveAttendanceLocationResource($location);
     }
 }

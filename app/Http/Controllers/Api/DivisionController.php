@@ -28,10 +28,10 @@ class DivisionController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name'
+                'name',
             ])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'created_at'
+                'id', 'company_id', 'name', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -60,6 +60,7 @@ class DivisionController extends BaseController
     public function destroy(Division $division)
     {
         $division->delete();
+
         return $this->deletedResponse();
     }
 
@@ -67,6 +68,7 @@ class DivisionController extends BaseController
     {
         $division = Division::withTrashed()->findOrFail($id);
         $division->forceDelete();
+
         return $this->deletedResponse();
     }
 
@@ -74,6 +76,7 @@ class DivisionController extends BaseController
     {
         $division = Division::withTrashed()->findOrFail($id);
         $division->restore();
+
         return new DivisionResource($division);
     }
 }

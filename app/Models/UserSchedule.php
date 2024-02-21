@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserSchedule extends BaseModel
 {
     public $incrementing = false;
+
     protected $fillable = ['user_id', 'schedule_id'];
 
     protected static function booted(): void

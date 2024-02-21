@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\Shift;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ScheduleSeeder extends Seeder
@@ -55,13 +54,13 @@ class ScheduleSeeder extends Seeder
             $shiftIds = collect($shifts)->pluck('id');
 
             $schedule = $company->schedules()->create([
-                'name' => 'Schedule 1 ' . $company->name,
+                'name' => 'Schedule 1 '.$company->name,
                 'effective_date' => date('Y-m-01'),
             ]);
             $schedule->shifts()->sync($shiftIds);
 
             $schedule = $company->schedules()->create([
-                'name' => 'Schedule 2 ' . $company->name,
+                'name' => 'Schedule 2 '.$company->name,
                 'effective_date' => date('Y-m-t'),
             ]);
             $schedule->shifts()->sync($shiftIds);

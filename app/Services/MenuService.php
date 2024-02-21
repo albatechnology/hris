@@ -18,7 +18,7 @@ class MenuService
     //     ];
     // }
 
-    public static function menu() : array
+    public static function menu(): array
     {
         return [
             self::masterData(),
@@ -27,10 +27,10 @@ class MenuService
         ];
     }
 
-    public static function visitorMenu() : array
+    public static function visitorMenu(): array
     {
         return [
-            new MenuCategory('MANAJEMEN DOKUMEN', ...[self::fileMenu(), self::suratMasuk(), self::suratKeluar(), self::peminjamanMenu()])
+            new MenuCategory('MANAJEMEN DOKUMEN', ...[self::fileMenu(), self::suratMasuk(), self::suratKeluar(), self::peminjamanMenu()]),
         ];
     }
 

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\OvertimeRequest;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {

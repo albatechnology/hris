@@ -21,9 +21,11 @@ trait BaseEnum
         return collect(self::cases())->map(fn ($enum) => $enum->value)->all();
     }
 
-    public static function getValue(string $value = null): self|null
+    public static function getValue(?string $value = null): ?self
     {
-        if (empty($value)) return null;
+        if (empty($value)) {
+            return null;
+        }
 
         return collect(self::cases())->first(fn ($enum) => $enum->name == $value || $enum->value == $value);
     }

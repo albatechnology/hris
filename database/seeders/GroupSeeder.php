@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Division;
 use App\Models\Group;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class GroupSeeder extends Seeder
@@ -40,7 +39,7 @@ class GroupSeeder extends Seeder
                 'order' => 5,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         $division = new Division([
@@ -66,9 +65,8 @@ class GroupSeeder extends Seeder
             ],
         ];
 
-
         $group = Group::create([
-            'name' => 'SUN EDUCATION GROUP'
+            'name' => 'SUN EDUCATION GROUP',
         ]);
 
         $company = $group->companies()->create([
@@ -82,7 +80,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'SUN Plaza',
@@ -116,7 +114,7 @@ class GroupSeeder extends Seeder
             'lng' => '101.5256048',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'SUNWAY Geo',
@@ -140,7 +138,7 @@ class GroupSeeder extends Seeder
         ]);
 
         $group = Group::create([
-            'name' => 'ALBA GROUP'
+            'name' => 'ALBA GROUP',
         ]);
 
         $company = $group->companies()->create([
@@ -154,7 +152,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.6645009',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'Alba Alam Sutera',
