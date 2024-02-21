@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('overtime_formula_components', function (Blueprint $table) {
+        Schema::create('formula_components', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('overtime_formula_id')->constrained();
+            $table->foreignId('formula_id')->constrained();
             $table->string('value');
             $table->timestamps();
         });
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('overtime_formula_components');
+        Schema::dropIfExists('formula_components');
     }
 };

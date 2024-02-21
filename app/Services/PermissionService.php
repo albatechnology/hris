@@ -127,6 +127,12 @@ class PermissionService
                 'timeoff_regulation_month_edit',
                 'timeoff_regulation_month_delete',
             ],
+            'payroll_access' => [
+                'payroll_read',
+                'payroll_create',
+                'payroll_edit',
+                'payroll_delete',
+            ],
             'overtime_access' => [
                 'overtime_read',
                 'overtime_create',
