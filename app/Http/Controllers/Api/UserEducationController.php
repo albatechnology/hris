@@ -27,7 +27,7 @@ class UserEducationController extends BaseController
         $data = QueryBuilder::for(UserEducation::where('user_id', $user->id))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                'level', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee'
+                'type', 'level', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee'
             ])
             ->allowedSorts([
                 'id', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee', 'created_at'
