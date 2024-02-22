@@ -35,7 +35,8 @@ class MenuService
     {
         $groups = new Submenu('group_access', 'groups', 'fas fa-', 'Groups');
         $companies = new Submenu('role_access', 'companies', 'fas fa-', 'Companies');
+        $branches = new Submenu('role_access', 'branches', 'fas fa-', 'Branches');
 
-        return new Menu('group_management_access', 'fas fa-building', 'Groups', ...[$groups, $companies]);
+        return new Menu('group_management_access', 'fas fa-building', 'Groups', ...[$groups, $companies, $branches]);
     }
 }
