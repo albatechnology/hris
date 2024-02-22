@@ -9,9 +9,18 @@ use App\Models\TimeoffRegulation;
 
 class TimeoffRegulationService
 {
-    public static function create(Company $company, string $renewType): TimeoffRegulation
+    /**
+     * Create a new timeoff regulation based on the given company and renew type.
+     *
+     * @param Company $company The company for which the timeoff regulation is created
+     * @param TimeoffRenewType|string $renewType The type of renew for the timeoff regulation
+     * @return TimeoffRegulation The created timeoff regulation
+     */
+    public static function create(Company $company, TimeoffRenewType|string $renewType): TimeoffRegulation
     {
-        $renewType = TimeoffRenewType::tryFrom($renewType);
+        if (!($renewType instanceof TimeoffRenewType)) {
+            $renewType = TimeoffRenewType::tryFrom($renewType);
+        }
 
         if ($renewType->is(TimeoffRenewType::USER_PERIOD)) {
             return self::createUserPeriod($company);
@@ -24,7 +33,7 @@ class TimeoffRegulationService
 
     public static function createUserPeriod(Company $company): TimeoffRegulation
     {
-        return $company->timeoffRegulation()->create([
+        $timeoffRegulation = $company->timeoffRegulation()->create([
             'renew_type' => TimeoffRenewType::USER_PERIOD,
             'total_day' => 12,
             'start_period' => null,
@@ -40,6 +49,8 @@ class TimeoffRegulationService
             'dayoff_consecutively_working_day' => 15,
             'dayoff_consecutively_amount' => 1,
         ]);
+
+        return $timeoffRegulation;
     }
 
     public static function createMonthly(Company $company): TimeoffRegulation

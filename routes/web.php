@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +16,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Auth::routes();
+Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    Route::delete('users/mass/destroy', [UserController::class, 'massDestroy'])->name('users.mass.destroy');
+    Route::resource('users', UserController::class);
+
+    Route::delete('roles/mass/destroy', [RoleController::class, 'massDestroy'])->name('roles.mass.destroy');
+    Route::resource('roles', RoleController::class);
 });

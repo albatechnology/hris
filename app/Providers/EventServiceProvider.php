@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Company;
 use App\Models\OvertimeRequest;
+use App\Observers\CompanyObserver;
 use App\Observers\OvertimeRequestObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -27,7 +29,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         OvertimeRequest::observe(OvertimeRequestObserver::class);
-        // Company::observe(CompanyObserver::class);
+        Company::observe(CompanyObserver::class);
     }
 
     /**

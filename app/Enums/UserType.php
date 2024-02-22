@@ -10,6 +10,11 @@ enum UserType: string
     case ADMINISTRATOR = 'administrator';
     case USER = 'user';
 
+    public function hasPermission(string $access, string $permission): bool
+    {
+        return true;
+    }
+
     // public function getNotificationClass(): string
     // {
     //     return match ($this) {
