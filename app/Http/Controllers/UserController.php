@@ -71,7 +71,7 @@ class UserController extends Controller
     public function store(StoreRequest $request): RedirectResponse
     {
         try {
-            $this->model->create($request->all());
+            $this->model->create($request->validated());
 
             $alert['success'] = self::CREATED_MESSAGE;
         } catch (Exception $e) {
@@ -107,11 +107,7 @@ class UserController extends Controller
     public function update(UpdateRequest $request, User $user): RedirectResponse
     {
         try {
-            $user->update($request->except('password'));
-
-            if ($request->password) {
-                $user->update(['password' => Hash::make($request->password)]);
-            }
+            $user->update($request->validated());
 
             $alert['success'] = self::UPDATED_MESSAGE;
         } catch (Exception $e) {

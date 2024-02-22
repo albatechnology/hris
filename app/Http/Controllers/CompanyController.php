@@ -13,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Hash;
 use DataTables;
 
 class CompanyController extends Controller
@@ -71,7 +70,7 @@ class CompanyController extends Controller
     public function store(StoreRequest $request): RedirectResponse
     {
         try {
-            $this->model->create($request->all());
+            $this->model->create($request->validated());
 
             $alert['success'] = self::CREATED_MESSAGE;
         } catch (Exception $e) {
@@ -104,12 +103,10 @@ class CompanyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRequest $request, $id)
+    public function update(UpdateRequest $request, Company $company)
     {
         try {
-            $company = Company::findOrFail($id);
-            $company->update($request->all());
-            $company->syncPermissions(array_map('intval', $request->permission_ids ?? []));
+            $company->update($request->validated());
 
             $alert['success'] = self::UPDATED_MESSAGE;
         } catch (\Exception $th) {

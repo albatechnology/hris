@@ -97,7 +97,7 @@ class RoleController extends Controller
     {
         try {
             $role = Role::findOrFail($id);
-            $role->update($request->all());
+            $role->update($request->validated());
             $role->syncPermissions(array_map('intval', $request->permission_ids ?? []));
 
             $alert['success'] = self::UPDATED_MESSAGE;
