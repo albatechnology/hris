@@ -42,6 +42,7 @@ class User extends Authenticatable implements TenantedInterface
         'type',
         'nik',
         'phone',
+        'total_timeoff',
     ];
 
     /**
@@ -64,27 +65,6 @@ class User extends Authenticatable implements TenantedInterface
         'password' => 'hashed',
         'type' => UserType::class,
     ];
-
-    protected static function booted(): void
-    {
-        static::saving(function (self $model) {
-            if (! empty($model->branch_id)) {
-                $model->company_id = $model->branch?->company_id;
-                $model->group_id = $model->branch?->company?->group_id;
-            }
-        });
-
-        static::creating(function (self $model) {
-            if (empty($model->type)) {
-                $model->type = UserType::USER;
-            }
-        });
-
-        static::created(function (self $model) {
-            $model->detail()->create([]);
-            $model->payrollInfo()->create([]);
-        });
-    }
 
     public function scopeTenanted(Builder $query): Builder
     {

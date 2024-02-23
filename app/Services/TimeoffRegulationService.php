@@ -42,7 +42,7 @@ class TimeoffRegulationService
             'halfday_not_applicable_in' => ['06', '07'],
             'is_expired_in_end_period' => true,
             'expired_max_month' => null,
-            'min_working_month' => 3,
+            'min_working_month' => 1,
             'cut_off_date' => '20',
             'min_advance_leave_working_month' => 5,
             'max_advance_leave_request' => 3,
@@ -100,5 +100,13 @@ class TimeoffRegulationService
     {
         dump('createAnnual');
         dd($company);
+    }
+
+    public static function isJoinDatePassed($joinDate, int $minWorkingMonth): bool
+    {
+        $minWorkingMonthDate = new \DateTime($joinDate);
+        $minWorkingMonthDate->add(new \DateInterval(sprintf('P%sM', $minWorkingMonth)));
+        if (date('Y-m-d') >= $minWorkingMonthDate->format('Y-m-d')) return true;
+        return false;
     }
 }

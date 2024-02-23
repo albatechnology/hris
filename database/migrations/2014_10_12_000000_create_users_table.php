@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('nik', 20)->nullable();
             $table->string('phone', 18)->nullable();
+            $table->unsignedSmallInteger('total_timeoff')->default(0);
             $table->timestamps();
         });
     }
