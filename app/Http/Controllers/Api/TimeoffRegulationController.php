@@ -40,20 +40,10 @@ class TimeoffRegulationController extends BaseController
             return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
         }
 
-        $date = '2023-01-01';
-        $joinDate = new \DateTime($date);
-
-        $minWorkingMonth = new \DateTime($date);
-        dump($minWorkingMonth);
-        $minWorkingMonth->add(new \DateInterval(sprintf('P%sM', 2)));
-        dd($minWorkingMonth);
-
-        // compare $joinDate to today’s date
-
-        $workingMonth = $joinDate->diff($minWorkingMonth);
-        $workingMonth = $workingMonth->m * ($workingMonth->y > 0 ? $workingMonth->y : 1);
-        dump(gettype($workingMonth));
-        dd($workingMonth);
+        $cutOffDate = '05';
+        $joinDate = '2024-02-02';
+        dump(date('d', strtotime($cutOffDate)));
+        dd(date('d', strtotime($joinDate)));
 
         dump($request->validated());
 

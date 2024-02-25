@@ -59,7 +59,17 @@ class UserObserver
                 // 3. urutkan min_working_month dari yang terbesar
                 // 4. apabila join_date > min_working_month user tsb berhak mendapatkan jatah cuti
 
+                /** @var TimeoffPeriodRegulation $timeoffPeriodRegulation */
                 $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn ($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->detail->join_date, $timeoffPeriodRegulation->min_working_month));
+
+                if ($timeoffPeriodRegulation) {
+                    // 1. cek join_date user
+                    // 2. cek cut off date
+                    // 3. user dapet jatah cuti dari awal bulan join_date, tapi perlu di cek dulu cut off date nya. kalo user join nya dibawah cut off date, dia dapet jatah cuti bulan tsb, else gadapet
+                    $joinDateMonth = date('m', strtotime($user->detail->join_date));
+                    // if()
+                    $user->update(['total_timeoff' => $timeoffPeriodRegulation->max_working_month]);
+                }
             }
         }
     }
