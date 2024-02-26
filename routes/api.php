@@ -79,7 +79,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('schedules/today', [ScheduleController::class, 'today']);
     Route::group(['prefix' => 'schedules/{schedule}'], function () {
-        Route::put('shifts', [ScheduleController::class, 'updateShifts']);
+        // Route::put('shifts', [ScheduleController::class, 'updateShifts']);
         Route::post('users', [UserScheduleController::class, 'store']);
         Route::put('restore', [ScheduleController::class, 'restore']);
         Route::delete('force-delete', [ScheduleController::class, 'forceDelete']);

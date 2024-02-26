@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\Api\Schedule\ScheduleShiftRequest;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -48,14 +48,42 @@ class ScheduleController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $schedule = Schedule::create($request->validated());
+        DB::beginTransaction();
+        try {
+            $schedule = Schedule::create($request->validated());
+
+            $data = [];
+            foreach ($request->shifts ?? [] as $shift) {
+                $data[$shift['id']] = ['order' => $shift['order']];
+            }
+            $schedule->shifts()->sync($data);
+
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new ScheduleResource($schedule);
     }
 
     public function update(Schedule $schedule, StoreRequest $request)
     {
-        $schedule->update($request->validated());
+        DB::beginTransaction();
+        try {
+            $schedule->update($request->validated());
+
+            $data = [];
+            foreach ($request->shifts ?? [] as $shift) {
+                $data[$shift['id']] = ['order' => $shift['order']];
+            }
+            $schedule->shifts()->sync($data);
+
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
 
         return (new ScheduleResource($schedule))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
@@ -83,21 +111,21 @@ class ScheduleController extends BaseController
         return new ScheduleResource($schedule);
     }
 
-    public function updateShifts(Schedule $schedule, ScheduleShiftRequest $request)
-    {
-        $data = [];
-        foreach ($request->shifts ?? [] as $shift) {
-            $data[$shift['id']] = ['order' => $shift['order']];
-        }
-        $schedule->shifts()->sync($data);
+    // public function updateShifts(Schedule $schedule, ScheduleShiftRequest $request)
+    // {
+    //     $data = [];
+    //     foreach ($request->shifts ?? [] as $shift) {
+    //         $data[$shift['id']] = ['order' => $shift['order']];
+    //     }
+    //     $schedule->shifts()->sync($data);
 
-        return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
-    }
+    //     return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
+    // }
 
     public function today()
     {
         $schedule = ScheduleService::getTodaySchedule();
-        if (! $schedule) {
+        if (!$schedule) {
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
         }
 
