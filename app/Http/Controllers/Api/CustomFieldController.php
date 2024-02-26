@@ -14,11 +14,11 @@ class CustomFieldController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->middleware('permission:cumtom_field_access', ['only' => ['restore']]);
-        $this->middleware('permission:cumtom_field_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:cumtom_field_create', ['only' => 'store']);
-        $this->middleware('permission:cumtom_field_edit', ['only' => 'update']);
-        $this->middleware('permission:cumtom_field_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:custom_field_access', ['only' => ['restore']]);
+        $this->middleware('permission:custom_field_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:custom_field_create', ['only' => 'store']);
+        $this->middleware('permission:custom_field_edit', ['only' => 'update']);
+        $this->middleware('permission:custom_field_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
