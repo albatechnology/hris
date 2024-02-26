@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -25,4 +28,13 @@ Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
 
     Route::delete('roles/mass/destroy', [RoleController::class, 'massDestroy'])->name('roles.mass.destroy');
     Route::resource('roles', RoleController::class);
+
+    Route::delete('groups/mass/destroy', [GroupController::class, 'massDestroy'])->name('groups.mass.destroy');
+    Route::resource('groups', GroupController::class);
+
+    Route::delete('branches/mass/destroy', [BranchController::class, 'massDestroy'])->name('branches.mass.destroy');
+    Route::resource('branches', BranchController::class);
+
+    Route::delete('companies/mass/destroy', [CompanyController::class, 'massDestroy'])->name('companies.mass.destroy');
+    Route::resource('companies', CompanyController::class);
 });

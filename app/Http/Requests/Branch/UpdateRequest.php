@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Company;
+namespace App\Http\Requests\Branch;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRequest extends FormRequest
+class UpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'required|exists:groups,id',
+            'company_id' => 'required|exists:companies,id',
             'name' => 'required|string',
             'country' => 'nullable|string',
             'province' => 'nullable|string',
@@ -31,7 +31,6 @@ class StoreRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'address' => 'nullable|string',
-            'currency_code' => 'required|string',
         ];
     }
 }

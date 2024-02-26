@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Company\MassDestroyRequest;
-use App\Http\Requests\Company\StoreRequest;
-use App\Http\Requests\Company\UpdateRequest;
-use App\Models\Company;
+use App\Http\Requests\Group\MassDestroyRequest;
+use App\Http\Requests\Group\StoreRequest;
+use App\Http\Requests\Group\UpdateRequest;
+use App\Models\Group;
 use App\View\Components\Datatables\DatatableAction;
 use Exception;
 use Illuminate\Contracts\View\View;
@@ -15,15 +15,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use DataTables;
 
-class CompanyController extends Controller
+class GroupController extends Controller
 {
     // constructor
-    public function __construct(public Company $model)
+    public function __construct(public Group $model)
     {
-        $this->middleware('permission:company_access', ['only' => ['index', 'show']]);
-        $this->middleware('permission:company_create', ['only' => ['create', 'store']]);
-        $this->middleware('permission:company_edit', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:company_delete', ['only' => ['destroy', 'massDestroy']]);
+        $this->middleware('permission:group_access', ['only' => ['index', 'show']]);
+        $this->middleware('permission:group_create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:group_edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:group_delete', ['only' => ['destroy', 'massDestroy']]);
     }
 
     /**
@@ -32,17 +32,17 @@ class CompanyController extends Controller
     public function index(Request $request): mixed
     {
         if ($request->ajax()) {
-            $query = $this->model->with('group');
+            $query = $this->model->query();
             $table = DataTables::of($query);
 
             $table->addColumn('checkbox', '&nbsp;');
 
             $table->editColumn('actions', function ($row) {
                 return Blade::renderComponent(new DatatableAction(
-                    showRoute: route('companies.show', $row->id),
-                    editRoute: route('companies.edit', $row->id),
-                    destroyRoute: route('companies.destroy', $row->id),
-                    access: 'company_access',
+                    showRoute: route('groups.show', $row->id),
+                    editRoute: route('groups.edit', $row->id),
+                    destroyRoute: route('groups.destroy', $row->id),
+                    access: 'group_access',
                 ));
             });
 
@@ -51,7 +51,7 @@ class CompanyController extends Controller
             return $table->make(true);
         }
 
-        return view('companies.index');
+        return view('groups.index');
     }
 
     /**
@@ -59,7 +59,7 @@ class CompanyController extends Controller
      */
     public function create(): View
     {
-        return view('companies.create', [
+        return view('groups.create', [
             'model' => $this->model,
         ]);
     }
@@ -77,59 +77,59 @@ class CompanyController extends Controller
             $alert['error'] = $e->getMessage();
         }
 
-        return to_route('companies.index')->with(key($alert), current($alert));
+        return to_route('groups.index')->with(key($alert), current($alert));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Company $company): View
+    public function show(Group $group): View
     {
-        return view('companies.show', [
-            'model' => $company,
+        return view('groups.show', [
+            'model' => $group,
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Company $company): View
+    public function edit(Group $group): View
     {
-        return view('companies.edit', [
-            'model' => $company,
+        return view('groups.edit', [
+            'model' => $group,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRequest $request, Company $company)
+    public function update(UpdateRequest $request, Group $group)
     {
         try {
-            $company->update($request->validated());
+            $group->update($request->validated());
 
             $alert['success'] = self::UPDATED_MESSAGE;
         } catch (\Exception $th) {
             $alert['error'] = $th->getMessage();
         }
 
-        return to_route('companies.index')->with(key($alert), current($alert));
+        return to_route('groups.index')->with(key($alert), current($alert));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Company $company): RedirectResponse
+    public function destroy(Group $group): RedirectResponse
     {
         try {
-            $company->delete();
+            $group->delete();
 
             $alert['success'] = self::DELETED_MESSAGE;
         } catch (Exception $e) {
             $alert['error'] = $e->getMessage();
         }
 
-        return to_route('companies.index')->with(key($alert), current($alert));
+        return to_route('groups.index')->with(key($alert), current($alert));
     }
 
     /**

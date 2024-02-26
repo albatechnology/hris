@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CurrencyCode;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,11 @@ class Company extends BaseModel implements TenantedInterface
         'lat',
         'lng',
         'address',
+        'currency_code',
+    ];
+
+    protected $casts = [
+        'currency_code' => CurrencyCode::class,
     ];
 
     public function scopeTenanted(Builder $query): Builder
