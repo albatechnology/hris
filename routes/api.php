@@ -42,6 +42,8 @@ Route::group(['prefix' => 'auth', 'controller' => AuthController::class], functi
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('users/me', [UserController::class, 'me']);
     Route::group(['prefix' => 'users/{user}'], function () {
+        Route::get('companies', [UserController::class, 'companies']);
+        Route::get('branches', [UserController::class, 'branches']);
         Route::post('detail', [UserController::class, 'detail']);
         Route::post('payroll-info', [UserController::class, 'payrollInfo']);
         Route::apiResource('experiences', UserExperienceController::class);
