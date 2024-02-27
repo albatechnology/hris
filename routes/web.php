@@ -4,6 +4,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NationalHolidayController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
@@ -37,4 +38,7 @@ Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
 
     Route::delete('companies/mass/destroy', [CompanyController::class, 'massDestroy'])->name('companies.mass.destroy');
     Route::resource('companies', CompanyController::class);
+
+    Route::delete('national-holidays/mass/destroy', [NationalHolidayController::class, 'massDestroy'])->name('national-holidays.mass.destroy');
+    Route::resource('national-holidays', NationalHolidayController::class);
 });

@@ -13,6 +13,7 @@ class MenuService
             self::dashboard(),
             self::users(),
             self::groups(),
+            self::nationalholidays(),
         ];
     }
 
@@ -38,5 +39,12 @@ class MenuService
         $branches = new Submenu('role_access', 'branches', 'fas fa-', 'Branches');
 
         return new Menu('group_management_access', 'fas fa-building', 'Groups', ...[$groups, $companies, $branches]);
+    }
+
+    protected static function nationalholidays()
+    {
+        $nationalholidays = new Submenu('national_holiday_access', 'national-holidays', 'fas fa-', 'National-holidays');
+
+        return new Menu('national_holiday_management_access', 'fas fa-building', 'National-holidays', ...[$nationalholidays]);
     }
 }
