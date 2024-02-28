@@ -23,8 +23,6 @@ class UserDetail extends BaseModel
         'job_position',
         'job_level',
         'employment_status',
-        'join_date',
-        'sign_date',
         'passport_no',
         'passport_expired',
         'birth_place',

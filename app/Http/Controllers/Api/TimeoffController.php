@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
 use App\Models\Attendance;
 use App\Models\Timeoff;
+use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -56,7 +58,7 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        if (! ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
+        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -67,7 +69,7 @@ class TimeoffController extends BaseController
 
     public function update(Timeoff $timeoff, StoreRequest $request)
     {
-        if (! ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
+        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -104,18 +106,32 @@ class TimeoffController extends BaseController
         // dump($request->validated());
         // dump($timeoff);
         $timeoff->is_approved = $request->is_approved;
-        if (! $timeoff->isDirty('is_approved')) {
+        if (!$timeoff->isDirty('is_approved')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
 
         $startSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->start_at);
         $endSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->end_at);
-        if (! $startSchedule && ! $endSchedule) {
+        if (!$startSchedule && !$endSchedule) {
             return $this->errorResponse(message: sprintf('There is a schedule that cannot be found between %s and %s', $timeoff->start_at, $timeoff->end_at), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $dateRange = new \DatePeriod(date_create($timeoff->start_at), new \DateInterval('P1D'), date_create($timeoff->end_at));
 
+        // untuk history timeoff
+        $value = 0.5;
+        if ($timeoff->request_type->is(TimeoffRequestType::FULL_DAY)) {
+            $startDate = new \DateTime($timeoff->start_at);
+            $endDate = new \DateTime($timeoff->end_at);
+            if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')) {
+                $value = 1;
+            } else {
+                $interval = $startDate->diff($endDate);
+                $value = $interval->days;
+            }
+        }
+
+        // dd($timeoff);
         DB::beginTransaction();
         try {
             $timeoff->approved_by = auth('sanctum')->user()->id;
@@ -127,6 +143,14 @@ class TimeoffController extends BaseController
 
             if (is_null($timeoff->is_approved) || $timeoff->is_approved === false) {
                 Attendance::where('timeoff_id', $timeoff->id)->delete();
+
+                UserTimeoffHistory::create([
+                    'user_id' => $timeoff->user_id,
+                    'is_increment' => true,
+                    'value' => $value,
+                    'properties' => ['user' => $timeoff->user, 'timeoff' => $timeoff, 'timeoff_policy' => $timeoff->timeoffPolicy],
+                    'description' => sprintf(UserTimeoffHistory::DESCRIPTION['TIMEOFF'], $timeoff->timeoffPolicy->name),
+                ]);
             } else {
                 foreach ($dateRange as $date) {
                     $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
@@ -138,6 +162,14 @@ class TimeoffController extends BaseController
                         'code' => $timeoff->timeoffPolicy->code,
                     ]);
                 }
+
+                UserTimeoffHistory::create([
+                    'user_id' => $timeoff->user_id,
+                    'is_increment' => false,
+                    'value' => $value,
+                    'properties' => ['user' => $timeoff->user, 'timeoff' => $timeoff, 'timeoff_policy' => $timeoff->timeoffPolicy],
+                    'description' => sprintf(UserTimeoffHistory::DESCRIPTION['TIMEOFF'], $timeoff->timeoffPolicy->name),
+                ]);
             }
 
             $timeoff->save();

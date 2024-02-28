@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('job_position')->nullable();
             $table->string('job_level')->nullable();
             $table->string('employment_status')->nullable();
-            $table->date('join_date')->nullable();
-            $table->date('sign_date')->nullable();
+            // $table->date('join_date')->nullable();
+            // $table->date('sign_date')->nullable();
             $table->string('passport_no')->nullable();
             $table->date('passport_expired')->nullable();
             $table->string('birth_place')->nullable();

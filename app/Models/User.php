@@ -42,7 +42,10 @@ class User extends Authenticatable implements TenantedInterface
         'type',
         'nik',
         'phone',
+        'join_date',
+        'sign_date',
         'total_timeoff',
+        'remaining_timeoff',
     ];
 
     /**

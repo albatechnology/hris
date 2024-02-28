@@ -37,7 +37,7 @@ class TimeoffRegulationObserver
     //     // 1. update total_timeoff user dengan total_day timeoffRegulation
 
     //     $users->each(function (User $user) use ($timeoffRegulation) {
-    //         if (TimeoffRegulationService::isJoinDatePassed($user->detail->join_date, $timeoffRegulation->min_working_month)) {
+    //         if (TimeoffRegulationService::isJoinDatePassed($user->join_date, $timeoffRegulation->min_working_month)) {
     //             $user->update(['total_timeoff' => $timeoffRegulation->total_day]);
     //         }
     //     });
@@ -48,7 +48,7 @@ class TimeoffRegulationObserver
     //     // 4. apabila join_date > min_working_month user tsb berhak mendapatkan jatah cuti
 
     //     $users->each(function (User $user) use ($timeoffRegulation) {
-    //         $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn ($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->detail->join_date, $timeoffPeriodRegulation->min_working_month));
+    //         $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn ($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->join_date, $timeoffPeriodRegulation->min_working_month));
 
 
     //     });

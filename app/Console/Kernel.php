@@ -13,6 +13,12 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+
+        // cron untuk company yang punya timeoff regulation monthly
+        // cron untuk company yang punya timeoff regulation user_period
+        // cron untuk company yang punya timeoff regulation period
+
+        // cron untuk cek user dapet dayoff
     }
 
     /**

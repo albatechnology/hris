@@ -36,8 +36,6 @@ class DetailStoreRequest extends FormRequest
             'job_position' => 'nullable|string',
             'job_level' => ['nullable', Rule::enum(JobLevel::class)],
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
-            'join_date' => 'nullable|date',
-            'sign_date' => 'nullable|date',
             'passport_no' => 'nullable|string',
             'passport_expired' => 'nullable|date',
             'birth_place' => 'nullable',

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('renew_type', 15);
             $table->unsignedSmallInteger('total_day')->default(0);
-            $table->char('start_period', 5)->nullable()->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == annual');
-            $table->char('end_period', 5)->nullable()->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == annual');
+            $table->char('start_period', 5)->nullable()->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == period');
+            $table->char('end_period', 5)->nullable()->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == period');
             $table->unsignedSmallInteger('max_consecutively_day')->nullable()->comment('Maksimal pengajuan cuti tahunan (hari) berturut-turut');
             // $table->boolean('is_allow_halfday')->default(1);
             $table->text('halfday_not_applicable_in')->nullable()->comment('hari(array) yang tidak bisa diajukan cuti setengah hari (is_allow_halfday harus true)');

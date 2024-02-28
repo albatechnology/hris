@@ -27,7 +27,7 @@ class TimeoffRegulationService
         } elseif ($renewType->is(TimeoffRenewType::MONTHLY)) {
             return self::createMonthly($company);
         } else {
-            return self::createAnnual($company);
+            return self::createPeriod($company);
         }
     }
 
@@ -96,9 +96,9 @@ class TimeoffRegulationService
         return $timeoffRegulation;
     }
 
-    public static function createAnnual(Company $company)
+    public static function createPeriod(Company $company)
     {
-        dump('createAnnual');
+        dump('createPeriod');
         dd($company);
     }
 
@@ -108,5 +108,25 @@ class TimeoffRegulationService
         $minWorkingMonthDate->add(new \DateInterval(sprintf('P%sM', $minWorkingMonth)));
         if (date('Y-m-d') >= $minWorkingMonthDate->format('Y-m-d')) return true;
         return false;
+    }
+
+    public static function updateEndPeriod(TimeoffRegulation $timeoffRegulation): void
+    {
+        $startAt = new \DateTime(date('Y-') . $timeoffRegulation->start_period);
+        $endAt = new \DateTime(date('Y-') . $timeoffRegulation->end_period);
+        $interval = $startAt->diff($endAt);
+
+        $dateStart = $startAt->add($interval)->format('Y-m-d');
+        $dateEnd = $endAt->add($interval)->format('Y-m-d');
+
+        dump($startAt);
+        dump($endAt);
+        dump($interval);
+        dump($dateStart);
+        dump($dateEnd);
+        dd($timeoffRegulation);
+        if ($timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+        } elseif ($timeoffRegulation->renew_type->is(TimeoffRenewType::PERIOD)) {
+        }
     }
 }

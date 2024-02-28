@@ -41,9 +41,8 @@ class TimeoffRegulationController extends BaseController
         }
 
         $cutOffDate = '05';
-        $joinDate = '2024-02-02';
-        dump(date('d', strtotime($cutOffDate)));
-        dd(date('d', strtotime($joinDate)));
+        $joinDate = '2024-02-06';
+        dd(date('m', strtotime('-2 month')));
 
         dump($request->validated());
 

@@ -37,6 +37,8 @@ class StoreRequest extends FormRequest
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
             'phone' => 'nullable',
+            'join_date' => 'nullable|date',
+            'sign_date' => 'nullable|date',
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
 
