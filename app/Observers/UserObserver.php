@@ -105,15 +105,15 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        if ($user->wasChanged('total_timeoff')) {
-            // UserTimeoffHistory::create([
-            //     'user_id' => $user->id,
-            //     'is_increment' => true,
-            //     'value' => $user->total_timeoff,
-            //     'properties' => ['user' => $user],
-            //     'description' => UserTimeoffHistory::DESCRIPTION['USER_CREATED'],
-            // ]);
-        }
+        // if ($user->wasChanged('total_timeoff')) {
+        // UserTimeoffHistory::create([
+        //     'user_id' => $user->id,
+        //     'is_increment' => true,
+        //     'value' => $user->total_timeoff,
+        //     'properties' => ['user' => $user],
+        //     'description' => UserTimeoffHistory::DESCRIPTION['USER_CREATED'],
+        // ]);
+        // }
     }
 
     /**

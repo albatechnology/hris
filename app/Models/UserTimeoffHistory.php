@@ -36,6 +36,10 @@ class UserTimeoffHistory extends BaseModel
     protected static function booted(): void
     {
         static::creating(function (self $model) {
+            if (empty($model->is_for_total_timeoff)) {
+                $model->is_for_total_timeoff = true;
+            }
+
             if (empty($model->created_by)) {
                 $model->created_by = auth('sanctum')->user()?->id ?? null;
             }

@@ -15,9 +15,9 @@ class AuthController extends BaseController
     public function login(LoginRequest $request)
     {
         // ReevaluateTimeoffRegulationUserPeriod::dispatch();
-        $timeoffRegulation = TimeoffRegulation::findOrFail(1);
-        TimeoffRegulationService::updateEndPeriod($timeoffRegulation);
-        die;
+        // $timeoffRegulation = TimeoffRegulation::findOrFail(1);
+        // TimeoffRegulationService::updateEndPeriod($timeoffRegulation);
+        // die;
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {

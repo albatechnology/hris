@@ -20,6 +20,7 @@ class Attendance extends BaseModel implements TenantedInterface
         'timeoff_id',
         'event_id',
         'code',
+        'date',
     ];
 
     protected static function booted(): void
@@ -80,5 +81,10 @@ class Attendance extends BaseModel implements TenantedInterface
     public function details(): HasMany
     {
         return $this->hasMany(AttendanceDetail::class);
+    }
+
+    public function scopeWhereDateBetween(Builder $query, string $startDate, string $endDate)
+    {
+        $query->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate);
     }
 }

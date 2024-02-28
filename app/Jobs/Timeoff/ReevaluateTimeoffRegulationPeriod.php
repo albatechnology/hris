@@ -8,6 +8,7 @@ use App\Jobs\Timeoff\CleanRemainingTimeoff;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\UserTimeoffHistory;
+use App\Services\TimeoffRegulationService;
 use DateTime;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -68,6 +69,8 @@ class ReevaluateTimeoffRegulationPeriod implements ShouldQueue
                         'description' => UserTimeoffHistory::DESCRIPTION['PERIOD_EXPIRED'],
                     ]);
                 });
+
+            TimeoffRegulationService::updateEndPeriod($timeoffRegulation);
         });
     }
 }

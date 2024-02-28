@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
+use App\Models\ScheduleShift;
 use App\Models\Shift;
 use Illuminate\Database\Seeder;
 
@@ -54,16 +55,86 @@ class ScheduleSeeder extends Seeder
             $shiftIds = collect($shifts)->pluck('id');
 
             $schedule = $company->schedules()->create([
-                'name' => 'Schedule 1 '.$company->name,
+                'name' => 'Schedule 1 ' . $company->name,
                 'effective_date' => date('Y-m-01'),
             ]);
-            $schedule->shifts()->sync($shiftIds);
+            // $schedule->shifts()->attach([...$shiftIds, 1, 1]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 2,
+                'order' => 1
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 3,
+                'order' => 2
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 4,
+                'order' => 3
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 5,
+                'order' => 4
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 6,
+                'order' => 5
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 1,
+                'order' => 6
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 1,
+                'order' => 7
+            ]);
 
             $schedule = $company->schedules()->create([
-                'name' => 'Schedule 2 '.$company->name,
+                'name' => 'Schedule 2 ' . $company->name,
                 'effective_date' => date('Y-m-t'),
             ]);
-            $schedule->shifts()->sync($shiftIds);
+            // $schedule->shifts()->attach([...$shiftIds, 1, 1]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 2,
+                'order' => 1
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 3,
+                'order' => 2
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 4,
+                'order' => 3
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 5,
+                'order' => 4
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 6,
+                'order' => 5
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 1,
+                'order' => 6
+            ]);
+            ScheduleShift::create([
+                'schedule_id' => $schedule->id,
+                'shift_id' => 1,
+                'order' => 7
+            ]);
         });
     }
 }

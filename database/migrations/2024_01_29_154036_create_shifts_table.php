@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->nullable()->constrained();
             $table->boolean('is_dayoff')->default(0);
             $table->string('name');
-            $table->time('clock_in');
+            $table->time('clock_in')->nullable();
             $table->time('clock_out')->nullable();
             $table->time('break_start')->nullable();
             $table->time('break_end')->nullable();

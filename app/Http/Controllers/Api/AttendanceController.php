@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use App\Models\TimeoffRegulation;
 use App\Services\AttendanceService;
+use App\Services\ScheduleService;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -25,25 +31,57 @@ class AttendanceController extends BaseController
         // $this->middleware('permission:attendance_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    public function index()
-    {
-        $attendances = QueryBuilder::for(Attendance::tenanted())
-            ->allowedFilters([
-                AllowedFilter::exact('id'),
-                AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('schedule_id'),
-                AllowedFilter::exact('shift_id'),
-                AllowedFilter::scope('company_id', 'whereCompanyId'),
-                AllowedFilter::scope('shift_id', 'whereShiftId'),
-                'is_clock_in', 'time', 'type', 'is_approved', 'approved_by',
-            ])
-            ->allowedIncludes(self::ALLOWED_INCLUDES)
-            ->allowedSorts([
-                'id', 'user_id', 'schedule_id', 'shift_id', 'is_clock_in', 'time', 'type', 'is_approved', 'approved_by', 'created_at',
-            ])
-            ->paginate($this->per_page);
+    // public function index()
+    // {
+    //     $attendances = QueryBuilder::for(Attendance::tenanted())
+    //         ->allowedFilters([
+    //             AllowedFilter::exact('id'),
+    //             AllowedFilter::exact('user_id'),
+    //             AllowedFilter::exact('schedule_id'),
+    //             AllowedFilter::exact('shift_id'),
+    //             AllowedFilter::scope('company_id', 'whereCompanyId'),
+    //             AllowedFilter::scope('shift_id', 'whereShiftId'),
+    //             'is_clock_in', 'time', 'type', 'is_approved', 'approved_by',
+    //         ])
+    //         ->allowedIncludes(self::ALLOWED_INCLUDES)
+    //         ->allowedSorts([
+    //             'id', 'user_id', 'schedule_id', 'shift_id', 'is_clock_in', 'time', 'type', 'is_approved', 'approved_by', 'created_at',
+    //         ])
+    //         ->paginate($this->per_page);
 
-        return AttendanceResource::collection($attendances);
+    //     return AttendanceResource::collection($attendances);
+    // }
+
+    public function index(IndexRequest $request)
+    {
+        $schedule = ScheduleService::getTodaySchedule();
+        return $schedule->load('shifts');
+        $timeoffRegulation = TimeoffRegulation::tenanted()->first();
+        $startDate = date(sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $timeoffRegulation->cut_off_date));
+        $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
+        $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
+        $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        $attendances = Attendance::tenanted()
+            ->with('details', fn ($q) => $q->orderBy('created_at'))
+            ->whereDateBetween($startDate, $endDate)
+            ->get();
+        // dd($attendances);
+
+        $data = [];
+        foreach ($dateRange as $date) {
+            $date = $date->format('Y-m-d');
+            // $data[$date] = $attendances->first(fn ($attendance) => $attendance->date == $date);
+            $data[] = [
+                'date' => $date,
+                'attendance' => $attendances->first(fn ($attendance) => $attendance->date == $date)
+            ];
+            // dd($date->format('Y-m-d'));
+        }
+
+        return response()->json($data);
+
     }
 
     public function show(Attendance $attendance)
@@ -61,8 +99,12 @@ class AttendanceController extends BaseController
 
         DB::beginTransaction();
         try {
-            if (! $attendance) {
-                $attendance = Attendance::create($request->validated());
+            if (!$attendance) {
+                $data = [
+                    'date' => date('Y-m-d', strtotime($request->time)),
+                    ...$request->validated(),
+                ];
+                $attendance = Attendance::create($data);
             }
 
             $attendance->details()->create($request->validated());
