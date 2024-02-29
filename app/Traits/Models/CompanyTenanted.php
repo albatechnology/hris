@@ -14,10 +14,13 @@ trait CompanyTenanted
         return $this->belongsTo(Company::class);
     }
 
-    public function scopeTenanted(Builder $query): Builder
+    public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
-        /** @var User $user */
-        $user = auth('sanctum')->user();
+        if(!$user){
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
+
         if ($user->is_super_admin) {
             return $query;
         }

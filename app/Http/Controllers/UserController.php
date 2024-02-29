@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContactType;
 use App\Http\Requests\User\MassDestroyRequest;
 use App\Http\Requests\User\StoreRequest;
 use App\Http\Requests\User\UpdateRequest;
+use App\Models\CustomField;
 use App\Models\User;
 use App\View\Components\Datatables\DatatableAction;
 use Exception;
@@ -85,8 +87,32 @@ class UserController extends Controller
      */
     public function show(User $user): View
     {
+        $user->load([
+            'detail',
+            'contacts',
+            'educations',
+            'experiences',
+            'customFields'
+        ]);
+
+        $customFields = CustomField::tenanted($user)->get();
+        $customFields = $customFields->map(function ($customField) use ($user) {
+            $userCustomField = $user->customFields()->where('custom_field_id', $customField->id)->first();
+            $customField->custom_field_id = $customField->id;
+            $customField->id = null;
+            $customField->value = null;
+
+            if ($userCustomField) {
+                $customField->id = $userCustomField->id;
+                $customField->value = $userCustomField->value;
+            }
+
+            return $customField;
+        });
+
         return view('users.show', [
             'model' => $user,
+            'customFields' => $customFields
         ]);
     }
 
