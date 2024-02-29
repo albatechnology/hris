@@ -18,7 +18,7 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         'total_day',
         'start_period',
         'end_period',
-        'max_consecutively_day',
+        // 'max_consecutively_day',
         // 'is_allow_halfday',
         'halfday_not_applicable_in',
         'is_expired_in_end_period',

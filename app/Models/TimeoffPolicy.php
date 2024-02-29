@@ -20,9 +20,9 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
         'description',
         'effective_date',
         'expired_date',
+        'max_consecutively_day',
         'is_allow_halfday',
         'is_for_all_user',
-        'is_unlimited_day',
         'is_enable_block_leave',
         'block_leave_take_days',
         'block_leave_min_working_month',
@@ -34,7 +34,6 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
         'is_allow_halfday' => 'boolean',
         'is_for_all_user' => 'boolean',
         'is_enable_block_leave' => 'boolean',
-        'is_unlimited_day' => 'boolean',
     ];
 
     protected static function booted(): void

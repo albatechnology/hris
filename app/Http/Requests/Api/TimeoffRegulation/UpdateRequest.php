@@ -44,7 +44,7 @@ class UpdateRequest extends FormRequest
             'total_day' => 'nullable|integer',
             'start_period' => 'nullable|string|date_format:m-d',
             'end_period' => 'nullable|string|date_format:m-d',
-            'max_consecutively_day' => 'nullable|integer',
+            // 'max_consecutively_day' => 'nullable|integer',
             // 'is_allow_halfday' => 'nullable|boolean',
             'is_expired_in_end_period' => 'nullable|boolean',
             'expired_max_month' => 'nullable|integer',
