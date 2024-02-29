@@ -30,8 +30,8 @@ class RequestAttendanceRequest extends FormRequest
     {
         $this->merge([
             'type' => AttendanceType::MANUAL->value,
-            'is_clock_in' => $this->toBoolean($this->is_clock_in ?? false),
-            'is_clock_out' => $this->toBoolean($this->is_clock_out ?? false),
+            'is_clock_in' => $this->toBoolean($this->is_clock_in),
+            'is_clock_out' => $this->toBoolean($this->is_clock_out),
         ]);
     }
 
