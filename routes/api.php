@@ -66,6 +66,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('timeoff-regulation/periods/{period}/months', TimeoffRegulationMonthController::class)->except('store', 'destroy');
         Route::apiResource('timeoff-regulation/periods', TimeoffPeriodRegulationController::class);
         Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
+        Route::post('timeoff-regulation', [TimeoffRegulationController::class, 'store']);
         Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
     });
     Route::apiResource('companies', CompanyController::class);

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\TimeoffRenewType;
-use App\Http\Requests\Api\TimeoffRegulation\UpdateRequest;
+use App\Http\Requests\Api\TimeoffRegulation\StoreRequest;
 use App\Http\Resources\TimeoffRegulation\TimeoffRegulationResource;
 use App\Models\Company;
 use App\Models\TimeoffRegulation;
@@ -12,18 +12,17 @@ use Illuminate\Support\Facades\DB;
 
 class TimeoffRegulationController extends BaseController
 {
-    private TimeoffRegulation $timeoffRegulation;
+    private ?TimeoffRegulation $timeoffRegulation;
 
     public function __construct(protected Company $company)
     {
         parent::__construct();
-
-        $this->timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->firstOrFail();
-
+        // dd(TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->first());
+        $this->timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->first();
         // $this->middleware('permission:timeoff_regulation_access', ['only' => ['index', 'show', 'restore']]);
         // $this->middleware('permission:timeoff_regulation_access', ['only' => ['restore']]);
         $this->middleware('permission:timeoff_regulation_read', ['only' => 'index']);
-        // $this->middleware('permission:timeoff_regulation_create', ['only' => 'store']);
+        $this->middleware('permission:timeoff_regulation_create', ['only' => 'store']);
         $this->middleware('permission:timeoff_regulation_edit', ['only' => 'update']);
         // $this->middleware('permission:timeoff_regulation_delete', ['only' => ['destroy', 'forceDelete']]);
     }
@@ -33,7 +32,27 @@ class TimeoffRegulationController extends BaseController
         return new TimeoffRegulationResource($this->timeoffRegulation);
     }
 
-    public function update(Company $company, UpdateRequest $request)
+    public function store(Company $company, StoreRequest $request)
+    {
+        $timeoffRegulation = $this->timeoffRegulation;
+        if ($timeoffRegulation) {
+            return $this->errorResponse('Timeoff already exist', code: Response::HTTP_CONFLICT);
+        }
+
+        DB::beginTransaction();
+        try {
+            $timeoffRegulation = $company->timeoffRegulation()->create($request->validated());
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return (new TimeoffRegulationResource($timeoffRegulation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+    }
+
+    public function update(Company $company, StoreRequest $request)
     {
         $timeoffRegulation = $this->timeoffRegulation;
         if (!$timeoffRegulation) {

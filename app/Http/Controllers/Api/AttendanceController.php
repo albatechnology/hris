@@ -121,22 +121,30 @@ class AttendanceController extends BaseController
         DB::beginTransaction();
         try {
             // pemeriksaan kehadiran hri ini
-            $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
+            $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date);
 
             // membuat data kehadiran baru jika tidak ada
             if (!$attendance) {
-                $data = [
-                    'date' => date('Y-m-d', strtotime($request->time)),
-                    ...$request->validated(),
-                ];
-                $attendance = Attendance::create($data);
+                $attendance = Attendance::create($request->validated());
             }
 
-            // membuat detail untuk clock in dan clock out secara bersamaan
-            $data = array_merge($request->validated(), ['is_clock_in' => true]);
-            $data = array_merge($request->validated(), ['is_clock_out' => true]);
+            if ($request->is_clock_in) {
+                $attendance->details()->create([
+                    'is_clock_in' => true,
+                    'time' => $request->date . ' ' . $request->clock_in_hour,
+                    'type' => $request->type,
+                    'note' => $request->note,
+                ]);
+            }
 
-            $attendance->details()->create($request->validated());
+            if ($request->is_clock_out) {
+                $attendance->details()->create([
+                    'is_clock_in' => false,
+                    'time' => $request->date . ' ' . $request->clock_out_hour,
+                    'type' => $request->type,
+                    'note' => $request->note,
+                ]);
+            }
 
             DB::commit();
         } catch (\Exception $th) {

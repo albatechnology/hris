@@ -4,7 +4,6 @@ namespace App\Observers;
 
 use App\Enums\TimeoffRenewType;
 use App\Models\TimeoffRegulation;
-use App\Models\User;
 use App\Services\TimeoffRegulationService;
 
 class TimeoffRegulationObserver
@@ -14,6 +13,9 @@ class TimeoffRegulationObserver
      */
     public function created(TimeoffRegulation $timeoffRegulation): void
     {
+        if ($timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+            TimeoffRegulationService::createDefaultMonthlyPeriod($timeoffRegulation);
+        }
     }
 
     /**

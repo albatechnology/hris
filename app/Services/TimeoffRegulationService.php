@@ -9,6 +9,28 @@ use App\Models\TimeoffRegulation;
 
 class TimeoffRegulationService
 {
+    public static function createDefaultMonthlyPeriod(TimeoffRegulation $timeoffRegulation): void
+    {
+        /** @var TimeoffPeriodRegulation $timeoffPeriodRegulation */
+        $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->create([
+            'min_working_month' => 0,
+            'max_working_month' => 1000,
+        ]);
+        $timeoffPeriodRegulation->timeoffRegulationMonths()->createMany([
+            ['month' => '01', 'amount' => 1],
+            ['month' => '02', 'amount' => 1],
+            ['month' => '03', 'amount' => 1],
+            ['month' => '04', 'amount' => 1],
+            ['month' => '05', 'amount' => 1],
+            ['month' => '06', 'amount' => 1],
+            ['month' => '07', 'amount' => 1],
+            ['month' => '08', 'amount' => 1],
+            ['month' => '09', 'amount' => 1],
+            ['month' => '10', 'amount' => 1],
+            ['month' => '11', 'amount' => 1],
+            ['month' => '12', 'amount' => 1],
+        ]);
+    }
     /**
      * Create a new timeoff regulation based on the given company and renew type.
      *

@@ -29,8 +29,9 @@ class RequestAttendanceRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'is_clock_in' => $this->toBoolean($this->is_clock_in),
-            'is_clock_out' => $this->toBoolean($this->is_clock_out),
+            'type' => AttendanceType::MANUAL->value,
+            'is_clock_in' => $this->toBoolean($this->is_clock_in ?? false),
+            'is_clock_out' => $this->toBoolean($this->is_clock_out ?? false),
         ]);
     }
 
@@ -46,11 +47,11 @@ class RequestAttendanceRequest extends FormRequest
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
             'is_clock_in' => 'required|boolean',
+            'clock_in_hour' => 'required_if:is_clock_in,true|date_format:H:i',
             'is_clock_out' => 'required|boolean',
-            'time' => 'required|date_format:Y-m-d H:i:s',
+            'clock_out_hour' => 'required_if:is_clock_out,true|date_format:H:i',
+            'date' => 'required|date_format:Y-m-d',
             'type' => ['required', Rule::enum(AttendanceType::class)],
-            'lat' => 'nullable|string',
-            'lng' => 'nullable|string',
             'note' => 'nullable|string',
         ];
     }

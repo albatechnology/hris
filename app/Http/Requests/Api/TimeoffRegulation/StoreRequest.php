@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Api\TimeoffRegulation;
 
+use App\Enums\DaysName;
 use App\Enums\TimeoffRenewType;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
 
@@ -55,7 +56,7 @@ class UpdateRequest extends FormRequest
             'dayoff_consecutively_working_day' => 'nullable|integer',
             'dayoff_consecutively_amount' => 'nullable|integer',
             'halfday_not_applicable_in' => 'nullable|array',
-            'halfday_not_applicable_in.*' => 'required|string|date_format:d',
+            'halfday_not_applicable_in.*' => ['required', 'string', Rule::enum(DaysName::class)],
         ];
     }
 }

@@ -13,7 +13,7 @@ class CompanyObserver
      */
     public function created(Company $company): void
     {
-        TimeoffRegulationService::create($company, TimeoffRenewType::USER_PERIOD);
+        // TimeoffRegulationService::create($company, TimeoffRenewType::USER_PERIOD);
     }
 
     /**

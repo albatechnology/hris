@@ -51,7 +51,7 @@ class CompanyController extends BaseController
         DB::beginTransaction();
         try {
             $company = Company::create($request->validated());
-            TimeoffRegulationService::create($company, $request->renew_type);
+            // TimeoffRegulationService::create($company, $request->renew_type);
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
