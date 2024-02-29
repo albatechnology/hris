@@ -30,6 +30,7 @@ class PositionController extends BaseController
                 AllowedFilter::exact('company_id'),
                 'name',
             ])
+            ->allowedIncludes(['company'])
             ->allowedSorts([
                 'id', 'company_id', 'name', 'order', 'created_at',
             ])

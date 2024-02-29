@@ -30,6 +30,7 @@ class DepartmentController extends BaseController
                 AllowedFilter::exact('division_id'),
                 'name',
             ])
+            ->allowedIncludes(['division'])
             ->allowedSorts([
                 'id', 'division_id', 'name', 'created_at',
             ])
