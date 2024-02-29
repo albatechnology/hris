@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Schedule\TodayScheduleRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
+use DateTime;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -125,10 +126,28 @@ class ScheduleController extends BaseController
 
     public function today(TodayScheduleRequest $request)
     {
-        $schedule = ScheduleService::getTodaySchedule($request->date);
+        $schedule = ScheduleService::getTodaySchedule(date: $request->date);
+
         if (!$schedule) {
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
         }
+
+        $startDate = new DateTime($schedule->effective_date);
+        $endDate = new DateTime();
+        $interval = $startDate->diff($endDate)->days;
+
+        $sisaBagi = $interval % $schedule->shifts->count();
+
+        return [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'interval' => $interval,
+            'sisaBagi' => $sisaBagi,
+            'schedule' => $schedule->effective_date,
+            'total_shift' => $schedule->shifts->count(),
+        ];
+        return $schedule;
+        return $schedule->shifts;
 
         return new ScheduleResource($schedule->load('shift.shift'));
     }
