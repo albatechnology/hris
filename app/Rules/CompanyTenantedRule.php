@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class CompanyTenantedRule implements ValidationRule
 {
-    public function __construct(public $model = null, public string $message = 'Company not found')
+    public function __construct(private $model = null, private string $message = 'Company not found', private ?Closure $function = null)
     {
         if (is_null($model)) {
             $this->model = \App\Models\Company::class;
@@ -21,8 +21,11 @@ class CompanyTenantedRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $company = $this->model::tenanted()->firstWhere('id', $value);
-        if (! $company) {
+        $company = $this->model::tenanted()
+            ->when($this->function, $this->function)
+            ->firstWhere('id', $value);
+
+        if (!$company) {
             $fail($this->message);
         }
     }

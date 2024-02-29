@@ -51,7 +51,7 @@ class StoreRequest extends FormRequest
             'is_include_early_out' => 'nullable|boolean',
 
             'shifts' => 'nullable|array',
-            'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
+            'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],
             'shifts.*.order' => 'required|integer',
         ];
     }
