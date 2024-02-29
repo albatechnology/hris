@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Attendance\IndexRequest;
+use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Models\Attendance;
@@ -11,9 +12,7 @@ use App\Services\AttendanceService;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class AttendanceController extends BaseController
@@ -94,6 +93,31 @@ class AttendanceController extends BaseController
     }
 
     public function store(StoreRequest $request)
+    {
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
+
+        DB::beginTransaction();
+        try {
+            if (!$attendance) {
+                $data = [
+                    'date' => date('Y-m-d', strtotime($request->time)),
+                    ...$request->validated(),
+                ];
+                $attendance = Attendance::create($data);
+            }
+
+            $attendance->details()->create($request->validated());
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return new AttendanceResource($attendance);
+    }
+
+    public function request(RequestAttendanceRequest $request)
     {
         $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
 

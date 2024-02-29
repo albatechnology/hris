@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Schedule\StoreRequest;
+use App\Http\Requests\Api\Schedule\TodayScheduleRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
@@ -122,9 +123,9 @@ class ScheduleController extends BaseController
     //     return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
     // }
 
-    public function today()
+    public function today(TodayScheduleRequest $request)
     {
-        $schedule = ScheduleService::getTodaySchedule();
+        $schedule = ScheduleService::getTodaySchedule($request->date);
         if (!$schedule) {
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
         }

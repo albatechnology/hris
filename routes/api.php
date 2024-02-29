@@ -87,6 +87,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('schedules', ScheduleController::class);
 
+    // ruting untuk request attendace. method post
     Route::apiResource('attendances', AttendanceController::class)->except('update');
 
     Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
