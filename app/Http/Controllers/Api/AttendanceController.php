@@ -80,7 +80,6 @@ class AttendanceController extends BaseController
         }
 
         return response()->json($data);
-
     }
 
     public function show(Attendance $attendance)
@@ -119,10 +118,12 @@ class AttendanceController extends BaseController
 
     public function request(RequestAttendanceRequest $request)
     {
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
-
         DB::beginTransaction();
         try {
+            // pemeriksaan kehadiran hri ini
+            $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
+
+            // membuat data kehadiran baru jika tidak ada
             if (!$attendance) {
                 $data = [
                     'date' => date('Y-m-d', strtotime($request->time)),
@@ -131,7 +132,12 @@ class AttendanceController extends BaseController
                 $attendance = Attendance::create($data);
             }
 
+            // membuat detail untuk clock in dan clock out secara bersamaan
+            $data = array_merge($request->validated(), ['is_clock_in' => true]);
+            $data = array_merge($request->validated(), ['is_clock_out' => true]);
+
             $attendance->details()->create($request->validated());
+
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -141,6 +147,7 @@ class AttendanceController extends BaseController
 
         return new AttendanceResource($attendance);
     }
+
 
     public function destroy(Attendance $attendance)
     {
