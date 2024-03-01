@@ -134,8 +134,7 @@ class ScheduleController extends BaseController
 
         $startDate = new DateTime($schedule->effective_date);
         $endDate = new DateTime();
-        $interval = $startDate->diff($endDate)->days;
-
+        $interval = $startDate->diff($endDate)->days + 1;
         $sisaBagi = $interval % $schedule->shifts->count();
 
         return [
@@ -143,7 +142,7 @@ class ScheduleController extends BaseController
             'endDate' => $endDate,
             'interval' => $interval,
             'sisaBagi' => $sisaBagi,
-            'schedule' => $schedule->effective_date,
+            'effective_date' => $schedule->effective_date,
             'total_shift' => $schedule->shifts->count(),
         ];
         return $schedule;
