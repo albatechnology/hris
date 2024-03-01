@@ -2,12 +2,7 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
-use App\Enums\AttendanceType;
-use App\Models\Schedule;
-use App\Rules\CompanyTenantedRule;
-use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class IndexRequest extends FormRequest
 {
@@ -30,7 +25,7 @@ class IndexRequest extends FormRequest
             'filter' => [
                 'month' => $this->filter['month'] ?? date('m'),
                 'year' => $this->filter['year'] ?? date('Y'),
-                ...$this->filter
+                ...($this->filter ?? [])
             ],
         ]);
     }

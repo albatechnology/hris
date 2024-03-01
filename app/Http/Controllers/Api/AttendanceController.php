@@ -53,33 +53,59 @@ class AttendanceController extends BaseController
 
     public function index(IndexRequest $request)
     {
-        $schedule = ScheduleService::getTodaySchedule();
-        return $schedule->load('shifts');
-        $timeoffRegulation = TimeoffRegulation::tenanted()->first();
+        $schedule = ScheduleService::getTodaySchedule(date:'2024-03-03');
+        return $schedule;
+        $timeoffRegulation = TimeoffRegulation::tenanted()->first(['id', 'cut_off_date']);
+
         $startDate = date(sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $timeoffRegulation->cut_off_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
+
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        $schedule = ScheduleService::getTodaySchedule(date: $startDate)->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        $order = $schedule->shifts->where('id', $schedule->shift->id);
+        $orderKey = array_keys($order->toArray())[0];
+        $totalShifts = $schedule->shifts->count();
+
+        // return [
+        //     'schedule' => $schedule,
+        //     'shift' => $schedule->shifts[0]->pivot->order,
+        //     'startDate' => $startDate,
+        //     'endDate' => $endDate,
+        //     'dateRange' => $dateRange,
+        // ];
+
         $attendances = Attendance::tenanted()
-            ->with('details', fn ($q) => $q->orderBy('created_at'))
+            ->with([
+                'shift',
+                'details' => fn ($q) => $q->orderBy('created_at')
+            ])
             ->whereDateBetween($startDate, $endDate)
             ->get();
-        // dd($attendances);
 
         $data = [];
         foreach ($dateRange as $date) {
             $date = $date->format('Y-m-d');
-            // $data[$date] = $attendances->first(fn ($attendance) => $attendance->date == $date);
+            $attendance = $attendances->first(fn ($attendance) => $attendance->date == $date);
+
             $data[] = [
                 'date' => $date,
-                'attendance' => $attendances->first(fn ($attendance) => $attendance->date == $date)
+                'shift' => $attendance ? $attendance->shift : $schedule->shifts[$orderKey],
+                'attendance' => $attendance
             ];
-            // dd($date->format('Y-m-d'));
+
+            if (($orderKey + 1) === $totalShifts) {
+                $orderKey = 0;
+            } else {
+                $orderKey++;
+            }
         }
 
-        return response()->json($data);
+        return response()->json([
+            'data' => $data
+        ]);
     }
 
     public function show(Attendance $attendance)

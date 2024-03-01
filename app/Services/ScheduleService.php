@@ -4,27 +4,38 @@ namespace App\Services;
 
 use App\Models\Schedule;
 use App\Models\User;
+use DateTime;
 
 class ScheduleService
 {
     /**
      * get user today schedule.
      */
-    public static function getTodaySchedule(?User $user = null, $date = null): ?Schedule
+    public static function getTodaySchedule(?User $user = null, $date = null)
     {
-        if (! $user) {
+        if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }
 
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
 
+        /** @var Schedule $schedule */
         $schedule = $user->schedules()->whereDate('effective_date', '<=', $date)->orderByDesc('effective_date')->first();
-        if (! $schedule) {
+
+        if (!$schedule) {
             return null;
         }
 
-        return $schedule->load('shift');
+        $totalShifts = $schedule->shifts()->count();
+        $startDate = new DateTime($schedule->effective_date);
+        $endDate = new DateTime($date);
+        $interval = $startDate->diff($endDate)->days + 1;
+        $order = $interval % $schedule->shifts()->count();
+        $order = $order > 0 ? $order : $totalShifts;
+
+        unset($schedule->pivot);
+        return $schedule->load(['shift' => fn ($q) => $q->where('order', $order)]);
     }
 
     /**
@@ -36,7 +47,7 @@ class ScheduleService
      */
     public static function checkAvailableSchedule(?User $user = null, $startDate = null, $endDate = null): bool
     {
-        if (! $user) {
+        if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }

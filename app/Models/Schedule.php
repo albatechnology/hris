@@ -36,9 +36,10 @@ class Schedule extends BaseModel implements TenantedInterface
         return $this->belongsToMany(Shift::class, 'schedule_shifts')->withPivot('order');
     }
 
-    public function shift(): HasOne
+    public function shift()
     {
-        return $this->hasOne(ScheduleShift::class)->orderByDesc('order');
+        return $this->hasOneThrough(Shift::class, ScheduleShift::class, 'schedule_id', 'id', 'id', 'shift_id');
+        // return $this->hasOne(ScheduleShift::class)->orderByDesc('order');
     }
 
     public function users(): BelongsToMany

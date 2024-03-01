@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Requests\Api\Schedule\TodayScheduleRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
+use App\Http\Resources\Schedule\TodayScheduleResource;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
 use DateTime;
@@ -132,22 +133,24 @@ class ScheduleController extends BaseController
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $startDate = new DateTime($schedule->effective_date);
-        $endDate = new DateTime();
-        $interval = $startDate->diff($endDate)->days + 1;
-        $sisaBagi = $interval % $schedule->shifts->count();
+        return new TodayScheduleResource($schedule);
 
-        return [
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'interval' => $interval,
-            'sisaBagi' => $sisaBagi,
-            'effective_date' => $schedule->effective_date,
-            'total_shift' => $schedule->shifts->count(),
-        ];
-        return $schedule;
-        return $schedule->shifts;
+        // $startDate = new DateTime($schedule->effective_date);
+        // $endDate = new DateTime();
+        // $interval = $startDate->diff($endDate)->days + 1;
+        // $sisaBagi = $interval % $schedule->shifts->count();
 
-        return new ScheduleResource($schedule->load('shift.shift'));
+        // return [
+        //     'startDate' => $startDate,
+        //     'endDate' => $endDate,
+        //     'interval' => $interval,
+        //     'sisaBagi' => $sisaBagi,
+        //     'effective_date' => $schedule->effective_date,
+        //     'total_shift' => $schedule->shifts->count(),
+        // ];
+        // return $schedule;
+        // return $schedule->shifts;
+
+        // return new ScheduleResource($schedule->load('shift.shift'));
     }
 }
