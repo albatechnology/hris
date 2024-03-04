@@ -147,4 +147,25 @@ class NationalHolidayController extends Controller
 
         return $this->jsonResponse(key($alert), current($alert));
     }
+
+    public function fileImportExport()
+    {
+        return view('file-import');
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function fileImport(Request $request)
+    {
+        Excel::import(new NationalHolidaysImport, $request->file('file')->store('temp'));
+        return back();
+    }
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function fileExport()
+    {
+        return Excel::download(new NationalHolidaysExport, 'nationalholidays-collection.xlsx');
+    }
 }
