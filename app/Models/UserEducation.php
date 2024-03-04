@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Enums\EducationLevel;
 use App\Enums\EducationType;
 use App\Traits\Models\BelongsToUser;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class UserEducation extends BaseModel
+class UserEducation extends BaseModel implements HasMedia
 {
-    use BelongsToUser;
+    use BelongsToUser, InteractsWithMedia;
 
     public $table = 'user_educations';
 

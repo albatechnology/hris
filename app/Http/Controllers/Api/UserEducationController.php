@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MediaCollection;
 use App\Http\Requests\Api\UserEducation\StoreRequest;
 use App\Http\Resources\UserEducation\UserEducationResource;
 use App\Models\User;
 use App\Models\UserEducation;
+use Exception;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -44,14 +46,33 @@ class UserEducationController extends BaseController
 
     public function store(User $user, StoreRequest $request)
     {
-        $education = $user->educations()->create($request->validated());
+        try {
+            $education = $user->educations()->create($request->validated());
+
+            $mediaCollection = MediaCollection::USER_EDUCATION->value;
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $education->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new UserEducationResource($education);
     }
 
     public function update(User $user, StoreRequest $request, UserEducation $education)
     {
-        $education->update($request->validated());
+        try {
+            $education->update($request->validated());
+
+            $mediaCollection = MediaCollection::USER_EDUCATION->value;
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $education->clearMediaCollection($mediaCollection);
+                $education->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new UserEducationResource($education);
     }

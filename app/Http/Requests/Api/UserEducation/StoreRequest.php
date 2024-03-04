@@ -35,6 +35,7 @@ class StoreRequest extends FormRequest
             'expired_date' => 'nullable|date',
             'score' => 'nullable|string',
             'fee' => 'nullable|numeric',
+            'file' => 'nullable|mimes:' . config('app.file_mimes_types')
         ];
     }
 }

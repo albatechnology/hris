@@ -186,5 +186,5 @@ return [
         // 'Example' => App\Facades\Example::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
     ])->toArray(),
-
+    'file_mimes_types' => 'jpg,jpeg,png,pdf,doc,docx,xls,xlsx',
 ];
