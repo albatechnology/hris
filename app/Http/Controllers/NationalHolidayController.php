@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\NationalHolidaysExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\NationalHoliday\MassDestroyRequest;
 use App\Http\Requests\NationalHoliday\StoreRequest;
 use App\Http\Requests\NationalHoliday\UpdateRequest;
+use App\Imports\NationalHolidaysImport;
 use App\Models\NationalHoliday;
 use App\View\Components\Datatables\DatatableAction;
 use Exception;
@@ -62,22 +65,6 @@ class NationalHolidayController extends Controller
         return view('national-holidays.create', [
             'model' => $this->model,
         ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreRequest $request): RedirectResponse
-    {
-        try {
-            $this->model->create($request->validated());
-
-            $alert['success'] = self::CREATED_MESSAGE;
-        } catch (Exception $e) {
-            $alert['error'] = $e->getMessage();
-        }
-
-        return to_route('national-holidays.index')->with(key($alert), current($alert));
     }
 
     /**
@@ -166,6 +153,6 @@ class NationalHolidayController extends Controller
      */
     public function fileExport()
     {
-        return Excel::download(new NationalHolidaysExport, 'nationalholidays-collection.xlsx');
+        return Excel::download(new NationalHolidaysExport, 'national-holidays-collection.xlsx');
     }
 }

@@ -42,7 +42,7 @@ Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
     Route::delete('national-holidays/mass/destroy', [NationalHolidayController::class, 'massDestroy'])->name('national-holidays.mass.destroy');
     Route::resource('national-holidays', NationalHolidayController::class);
 
-    Route::get('file-import-export', [NationalHolidayController::class, 'fileImportExport']);
-    Route::post('file-import', [NationalHolidayController::class, 'fileImport'])->name('file-import');
-    Route::get('file-export', [NationalHolidayController::class, 'fileExport'])->name('file-export');
+    Route::get('national-holidays-import-export', [NationalHolidayController::class, 'fileImportExport']);
+    Route::post('national-holidays-import', [NationalHolidayController::class, 'fileImport'])->name('national-holidays-import');
+    Route::get('national-holidays-export', [NationalHolidayController::class, 'fileExport'])->name('national-holidays-export');
 });
