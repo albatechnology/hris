@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Division;
 
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -22,7 +23,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => 'required|exists:companies,id',
+            'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
         ];
     }

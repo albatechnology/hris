@@ -7,6 +7,8 @@ use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use App\Models\Event;
+use App\Models\NationalHoliday;
 use App\Models\TimeoffRegulation;
 use App\Services\AttendanceService;
 use App\Services\ScheduleService;
@@ -53,18 +55,16 @@ class AttendanceController extends BaseController
 
     public function index(IndexRequest $request)
     {
-        $schedule = ScheduleService::getTodaySchedule(date:'2024-03-03');
-        return $schedule;
         $timeoffRegulation = TimeoffRegulation::tenanted()->first(['id', 'cut_off_date']);
 
         $startDate = date(sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $timeoffRegulation->cut_off_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
-
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $schedule = ScheduleService::getTodaySchedule(date: $startDate)->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+
         $order = $schedule->shifts->where('id', $schedule->shift->id);
         $orderKey = array_keys($order->toArray())[0];
         $totalShifts = $schedule->shifts->count();
@@ -76,23 +76,61 @@ class AttendanceController extends BaseController
         //     'endDate' => $endDate,
         //     'dateRange' => $dateRange,
         // ];
-
         $attendances = Attendance::tenanted()
             ->with([
                 'shift',
+                'timeoff.timeoffPolicy',
                 'details' => fn ($q) => $q->orderBy('created_at')
             ])
             ->whereDateBetween($startDate, $endDate)
             ->get();
 
+        $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        $nationalHolidays = NationalHoliday::orderBy('date')->get();
+
         $data = [];
         foreach ($dateRange as $date) {
+            // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
+            // 2. kalo company event(holiday), shiftnya pake holiday
+            // 3. kalo schedulenya !is_overide_national_holiday, shiftnya pake shift
+            // 4. kalo schedulenya !is_overide_company_holiday, shiftnya pake shift
+            // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
             $date = $date->format('Y-m-d');
-            $attendance = $attendances->first(fn ($attendance) => $attendance->date == $date);
+            $attendance = $attendances->firstWhere('date', $date);
+
+            if ($attendance) {
+                $shift = $attendance->shift;
+            } else {
+                $shift = $schedule->shifts[$orderKey];
+            }
+            $shiftType = 'shift';
+
+            $companyHolidayData = null;
+            if (!$schedule->is_overide_company_holiday) {
+                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                });
+
+                if ($companyHolidayData) {
+                    $shift = $companyHolidayData;
+                    $shiftType = 'company_holiday';
+                }
+            }
+
+            if (!$schedule->is_overide_national_holiday && is_null($companyHolidayData)) {
+                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                if ($nationalHoliday) {
+                    $shift = $nationalHoliday;
+                    $shiftType = 'national_holiday';
+                }
+            }
+
+            unset($shift->pivot);
 
             $data[] = [
                 'date' => $date,
-                'shift' => $attendance ? $attendance->shift : $schedule->shifts[$orderKey],
+                'shift_type' => $shiftType,
+                'shift' => $shift,
                 'attendance' => $attendance
             ];
 

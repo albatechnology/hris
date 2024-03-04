@@ -68,6 +68,11 @@ class Attendance extends BaseModel implements TenantedInterface
         $query->whereHas('schedule', fn ($q) => $q->whereHas('shifts', fn ($q) => $q->where('shift_id', $shiftId)));
     }
 
+    public function timeoff(): BelongsTo
+    {
+        return $this->belongsTo(Timeoff::class);
+    }
+
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class);
@@ -85,6 +90,6 @@ class Attendance extends BaseModel implements TenantedInterface
 
     public function scopeWhereDateBetween(Builder $query, string $startDate, string $endDate)
     {
-        $query->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate);
+        $query->whereDate('date', '>=', date('Y-m-d', strtotime($startDate)))->whereDate('date', '<=', date('Y-m-d', strtotime($endDate)));
     }
 }

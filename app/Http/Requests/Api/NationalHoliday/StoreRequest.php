@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\NationalHoliday;
 
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest

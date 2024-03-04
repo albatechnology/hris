@@ -24,7 +24,7 @@ class EventController extends BaseController
 
     public function index()
     {
-        $event = QueryBuilder::for(Event::class)
+        $event = QueryBuilder::for(Event::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),

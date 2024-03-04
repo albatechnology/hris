@@ -131,7 +131,6 @@ class TimeoffController extends BaseController
             }
         }
 
-        // dd($timeoff);
         DB::beginTransaction();
         try {
             $timeoff->approved_by = auth('sanctum')->user()->id;
@@ -157,9 +156,10 @@ class TimeoffController extends BaseController
                     Attendance::create([
                         'user_id' => $timeoff->user_id,
                         'schedule_id' => $schedule->id,
-                        'shift_id' => $schedule->shift->shift_id,
+                        'shift_id' => $schedule->shift->id,
                         'timeoff_id' => $timeoff->id,
                         'code' => $timeoff->timeoffPolicy->code,
+                        'date' => $date->format('Y-m-d'),
                     ]);
                 }
 
