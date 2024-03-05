@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AttendanceType;
+use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
@@ -169,7 +171,9 @@ class AttendanceController extends BaseController
                 $attendance = Attendance::create($data);
             }
 
-            $attendance->details()->create($request->validated());
+            $attendanceDetail = $attendance->details()->create($request->validated());
+
+            AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendance);
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -210,6 +214,7 @@ class AttendanceController extends BaseController
                 ]);
             }
 
+            AttendanceRequested::dispatchIf($attendance->details->contains('type', AttendanceType::MANUAL), $attendance);
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();

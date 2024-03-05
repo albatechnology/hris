@@ -67,7 +67,7 @@ class TimeoffController extends BaseController
         try {
             $timeoff = Timeoff::create($request->validated());
 
-            $notificationType = NotificationType::NEED_TIMEOFF_APPROVAL;
+            $notificationType = NotificationType::REQUEST_TIMEOFF;
             $timeoff->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user));
         } catch (Exception $e) {
             return $this->errorResponse(message: $e->getMessage());

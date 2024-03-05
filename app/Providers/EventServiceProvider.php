@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\Attendance\AttendanceRequested;
+use App\Listeners\Attendance\RequestAttendanceNotification;
 use App\Models\Company;
 use App\Models\OvertimeRequest;
 use App\Models\TimeoffRegulation;
@@ -25,6 +27,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        AttendanceRequested::class => [
+            RequestAttendanceNotification::class
+        ]
     ];
 
     /**

@@ -6,6 +6,7 @@ use App\Enums\AttendanceType;
 use App\Models\Schedule;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,9 +47,13 @@ class RequestAttendanceRequest extends FormRequest
             'user_id' => 'nullable|exists:users,id',
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
-            'is_clock_in' => 'required|boolean',
+            'is_clock_in' => ['boolean', function (string $attribute, mixed $value, Closure $fail) {
+                if (!$value && !$this->is_clock_out) $fail("The {$attribute} field is required.");
+            },],
             'clock_in_hour' => 'required_if:is_clock_in,true|date_format:H:i',
-            'is_clock_out' => 'required|boolean',
+            'is_clock_out' => ['boolean', function (string $attribute, mixed $value, Closure $fail) {
+                if (!$value && !$this->is_clock_in) $fail("The {$attribute} field is required.");
+            },],
             'clock_out_hour' => 'required_if:is_clock_out,true|date_format:H:i',
             'date' => 'required|date_format:Y-m-d',
             'type' => ['required', Rule::enum(AttendanceType::class)],
