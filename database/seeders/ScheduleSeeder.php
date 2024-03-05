@@ -56,7 +56,7 @@ class ScheduleSeeder extends Seeder
 
             $schedule = $company->schedules()->create([
                 'name' => 'Schedule 1 ' . $company->name,
-                'effective_date' => date('Y-m-01'),
+                'effective_date' => date('Y') . '-01-01` ',
             ]);
             // $schedule->shifts()->attach([...$shiftIds, 1, 1]);
             ScheduleShift::create([
@@ -95,46 +95,46 @@ class ScheduleSeeder extends Seeder
                 'order' => 7
             ]);
 
-            $schedule = $company->schedules()->create([
-                'name' => 'Schedule 2 ' . $company->name,
-                'effective_date' => date('Y-m-t'),
-            ]);
-            // $schedule->shifts()->attach([...$shiftIds, 1, 1]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 2,
-                'order' => 1
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 3,
-                'order' => 2
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 4,
-                'order' => 3
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 5,
-                'order' => 4
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 6,
-                'order' => 5
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 1,
-                'order' => 6
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 1,
-                'order' => 7
-            ]);
+            // $schedule = $company->schedules()->create([
+            //     'name' => 'Schedule 2 ' . $company->name,
+            //     'effective_date' => date('Y-m-t'),
+            // ]);
+            // // $schedule->shifts()->attach([...$shiftIds, 1, 1]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 2,
+            //     'order' => 1
+            // ]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 3,
+            //     'order' => 2
+            // ]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 4,
+            //     'order' => 3
+            // ]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 5,
+            //     'order' => 4
+            // ]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 6,
+            //     'order' => 5
+            // ]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 1,
+            //     'order' => 6
+            // ]);
+            // ScheduleShift::create([
+            //     'schedule_id' => $schedule->id,
+            //     'shift_id' => 1,
+            //     'order' => 7
+            // ]);
         });
     }
 }
