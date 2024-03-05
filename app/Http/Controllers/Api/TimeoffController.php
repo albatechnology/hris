@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\NotificationType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
@@ -10,6 +11,7 @@ use App\Models\Attendance;
 use App\Models\Timeoff;
 use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -62,7 +64,14 @@ class TimeoffController extends BaseController
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $timeoff = Timeoff::create($request->validated());
+        try {
+            $timeoff = Timeoff::create($request->validated());
+
+            $notificationType = NotificationType::NEED_TIMEOFF_APPROVAL;
+            $timeoff->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user));
+        } catch (Exception $e) {
+            return $this->errorResponse(message: $e->getMessage());
+        }
 
         return new TimeoffResource($timeoff);
     }
@@ -173,6 +182,11 @@ class TimeoffController extends BaseController
             }
 
             $timeoff->save();
+
+            if (!is_null($timeoff->is_approved)) {
+                $notificationType = NotificationType::TIMEOFF_APPROVED;
+                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->manager, $timeoff->is_approved));
+            }
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
