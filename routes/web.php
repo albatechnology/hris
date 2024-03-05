@@ -4,6 +4,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\NationalHolidayController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -40,9 +41,13 @@ Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
     Route::resource('companies', CompanyController::class);
 
     Route::delete('national-holidays/mass/destroy', [NationalHolidayController::class, 'massDestroy'])->name('national-holidays.mass.destroy');
+
+    Route::post('national-holidays/import', [NationalHolidayController::class, 'import'])->name('national-holidays.import');
     Route::resource('national-holidays', NationalHolidayController::class);
 
-    Route::get('national-holidays-import-export', [NationalHolidayController::class, 'fileImportExport']);
-    Route::post('national-holidays-import', [NationalHolidayController::class, 'fileImport'])->name('national-holidays-import');
-    Route::get('national-holidays-export', [NationalHolidayController::class, 'fileExport'])->name('national-holidays-export');
+    // Route::get('national-holidays-import-export', [NationalHolidayController::class, 'fileImportExport']);
+    // Route::post('national-holidays-import', [NationalHolidayController::class, 'fileImport'])->name('national-holidays-import');
+    // Route::get('national-holidays-export', [NationalHolidayController::class, 'fileExport'])->name('national-holidays-export');
+
+    Route::get('exports/sample/{type}', [ExportController::class, 'sample'])->name('exports.sample');
 });

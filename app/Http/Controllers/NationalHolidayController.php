@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\NationalHolidaysExport;
+use App\Http\Requests\GeneralImportRequest;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Requests\NationalHoliday\MassDestroyRequest;
-use App\Http\Requests\NationalHoliday\StoreRequest;
 use App\Http\Requests\NationalHoliday\UpdateRequest;
 use App\Imports\NationalHolidaysImport;
 use App\Models\NationalHoliday;
@@ -135,24 +134,35 @@ class NationalHolidayController extends Controller
         return $this->jsonResponse(key($alert), current($alert));
     }
 
-    public function fileImportExport()
+    public function import(GeneralImportRequest $request)
     {
-        return view('file-import');
+        try {
+            Excel::import(new NationalHolidaysImport, $request->file('file'));
+            $alert['success'] = 'Data imported successfuly';
+        } catch (Exception $e) {
+            $alert['error'] = $e->getMessage();
+        }
+        return back()->with(key($alert), current($alert));
     }
 
-    /**
-     * @return \Illuminate\Support\Collection
-     */
-    public function fileImport(Request $request)
-    {
-        Excel::import(new NationalHolidaysImport, $request->file('file')->store('temp'));
-        return back();
-    }
-    /**
-     * @return \Illuminate\Support\Collection
-     */
-    public function fileExport()
-    {
-        return Excel::download(new NationalHolidaysExport, 'national-holidays-collection.xlsx');
-    }
+    // public function fileImportExport()
+    // {
+    //     return view('file-import');
+    // }
+
+    // /**
+    //  * @return \Illuminate\Support\Collection
+    //  */
+    // public function fileImport(Request $request)
+    // {
+    //     Excel::import(new NationalHolidaysImport, $request->file('file')->store('temp'));
+    //     return back();
+    // }
+    // /**
+    //  * @return \Illuminate\Support\Collection
+    //  */
+    // public function fileExport()
+    // {
+    //     return Excel::download(new NationalHolidaysExport, 'national-holidays-collection.xlsx');
+    // }
 }

@@ -4,8 +4,9 @@ namespace App\Imports;
 
 use App\Models\NationalHoliday;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class NationalHolidaysImport implements ToModel
+class NationalHolidaysImport implements ToModel, WithHeadingRow
 {
     /**
      * @param array $row
@@ -16,7 +17,7 @@ class NationalHolidaysImport implements ToModel
     {
         return new NationalHoliday([
             'name' => $row['name'],
-            'date' => $row['date'],
+            'date' => date('Y-m-d', strtotime($row['date'])),
         ]);
     }
 }
