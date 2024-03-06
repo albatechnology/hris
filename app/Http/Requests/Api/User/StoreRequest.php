@@ -33,7 +33,7 @@ class StoreRequest extends FormRequest
             'manager_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required',
+            'password' => 'required|string',
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
             'phone' => 'nullable',

@@ -32,7 +32,7 @@ class UpdateRequest extends FormRequest
             'manager_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,'.$this->user->id,
-            'password' => 'required',
+            'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
             'phone' => 'nullable',
