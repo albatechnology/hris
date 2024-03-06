@@ -30,6 +30,9 @@ return new class extends Migration
             $table->unsignedSmallInteger('dayoff_consecutively_working_day')->nullable()->comment('minimal (hari) kerja berturut-turut untuk dapat mendapatkan day off (libur tanpa memotong cuti)');
             $table->integer('dayoff_consecutively_amount')->default(0)->comment('jumlah hari dayoff yang akan didapatkan');
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
             $table->softDeletes();
         });
     }

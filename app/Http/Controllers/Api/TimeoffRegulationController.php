@@ -17,14 +17,11 @@ class TimeoffRegulationController extends BaseController
     public function __construct(protected Company $company)
     {
         parent::__construct();
-        // dd(TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->first());
         $this->timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->first();
-        // $this->middleware('permission:timeoff_regulation_access', ['only' => ['index', 'show', 'restore']]);
-        // $this->middleware('permission:timeoff_regulation_access', ['only' => ['restore']]);
+
         $this->middleware('permission:timeoff_regulation_read', ['only' => 'index']);
         $this->middleware('permission:timeoff_regulation_create', ['only' => 'store']);
         $this->middleware('permission:timeoff_regulation_edit', ['only' => 'update']);
-        // $this->middleware('permission:timeoff_regulation_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index(Company $company)

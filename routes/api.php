@@ -69,7 +69,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('timeoff-regulation', [TimeoffRegulationController::class, 'store']);
         Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
     });
-    Route::apiResource('companies', CompanyController::class);
+    Route::apiResource('companies', CompanyController::class)->except('destroy');
 
     Route::apiResource('branches', BranchController::class);
     Route::apiResource('positions', PositionController::class);

@@ -29,6 +29,10 @@ return new class extends Migration
             $table->unsignedSmallInteger('block_leave_min_working_month')->default(0)->comment('minimal masa kerja(bulan) untuk dapat me-request. 0 berarti semua user dapat me-request');
             $table->unsignedSmallInteger('max_used')->nullable()->comment('maksimal policy dapat digunakan');
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

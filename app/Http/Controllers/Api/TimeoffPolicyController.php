@@ -14,7 +14,6 @@ class TimeoffPolicyController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:timeoff_policy_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:timeoff_policy_access', ['only' => ['restore']]);
         $this->middleware('permission:timeoff_policy_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:timeoff_policy_create', ['only' => 'store']);

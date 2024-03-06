@@ -6,7 +6,6 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Schedule extends BaseModel implements TenantedInterface
 {

@@ -5,13 +5,14 @@ namespace App\Models;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attendance extends BaseModel implements TenantedInterface
 {
-    use BelongsToUser;
+    use CustomSoftDeletes, BelongsToUser;
 
     protected $fillable = [
         'user_id',

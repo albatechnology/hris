@@ -16,7 +16,6 @@ class LiveAttendanceLocationController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:live_attendance_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:live_attendance_access', ['only' => ['restore']]);
         $this->middleware('permission:live_attendance_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:live_attendance_create', ['only' => 'store']);
@@ -66,19 +65,5 @@ class LiveAttendanceLocationController extends BaseController
         $liveAttendance->locations()->findOrFail($location->id)->delete();
 
         return $this->deletedResponse();
-    }
-
-    public function forceDelete(LiveAttendance $liveAttendance, $id)
-    {
-        $liveAttendance->locations()->withTrashed()->findOrFail($id)->forceDelete();
-
-        return $this->deletedResponse();
-    }
-
-    public function restore(LiveAttendance $liveAttendance, $id)
-    {
-        $location = $liveAttendance->locations()->withTrashed()->findOrFail($id)->restore();
-
-        return new LiveAttendanceLocationResource($location);
     }
 }

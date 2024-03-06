@@ -8,12 +8,15 @@ class PermissionService
 {
     public static function getAllPermissions()
     {
-        return collect(static::permissions());
+        return collect(static::permissions())
+            ->mergeRecursive(static::administratorPermissions());
     }
 
-    public static function getPermissionsData(): array
+    public static function getPermissionsData(?array $persmissions = null): array
     {
-        $persmissions = self::permissions();
+        if (!is_null($persmissions) && is_array($persmissions) && count($persmissions) > 0) {
+            $persmissions = self::getAllPermissions();
+        }
 
         $data = [];
         foreach ($persmissions as $key => $persmission) {
@@ -41,8 +44,18 @@ class PermissionService
     public static function permissions(): array
     {
         return [
-            // 'dashboard_access',
+            'national_holiday_access' => [
+                // 'national_holiday_read',
+                'national_holiday_create',
+                'national_holiday_edit',
+                'national_holiday_delete',
+            ],
+        ];
+    }
 
+    public static function administratorPermissions(): array
+    {
+        return [
             'user_access' => [
                 'user_read',
                 'user_create',
@@ -91,7 +104,6 @@ class PermissionService
                 'role_edit',
                 'role_delete',
             ],
-
             'shift_access' => [
                 'shift_read',
                 'shift_create',
@@ -110,23 +122,17 @@ class PermissionService
                 'attendance_edit',
                 'attendance_delete',
             ],
+            'timeoff_access' => [
+                'timeoff_read',
+                'timeoff_create',
+                'timeoff_edit',
+                'timeoff_delete',
+            ],
             'timeoff_regulation_access' => [
                 'timeoff_regulation_read',
                 'timeoff_regulation_create',
                 'timeoff_regulation_edit',
                 'timeoff_regulation_delete',
-            ],
-            'timeoff_period_regulation_access' => [
-                'timeoff_period_regulation_read',
-                'timeoff_period_regulation_create',
-                'timeoff_period_regulation_edit',
-                'timeoff_period_regulation_delete',
-            ],
-            'timeoff_regulation_month_access' => [
-                'timeoff_regulation_month_read',
-                'timeoff_regulation_month_create',
-                'timeoff_regulation_month_edit',
-                'timeoff_regulation_month_delete',
             ],
             'payroll_access' => [
                 'payroll_read',
@@ -158,18 +164,6 @@ class PermissionService
                 'live_attendance_edit',
                 'live_attendance_delete',
             ],
-            'supervisor_type_access' => [
-                'supervisor_type_read',
-                'supervisor_type_create',
-                'supervisor_type_edit',
-                'supervisor_type_delete',
-            ],
-            'national_holiday_access' => [
-                'national_holiday_read',
-                'national_holiday_create',
-                'national_holiday_edit',
-                'national_holiday_delete',
-            ],
             'event_access' => [
                 'event_read',
                 'event_create',
@@ -181,6 +175,150 @@ class PermissionService
                 'custom_field_create',
                 'custom_field_edit',
                 'custom_field_delete',
+            ],
+            'national_holiday_access' => [
+                'national_holiday_read',
+                // 'national_holiday_create',
+                // 'national_holiday_edit',
+                // 'national_holiday_delete',
+            ],
+            // 'supervisor_type_access' => [
+            //     'supervisor_type_read',
+            //     'supervisor_type_create',
+            //     'supervisor_type_edit',
+            //     'supervisor_type_delete',
+            // ],
+        ];
+    }
+
+    public static function userPermissions(): array
+    {
+        return [
+            'user_access' => [
+                'user_read',
+                'user_create',
+                'user_edit',
+                // 'user_delete',
+            ],
+            // 'group_access' => [
+            //     'group_read',
+            //     'group_create',
+            //     'group_edit',
+            //     'group_delete',
+            // ],
+            'company_access' => [
+                'company_read',
+                // 'company_create',
+                // 'company_edit',
+                // 'company_delete',
+            ],
+            'branch_access' => [
+                'branch_read',
+                // 'branch_create',
+                // 'branch_edit',
+                // 'branch_delete',
+            ],
+            'division_access' => [
+                'division_read',
+                // 'division_create',
+                // 'division_edit',
+                // 'division_delete',
+            ],
+            'position_access' => [
+                'position_read',
+                // 'position_create',
+                // 'position_edit',
+                // 'position_delete',
+            ],
+            'department_access' => [
+                'department_read',
+                // 'department_create',
+                // 'department_edit',
+                // 'department_delete',
+            ],
+            'role_access' => [
+                'role_read',
+                // 'role_create',
+                // 'role_edit',
+                // 'role_delete',
+            ],
+            'shift_access' => [
+                'shift_read',
+                // 'shift_create',
+                // 'shift_edit',
+                // 'shift_delete',
+            ],
+            'schedule_access' => [
+                'schedule_read',
+                // 'schedule_create',
+                // 'schedule_edit',
+                // 'schedule_delete',
+            ],
+            'attendance_access' => [
+                'attendance_read',
+                'attendance_create',
+                'attendance_edit',
+                'attendance_delete',
+            ],
+            'timeoff_access' => [
+                'timeoff_read',
+                'timeoff_create',
+                'timeoff_edit',
+                'timeoff_delete',
+            ],
+            'timeoff_regulation_access' => [
+                'timeoff_regulation_read',
+                // 'timeoff_regulation_create',
+                // 'timeoff_regulation_edit',
+                // 'timeoff_regulation_delete',
+            ],
+            'payroll_access' => [
+                'payroll_read',
+                // 'payroll_create',
+                // 'payroll_edit',
+                // 'payroll_delete',
+            ],
+            'overtime_access' => [
+                'overtime_read',
+                'overtime_create',
+                'overtime_edit',
+                'overtime_delete',
+            ],
+            'overtime_request_access' => [
+                'overtime_request_read',
+                'overtime_request_create',
+                'overtime_request_edit',
+                'overtime_request_delete',
+            ],
+            'timeoff_policy_access' => [
+                'timeoff_policy_read',
+                // 'timeoff_policy_create',
+                // 'timeoff_policy_edit',
+                // 'timeoff_policy_delete',
+            ],
+            'live_attendance_access' => [
+                'live_attendance_read',
+                // 'live_attendance_create',
+                // 'live_attendance_edit',
+                // 'live_attendance_delete',
+            ],
+            'event_access' => [
+                'event_read',
+                // 'event_create',
+                // 'event_edit',
+                // 'event_delete',
+            ],
+            'custom_field_access' => [
+                'custom_field_read',
+                // 'custom_field_create',
+                // 'custom_field_edit',
+                // 'custom_field_delete',
+            ],
+            'national_holiday_access' => [
+                'national_holiday_read',
+                // 'national_holiday_create',
+                // 'national_holiday_edit',
+                // 'national_holiday_delete',
             ],
         ];
     }
@@ -203,7 +341,6 @@ class PermissionService
                     'parent_id' => $headSubPermissions->id,
                 ]);
             }
-
         });
     }
 
@@ -213,7 +350,7 @@ class PermissionService
     public static function getPermissionNames(array $permissionIds = []): array
     {
         $pids = [];
-        if (! is_array($permissionIds) || count($permissionIds) <= 0) {
+        if (!is_array($permissionIds) || count($permissionIds) <= 0) {
             return $pids;
         }
 

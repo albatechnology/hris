@@ -14,7 +14,6 @@ class ShiftController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:shift_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:shift_access', ['only' => ['restore']]);
         $this->middleware('permission:shift_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:shift_create', ['only' => 'store']);

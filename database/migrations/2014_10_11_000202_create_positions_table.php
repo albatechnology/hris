@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('name', 100);
             $table->unsignedSmallInteger('order')->default(1);
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

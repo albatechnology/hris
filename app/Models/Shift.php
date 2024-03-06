@@ -4,11 +4,12 @@ namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Shift extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted;
+    use CustomSoftDeletes, CompanyTenanted;
 
     protected $fillable = [
         'company_id',

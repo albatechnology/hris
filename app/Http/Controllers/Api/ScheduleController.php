@@ -8,7 +8,7 @@ use App\Http\Resources\Schedule\ScheduleResource;
 use App\Http\Resources\Schedule\TodayScheduleResource;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
-use DateTime;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -19,12 +19,13 @@ class ScheduleController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:schedule_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:schedule_access', ['only' => ['restore']]);
         $this->middleware('permission:schedule_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:schedule_create', ['only' => 'store']);
         $this->middleware('permission:schedule_edit', ['only' => 'update']);
         $this->middleware('permission:schedule_delete', ['only' => ['destroy', 'forceDelete']]);
+
+        $this->middleware('permission:attendance_create', ['only' => 'today']);
     }
 
     public function index()
@@ -62,7 +63,7 @@ class ScheduleController extends BaseController
             $schedule->shifts()->sync($data);
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
             return $this->errorResponse($th->getMessage());
         }
@@ -83,7 +84,7 @@ class ScheduleController extends BaseController
             $schedule->shifts()->sync($data);
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
             return $this->errorResponse($th->getMessage());
         }
@@ -114,17 +115,6 @@ class ScheduleController extends BaseController
         return new ScheduleResource($schedule);
     }
 
-    // public function updateShifts(Schedule $schedule, ScheduleShiftRequest $request)
-    // {
-    //     $data = [];
-    //     foreach ($request->shifts ?? [] as $shift) {
-    //         $data[$shift['id']] = ['order' => $shift['order']];
-    //     }
-    //     $schedule->shifts()->sync($data);
-
-    //     return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
-    // }
-
     public function today(TodayScheduleRequest $request)
     {
         $schedule = ScheduleService::getTodaySchedule(date: $request->date);
@@ -134,23 +124,5 @@ class ScheduleController extends BaseController
         }
 
         return new TodayScheduleResource($schedule);
-
-        // $startDate = new DateTime($schedule->effective_date);
-        // $endDate = new DateTime();
-        // $interval = $startDate->diff($endDate)->days + 1;
-        // $sisaBagi = $interval % $schedule->shifts->count();
-
-        // return [
-        //     'startDate' => $startDate,
-        //     'endDate' => $endDate,
-        //     'interval' => $interval,
-        //     'sisaBagi' => $sisaBagi,
-        //     'effective_date' => $schedule->effective_date,
-        //     'total_shift' => $schedule->shifts->count(),
-        // ];
-        // return $schedule;
-        // return $schedule->shifts;
-
-        // return new ScheduleResource($schedule->load('shift.shift'));
     }
 }

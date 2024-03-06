@@ -17,9 +17,8 @@ class LiveAttendanceController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:live_attendance_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:live_attendance_access', ['only' => ['restore']]);
-        $this->middleware('permission:live_attendance_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:live_attendance_read', ['only' => ['index', 'show', 'users']]);
         $this->middleware('permission:live_attendance_create', ['only' => 'store']);
         $this->middleware('permission:live_attendance_edit', ['only' => 'update']);
         $this->middleware('permission:live_attendance_delete', ['only' => ['destroy', 'forceDelete']]);

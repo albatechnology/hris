@@ -16,6 +16,10 @@ return new class extends Migration
             $table->foreignId('division_id')->constrained();
             $table->string('name');
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

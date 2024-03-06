@@ -25,6 +25,10 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

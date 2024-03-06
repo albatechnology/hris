@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Enums\TimeoffRequestType;
 use App\Enums\UserType;
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Timeoff extends BaseModel
 {
-    use BelongsToUser;
+    use CustomSoftDeletes, BelongsToUser;
 
     protected $fillable = [
         'user_id',

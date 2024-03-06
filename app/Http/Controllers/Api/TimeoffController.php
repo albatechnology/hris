@@ -22,12 +22,11 @@ class TimeoffController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:timeoff_access', ['only' => ['index', 'show', 'restore']]);
-        // $this->middleware('permission:timeoff_access', ['only' => ['restore']]);
-        // $this->middleware('permission:timeoff_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:timeoff_create', ['only' => 'store']);
-        // $this->middleware('permission:timeoff_edit', ['only' => 'update']);
-        // $this->middleware('permission:timeoff_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:timeoff_access', ['only' => ['restore']]);
+        $this->middleware('permission:timeoff_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:timeoff_create', ['only' => 'store']);
+        $this->middleware('permission:timeoff_edit', ['only' => ['update', 'approve']]);
+        $this->middleware('permission:timeoff_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()

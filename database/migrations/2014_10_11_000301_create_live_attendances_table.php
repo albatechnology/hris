@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('name');
             $table->boolean('is_flexible')->default(0);
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

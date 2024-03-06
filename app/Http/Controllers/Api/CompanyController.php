@@ -17,7 +17,6 @@ class CompanyController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:company_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:company_access', ['only' => ['restore']]);
         $this->middleware('permission:company_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:company_create', ['only' => 'store']);

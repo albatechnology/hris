@@ -4,11 +4,12 @@ namespace App\Models;
 
 use App\Enums\FieldType;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomField extends Model
 {
-    use CompanyTenanted;
+    use CustomSoftDeletes, CompanyTenanted;
 
     protected $fillable = [
         'company_id',

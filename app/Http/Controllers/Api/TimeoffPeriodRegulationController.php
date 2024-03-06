@@ -20,16 +20,14 @@ class TimeoffPeriodRegulationController extends BaseController
         parent::__construct();
 
         $this->timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', request()->segment(3))->firstOrFail();
-        if (! $this->timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+        if (!$this->timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
             return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
         }
 
-        // $this->middleware('permission:timeoff_period_regulation_access', ['only' => ['index', 'show', 'restore']]);
-        $this->middleware('permission:timeoff_period_regulation_access', ['only' => ['restore']]);
-        $this->middleware('permission:timeoff_period_regulation_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:timeoff_period_regulation_create', ['only' => 'store']);
-        $this->middleware('permission:timeoff_period_regulation_edit', ['only' => 'update']);
-        $this->middleware('permission:timeoff_period_regulation_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:timeoff_regulation_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:timeoff_regulation_create', ['only' => 'store']);
+        $this->middleware('permission:timeoff_regulation_edit', ['only' => 'update']);
+        $this->middleware('permission:timeoff_regulation_delete', ['only' => 'destroy']);
     }
 
     public function index(Company $company)

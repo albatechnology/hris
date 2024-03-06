@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Department extends BaseModel implements TenantedInterface
 {
+    use CustomSoftDeletes;
+
     protected $fillable = [
         'division_id',
         'name',

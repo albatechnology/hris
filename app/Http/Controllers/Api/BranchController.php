@@ -15,7 +15,6 @@ class BranchController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:branch_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:branch_access', ['only' => ['restore']]);
         $this->middleware('permission:branch_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:branch_create', ['only' => 'store']);

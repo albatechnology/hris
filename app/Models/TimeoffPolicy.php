@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Enums\TimeoffPolicyType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TimeoffPolicy extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted;
+    use CustomSoftDeletes, CompanyTenanted;
 
     protected $fillable = [
         'company_id',

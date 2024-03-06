@@ -19,7 +19,7 @@ class SupervisorTypeController extends BaseController
         $this->middleware('permission:supervisor_type_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:supervisor_type_create', ['only' => 'store']);
         $this->middleware('permission:supervisor_type_edit', ['only' => 'update']);
-        $this->middleware('permission:supervisor_type_delete', ['only' => ['destroy', 'forceDelete']]);
+        // $this->middleware('permission:supervisor_type_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
@@ -61,26 +61,26 @@ class SupervisorTypeController extends BaseController
         return (new SupervisorTypeResource($supervisorType))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(SupervisorType $supervisorType)
-    {
-        $supervisorType->delete();
+    // public function destroy(SupervisorType $supervisorType)
+    // {
+    //     $supervisorType->delete();
 
-        return $this->deletedResponse();
-    }
+    //     return $this->deletedResponse();
+    // }
 
-    public function forceDelete($id)
-    {
-        $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
-        $supervisorType->forceDelete();
+    // public function forceDelete($id)
+    // {
+    //     $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
+    //     $supervisorType->forceDelete();
 
-        return $this->deletedResponse();
-    }
+    //     return $this->deletedResponse();
+    // }
 
-    public function restore($id)
-    {
-        $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
-        $supervisorType->restore();
+    // public function restore($id)
+    // {
+    //     $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
+    //     $supervisorType->restore();
 
-        return new SupervisorTypeResource($supervisorType);
-    }
+    //     return new SupervisorTypeResource($supervisorType);
+    // }
 }

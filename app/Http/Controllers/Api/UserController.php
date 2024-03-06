@@ -25,7 +25,6 @@ class UserController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:user_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:user_access', ['only' => ['restore']]);
         $this->middleware('permission:user_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:user_create', ['only' => 'store']);
@@ -72,7 +71,6 @@ class UserController extends BaseController
         // dump($user->getPermissionsViaRoles());
         // dump($user->getAllPermissions());
         // dump($user->getRoleNames());
-        // abort_if(!auth()->user()->tokenCan('user_access'), 403);
         $user = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->firstOrFail();
@@ -161,7 +159,6 @@ class UserController extends BaseController
         if ($user->id == 1) {
             return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
         }
-        // abort_if(!auth()->user()->tokenCan('user_delete'), 403);
         $user->delete();
 
         return $this->deletedResponse();
@@ -172,7 +169,6 @@ class UserController extends BaseController
         if ($id == 1) {
             return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
         }
-        // abort_if(!auth()->user()->tokenCan('user_delete'), 403);
         $user = User::withTrashed()->findOrFail($id);
         $user->forceDelete();
 
@@ -181,7 +177,6 @@ class UserController extends BaseController
 
     public function restore($id)
     {
-        // abort_if(!auth()->user()->tokenCan('user_access'), 403);
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
 

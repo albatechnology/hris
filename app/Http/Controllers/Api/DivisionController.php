@@ -14,7 +14,6 @@ class DivisionController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:division_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:division_access', ['only' => ['restore']]);
         $this->middleware('permission:division_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:division_create', ['only' => 'store']);

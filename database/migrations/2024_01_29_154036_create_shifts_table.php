@@ -32,6 +32,10 @@ return new class extends Migration
             $table->time('overtime_before')->nullable();
             $table->time('overtime_after')->nullable();
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

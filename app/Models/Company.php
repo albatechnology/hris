@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CurrencyCode;
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Company extends BaseModel implements TenantedInterface
 {
+    use CustomSoftDeletes;
+
     protected $fillable = [
         'group_id',
         'name',

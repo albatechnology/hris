@@ -14,7 +14,6 @@ class DepartmentController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:department_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:department_access', ['only' => ['restore']]);
         $this->middleware('permission:department_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:department_create', ['only' => 'store']);

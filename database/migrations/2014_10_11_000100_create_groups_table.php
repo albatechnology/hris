@@ -15,6 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100);
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

@@ -14,7 +14,6 @@ class EventController extends BaseController
     public function __construct()
     {
         parent::__construct();
-
         $this->middleware('permission:event_access', ['only' => ['restore']]);
         $this->middleware('permission:event_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:event_create', ['only' => 'store']);
