@@ -15,7 +15,7 @@ class AuthController extends BaseController
 {
     public function login(LoginRequest $request)
     {
-        return PermissionService::getAllPermissions();
+        // return PermissionService::getAllPermissions();
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
