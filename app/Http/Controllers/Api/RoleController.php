@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Role\StoreRequest;
 use App\Http\Resources\Role\RoleResource;
 use App\Models\Role;
-use App\Services\PermissionService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -15,7 +14,6 @@ class RoleController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:role_access', ['only' => ['index', 'show']]);
         $this->middleware('permission:role_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:role_create', ['only' => 'store']);
         $this->middleware('permission:role_edit', ['only' => 'update']);
@@ -45,7 +43,8 @@ class RoleController extends BaseController
      */
     public function store(StoreRequest $request)
     {
-        $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
+        // $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
+        $permissionNames = $request->permission_ids ?? [];
         $role = DB::transaction(function () use ($request, $permissionNames) {
             $data = $request->validated();
             $data['guard_name'] = 'web';
@@ -82,7 +81,8 @@ class RoleController extends BaseController
             return response()->json(['message' => 'Role administrator tidak dapat diupdate!']);
         }
 
-        $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
+        // $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
+        $permissionNames = $request->permission_ids ?? [];
         $role = DB::transaction(function () use ($request, $permissionNames, $role) {
             $data = $request->validated();
             $data['guard_name'] = 'web';

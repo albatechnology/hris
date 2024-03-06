@@ -25,7 +25,7 @@ class StoreRequest extends FormRequest
             'name' => 'required',
             'group_id' => 'nullable|exists:groups,id',
             'permission_ids' => 'nullable|array',
-            'permission_ids.*' => 'exists:permissions,id',
+            'permission_ids.*' => 'exists:permissions,name',
         ];
     }
 }
