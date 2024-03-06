@@ -23,8 +23,8 @@ class IndexRequest extends FormRequest
     {
         $this->merge([
             'filter' => [
-                'month' => $this->filter['month'] && !empty($this->filter['month']) ? $this->filter['month'] : date('m'),
-                'year' => $this->filter['year'] && !empty($this->filter['year']) ? $this->filter['year'] : date('Y'),
+                'month' => !empty($this->filter['month']) ? $this->filter['month'] : date('m'),
+                'year' => !empty($this->filter['year']) ? $this->filter['year'] : date('Y'),
                 ...($this->filter ?? [])
             ],
         ]);
