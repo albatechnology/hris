@@ -18,10 +18,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
+<<<<<<< Updated upstream
+=======
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+>>>>>>> Stashed changes
 
-class User extends Authenticatable implements TenantedInterface
+class User extends Authenticatable implements TenantedInterface, HasMedia
 {
+<<<<<<< Updated upstream
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
+=======
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, InteractsWithMedia;
+>>>>>>> Stashed changes
 
     /**
      * The attributes that are mass assignable.

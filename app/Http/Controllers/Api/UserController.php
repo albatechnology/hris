@@ -6,6 +6,9 @@ use App\Http\Requests\Api\User\DetailStoreRequest;
 use App\Http\Requests\Api\User\PayrollInfoStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
+use App\Http\Requests\Api\User\UploadPhotoStoreRequest;
+use App\Http\Resources\Branch\BranchResource;
+use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
 use Illuminate\Http\Response;
@@ -185,4 +188,72 @@ class UserController extends BaseController
         }
         return new UserResource($user->load('payrollInfo'));
     }
+<<<<<<< Updated upstream
+=======
+
+    public function companies(User $user)
+    {
+        if ($user->type->is(UserType::SUPER_ADMIN)) {
+            $companies = Company::all();
+        } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
+            if ($user->companies->count() > 0) {
+                $companies = Company::whereIn('id', $user->companies->pluck('company_id'))->get();
+            }
+            $companies = Company::where('group_id', $user->group_id)->get();
+        } else {
+            $companies = Company::whereIn('id', $user->companies->pluck('company_id'))->get();
+        }
+
+        return CompanyResource::collection($companies);
+    }
+
+    public function branches(User $user)
+    {
+        if ($user->type->is(UserType::SUPER_ADMIN)) {
+            $branches = Branch::all();
+        } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
+            if ($user->branches->count() > 0) {
+                $branches = Branch::whereIn('id', $user->branches->pluck('branch_id'))->get();
+            }
+            $branches = Branch::whereHas('company', fn ($q) => $q->where('group_id', $user->group_id))->get();
+        } else {
+            $branches = Branch::whereIn('id', $user->branches?->pluck('branch_id') ?? [])->get();
+        }
+
+        return BranchResource::collection($branches);
+    }
+
+    public function uploadPhoto(User $user, UploadPhotoStoreRequest $request)
+    {
+        try {
+            $user = uploadPhoto::create($request->validated());
+
+            $mediaCollection = MediaCollection::USER_EDUCATION->value;
+            if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+                $user->addMediaFromRequest('photo')->toMediaCollection($mediaCollection);
+            }
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return new UserResource($user->load('uploadPhoto'));
+    }
+
+    public function updatePhoto(User $user, UploadPhotoStoreRequest $request)
+    {
+        try {
+            $user->updatePhoto->update($request->validated());
+
+            $mediaCollection = MediaCollection::USER->value;
+            if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+                $user->clearMediaCollection($mediaCollection);
+                $user->addMediaFromRequest('photo')->toMediaCollection($mediaCollection);
+            }
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return new UserResource($user->load('updatePhoto'));
+    }
+>>>>>>> Stashed changes
 }

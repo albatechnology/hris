@@ -39,6 +39,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::post('detail', [UserController::class, 'detail']);
         Route::post('payroll-info', [UserController::class, 'payrollInfo']);
+        Route::post('upload-photo', [UserController::class, 'uploadPhoto']);
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);
