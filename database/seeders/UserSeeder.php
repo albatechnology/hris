@@ -95,7 +95,7 @@ class UserSeeder extends Seeder
 
             $admin = User::create([
                 'group_id' => $company->group_id,
-                'company_id' => null,
+                'company_id' => $company->id,
                 'branch_id' => null,
                 'name' => 'Admin ' . $company->name,
                 'email' => 'admin' . $company->id . '@gmail.com',
@@ -111,6 +111,7 @@ class UserSeeder extends Seeder
                 'model_id' => $admin->id,
                 'group_id' => $company->group_id,
             ]);
+            $admin->companies()->create(['company_id' => $admin->company_id]);
 
             /** ================================================================= */
             $userRole = Role::create([
@@ -120,7 +121,8 @@ class UserSeeder extends Seeder
             $permissions = PermissionService::getPermissionsData(PermissionService::userPermissions());
             $userRole->syncPermissions($permissions);
 
-            $company->branches->each(function (Branch $branch) use ($company, $userRole) {
+            $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin) {
+                $admin->branches()->create(['branch_id' => $branch->id]);
                 // $faker = \Faker\Factory::create('id_ID');
                 for ($i = 1; $i < 4; $i++) {
                     /** @var User $user */

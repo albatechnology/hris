@@ -24,15 +24,14 @@ class OvertimeRequest extends BaseModel
     ];
 
     protected $casts = [
-        'user_id' => 'integer',
-        'date' => 'date',
-        'shift_id' => 'integer',
-        'overtime_id' => 'integer',
+        // 'user_id' => 'integer',
+        // 'date' => 'date',
+        // 'shift_id' => 'integer',
+        // 'overtime_id' => 'integer',
         'start_at' => 'datetime:H:i',
         'end_at' => 'datetime:H:i',
-        'note' => 'string',
         'status' => OvertimeStatus::class,
-        'status_updated_by' => 'integer',
+        // 'status_updated_by' => 'integer',
         'status_updated_at' => 'datetime',
     ];
 
