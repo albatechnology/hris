@@ -41,12 +41,12 @@ enum NotificationType: string
     public function getUrlPath(): mixed
     {
         return match ($this) {
-            self::REQUEST_ATTENDANCE => 'approvals/%s/edit',
-            self::ATTENDANCE_APPROVED => 'approvals/%s/edit',
-            self::REQUEST_TIMEOFF => 'approvals/%s/edit',
-            self::TIMEOFF_APPROVED => 'approvals/%s/edit',
-            self::REQUEST_OVERTIME => 'approvals/%s/edit',
-            self::OVERTIME_APPROVED => 'approvals/%s/edit',
+            self::REQUEST_ATTENDANCE => 'url/path',
+            self::ATTENDANCE_APPROVED => 'url/path',
+            self::REQUEST_TIMEOFF => 'url/path',
+            self::TIMEOFF_APPROVED => 'url/path',
+            self::REQUEST_OVERTIME => 'url/path',
+            self::OVERTIME_APPROVED => 'url/path',
             default => null,
         };
     }

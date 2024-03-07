@@ -52,7 +52,7 @@ class NeedTimeoffApproval extends Notification
         return [
             'type' => $this->notificationType->value,
             'message' => sprintf($this->notificationType->getMessage(), $this->user->name),
-            // 'url_path' => sprintf($this->notificationType->getUrlPath(), $this->file->type->value, $this->file->id),
+            'url_path' => $this->notificationType->getUrlPath(),
         ];
     }
 }

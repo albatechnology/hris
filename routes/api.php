@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\NationalHolidayController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PayrollComponentController;
@@ -124,4 +125,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('events', EventController::class);
     Route::apiResource('custom-fields', CustomFieldController::class);
+
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::put('notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::get('notifications/{notification}', [NotificationController::class, 'show']);
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy']);
 });

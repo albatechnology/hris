@@ -73,7 +73,7 @@ class UserSeeder extends Seeder
             'company_id' => null,
             'branch_id' => null,
             'name' => 'Administrator - ' . $group->name,
-            'email' => 'admiistrator2@gmail.com',
+            'email' => 'administrator2@gmail.com',
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
