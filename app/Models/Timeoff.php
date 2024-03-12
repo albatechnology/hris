@@ -90,4 +90,9 @@ class Timeoff extends BaseModel
     {
         return $this->belongsTo(User::class, 'delegate_to');
     }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
 }

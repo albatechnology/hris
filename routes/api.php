@@ -102,6 +102,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
 
+    Route::get('timeoffs/approvals', [TimeoffController::class, 'approvals']);
     Route::group(['prefix' => 'timeoffs/{timeoff}'], function () {
         Route::put('approve', [TimeoffController::class, 'approve']);
     });

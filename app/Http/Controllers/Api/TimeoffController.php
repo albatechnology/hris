@@ -52,7 +52,7 @@ class TimeoffController extends BaseController
 
     public function show(Timeoff $timeoff)
     {
-        $timeoff->load(['user', 'timeoffPolicy', 'delegateTo']);
+        $timeoff->load(['user', 'timeoffPolicy', 'approvedBy', 'delegateTo']);
 
         return new TimeoffResource($timeoff);
     }
@@ -194,5 +194,28 @@ class TimeoffController extends BaseController
         }
 
         return new TimeoffResource($timeoff);
+    }
+
+    public function approvals()
+    {
+        $query = Timeoff::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->user()->id));
+
+        $data = QueryBuilder::for($query)
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+                AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('timeoff_policy_id'),
+                AllowedFilter::exact('delegate_to'),
+                AllowedFilter::scope('start_at'),
+                AllowedFilter::scope('end_at'),
+                'request_type',
+            ])
+            ->allowedIncludes(['user', 'timeoffPolicy', 'approvedBy', 'delegateTo'])
+            ->allowedSorts([
+                'id', 'user_id', 'timeoff_policy_id', 'delegate_to', 'start_at', 'end_at', 'request_type', 'created_at',
+            ])
+            ->paginate($this->per_page);
+
+        return TimeoffResource::collection($data);
     }
 }

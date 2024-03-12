@@ -25,7 +25,7 @@ class ApproveAttendanceRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'is_approved' => $this->is_approved ? $this->toBoolean($this->is_approved) : null,
+            'is_approved' => $this->toBoolean($this->is_approved),
             'approved_at' => now(),
             'approved_by' => auth('sanctum')->user()->id,
         ]);

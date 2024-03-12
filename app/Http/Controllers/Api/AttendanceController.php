@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\AttendanceType;
+use App\Enums\NotificationType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
@@ -272,7 +273,16 @@ class AttendanceController extends BaseController
 
     public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
     {
+        if ($attendanceDetail->is_approved == $request->is_approved) {
+            return response()->json([
+                'message' => 'Attendance is already ' . ($attendanceDetail->is_approved ? 'approved' : 'rejected'),
+            ]);
+        }
+
         $attendanceDetail->update($request->validated());
+
+        $notificationType = NotificationType::ATTENDANCE_APPROVED;
+        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->is_approved));
 
         return new AttendanceDetailResource($attendanceDetail);
     }
