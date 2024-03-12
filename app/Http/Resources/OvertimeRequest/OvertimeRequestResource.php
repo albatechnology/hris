@@ -19,7 +19,7 @@ class OvertimeRequestResource extends JsonResource
             'user' => $this->user,
             'shift' => $this->shift,
             'overtime' => $this->overtime,
-            'status_updated_by' => $this->statusUpdatedBy ?? $this->status_updated_by,
+            'approved_by' => $this->approvedBy,
         ];
     }
 }

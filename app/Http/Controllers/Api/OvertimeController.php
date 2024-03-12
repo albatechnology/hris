@@ -6,7 +6,6 @@ use App\Http\Requests\Api\Overtime\StoreRequest;
 use App\Http\Requests\Api\Overtime\UpdateRequest;
 use App\Http\Requests\Api\Overtime\UserSettingRequest;
 use App\Http\Resources\Overtime\OvertimeResource;
-use App\Models\Formula;
 use App\Models\Overtime;
 use App\Models\User;
 use App\Services\FormulaService;

@@ -34,7 +34,7 @@ class Timeoff extends BaseModel
     {
         static::creating(function (self $model) {
             if (empty($model->user_id)) {
-                $model->user_id = auth('sanctum')->user()->id;
+                $model->user_id = auth('sanctum')->id();
             }
         });
     }

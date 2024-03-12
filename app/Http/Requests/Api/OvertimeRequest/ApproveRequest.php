@@ -2,18 +2,31 @@
 
 namespace App\Http\Requests\Api\OvertimeRequest;
 
-use App\Enums\OvertimeStatus;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class UpdateStatusRequest extends FormRequest
+class ApproveRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_approved' => $this->toBoolean($this->is_approved),
+        ]);
     }
 
     /**
@@ -24,7 +37,7 @@ class UpdateStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', Rule::enum(OvertimeStatus::class)],
+            'is_approved' => 'required|boolean',
         ];
     }
 }

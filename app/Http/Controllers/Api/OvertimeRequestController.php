@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
-use App\Http\Requests\Api\OvertimeRequest\UpdateStatusRequest;
+use App\Http\Requests\Api\OvertimeRequest\ApproveRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
 use Exception;
@@ -57,16 +57,33 @@ class OvertimeRequestController extends BaseController
         return new OvertimeRequestResource($overtimeRequest);
     }
 
-    public function updateStatus(UpdateStatusRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
+    public function approve(ApproveRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
     {
         try {
-            $overtimeRequest->update([
-                'status' => $request->status,
-            ]);
+            $overtimeRequest->update($request->validated());
+
+            $notificationType = NotificationType::OVERTIME_APPROVED;
+            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->is_approved));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
         return new OvertimeRequestResource($overtimeRequest);
+    }
+
+    public function approvals()
+    {
+        $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()));
+
+        $data = QueryBuilder::for($query)
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+            ])
+            ->allowedSorts([
+                'id', 'date',
+            ])
+            ->paginate($this->per_page);
+
+        return OvertimeRequestResource::collection($data);
     }
 }

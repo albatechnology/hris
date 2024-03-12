@@ -27,7 +27,7 @@ class ApproveAttendanceRequest extends FormRequest
         $this->merge([
             'is_approved' => $this->toBoolean($this->is_approved),
             'approved_at' => now(),
-            'approved_by' => auth('sanctum')->user()->id,
+            'approved_by' => auth('sanctum')->id(),
         ]);
     }
 
@@ -39,7 +39,7 @@ class ApproveAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_approved' => 'nullable|boolean',
+            'is_approved' => 'required|boolean',
             'approved_at' => 'required',
             'approved_by' => 'required',
         ];

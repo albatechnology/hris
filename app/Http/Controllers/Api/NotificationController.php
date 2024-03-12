@@ -11,7 +11,7 @@ class NotificationController extends BaseController
 {
     public function index()
     {
-        $data = QueryBuilder::for(DatabaseNotification::whereHas('notifiable', fn ($q) => $q->where('id', auth('sanctum')->user()->id)))
+        $data = QueryBuilder::for(DatabaseNotification::whereHas('notifiable', fn ($q) => $q->where('id', auth('sanctum')->id())))
             ->allowedFilters([
                 AllowedFilter::callback('message', fn (\Illuminate\Database\Eloquent\Builder $query, string $value) => $query->where('data->message', 'like', '%' . $value . '%')),
             ])

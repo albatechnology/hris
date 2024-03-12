@@ -18,9 +18,9 @@ class OvertimeRequest extends BaseModel
         'start_at',
         'end_at',
         'note',
-        'status',
-        'status_updated_by',
-        'status_changed_at',
+        'is_approved',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -30,9 +30,10 @@ class OvertimeRequest extends BaseModel
         // 'overtime_id' => 'integer',
         'start_at' => 'datetime:H:i',
         'end_at' => 'datetime:H:i',
-        'status' => OvertimeStatus::class,
-        // 'status_updated_by' => 'integer',
-        'status_updated_at' => 'datetime',
+        'is_approved' => 'boolean',
+        // 'status' => OvertimeStatus::class,
+        // 'approved_by' => 'integer',
+        'approved_at' => 'datetime',
     ];
 
     public function overtime(): BelongsTo
@@ -45,8 +46,8 @@ class OvertimeRequest extends BaseModel
         return $this->belongsTo(Shift::class);
     }
 
-    public function statusUpdatedBy(): BelongsTo
+    public function approvedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'status_updated_by', 'id');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

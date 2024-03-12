@@ -141,7 +141,7 @@ class TimeoffController extends BaseController
 
         DB::beginTransaction();
         try {
-            $timeoff->approved_by = auth('sanctum')->user()->id;
+            $timeoff->approved_by = auth('sanctum')->id();
             $timeoff->approved_at = now();
 
             // 1. kalo pending, is_approved=null dan delete attendance
@@ -198,7 +198,7 @@ class TimeoffController extends BaseController
 
     public function approvals()
     {
-        $query = Timeoff::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->user()->id));
+        $query = Timeoff::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

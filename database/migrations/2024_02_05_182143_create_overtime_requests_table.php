@@ -21,9 +21,10 @@ return new class extends Migration
             $table->time('start_at');
             $table->time('end_at');
             $table->text('note')->nullable();
-            $table->string('status')->nullable()->default(OvertimeStatus::PENDING)->comment('Enum from OvertimeStatus::class. Allowed value is (pending, approved, rejected).');
-            $table->foreignId('status_updated_by')->nullable()->constrained('users');
-            $table->datetime('status_updated_at')->nullable();
+            // $table->string('status')->nullable()->default(OvertimeStatus::PENDING)->comment('Enum from OvertimeStatus::class. Allowed value is (pending, approved, rejected).');
+            $table->boolean('is_approved')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users');
+            $table->datetime('approved_at')->nullable();
             $table->timestamps();
         });
     }

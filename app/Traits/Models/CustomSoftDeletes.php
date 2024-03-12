@@ -14,7 +14,7 @@ trait CustomSoftDeletes
     {
         static::deleted(function (self $model) {
             if (! str_contains(request()->url(), 'force-delete')) {
-                $model->deleted_by = auth('sanctum')->user()->id;
+                $model->deleted_by = auth('sanctum')->id();
                 $model->saveQuietly();
             }
         });
