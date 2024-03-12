@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\NotificationType;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Requests\Api\OvertimeRequest\UpdateStatusRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -45,7 +47,10 @@ class OvertimeRequestController extends BaseController
     {
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
-        } catch (\Exception $th) {
+
+            $notificationType = NotificationType::REQUEST_OVERTIME;
+            $overtimeRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user));
+        } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
@@ -58,7 +63,7 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest->update([
                 'status' => $request->status,
             ]);
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 

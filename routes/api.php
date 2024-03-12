@@ -91,6 +91,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('schedules', ScheduleController::class);
 
     Route::post('attendances/request', [AttendanceController::class, 'request']);
+    Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
+    Route::get('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
+    Route::put('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
     Route::apiResource('attendances', AttendanceController::class)->except('update');
 
     Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {

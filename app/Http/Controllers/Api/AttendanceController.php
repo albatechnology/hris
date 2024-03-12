@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\AttendanceType;
 use App\Events\Attendance\AttendanceRequested;
+use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
+use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use App\Models\AttendanceDetail;
 use App\Models\Event;
 use App\Models\NationalHoliday;
 use App\Models\TimeoffRegulation;
@@ -65,81 +68,75 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
-        $schedule = ScheduleService::getTodaySchedule(date: $startDate)->load(['shifts' => fn ($q) => $q->orderBy('order')]);
-
-        $order = $schedule->shifts->where('id', $schedule->shift->id);
-        $orderKey = array_keys($order->toArray())[0];
-        $totalShifts = $schedule->shifts->count();
-
-        // return [
-        //     'schedule' => $schedule,
-        //     'shift' => $schedule->shifts[0]->pivot->order,
-        //     'startDate' => $startDate,
-        //     'endDate' => $endDate,
-        //     'dateRange' => $dateRange,
-        // ];
-        $attendances = Attendance::tenanted()
-            ->with([
-                'shift',
-                'timeoff.timeoffPolicy',
-                'details' => fn ($q) => $q->orderBy('created_at')
-            ])
-            ->whereDateBetween($startDate, $endDate)
-            ->get();
-
-        $companyHolidays = Event::tenanted()->whereHoliday()->get();
-        $nationalHolidays = NationalHoliday::orderBy('date')->get();
-
         $data = [];
-        foreach ($dateRange as $date) {
-            // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
-            // 2. kalo company event(holiday), shiftnya pake holiday
-            // 3. kalo schedulenya !is_overide_national_holiday, shiftnya pake shift
-            // 4. kalo schedulenya !is_overide_company_holiday, shiftnya pake shift
-            // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
-            $date = $date->format('Y-m-d');
-            $attendance = $attendances->firstWhere('date', $date);
+        $schedule = ScheduleService::getTodaySchedule(date: $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        if ($schedule) {
+            $order = $schedule->shifts->where('id', $schedule->shift->id);
+            $orderKey = array_keys($order->toArray())[0];
+            $totalShifts = $schedule->shifts->count();
 
-            if ($attendance) {
-                $shift = $attendance->shift;
-            } else {
-                $shift = $schedule->shifts[$orderKey];
-            }
-            $shiftType = 'shift';
+            $attendances = Attendance::tenanted()
+                ->with([
+                    'shift',
+                    'timeoff.timeoffPolicy',
+                    'details' => fn ($q) => $q->orderBy('created_at')
+                ])
+                ->whereDateBetween($startDate, $endDate)
+                ->get();
 
-            $companyHolidayData = null;
-            if (!$schedule->is_overide_company_holiday) {
-                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
-                });
+            $companyHolidays = Event::tenanted()->whereHoliday()->get();
+            $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
-                if ($companyHolidayData) {
-                    $shift = $companyHolidayData;
-                    $shiftType = 'company_holiday';
+            foreach ($dateRange as $date) {
+                // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
+                // 2. kalo company event(holiday), shiftnya pake holiday
+                // 3. kalo schedulenya !is_overide_national_holiday, shiftnya pake shift
+                // 4. kalo schedulenya !is_overide_company_holiday, shiftnya pake shift
+                // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
+                $date = $date->format('Y-m-d');
+                $attendance = $attendances->firstWhere('date', $date);
+
+                if ($attendance) {
+                    $shift = $attendance->shift;
+                } else {
+                    $shift = $schedule->shifts[$orderKey];
                 }
-            }
+                $shiftType = 'shift';
 
-            if (!$schedule->is_overide_national_holiday && is_null($companyHolidayData)) {
-                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
-                if ($nationalHoliday) {
-                    $shift = $nationalHoliday;
-                    $shiftType = 'national_holiday';
+                $companyHolidayData = null;
+                if (!$schedule->is_overide_company_holiday) {
+                    $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                        return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                    });
+
+                    if ($companyHolidayData) {
+                        $shift = $companyHolidayData;
+                        $shiftType = 'company_holiday';
+                    }
                 }
-            }
 
-            unset($shift->pivot);
+                if (!$schedule->is_overide_national_holiday && is_null($companyHolidayData)) {
+                    $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                    if ($nationalHoliday) {
+                        $shift = $nationalHoliday;
+                        $shiftType = 'national_holiday';
+                    }
+                }
 
-            $data[] = [
-                'date' => $date,
-                'shift_type' => $shiftType,
-                'shift' => $shift,
-                'attendance' => $attendance
-            ];
+                unset($shift->pivot);
 
-            if (($orderKey + 1) === $totalShifts) {
-                $orderKey = 0;
-            } else {
-                $orderKey++;
+                $data[] = [
+                    'date' => $date,
+                    'shift_type' => $shiftType,
+                    'shift' => $shift,
+                    'attendance' => $attendance
+                ];
+
+                if (($orderKey + 1) === $totalShifts) {
+                    $orderKey = 0;
+                } else {
+                    $orderKey++;
+                }
             }
         }
 
@@ -247,5 +244,36 @@ class AttendanceController extends BaseController
         $attendance->restore();
 
         return new AttendanceResource($attendance);
+    }
+
+    public function approvals()
+    {
+        $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
+            ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->user()->id))
+            ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
+                'user' => fn ($q) => $q->select('id', 'name'),
+                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                'schedule' => fn ($q) => $q->select('id', 'name')
+            ]));
+
+        $attendances = QueryBuilder::for($query)
+            ->allowedSorts([
+                'id', 'is_approved', 'created_at',
+            ])
+            ->paginate($this->per_page);
+
+        return AttendanceResource::collection($attendances);
+    }
+
+    public function showApproval(AttendanceDetail $attendanceDetail)
+    {
+        return new AttendanceDetailResource($attendanceDetail);
+    }
+
+    public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
+    {
+        $attendanceDetail->update($request->validated());
+
+        return new AttendanceDetailResource($attendanceDetail);
     }
 }

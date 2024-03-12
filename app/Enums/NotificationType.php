@@ -22,6 +22,8 @@ enum NotificationType: string
             self::ATTENDANCE_APPROVED => \App\Notifications\Attendance\AttendanceApproved::class,
             self::REQUEST_TIMEOFF => \App\Notifications\Timeoff\NeedTimeoffApproval::class,
             self::TIMEOFF_APPROVED => \App\Notifications\Timeoff\TimeoffApproved::class,
+            self::REQUEST_OVERTIME => \App\Notifications\Overtime\RequestOvertime::class,
+            self::OVERTIME_APPROVED => \App\Notifications\Overtime\OvertimeApproved::class,
         };
     }
 
