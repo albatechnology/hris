@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UploadPhotoStoreRequest extends FormRequest
+class UploadPhotoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +22,7 @@ class UploadPhotoStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'photo' => 'nullable|mimes:' . config('app.file_mimes_types'),
+            'file' => 'required|mimes:' . config('app.file_mimes_types'),
         ];
     }
 }

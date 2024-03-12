@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MediaCollection;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
 use App\Http\Requests\Api\User\PayrollInfoStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
-use App\Http\Requests\Api\User\UploadPhotoStoreRequest;
+use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\User\UserResource;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -238,36 +240,21 @@ class UserController extends BaseController
         return BranchResource::collection($branches);
     }
 
-    public function uploadPhoto(User $user, UploadPhotoStoreRequest $request)
+    public function uploadPhoto(UploadPhotoRequest $request)
     {
+        /** @var User $user */
+        $user = auth('sanctum')->user();
+
         try {
-            $user = uploadPhoto::create($request->validated());
-
-            $mediaCollection = MediaCollection::USER_EDUCATION->value;
-            if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-                $user->addMediaFromRequest('photo')->toMediaCollection($mediaCollection);
-            }
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return new UserResource($user->load('uploadPhoto'));
-    }
-
-    public function updatePhoto(User $user, UploadPhotoStoreRequest $request)
-    {
-        try {
-            $user->updatePhoto->update($request->validated());
-
             $mediaCollection = MediaCollection::USER->value;
-            if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
                 $user->clearMediaCollection($mediaCollection);
-                $user->addMediaFromRequest('photo')->toMediaCollection($mediaCollection);
+                $user->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
 
-        return new UserResource($user->load('updatePhoto'));
+        return new UserResource($user);
     }
 }
