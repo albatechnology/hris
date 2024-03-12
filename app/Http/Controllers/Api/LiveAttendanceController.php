@@ -126,16 +126,24 @@ class LiveAttendanceController extends BaseController
 
     public function users(LiveAttendance $liveAttendance)
     {
-        $users = QueryBuilder::for(User::tenanted()->where('live_attendance_id', $liveAttendance->id))
+        $query = User::select('id', 'name', 'nik', 'branch_id', 'company_id', 'live_attendance_id')
+            ->tenanted()->where('live_attendance_id', $liveAttendance->id)
+            ->with([
+                'company' => fn ($q) => $q->select('id', 'name'),
+                'branch' => fn ($q) => $q->select('id', 'name'),
+                'detail' => fn ($q) => $q->select('id', 'job_position'),
+                'liveAttendance'
+            ]);
+
+        $users = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::exact('manager_id'),
-                AllowedFilter::scope('has_schedule_id'),
-                'name', 'email', 'type', 'nik', 'phone', 'marital_status',
+                AllowedFilter::exact('company_id'),
+                'name', 'email', 'nik', 'phone',
             ])
             ->allowedSorts([
-                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'marital_status', 'created_at',
+                'id', 'company_id', 'branch_id', 'manager_id', 'name', 'email', 'nik', 'phone', 'created_at',
             ])
             ->paginate($this->per_page);
 
