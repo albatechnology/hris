@@ -36,8 +36,8 @@ class TimeoffPeriodRegulationController extends BaseController
 
     public function index(Company $company)
     {
-        $data = QueryBuilder::for($this->timeoffRegulation->timeoffPeriodRegulations())
-            ->allowedIncludes(['timeoffRegulation', 'timeoffRegulationMonths'])
+        $data = QueryBuilder::for($this->timeoffRegulation->timeoffPeriodRegulations()->with('timeoffRegulationMonths'))
+            ->allowedIncludes(['timeoffRegulation'])
             ->allowedSorts([
                 'id', 'min_working_month', 'max_working_month', 'created_at',
             ])
