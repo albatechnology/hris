@@ -15,41 +15,38 @@ class GroupSeeder extends Seeder
     {
         $positions = [
             [
-                'name' => 'Accounting',
+                'name' => 'Direktur',
                 'order' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ], [
-                'name' => 'HR',
+            ],
+            [
+                'name' => 'Manager',
                 'order' => 2,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ], [
-                'name' => 'Legal',
+            ],
+            [
+                'name' => 'Staff',
                 'order' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ], [
-                'name' => 'Frontend Developer',
-                'order' => 4,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ], [
-                'name' => 'Backend Developer',
-                'order' => 5,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            ]
         ];
 
-        $division = new Division([
-            'name' => 'Operasional',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // $division = new Division([
+        //     'name' => 'Operasional',
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]);
         $departments = [
             [
                 'name' => 'Marketing',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Finance',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
