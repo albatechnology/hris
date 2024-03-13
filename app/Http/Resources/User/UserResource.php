@@ -18,6 +18,7 @@ class UserResource extends JsonResource
     {
         $data = parent::toArray($request);
         $data['roles'] = RoleResource::collection($this->whenLoaded('roles'));
+        $data['image'] = $this->image;
 
         if ($request->getRequestUri() === '/api/users/me') {
             return [

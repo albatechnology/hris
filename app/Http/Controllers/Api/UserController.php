@@ -67,13 +67,6 @@ class UserController extends BaseController
 
     public function show(User $user)
     {
-        // dump($user->roles);
-        // dump($user->permissions);
-        // dump($user->getPermissionNames());
-        // dump($user->getDirectPermissions());
-        // dump($user->getPermissionsViaRoles());
-        // dump($user->getAllPermissions());
-        // dump($user->getRoleNames());
         $user = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->firstOrFail();
@@ -245,13 +238,15 @@ class UserController extends BaseController
         /** @var User $user */
         $user = auth('sanctum')->user();
 
+        DB::beginTransaction();
         try {
             $mediaCollection = MediaCollection::USER->value;
             if ($request->hasFile('file') && $request->file('file')->isValid()) {
-                $user->clearMediaCollection($mediaCollection);
                 $user->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 

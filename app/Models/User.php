@@ -225,4 +225,32 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
     {
         DB::table('model_has_roles')->where('model_type', get_class($this))->where('model_id', $this->id)->delete();
     }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(\App\Enums\MediaCollection::USER->value)
+            ->onlyKeepLatest(1)
+            ->registerMediaConversions(function (\Spatie\MediaLibrary\MediaCollections\Models\Media $media) {
+                $this->addMediaConversion('preview')
+                    ->fit(\Spatie\Image\Enums\Fit::Contain, 250, 250)
+                    ->nonQueued();
+            });
+    }
+
+    public function getImageAttribute()
+    {
+        $file = $this->getFirstMedia('user');
+        if ($file) {
+            $url = $file->getUrl();
+            $preview = $file->getUrl('preview');
+        } else {
+            $url = asset('img/user-icon.png');
+            $preview = asset('img/user-icon.png');
+        }
+
+        return [
+            'url' => $url,
+            'preview' => $preview
+        ];
+    }
 }
