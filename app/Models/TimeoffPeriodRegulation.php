@@ -16,7 +16,6 @@ class TimeoffPeriodRegulation extends BaseModel
     protected static function booted(): void
     {
         static::deleting(function (self $model) {
-            // dd($model);
             $model->timeoffRegulationMonths()->delete();
         });
     }

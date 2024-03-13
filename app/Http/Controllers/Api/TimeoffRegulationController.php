@@ -56,12 +56,6 @@ class TimeoffRegulationController extends BaseController
             return $this->errorResponse('Timeoff Regulation not found', code: Response::HTTP_NOT_FOUND);
         }
 
-        $cutOffDate = '05';
-        $joinDate = '2024-02-06';
-        dd(date('m', strtotime('-2 month')));
-
-        dump($request->validated());
-
         DB::beginTransaction();
         try {
             $timeoffRegulation->update($request->validated());
