@@ -118,11 +118,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('overtime-requests', OvertimeRequestController::class);
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
 
+    Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);
+    // Route::get('live-attendances/locations', [LiveAttendanceController::class, 'locations']);
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
-        Route::get('users', [LiveAttendanceController::class, 'users']);
-        Route::apiResource('locations', LiveAttendanceLocationController::class);
+        Route::apiResource('/locations', LiveAttendanceLocationController::class);
     });
     Route::apiResource('live-attendances', LiveAttendanceController::class);
+
     Route::apiResource('supervisor-types', SupervisorTypeController::class);
     Route::apiResource('national-holidays', NationalHolidayController::class);
 
