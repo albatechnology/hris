@@ -32,7 +32,7 @@ class LiveAttendanceController extends BaseController
                 'name',
                 'is_flexible',
             ])
-            ->allowedIncludes(['company', 'locations'])
+            ->allowedIncludes(['company', 'locations', 'users'])
             ->allowedSorts([
                 'id', 'name', 'is_flexible', 'created_at',
             ])
