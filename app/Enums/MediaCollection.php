@@ -9,4 +9,5 @@ enum MediaCollection: string
     case DEFAULT = 'default';
     case USER = 'user';
     case USER_EDUCATION = 'user_education';
+    case ATTENDANCE = 'attendance';
 }

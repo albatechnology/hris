@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\AttendanceType;
+use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
@@ -25,7 +26,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class AttendanceController extends BaseController
 {
-    const ALLOWED_INCLUDES = ['user', 'schedule', 'shift'];
+    const ALLOWED_INCLUDES = ['user', 'schedule', 'shift', 'details'];
 
     public function __construct()
     {
@@ -80,7 +81,9 @@ class AttendanceController extends BaseController
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
-                    'details' => fn ($q) => $q->orderBy('created_at')
+                    'clockIn',
+                    'clockOut',
+                    // 'details' => fn ($q) => $q->orderBy('created_at')
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
@@ -169,7 +172,13 @@ class AttendanceController extends BaseController
                 $attendance = Attendance::create($data);
             }
 
+            /** @var AttendanceDetail $attendanceDetail */
             $attendanceDetail = $attendance->details()->create($request->validated());
+
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::ATTENDANCE->value;
+                $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
 
             AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendance);
             DB::commit();

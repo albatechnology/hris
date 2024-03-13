@@ -239,7 +239,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
 
     public function getImageAttribute()
     {
-        $file = $this->getFirstMedia('user');
+        $file = $this->getFirstMedia(\App\Enums\MediaCollection::USER->value);
         if ($file) {
             $url = $file->getUrl();
             $preview = $file->getUrl('preview');

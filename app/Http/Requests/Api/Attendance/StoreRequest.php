@@ -50,6 +50,20 @@ class StoreRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'note' => 'nullable|string',
+
+            'file' => 'required_if:type,' . AttendanceType::AUTOMATIC->value . '|mimes:' . config('app.file_mimes_types'),
+        ];
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'file.required_if' => 'Selfie photo is required.',
         ];
     }
 }

@@ -9,6 +9,7 @@ use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Attendance extends BaseModel implements TenantedInterface
 {
@@ -87,6 +88,16 @@ class Attendance extends BaseModel implements TenantedInterface
     public function details(): HasMany
     {
         return $this->hasMany(AttendanceDetail::class);
+    }
+
+    public function clockIn(): HasOne
+    {
+        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', true)->orderBy('time');
+    }
+
+    public function clockOut(): HasOne
+    {
+        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', false)->orderByDesc('time');
     }
 
     public function scopeWhereDateBetween(Builder $query, string $startDate, string $endDate)

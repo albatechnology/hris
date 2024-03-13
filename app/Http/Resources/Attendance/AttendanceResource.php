@@ -16,6 +16,7 @@ class AttendanceResource extends JsonResource
     {
         return [
             ...parent::toArray($request),
+            'details' => AttendanceDetailResource::collection($this->whenLoaded('details')),
             // 'shifts' => ShiftResource::collection($this->whenLoaded('shifts')),
         ];
     }

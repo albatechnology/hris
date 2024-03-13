@@ -14,6 +14,9 @@ class AttendanceDetailResource extends JsonResource
      */
     public function toArray(Request $request)
     {
-        return parent::toArray($request);
+        return [
+            ...parent::toArray($request),
+            'image' => $this->image
+        ];
     }
 }
