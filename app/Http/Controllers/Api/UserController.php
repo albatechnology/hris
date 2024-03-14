@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Enums\MediaCollection;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
-use App\Http\Requests\Api\User\PayrollInfoStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
@@ -189,17 +188,6 @@ class UserController extends BaseController
 
         return new UserResource($user->load('detail'));
     }
-
-    // public function payrollInfo(User $user, PayrollInfoStoreRequest $request)
-    // {
-    //     if ($user->payrollInfo) {
-    //         $user->payrollInfo->update($request->validated());
-    //     } else {
-    //         $user->payrollInfo()->create($request->validated());
-    //     }
-
-    //     return new UserResource($user->load('payrollInfo'));
-    // }
 
     public function companies(User $user)
     {

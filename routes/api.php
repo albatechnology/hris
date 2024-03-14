@@ -48,7 +48,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
         Route::post('detail', [UserController::class, 'detail']);
-        Route::post('payroll-info', [UserController::class, 'payrollInfo']);
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);
