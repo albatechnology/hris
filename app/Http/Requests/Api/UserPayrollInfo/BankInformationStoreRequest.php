@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\User;
+namespace App\Http\Requests\Api\UserPayrollInfo;
 
-use App\Enums\PtkpStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class PayrollInfoStoreRequest extends FormRequest
+class BankInformationStoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,13 +22,9 @@ class PayrollInfoStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'bpjs_ketenagakerjaan_no' => 'nullable|string',
-            'bpjs_kesehatan_no' => 'nullable|string',
-            'npwp' => 'nullable|string',
             'bank_name' => 'nullable|string',
             'bank_account_no' => 'nullable|string',
             'bank_account_holder' => 'nullable|string',
-            'ptkp_status' => ['nullable', Rule::enum(PtkpStatus::class)],
         ];
     }
 }

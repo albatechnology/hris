@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\UserExperienceController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserTimeoffPolicyController;
+use App\Http\Controllers\Api\UserPayrollInfoController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -52,6 +53,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);
         Route::apiResource('custom-fields', UserCustomFieldController::class)->except('destroy');
+        Route::put('salary', [UserPayrollInfoController::class, 'salary']);
+        Route::put('bank-information', [UserPayrollInfoController::class, 'bankInformation']);
+        Route::put('tax-configuration', [UserPayrollInfoController::class, 'taxConfiguration']);
+        Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
