@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\NationalHolidayController;
+use App\Http\Controllers\Api\UserPayrollInfoController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -43,6 +44,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);
+        Route::put('salary', [UserPayrollInfoController::class, 'salary']);
+        Route::put('bank-information', [UserPayrollInfoController::class, 'bankInformation']);
+        Route::put('tax-configuration', [UserPayrollInfoController::class, 'taxConfiguration']);
+        Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);

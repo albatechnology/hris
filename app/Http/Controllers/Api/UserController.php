@@ -179,18 +179,6 @@ class UserController extends BaseController
         return new UserResource($user->load('detail'));
     }
 
-    public function payrollInfo(User $user, PayrollInfoStoreRequest $request)
-    {
-        if ($user->payrollInfo) {
-            $user->payrollInfo->update($request->validated());
-        } else {
-            $user->payrollInfo()->create($request->validated());
-        }
-        return new UserResource($user->load('payrollInfo'));
-    }
-<<<<<<< Updated upstream
-=======
-
     public function companies(User $user)
     {
         if ($user->type->is(UserType::SUPER_ADMIN)) {
@@ -255,5 +243,4 @@ class UserController extends BaseController
 
         return new UserResource($user->load('updatePhoto'));
     }
->>>>>>> Stashed changes
 }
