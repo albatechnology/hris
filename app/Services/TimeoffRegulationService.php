@@ -66,8 +66,8 @@ class TimeoffRegulationService
             'expired_max_month' => null,
             'min_working_month' => 1,
             'cut_off_date' => '20',
-            'min_advance_leave_working_month' => 5,
-            'max_advance_leave_request' => 3,
+            'min_advanced_leave_working_month' => 5,
+            'max_advanced_leave_request' => 3,
             'dayoff_consecutively_working_day' => 15,
             'dayoff_consecutively_amount' => 1,
         ]);
@@ -89,8 +89,8 @@ class TimeoffRegulationService
             'expired_max_month' => null,
             'min_working_month' => 3,
             'cut_off_date' => '20',
-            'min_advance_leave_working_month' => 5,
-            'max_advance_leave_request' => 3,
+            'min_advanced_leave_working_month' => 5,
+            'max_advanced_leave_request' => 3,
             'dayoff_consecutively_working_day' => 15,
             'dayoff_consecutively_amount' => 1,
         ]);
@@ -131,8 +131,8 @@ class TimeoffRegulationService
             'expired_max_month' => null,
             'min_working_month' => 1,
             'cut_off_date' => '20',
-            'min_advance_leave_working_month' => 5,
-            'max_advance_leave_request' => 3,
+            'min_advanced_leave_working_month' => 5,
+            'max_advanced_leave_request' => 3,
             'dayoff_consecutively_working_day' => 15,
             'dayoff_consecutively_amount' => 1,
         ]);
@@ -140,7 +140,18 @@ class TimeoffRegulationService
         return $timeoffRegulation;
     }
 
-    public static function isJoinDatePassed($joinDate, int $minWorkingMonth): bool
+    /**
+     * Check if the join date has passed a certain number of working months.
+     *
+     * This function compares the join date with the current date, and if the join date
+     * has passed the minimum number of working months, it will return true. Otherwise,
+     * it will return false.
+     *
+     * @param string $joinDate The join date to compare. Format: Y-m-d
+     * @param int $minWorkingMonth The minimum number of working months to check against.
+     * @return bool True if the join date has passed the minimum number of working months, false otherwise.
+     */
+    public static function isJoinDatePassed(string $joinDate, int $minWorkingMonth): bool
     {
         $minWorkingMonthDate = new \DateTime($joinDate);
         $minWorkingMonthDate->add(new \DateInterval(sprintf('P%sM', $minWorkingMonth)));
@@ -148,9 +159,21 @@ class TimeoffRegulationService
         return false;
     }
 
+    /**
+     * Update the end period of a TimeoffRegulation.
+     *
+     * This function will update the end period of a TimeoffRegulation by calculating
+     * the difference between the start period and the end period, and then adding that
+     * difference to the start period. The start period and end period will be updated
+     * accordingly.
+     *
+     * @param TimeoffRegulation $timeoffRegulation The TimeoffRegulation to update
+     */
     public static function updateEndPeriod(TimeoffRegulation $timeoffRegulation): void
     {
-        if (empty($timeoffRegulation->start_period) || empty($timeoffRegulation->end_period)) return;
+        if (empty($timeoffRegulation->start_period) || empty($timeoffRegulation->end_period)) {
+            return;
+        }
 
         $startAt = new \DateTime(date('Y-') . $timeoffRegulation->start_period);
         $endAt = new \DateTime(date('Y-') . $timeoffRegulation->end_period);

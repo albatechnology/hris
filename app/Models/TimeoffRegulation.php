@@ -25,8 +25,8 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         'expired_max_month',
         'min_working_month',
         'cut_off_date',
-        'min_advance_leave_working_month',
-        'max_advance_leave_request',
+        'min_advanced_leave_working_month',
+        'max_advanced_leave_request',
         'dayoff_consecutively_working_day',
         'dayoff_consecutively_amount',
     ];

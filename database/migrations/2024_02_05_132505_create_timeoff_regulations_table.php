@@ -25,8 +25,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('expired_max_month')->nullable()->comment('jika null, maka sisa cuti tahun sebelumnya akan aktif tanpa batas waktu');
             $table->integer('min_working_month')->default(3)->comment('minimal masa kerja untuk dapat mendapatkan cuti');
             $table->char('cut_off_date', 2)->default('01')->comment('tanggal(day) cut off tiap bulannya');
-            $table->unsignedSmallInteger('min_advance_leave_working_month')->nullable()->comment('minimal (bulan) kerja berturut-turut untuk dapat mengajukan advanced leave (hutang cuti)');
-            $table->unsignedSmallInteger('max_advance_leave_request')->default(0)->comment('jika renew_type == monthly maka max_advance_leave_request adalah jumlah bulan kedepan. selain itu, max_advance_leave_request adalah total hari yang dapat diajukan');
+            $table->unsignedSmallInteger('min_advanced_leave_working_month')->nullable()->comment('minimal (bulan) kerja berturut-turut untuk dapat mengajukan advanced leave (hutang cuti)');
+            $table->unsignedSmallInteger('max_advanced_leave_request')->default(0)->comment('jika renew_type == monthly maka max_advanced_leave_request adalah jumlah bulan kedepan. selain itu, max_advanced_leave_request adalah total hari yang dapat diajukan');
             $table->unsignedSmallInteger('dayoff_consecutively_working_day')->nullable()->comment('minimal (hari) kerja berturut-turut untuk dapat mendapatkan day off (libur tanpa memotong cuti)');
             $table->integer('dayoff_consecutively_amount')->default(0)->comment('jumlah hari dayoff yang akan didapatkan');
             $table->timestamps();
