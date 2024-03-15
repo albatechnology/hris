@@ -2,7 +2,20 @@
 
 namespace App\Models;
 
+use App\Enums\BpjsKesehatanCost;
+use App\Enums\CostCenterCategory;
+use App\Enums\CurrencyCode;
+use App\Enums\EmploymentStatus;
+use App\Enums\JaminanPensiunCost;
+use App\Enums\JhtCost;
+use App\Enums\NppBpjsKetenagakerjaan;
+use App\Enums\OvertimeSetting;
+use App\Enums\PaymentSchedule;
+use App\Enums\ProrateSetting;
 use App\Enums\PtkpStatus;
+use App\Enums\SalaryType;
+use App\Enums\TaxMethod;
+use App\Enums\TaxSalary;
 use App\Traits\BelongsToUser;
 
 class UserPayrollInfo extends BaseModel
