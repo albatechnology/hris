@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\UserPayrollInfo\SalaryStoreRequest;
 use App\Http\Requests\Api\UserPayrollInfo\BankInformationStoreRequest;
-use App\Http\Requests\Api\UserPayrollInfo\TaskConfigurationStoreRequest;
 use App\Http\Requests\Api\UserPayrollInfo\BpjsConfigurationStoreRequest;
+use App\Http\Requests\Api\UserPayrollInfo\TaxConfigurationStoreRequest;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
 
@@ -23,7 +23,7 @@ class UserPayrollInfoController extends BaseController
         return new UserResource($user->load('payrollInfo'));
     }
 
-    public function taxConfiguration(User $user, TaskConfigurationStoreRequest $request)
+    public function taxConfiguration(User $user, TaxConfigurationStoreRequest $request)
     {
         $user->payrollInfo->update($request->validated());
         return new UserResource($user->load('payrollInfo'));

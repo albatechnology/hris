@@ -29,7 +29,7 @@ class SalaryStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'basic_salary' => 'required|integar',
+            'basic_salary' => 'required|integer',
             'salary_type' => ['required', Rule::enum(SalaryType::class)],
             'payment_schedule' => ['required', Rule::enum(PaymentSchedule::class)],
             'prorate_setting' => ['nullable', Rule::enum(ProrateSetting::class)],

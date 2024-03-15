@@ -52,7 +52,6 @@ class UserPayrollInfo extends BaseModel
         'jht_cost',
         'jaminan_pensiun_cost',
         'jaminan_pensiun_date',
-
     ];
 
     protected $casts = [

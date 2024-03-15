@@ -63,6 +63,12 @@ class TimeoffController extends BaseController
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        // if ($request->is_advanced_leave) {
+        //     1, cek min_advanced_leave_working_month di timeoff_regulations
+        //     2. cek history advanced leave user, apakah sudah melebihi max_advanced_leave_request
+        // }
+        // dd($request->validated());
+
         try {
             $timeoff = Timeoff::create($request->validated());
 
