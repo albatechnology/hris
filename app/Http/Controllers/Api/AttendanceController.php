@@ -18,9 +18,11 @@ use App\Models\Event;
 use App\Models\NationalHoliday;
 use App\Models\TimeoffRegulation;
 use App\Services\AttendanceService;
+use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -160,7 +162,19 @@ class AttendanceController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
+        $user = auth('sanctum')->user();
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
+
+        if ($request->type === AttendanceType::AUTOMATIC->value) {
+            try {
+                $compareFace = Rekognition::compareFace($user, $request->file('file'));
+                if (!$compareFace) {
+                    return $this->errorResponse(message: 'Face not match!', code: 400);
+                }
+            } catch (Exception $e) {
+                return $this->errorResponse(message: $e->getMessage(), code: $e->getCode());
+            }
+        }
 
         DB::beginTransaction();
         try {
@@ -182,10 +196,10 @@ class AttendanceController extends BaseController
 
             AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendance);
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return new AttendanceResource($attendance);
@@ -223,10 +237,10 @@ class AttendanceController extends BaseController
 
             AttendanceRequested::dispatchIf($attendance->details->contains('type', AttendanceType::MANUAL), $attendance);
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return new AttendanceResource($attendance);
