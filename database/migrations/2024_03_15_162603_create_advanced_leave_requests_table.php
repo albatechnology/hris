@@ -12,12 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_advanced_leaves', function (Blueprint $table) {
+        Schema::create('advanced_leave_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->foreignId('timeoff_period_regulation_id')->constrained();
-            $table->string('month', 2);
+            // $table->foreignId('timeoff_period_regulation_id')->constrained();
+            // $table->string('month', 2);
+            $table->text('months')->nullable();
             $table->unsignedFloat('amount')->default(0);
+            $table->boolean('is_approved')->nullable();
+            $table->foreignId('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_advanced_leaves');
+        Schema::dropIfExists('advanced_leave_requests');
     }
 };

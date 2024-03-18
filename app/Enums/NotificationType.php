@@ -15,6 +15,9 @@ enum NotificationType: string
     case REQUEST_OVERTIME = 'request_overtime';
     case OVERTIME_APPROVED = 'overtime_approved';
 
+    case REQUEST_ADVANCED_LEAVE = 'request_advanced_leave';
+    case ADVANCED_LEAVE_APPROVED = 'advanced_leave_approved';
+
     public function getNotificationClass(): string
     {
         return match ($this) {
@@ -24,6 +27,8 @@ enum NotificationType: string
             self::TIMEOFF_APPROVED => \App\Notifications\Timeoff\TimeoffApproved::class,
             self::REQUEST_OVERTIME => \App\Notifications\Overtime\RequestOvertime::class,
             self::OVERTIME_APPROVED => \App\Notifications\Overtime\OvertimeApproved::class,
+            self::REQUEST_ADVANCED_LEAVE => \App\Notifications\AdvancedLeave\RequestAdvancedLeave::class,
+            self::ADVANCED_LEAVE_APPROVED => \App\Notifications\AdvancedLeave\AdvancedLeaveApproved::class,
         };
     }
 
@@ -36,6 +41,8 @@ enum NotificationType: string
             self::TIMEOFF_APPROVED => '%s %s request timeoff anda', // difa menyetujui/menolak timeoff anda
             self::REQUEST_OVERTIME => '%s membutuhkan approval overtime dari anda',
             self::OVERTIME_APPROVED => '%s %s request overtime anda', // difa menyetujui/menolak overtime anda
+            self::REQUEST_ADVANCED_LEAVE => '%s membutuhkan approval advance leave dari anda',
+            self::ADVANCED_LEAVE_APPROVED => '%s %s request advance leave anda', // difa menyetujui/menolak overtime anda
             default => null,
         };
     }
@@ -49,6 +56,8 @@ enum NotificationType: string
             self::TIMEOFF_APPROVED => 'url/path',
             self::REQUEST_OVERTIME => 'url/path',
             self::OVERTIME_APPROVED => 'url/path',
+            self::REQUEST_ADVANCED_LEAVE => 'url/path',
+            self::ADVANCED_LEAVE_APPROVED => 'url/path',
             default => null,
         };
     }
@@ -62,6 +71,8 @@ enum NotificationType: string
             self::TIMEOFF_APPROVED => 'fa fa-check-double',
             self::REQUEST_OVERTIME => 'fa fa-check-double',
             self::OVERTIME_APPROVED => 'fa fa-check-double',
+            self::REQUEST_ADVANCED_LEAVE => 'fa fa-check-double',
+            self::ADVANCED_LEAVE_APPROVED => 'fa fa-check-double',
             default => null,
         };
     }

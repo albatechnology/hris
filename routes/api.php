@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdvancedLeaveRequestController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BranchController;
@@ -143,4 +144,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead']);
     Route::get('notifications/{notification}', [NotificationController::class, 'show']);
     Route::delete('notifications/{notification}', [NotificationController::class, 'destroy']);
+
+    Route::get('advanced-leave-requests/get-available-days', [AdvancedLeaveRequestController::class, 'getAvailableDays']);
+    Route::get('advanced-leave-requests/approvals', [AdvancedLeaveRequestController::class, 'approvals']);
+    Route::put('advanced-leave-requests/{advanced_leave_request}/approve', [AdvancedLeaveRequestController::class, 'approve']);
+    Route::apiResource('advanced-leave-requests', AdvancedLeaveRequestController::class);
 });

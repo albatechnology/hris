@@ -152,6 +152,12 @@ class PermissionService
                 'overtime_request_edit',
                 'overtime_request_delete',
             ],
+            'advanced_leave_request_access' => [
+                'advanced_leave_request_read',
+                'advanced_leave_request_create',
+                'advanced_leave_request_edit',
+                'advanced_leave_request_delete',
+            ],
             'timeoff_policy_access' => [
                 'timeoff_policy_read',
                 'timeoff_policy_create',
@@ -289,6 +295,12 @@ class PermissionService
                 'overtime_request_create',
                 'overtime_request_edit',
                 'overtime_request_delete',
+            ],
+            'advanced_leave_request_access' => [
+                'advanced_leave_request_read',
+                'advanced_leave_request_create',
+                'advanced_leave_request_edit',
+                'advanced_leave_request_delete',
             ],
             'timeoff_policy_access' => [
                 'timeoff_policy_read',

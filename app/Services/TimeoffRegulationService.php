@@ -13,7 +13,7 @@ class TimeoffRegulationService
     {
         /** @var TimeoffPeriodRegulation $timeoffPeriodRegulation */
         $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->create([
-            'min_working_month' => 0,
+            'min_working_month' => 4,
             'max_working_month' => 1000,
         ]);
         $timeoffPeriodRegulation->timeoffRegulationMonths()->createMany([
@@ -78,7 +78,7 @@ class TimeoffRegulationService
     public static function createMonthly(Company $company): TimeoffRegulation
     {
         /** @var TimeoffRegulation $timeoffRegulation */
-        $timeoffRegulation = $company->timeoffRegulation()->create([
+        $timeoffRegulation = $company->timeoffRegulation()->createQuietly([
             'renew_type' => TimeoffRenewType::MONTHLY,
             'total_day' => 12,
             'start_period' => '01-01',

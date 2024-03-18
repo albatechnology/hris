@@ -206,6 +206,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->hasMany(UserCustomField::class);
     }
 
+    public function timeoffRegulationMonths(): HasMany
+    {
+        return $this->hasMany(TimeoffRegulationMonth::class);
+    }
+
     public function getIsSuperAdminAttribute(): bool
     {
         return $this->type->is(UserType::SUPER_ADMIN);
@@ -224,6 +229,21 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
     public function deleteRoles()
     {
         DB::table('model_has_roles')->where('model_type', get_class($this))->where('model_id', $this->id)->delete();
+    }
+
+    public function getTotalWorkingMonth(?string $cutoffDate = null)
+    {
+        if ($cutoffDate == null) {
+            $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $this->company_id)->first(['cut_off_date']);
+
+            $cutoffDate = $timeoffRegulation->cut_off_date;
+        }
+
+        $joinDate = date_create($this->join_date);
+        $cutoffDate = date_create(date('Y-m-' . $cutoffDate));
+        $diff = date_diff($joinDate, $cutoffDate);
+
+        return (int)$diff->format('%m');
     }
 
     public function registerMediaCollections(): void
