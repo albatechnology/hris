@@ -26,8 +26,8 @@ class LiveAttendanceSeeder extends Seeder
             $liveAttendance->locations()->createMany([
                 [
                     'radius' => '100',
-                    'lat' => '-6.2326902',
-                    'lng' => '106.6645009',
+                    'lat' => '-6.2275964',
+                    'lng' => '106.6575175',
                 ],
                 [
                     'radius' => '10',

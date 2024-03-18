@@ -73,8 +73,8 @@ class GroupSeeder extends Seeder
             'province' => 'DKI Jakarta',
             'city' => 'Jakarta Barat',
             'zip_code' => '11610',
-            'lat' => '-6.1979899',
-            'lng' => '106.742916',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
         $company->positions()->createMany($positions);
         $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
@@ -86,8 +86,8 @@ class GroupSeeder extends Seeder
             'province' => 'DKI Jakarta',
             'city' => 'Jakarta Barat',
             'zip_code' => '11610',
-            'lat' => '-6.1979899',
-            'lng' => '106.742916',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
         $company->branches()->create([
             'name' => 'SUN Alam Sutera',
@@ -96,8 +96,8 @@ class GroupSeeder extends Seeder
             'province' => 'Banten',
             'city' => 'Kota Tangerang Selatan',
             'zip_code' => '15320',
-            'lat' => '-6.2348656',
-            'lng' => '106.5766001',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
 
         $company = $group->companies()->create([
@@ -107,8 +107,8 @@ class GroupSeeder extends Seeder
             'province' => 'Selangor',
             'city' => 'Subang Jaya',
             'zip_code' => '47500',
-            'lat' => '3.0649282',
-            'lng' => '101.5256048',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
         $company->positions()->createMany($positions);
         $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
@@ -120,8 +120,8 @@ class GroupSeeder extends Seeder
             'province' => 'Selangor',
             'city' => 'Subang Jaya',
             'zip_code' => '47500',
-            'lat' => '3.0649282',
-            'lng' => '101.5256048',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
         $company->branches()->create([
             'name' => 'SUN KL',
@@ -145,8 +145,8 @@ class GroupSeeder extends Seeder
             'province' => 'Banten',
             'city' => 'Kota Tangerang Selatan',
             'zip_code' => '15143',
-            'lat' => '-6.2326902',
-            'lng' => '106.6645009',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
         $company->positions()->createMany($positions);
         $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
@@ -158,8 +158,8 @@ class GroupSeeder extends Seeder
             'province' => 'Banten',
             'city' => 'Kota Tangerang Selatan',
             'zip_code' => '15320',
-            'lat' => '-6.2348656',
-            'lng' => '106.5766001',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
         $company->branches()->create([
             'name' => 'Alba Eliafood',
@@ -168,8 +168,8 @@ class GroupSeeder extends Seeder
             'province' => 'Banten',
             'city' => 'Kota Tangerang Selatan',
             'zip_code' => '15320',
-            'lat' => '-6.2348656',
-            'lng' => '106.5766001',
+            'lat' => '-6.2275964',
+            'lng' => '106.6575175',
         ]);
     }
 }
