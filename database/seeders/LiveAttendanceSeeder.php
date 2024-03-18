@@ -31,8 +31,8 @@ class LiveAttendanceSeeder extends Seeder
                 ],
                 [
                     'radius' => '10',
-                    'lat' => '-6.1979966',
-                    'lng' => '106.7425406',
+                    'lat' => '-6.2229137',
+                    'lng' => '106.6549371',
                 ],
             ]);
 
