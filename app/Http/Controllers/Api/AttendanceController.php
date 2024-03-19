@@ -206,7 +206,6 @@ class AttendanceController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
         dump('DONE');
-        dd($attendance);
         return new AttendanceResource($attendance);
     }
 
