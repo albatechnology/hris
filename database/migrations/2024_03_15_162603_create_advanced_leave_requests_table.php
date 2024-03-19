@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             // $table->foreignId('timeoff_period_regulation_id')->constrained();
             // $table->string('month', 2);
-            $table->text('months')->nullable();
+            $table->text('data')->nullable(); // isinya array dari timeoff regulation month new dan old
             $table->unsignedFloat('amount')->default(0);
             $table->boolean('is_approved')->nullable();
             $table->foreignId('approved_by')->nullable();

@@ -15,6 +15,7 @@ class UserTimeoffHistory extends BaseModel
         'ADD_REMAINING_TIMEOFF' => 'Add remaining timeoff',
         'ADJUST' => 'Timeoff adjusted',
         'TIMEOFF' => 'Timeoff: %s',
+        'ADVANCED_LEAVE' => 'Advanced leave',
     ];
 
     protected $fillable = [

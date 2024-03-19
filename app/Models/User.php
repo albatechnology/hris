@@ -208,7 +208,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
 
     public function timeoffRegulationMonths(): HasMany
     {
-        return $this->hasMany(TimeoffRegulationMonth::class);
+        return $this->hasMany(UserTimeoffRegulationMonth::class);
     }
 
     public function getIsSuperAdminAttribute(): bool

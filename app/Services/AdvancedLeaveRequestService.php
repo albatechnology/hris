@@ -2,11 +2,72 @@
 
 namespace App\Services;
 
+use App\Models\AdvancedLeaveRequest;
 use App\Models\TimeoffRegulation;
 use App\Models\User;
 
 class AdvancedLeaveRequestService
 {
+    public static function updateMonths(AdvancedLeaveRequest $advancedLeaveRequest, ?User $user = null): void
+    {
+        if (!$user) {
+            /** @var User $user */
+            $user = $advancedLeaveRequest->user;
+        }
+
+        $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first();
+
+        $totalDayAdvanceLeaveReequest = $advancedLeaveRequest->amount;
+        $startMonth = date('m');
+        $endMonth = date('m', strtotime('+ ' . $timeoffRegulation->max_advanced_leave_request . 'month'));
+
+        if ($user->timeoffRegulationMonths->count() > 0) {
+            $timeoffRegulationMonths = $user->timeoffRegulationMonths;
+            $oldTimeoffRegulationMonths = $timeoffRegulationMonths;
+            foreach ($timeoffRegulationMonths as $timeoffRegulationMonth) {
+                if (
+                    $timeoffRegulationMonth->month > $startMonth &&
+                    $timeoffRegulationMonth->month <= $endMonth &&
+                    $totalDayAdvanceLeaveReequest > 0
+                ) {
+                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveReequest, 0);
+                    $totalDayAdvanceLeaveReequest -= $timeoffRegulationMonth->amount;
+                    $timeoffRegulationMonth->amount = $amount;
+                } elseif ($timeoffRegulationMonth->month < $startMonth) {
+                    $timeoffRegulationMonth->amount = 0;
+                }
+                // handle total amount untuk bulan $startMonth
+                // elseif($timeoffRegulationMonth->month == $startMonth) {
+                // }
+            }
+
+            $user->timeoffRegulationMonths()->delete();
+        } else {
+            $timeoffRegulationMonths = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn ($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->join_date, $timeoffPeriodRegulation->min_working_month))?->timeoffRegulationMonths;
+
+            $oldTimeoffRegulationMonths = $timeoffRegulationMonths;
+            foreach ($timeoffRegulationMonths as $timeoffRegulationMonth) {
+                if (
+                    $timeoffRegulationMonth->month > $startMonth &&
+                    $timeoffRegulationMonth->month <= $endMonth &&
+                    $totalDayAdvanceLeaveReequest > 0
+                ) {
+                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveReequest, 0);
+                    $totalDayAdvanceLeaveReequest -= $timeoffRegulationMonth->amount;
+                    $timeoffRegulationMonth->amount = $amount;
+                } elseif ($timeoffRegulationMonth->month < $startMonth) {
+                    $timeoffRegulationMonth->amount = 0;
+                }
+                // handle total amount untuk bulan $startMonth
+                // elseif($timeoffRegulationMonth->month == $startMonth) {
+                // }
+            }
+        }
+
+        $user->timeoffRegulationMonths()->createMany($timeoffRegulationMonths->toArray());
+        $advancedLeaveRequest->update(['data' => ['new' => $timeoffRegulationMonths, 'old' => $oldTimeoffRegulationMonths]]);
+    }
+
     public static function getAvailableDays(?User $user = null): int
     {
         if (!$user) {

@@ -38,10 +38,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'amount' => ['required', 'numeric', 'gt:0', function (string $attribute, mixed $value, Closure $fail) {
-                $availableDays = AdvancedLeaveRequestService::getAvailableDays(User::findOrFail($this->user_id));
-                if ($value > $availableDays) $fail("The {$attribute} field must be less than or equal to {$availableDays} days.");
-            }],
+            'amount' => 'required|numeric|gt:0',
         ];
     }
 }

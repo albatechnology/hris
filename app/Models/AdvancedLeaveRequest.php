@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Models\BelongsToUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AdvancedLeaveRequest extends BaseModel
@@ -11,7 +12,7 @@ class AdvancedLeaveRequest extends BaseModel
 
     protected $fillable = [
         'user_id',
-        'months',
+        'data',
         'amount',
         'is_approved',
         'approved_by',
@@ -19,9 +20,33 @@ class AdvancedLeaveRequest extends BaseModel
     ];
 
     protected $casts = [
-        'months' => 'array',
+        'data' => 'array',
         'amount' => 'float',
     ];
+
+    public function scopeTenanted(Builder $query): Builder
+    {
+        /** @var User $user */
+        $user = auth('sanctum')->user();
+        if ($user->is_super_admin) {
+            return $query;
+        }
+        if ($user->is_administrator) {
+            return $query->whereHas('user', fn ($q) => $q->where('group_id', $user->group_id));
+        }
+
+        return $query->whereHas('user', fn ($q) => $q->where('manager_id', $user->id));
+    }
+
+    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
+    {
+        $query->tenanted()->where('id', $id);
+        if ($fail) {
+            return $query->firstOrFail();
+        }
+
+        return $query->first();
+    }
 
     public function approvedBy(): BelongsTo
     {

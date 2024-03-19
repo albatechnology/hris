@@ -7,13 +7,13 @@ use App\Http\Requests\Api\AdvancedLeaveRequest\StoreRequest;
 use App\Http\Requests\Api\AdvancedLeaveRequest\ApproveRequest;
 use App\Http\Resources\AdvancedLeaveRequest\AdvancedLeaveRequestResource;
 use App\Models\AdvancedLeaveRequest;
-use App\Models\TimeoffRegulation;
-use App\Models\TimeoffRegulationMonth;
+use App\Models\User;
+use App\Models\UserTimeoffHistory;
 use App\Services\AdvancedLeaveRequestService;
-use App\Services\TimeoffRegulationService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -49,6 +49,12 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function store(StoreRequest $request): AdvancedLeaveRequestResource|JsonResponse
     {
+        $availableDays = AdvancedLeaveRequestService::getAvailableDays(User::findOrFail($request->user_id));
+        if ($request->amount > $availableDays) {
+            $message = $availableDays == 0 ? 'You have no available days' : 'Request days exceeds available days';
+            return $this->errorResponse(message: $message, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         try {
             $advancedLeaveRequest = AdvancedLeaveRequest::create($request->validated());
 
@@ -63,42 +69,23 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function approve(ApproveRequest $request, AdvancedLeaveRequest $advancedLeaveRequest): AdvancedLeaveRequestResource|JsonResponse
     {
-        // dd($request->validated());
-
-        /** @var \App\Models\User $user */
-        $user = auth('sanctum')->user();
-        $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first();
-
-        $totalDayAdvanceLeaveReequest = $advancedLeaveRequest->amount;
-        $startMonth = date('m');
-        $endMonth = date('m', strtotime('+ ' . $timeoffRegulation->max_advanced_leave_request . 'month'));
-
-        if ($user->timeoffRegulationMonths->count() > 0) {
-        } else {
-            $timeoffRegulationMonths = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn ($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->join_date, $timeoffPeriodRegulation->min_working_month))?->timeoffRegulationMonths;
-
-            // $timeoffRegulationMonths->map(function ($timeoffRegulationMonth) use ($totalDayAdvanceLeaveRequest, $startMonth, $endMonth) {
-            // });
-
-            foreach ($timeoffRegulationMonths as $timeoffRegulationMonth) {
-                if (
-                    $timeoffRegulationMonth->month > $startMonth &&
-                    $timeoffRegulationMonth->month <= $endMonth &&
-                    $totalDayAdvanceLeaveReequest > 0
-                ) {
-                    // dump($timeoffRegulationMonth);
-
-                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveReequest, 0);
-                    $totalDayAdvanceLeaveReequest -= $timeoffRegulationMonth->amount;
-                    $timeoffRegulationMonth->amount = $amount;
-                    // dump($totalDayAdvanceLeaveReequest);
-                    // dd($timeoffRegulationMonth);
-                }
-            }
-            dd($timeoffRegulationMonths);
+        if (!is_null($advancedLeaveRequest->is_approved)) {
+            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
         try {
             $advancedLeaveRequest->update($request->validated());
+            if ($advancedLeaveRequest->is_approved == 1) {
+                AdvancedLeaveRequestService::updateMonths($advancedLeaveRequest);
+                UserTimeoffHistory::create([
+                    'is_for_total_timeoff' => true,
+                    'user_id' => $advancedLeaveRequest->user->id,
+                    'is_increment' => true,
+                    'value' => $advancedLeaveRequest->amount,
+                    'properties' => ['user' => $advancedLeaveRequest->user],
+                    'description' => UserTimeoffHistory::DESCRIPTION['ADVANCED_LEAVE'],
+                ]);
+            }
 
             $notificationType = NotificationType::ADVANCED_LEAVE_APPROVED;
             $advancedLeaveRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->approvedBy, $advancedLeaveRequest->is_approved));

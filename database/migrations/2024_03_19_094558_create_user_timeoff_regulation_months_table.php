@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\TimeoffPeriodRegulation;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,10 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('timeoff_regulation_months', function (Blueprint $table) {
+        Schema::create('user_timeoff_regulation_months', function (Blueprint $table) {
             $table->id();
-            // $table->foreignIdFor(User::class)->nullable()->cascadeOnDelete();
-            $table->foreignIdFor(TimeoffPeriodRegulation::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(User::class)->cascadeOnDelete();
             $table->string('month', 2);
             $table->unsignedFloat('amount')->default(0);
             $table->timestamps();
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('timeoff_regulation_months');
+        Schema::dropIfExists('user_timeoff_regulation_months');
     }
 };

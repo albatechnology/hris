@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TimeoffRegulationMonth extends BaseModel
 {
     protected $fillable = [
-        'user_id',
+        // 'user_id',
         'timeoff_period_regulation_id',
         'month',
         'amount',
