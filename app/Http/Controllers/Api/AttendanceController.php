@@ -178,7 +178,7 @@ class AttendanceController extends BaseController
             }
         }
         dump($user);
-        dd($attendance);
+        dump($attendance);
 
         DB::beginTransaction();
         try {
@@ -202,10 +202,11 @@ class AttendanceController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-
+            throw $e;
             return $this->errorResponse($e->getMessage());
         }
-
+        dump('DONE');
+        dd($attendance);
         return new AttendanceResource($attendance);
     }
 
