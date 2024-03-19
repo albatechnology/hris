@@ -165,9 +165,9 @@ class AttendanceController extends BaseController
         $user = auth('sanctum')->user();
         $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
 
-        dump($request->validated());
+        // dump($request->validated());
         if (config('app.enable_face_rekognition') === true && $request->type === AttendanceType::AUTOMATIC->value) {
-            dump('masok');
+            // dump('masok');
             try {
                 $compareFace = Rekognition::compareFace($user, $request->file('file'));
                 if (!$compareFace) {
@@ -177,8 +177,8 @@ class AttendanceController extends BaseController
                 return $this->errorResponse(message: $e->getMessage(), code: $e->getCode());
             }
         }
-        dump($user);
-        dump($attendance);
+        // dump($user);
+        // dump($attendance);
 
         DB::beginTransaction();
         try {
@@ -205,7 +205,7 @@ class AttendanceController extends BaseController
             throw $e;
             return $this->errorResponse($e->getMessage());
         }
-        dump('DONE');
+        // dump('DONE');
         return new AttendanceResource($attendance);
     }
 
