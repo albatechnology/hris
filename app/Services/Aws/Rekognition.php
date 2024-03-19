@@ -18,12 +18,12 @@ class Rekognition
             'region' => config('filesystems.disks.aws.region', 'ap-southeast-1'),
             'version' => 'latest',
         ]);
-
+        dump($client);
         $sourceImage = $user->getFirstMediaPath(MediaCollection::USER->value);
         if (empty($sourceImage)) {
             throw new Exception('User photo not found', 400);
         }
-
+        dump($sourceImage);
         try {
             // $image = fopen($file->getPathName(), 'r');
             // $bytes = fread($image, $file->getSize());
@@ -48,11 +48,15 @@ class Rekognition
                 ],
             ]);
         } catch (Exception $e) {
+            dd($e);
             if ($e instanceof \Aws\Rekognition\Exception\RekognitionException) {
                 throw new Exception('Photo is invalid', 400);
             }
             throw $e;
         }
+
+        dump('silit');
+        dd(isset($result['FaceMatches']) && count($result['FaceMatches']) > 0 && collect($result['FaceMatches'])->every(fn ($match) => $match['Similarity'] >= self::$similarityThreshold));
 
         if (isset($result['FaceMatches']) && count($result['FaceMatches']) > 0 && collect($result['FaceMatches'])->every(fn ($match) => $match['Similarity'] >= self::$similarityThreshold)) return true;
 
