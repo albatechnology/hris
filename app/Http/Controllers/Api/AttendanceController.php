@@ -174,7 +174,7 @@ class AttendanceController extends BaseController
                     return $this->errorResponse(message: 'Face not match!', code: 400);
                 }
             } catch (Exception $e) {
-                return $this->errorResponse(message: $e->getMessage(), code: $e->getCode());
+                return $this->errorResponse(message: $e->getMessage());
             }
         }
         // dump($user);
