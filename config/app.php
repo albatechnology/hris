@@ -187,5 +187,5 @@ return [
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
     ])->toArray(),
     'file_mimes_types' => 'jpg,jpeg,png,pdf,doc,docx,xls,xlsx',
-    'enable_face_rekognition' => env('enable_face_rekognition', true)
+    'enable_face_rekognition' => env('ENABLE_FACE_REKOGNITION', true)
 ];
