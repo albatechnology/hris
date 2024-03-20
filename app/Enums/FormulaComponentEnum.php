@@ -7,6 +7,7 @@ enum FormulaComponentEnum: string
     use BaseEnum;
 
     case JOB_LEVEL = 'job_level';
+    case HOLIDAY = 'holiday';
     case ELSE = 'else';
     case FUNCTION = 'function';
     case BRANCH = 'branch';

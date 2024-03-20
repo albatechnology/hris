@@ -4,6 +4,7 @@ namespace App\Services\Aws;
 
 use App\Enums\MediaCollection;
 use App\Models\User;
+use Aws\Credentials\Credentials;
 use Aws\Rekognition\RekognitionClient;
 use Exception;
 use Illuminate\Http\UploadedFile;
@@ -15,8 +16,9 @@ class Rekognition
     public static function compareFace(User $user, UploadedFile $file)
     {
         $client = new RekognitionClient([
-            'region' => config('filesystems.disks.aws.region', 'ap-southeast-1'),
+            'region' => config('filesystems.disks.s3.region', 'ap-southeast-1'),
             'version' => 'latest',
+            'credentials' => new Credentials(config('filesystems.disks.s3.key', ''), config('filesystems.disks.s3.secret', ''))
         ]);
 
         $sourceImage = $user->getFirstMediaPath(MediaCollection::USER->value);
