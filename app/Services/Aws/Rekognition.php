@@ -56,7 +56,7 @@ class Rekognition
             throw $e;
         }
 
-        if (isset($result['FaceMatches']) && count($result['FaceMatches']) > 0 && collect($result['FaceMatches'])->every(fn ($match) => $match['Similarity'] >= self::$similarityThreshold)) return true;
+        if (isset($result['FaceMatches']) && count($result['FaceMatches']) > 0 && collect($result['FaceMatches'])->contains(fn ($match) => $match['Similarity'] >= self::$similarityThreshold)) return true;
 
         return false;
     }
