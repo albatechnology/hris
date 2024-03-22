@@ -28,8 +28,6 @@ class PayrollComponent extends BaseModel
     ];
 
     protected $casts = [
-        'company_id' => 'integer',
-        'name' => 'string',
         'type' => PayrollComponentType::class,
         'amount' => 'double',
         'is_taxable' => 'boolean',

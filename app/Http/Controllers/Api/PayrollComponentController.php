@@ -53,19 +53,7 @@ class PayrollComponentController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $payrollComponent = PayrollComponent::create([
-                'company_id' => $request->company_id,
-                'name' => $request->name,
-                'type' => $request->type,
-                'amount' => $request->amount,
-                'is_taxable' => $request->is_taxable,
-                'period_type' => $request->period_type,
-                'is_monthly_prorate' => $request->is_monthly_prorate,
-                'is_daily_default' => $request->is_daily_default,
-                'daily_maximum_amount_type' => $request->daily_maximum_amount_type,
-                'daily_maximum_amount' => $request->daily_maximum_amount,
-                'is_one_time_bonus' => $request->is_one_time_bonus,
-            ]);
+            $payrollComponent = PayrollComponent::create($request->validated());
 
             FormulaService::sync($payrollComponent, $request->formulas);
 
@@ -83,19 +71,7 @@ class PayrollComponentController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $payrollComponent->update([
-                'company_id' => $request->company_id,
-                'name' => $request->name,
-                'type' => $request->type,
-                'amount' => $request->amount,
-                'is_taxable' => $request->is_taxable,
-                'period_type' => $request->period_type,
-                'is_monthly_prorate' => $request->is_monthly_prorate,
-                'is_daily_default' => $request->is_daily_default,
-                'daily_maximum_amount_type' => $request->daily_maximum_amount_type,
-                'daily_maximum_amount' => $request->daily_maximum_amount,
-                'is_one_time_bonus' => $request->is_one_time_bonus,
-            ]);
+            $payrollComponent->update($request->validated());
 
             FormulaService::sync($payrollComponent, $request->formulas);
 

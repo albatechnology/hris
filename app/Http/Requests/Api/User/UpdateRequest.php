@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\User;
 
+use App\Enums\Gender;
 use App\Enums\UserType;
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
@@ -36,6 +37,7 @@ class UpdateRequest extends FormRequest
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
             'phone' => 'nullable',
+            'gender' => ['required', Rule::enum(Gender::class)],
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
 

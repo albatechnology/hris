@@ -51,25 +51,6 @@ class OvertimeController extends BaseController
         return new OvertimeResource($overtime);
     }
 
-    public static function validateBeforeSaving(Request $request)
-    {
-        // check correct order for overtime rounding hours
-        collect($request->overtime_roundings)->each(function ($overtimeRounding, $i) use ($request) {
-            if ($i > 0 && $overtimeRounding['start_minute'] <= $request->overtime_roundings[$i - 1]['end_minute']) {
-                response()->json(['message' => 'start_minute and end_minute between the overtime_roundings are not in the correct order, please check it first'], 500)->send();
-                exit;
-            }
-        });
-
-        // check correct order for overtime multiplier hours
-        collect($request->overtime_multipliers)->each(function ($overtimeMultiplier, $i) use ($request) {
-            if ($i > 0 && $overtimeMultiplier['start_hour'] <= $request->overtime_multipliers[$i - 1]['end_hour']) {
-                response()->json(['message' => 'start_hour and end_hour between the overtime_multipliers are not in the correct order, please check it first'], 500)->send();
-                exit;
-            }
-        });
-    }
-
     public static function saveRelationship(Overtime $overtime, Request $request)
     {
         $overtime->overtimeRoundings()->delete();
@@ -89,8 +70,6 @@ class OvertimeController extends BaseController
 
     public function store(StoreRequest $request): OvertimeResource|JsonResponse
     {
-        self::validateBeforeSaving($request);
-
         DB::beginTransaction();
         try {
             $overtime = Overtime::create([
@@ -105,7 +84,6 @@ class OvertimeController extends BaseController
             self::saveRelationship($overtime, $request);
 
             FormulaService::sync($overtime, $request->formulas);
-
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -118,8 +96,6 @@ class OvertimeController extends BaseController
 
     public function update(Overtime $overtime, UpdateRequest $request): OvertimeResource|JsonResponse
     {
-        self::validateBeforeSaving($request);
-
         DB::beginTransaction();
         try {
             $overtime->update([

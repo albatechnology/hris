@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\User;
 
+use App\Enums\Gender;
 use App\Enums\UserType;
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
@@ -37,6 +38,7 @@ class StoreRequest extends FormRequest
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
             'phone' => 'nullable',
+            'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',
             'sign_date' => 'nullable|date',
             'role_ids' => 'nullable|array',

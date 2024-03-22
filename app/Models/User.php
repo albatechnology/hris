@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Enums\Gender;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,6 +45,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'type',
         'nik',
         'phone',
+        'gender',
         'join_date',
         'sign_date',
         'total_timeoff',
@@ -69,6 +71,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'type' => UserType::class,
+        'gender' => Gender::class,
     ];
 
     public function scopeTenanted(Builder $query): Builder

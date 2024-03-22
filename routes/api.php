@@ -149,4 +149,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('advanced-leave-requests/approvals', [AdvancedLeaveRequestController::class, 'approvals']);
     Route::put('advanced-leave-requests/{advanced_leave_request}/approve', [AdvancedLeaveRequestController::class, 'approve']);
     Route::apiResource('advanced-leave-requests', AdvancedLeaveRequestController::class);
+
+    Route::get('formulas/components/{formula_component}', [\App\Http\Controllers\Api\FormulaController::class, 'components']);
+    Route::get('formulas/amounts', [\App\Http\Controllers\Api\FormulaController::class, 'amounts']);
 });

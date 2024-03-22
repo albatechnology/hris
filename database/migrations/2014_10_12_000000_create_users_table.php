@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Gender;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -27,6 +28,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('nik', 20)->nullable();
             $table->string('phone', 18)->nullable();
+            $table->string('gender', 6)->default(Gender::MALE->value);
             $table->date('join_date')->nullable();
             $table->date('sign_date')->nullable();
             $table->unsignedSmallInteger('total_timeoff')->default(0);
