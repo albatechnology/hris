@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Attendance extends BaseModel implements TenantedInterface
+class Attendance extends BaseModel implements TenantedInterface, HasMedia
 {
-    use CustomSoftDeletes, BelongsToUser;
+    use CustomSoftDeletes, BelongsToUser, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',

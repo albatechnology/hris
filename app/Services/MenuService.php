@@ -14,6 +14,9 @@ class MenuService
             self::users(),
             self::groups(),
             self::nationalholidays(),
+            self::attendances(),
+            self::timeoffs(),
+            self::overtimes(),
         ];
     }
 
@@ -46,5 +49,26 @@ class MenuService
         $nationalholidays = new Submenu('national_holiday_access', 'national-holidays', 'fas fa-', 'National-holidays');
 
         return new Menu('national_holiday_management_access', 'fas fa-building', 'National-holidays', ...[$nationalholidays]);
+    }
+
+    protected static function attendances()
+    {
+        $attendances = new Submenu('attendance_access', 'attendances', 'fas fa-', 'Attendances');
+
+        return new Menu('attendance_management_access', 'fas fa-building', 'Attendances', ...[$attendances]);
+    }
+
+    protected static function timeoffs()
+    {
+        $timeoffs = new Submenu('timeoff_access', 'timeoffs', 'fas fa-', 'Timeoffs');
+
+        return new Menu('timeoff_management_access', 'fas fa-building', 'Timeoffs', ...[$timeoffs]);
+    }
+
+    protected static function overtimes()
+    {
+        $overtimes = new Submenu('overtime_access', 'overtimes', 'fas fa-', 'Overtimes');
+
+        return new Menu('overtime_management_access', 'fas fa-building', 'Overtimes', ...[$overtimes]);
     }
 }
