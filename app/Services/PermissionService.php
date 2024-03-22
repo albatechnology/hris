@@ -134,11 +134,18 @@ class PermissionService
                 'timeoff_regulation_edit',
                 'timeoff_regulation_delete',
             ],
-            'payroll_access' => [
-                'payroll_read',
-                'payroll_create',
-                'payroll_edit',
-                'payroll_delete',
+            'payroll_component_access' => [
+                'payroll_component_read',
+                'payroll_component_create',
+                'payroll_component_edit',
+                'payroll_component_delete',
+            ],
+
+            'payroll_setting_access' => [
+                'payroll_setting_read',
+                'payroll_setting_create',
+                'payroll_setting_edit',
+                'payroll_setting_delete',
             ],
             'overtime_access' => [
                 'overtime_read',
@@ -278,11 +285,17 @@ class PermissionService
                 // 'timeoff_regulation_edit',
                 // 'timeoff_regulation_delete',
             ],
-            'payroll_access' => [
-                'payroll_read',
-                // 'payroll_create',
-                // 'payroll_edit',
-                // 'payroll_delete',
+            'payroll_component_access' => [
+                'payroll_component_read',
+                // 'payroll_component_create',
+                // 'payroll_component_edit',
+                // 'payroll_component_delete',
+            ],
+            'payroll_setting_access' => [
+                'payroll_setting_read',
+                // 'payroll_setting_create',
+                // 'payroll_setting_edit',
+                // 'payroll_setting_delete',
             ],
             'overtime_access' => [
                 'overtime_read',

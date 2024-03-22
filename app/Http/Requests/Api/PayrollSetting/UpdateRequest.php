@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Http\Requests\Api\PayrollSetting;
+
+use App\Enums\DefaultEmployeeTaxSetting;
+use App\Enums\JhtCost;
+use App\Enums\TaxSalary;
+use App\Rules\CompanyTenantedRule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdateRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'company_id' => ['required', new CompanyTenantedRule()],
+            'cutoff_attendance_start_date' => 'required|date_format:d',
+            'cutoff_attendance_end_date' => 'required|date_format:d',
+            'default_employee_tax_setting' => ['required', Rule::enum(DefaultEmployeeTaxSetting::class)],
+            'default_employee_salary_tax_setting' => ['required', Rule::enum(TaxSalary::class)],
+            'default_oas_setting' => ['required', Rule::enum(JhtCost::class)],
+        ];
+    }
+}

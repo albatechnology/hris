@@ -42,6 +42,12 @@ class CompanyController extends BaseController
 
     public function show(Company $company)
     {
+        // dd($company->payrollSetting->cutoff_attendance_start_date);
+        $date = date('Y-m-'.$company->payrollSetting->cutoff_attendance_start_date);
+        dump($date);
+        dump(date('Y-m-d', strtotime($date.'+4 days')));
+        dump($company->payrollSetting);
+        dd($company);
         return new CompanyResource($company);
     }
 

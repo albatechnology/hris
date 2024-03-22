@@ -13,17 +13,17 @@ return new class extends Migration
     {
         Schema::create('payroll_settings', function (Blueprint $table) {
             $table->id();
-            // $table->foreignId('company_id')->constrained();
+            $table->foreignId('company_id')->constrained();
             // $table->integer('payroll_schedule')->nullable();
             // $table->boolean('is_default_cutoff')->default(0);
-            // $table->integer('cutoff_attendance_start_date')->nullable();
-            // $table->integer('cutoff_attendance_end_date')->nullable();
+            $table->char('cutoff_attendance_start_date', 2)->nullable();
+            $table->char('cutoff_attendance_end_date', 2)->nullable();
             // $table->boolean('is_attendance_pay_last_month')->default(0);
             // $table->integer('cutoff_payroll_end_date')->nullable();
             // $table->integer('cutoff_payroll_end_date')->nullable();
-            // $table->string('default_employee_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
-            // $table->string('default_employee_salary_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
-            // $table->string('default_oas_setting')->nullable(); // DefaultEmployeeTaxSetting::class
+            $table->string('default_employee_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
+            $table->string('default_employee_salary_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
+            $table->string('default_oas_setting')->nullable(); // DefaultEmployeeTaxSetting::class
             $table->timestamps();
         });
     }

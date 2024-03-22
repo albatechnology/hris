@@ -165,7 +165,7 @@ class AttendanceController extends BaseController
         $user = auth('sanctum')->user();
         $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
 
-        if (config('app.enable_face_rekognition') === true && $request->type === AttendanceType::AUTOMATIC->value) {
+        if (config('app.enable_face_rekognition') === true && $request->type != AttendanceType::OTHER->value) {
             try {
                 $compareFace = Rekognition::compareFace($user, $request->file('file'));
                 if (!$compareFace) {
@@ -207,11 +207,11 @@ class AttendanceController extends BaseController
 
     public function request(RequestAttendanceRequest $request)
     {
+        // pemeriksaan kehadiran hri ini
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date);
+
         DB::beginTransaction();
         try {
-            // pemeriksaan kehadiran hri ini
-            $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date);
-
             // membuat data kehadiran baru jika tidak ada
             if (!$attendance) {
                 $attendance = Attendance::create($request->validated());

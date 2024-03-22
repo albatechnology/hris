@@ -92,9 +92,19 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(LiveAttendance::class);
     }
 
+    public function payrollComponents(): HasMany
+    {
+        return $this->hasMany(PayrollComponent::class);
+    }
+
     public function timeoffRegulation(): HasOne
     {
         return $this->hasOne(TimeoffRegulation::class);
+    }
+
+    public function payrollSetting(): HasOne
+    {
+        return $this->hasOne(PayrollSetting::class);
     }
 
     public function group(): BelongsTo
@@ -110,5 +120,17 @@ class Company extends BaseModel implements TenantedInterface
     public function customFields(): HasMany
     {
         return $this->hasMany(CustomField::class);
+    }
+
+    public function createPayrollSetting(): void
+    {
+        $this->payrollSetting()->create([
+            'company_id' => $this->id,
+            'cutoff_attendance_start_date' => '02',
+            'cutoff_attendance_end_date' => '05',
+            'default_employee_tax_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
+            'default_employee_salary_tax_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
+            'default_oas_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
+        ]);
     }
 }

@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PayrollComponentController;
+use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -114,8 +115,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('timeoffs', TimeoffController::class);
 
-    Route::apiResource('payroll-components', PayrollComponentController::class);
-
     Route::apiResource('overtimes', OvertimeController::class);
     Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);
 
@@ -152,4 +151,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('formulas/components/{formula_component}', [\App\Http\Controllers\Api\FormulaController::class, 'components']);
     Route::get('formulas/amounts', [\App\Http\Controllers\Api\FormulaController::class, 'amounts']);
+
+    Route::apiResource('payroll-components', PayrollComponentController::class);
+    Route::get('payroll-setting', [PayrollSettingController::class, 'index']);
+    Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
 });
