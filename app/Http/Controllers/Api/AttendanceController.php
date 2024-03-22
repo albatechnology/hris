@@ -85,7 +85,7 @@ class AttendanceController extends BaseController
                     'timeoff.timeoffPolicy',
                     'clockIn',
                     'clockOut',
-                    // 'details' => fn ($q) => $q->orderBy('created_at')
+                    'details' => fn ($q) => $q->orderBy('created_at')
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
