@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\OvertimeStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,13 +14,12 @@ return new class extends Migration
         Schema::create('overtime_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->date('date');
+            $table->foreignId('schedule_id')->constrained();
             $table->foreignId('shift_id')->constrained();
-            $table->foreignId('overtime_id')->constrained();
-            $table->time('start_at');
-            $table->time('end_at');
+            // $table->foreignId('overtime_id')->constrained();
+            $table->date('date');
+            $table->duration('date');
             $table->text('note')->nullable();
-            // $table->string('status')->nullable()->default(OvertimeStatus::PENDING)->comment('Enum from OvertimeStatus::class. Allowed value is (pending, approved, rejected).');
             $table->boolean('is_approved')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->datetime('approved_at')->nullable();

@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Models\BaseModel;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -24,11 +25,11 @@ class CompanyTenantedRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $company = $this->model::tenanted()
+        $data = $this->model::tenanted()
             ->when($this->query, $this->query)
             ->firstWhere('id', $value);
 
-        if (!$company) {
+        if (!$data) {
             $fail($this->message);
         }
     }

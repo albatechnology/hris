@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\OvertimeStatus;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,7 +11,7 @@ class OvertimeRequest extends BaseModel
 
     protected $fillable = [
         'user_id',
-        'date',
+        'schedule_id',
         'shift_id',
         'overtime_id',
         'start_at',
@@ -24,15 +23,9 @@ class OvertimeRequest extends BaseModel
     ];
 
     protected $casts = [
-        // 'user_id' => 'integer',
-        // 'date' => 'date',
-        // 'shift_id' => 'integer',
-        // 'overtime_id' => 'integer',
-        'start_at' => 'datetime:H:i',
-        'end_at' => 'datetime:H:i',
+        'start_at' => 'timestamp',
+        'end_at' => 'timestamp',
         'is_approved' => 'boolean',
-        // 'status' => OvertimeStatus::class,
-        // 'approved_by' => 'integer',
         'approved_at' => 'datetime',
     ];
 

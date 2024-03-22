@@ -72,14 +72,7 @@ class OvertimeController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $overtime = Overtime::create([
-                'company_id' => $request->company_id,
-                'name' => $request->name,
-                'is_rounding' => $request->is_rounding,
-                'compensation_rate_per_day' => $request->compensation_rate_per_day,
-                'rate_type' => $request->rate_type,
-                'rate_amount' => $request->rate_amount,
-            ]);
+            $overtime = Overtime::create($request->validated());
 
             self::saveRelationship($overtime, $request);
 
@@ -98,14 +91,7 @@ class OvertimeController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $overtime->update([
-                'company_id' => $request->company_id,
-                'name' => $request->name,
-                'is_rounding' => $request->is_rounding,
-                'compensation_rate_per_day' => $request->compensation_rate_per_day,
-                'rate_type' => $request->rate_type,
-                'rate_amount' => $request->rate_amount,
-            ]);
+            $overtime->update($request->validated());
 
             self::saveRelationship($overtime, $request);
 

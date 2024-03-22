@@ -14,9 +14,8 @@ class PayrollSettingController extends BaseController
     {
         parent::__construct();
 
-        // $this->middleware('permission:payroll_setting_access', ['only' => ['restore']]);
-        // $this->middleware('permission:payroll_setting_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:payroll_setting_edit', ['only' => 'update']);
+        $this->middleware('permission:payroll_setting_read', ['only' => 'index']);
+        $this->middleware('permission:payroll_setting_edit', ['only' => 'update']);
     }
 
     public function index(Request $request)

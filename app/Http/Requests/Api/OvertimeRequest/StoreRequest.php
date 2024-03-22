@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\OvertimeRequest;
 
+use App\Models\Schedule;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -23,11 +25,11 @@ class StoreRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'date' => 'required|date_format:Y-m-d',
+            'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
             'overtime_id' => 'required|exists:overtimes,id',
-            'start_at' => 'required|date_format:H:i',
-            'end_at' => 'required|date_format:H:i',
+            'start_at' => 'required|date_format:Y-m-d H:i:s',
+            'end_at' => 'required|date_format:Y-m-d H:i:s',
             'note' => 'nullable|string',
         ];
     }

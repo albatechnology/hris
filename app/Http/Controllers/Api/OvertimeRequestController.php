@@ -7,6 +7,8 @@ use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Requests\Api\OvertimeRequest\ApproveRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
+use App\Models\User;
+use App\Services\AttendanceService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -45,6 +47,21 @@ class OvertimeRequestController extends BaseController
 
     public function store(StoreRequest $request): OvertimeRequestResource|JsonResponse
     {
+        $time = strtotime(date('H:i'));
+        $duration = $time / 1000;
+        $hours = floor($duration / 3600);
+        $minutes = floor(($duration / 60) % 60);
+        $seconds = $duration % 60;
+        if ($hours != 0)
+            echo "$hours:$minutes:$seconds";
+        else
+            echo "$minutes:$seconds";
+        die;
+        $user = User::findOrFail($request->user_id);
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
+        dump($request->validated());
+        dump($attendance);
+        dd($user);
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
 
