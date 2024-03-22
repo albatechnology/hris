@@ -9,10 +9,10 @@
   <div class="w-40 mx-auto text-xs text-gray-600">{{ $helper }}</div>
   <div class="w-40 mx-auto cursor-pointer relative mt-5">
     @if($errors->has($name))
-      <span id="{{ $name }}-error" class="error invalid-feedback">{{ $errors->first($name) }}</span>
+    <span id="{{ $name }}-error" class="error invalid-feedback">{{ $errors->first($name) }}</span>
     @endif
 
-    <button type="button" class="btn btn-info w-full ct-input-img-btn">Change Video</button>
-    <input type="file" name="{{ $name }}" class="d-none ct-input-img-file {{ $name }}" accept="video/*">
+    <button type="button" class="btn btn-info w-full ct-input-img-btn">Change File</button>
+    <input type="file" name="{{ $name }}" class="d-none ct-input-img-file {{ $name }}" accept="image/*">
   </div>
 </div>
