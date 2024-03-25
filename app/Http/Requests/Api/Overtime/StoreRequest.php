@@ -5,17 +5,32 @@ namespace App\Http\Requests\Api\Overtime;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\RateType;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_rounding' => $this->toBoolean($this->is_rounding),
+        ]);
     }
 
     /**

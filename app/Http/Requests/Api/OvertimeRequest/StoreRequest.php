@@ -4,16 +4,31 @@ namespace App\Http\Requests\Api\OvertimeRequest;
 
 use App\Models\Schedule;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_after_shift' => $this->toBoolean($this->is_after_shift),
+        ]);
     }
 
     /**
@@ -27,9 +42,9 @@ class StoreRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
-            'overtime_id' => 'required|exists:overtimes,id',
-            'start_at' => 'required|date_format:Y-m-d H:i:s',
-            'end_at' => 'required|date_format:Y-m-d H:i:s',
+            'date' => 'required|date',
+            'is_after_shift' => 'required|boolean',
+            'duration' => 'required|date_format:H:i',
             'note' => 'nullable|string',
         ];
     }

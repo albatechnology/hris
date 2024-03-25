@@ -165,7 +165,7 @@ class AttendanceController extends BaseController
         $user = auth('sanctum')->user();
         $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
 
-        if (config('app.enable_face_rekognition') === true && $request->type != AttendanceType::OTHER->value) {
+        if (config('app.enable_face_rekognition') === true) {
             try {
                 $compareFace = Rekognition::compareFace($user, $request->file('file'));
                 if (!$compareFace) {

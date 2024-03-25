@@ -13,9 +13,9 @@ class OvertimeRequest extends BaseModel
         'user_id',
         'schedule_id',
         'shift_id',
-        'overtime_id',
-        'start_at',
-        'end_at',
+        'date',
+        'is_after_shift',
+        'duration',
         'note',
         'is_approved',
         'approved_by',
@@ -23,8 +23,7 @@ class OvertimeRequest extends BaseModel
     ];
 
     protected $casts = [
-        'start_at' => 'timestamp',
-        'end_at' => 'timestamp',
+        'is_after_shift' => 'boolean',
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
     ];

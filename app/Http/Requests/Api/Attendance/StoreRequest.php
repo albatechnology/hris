@@ -51,7 +51,8 @@ class StoreRequest extends FormRequest
             'lng' => 'nullable|string',
             'note' => 'nullable|string',
 
-            'file' => 'required_if:type,' . AttendanceType::AUTOMATIC->value . '|mimes:' . config('app.file_mimes_types'),
+            'file' => 'required|mimes:' . config('app.file_mimes_types'),
+            // 'file' => 'required_if:type,' . AttendanceType::AUTOMATIC->value . '|mimes:' . config('app.file_mimes_types'),
         ];
     }
 
