@@ -3,6 +3,7 @@
 namespace App\Notifications\Timeoff;
 
 use App\Enums\NotificationType;
+use App\Models\Timeoff;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,7 +17,7 @@ class RequestTimeoff extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user)
+    public function __construct(private NotificationType $notificationType, private User $user, private Timeoff $timeoff)
     {
         //
     }
@@ -53,6 +54,8 @@ class RequestTimeoff extends Notification
             'type' => $this->notificationType->value,
             'message' => sprintf($this->notificationType->getMessage(), $this->user->name),
             'url_path' => $this->notificationType->getUrlPath(),
+            'user_id' => $this->user->id,
+            'model_id' => $this->timeoff->id
         ];
     }
 }

@@ -36,7 +36,7 @@ class AttendanceService
         }
 
         $overtimeRequests = \App\Models\OvertimeRequest::tenanted()
-            ->where('is_approved', true)
+            // ->where('is_approved', true)
             ->where('user_id', $user)
             ->where('date', $date)
             ->get(['duration']);

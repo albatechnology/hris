@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\Notification\NotificationResource;
-use Illuminate\Notifications\DatabaseNotification;
+use App\Models\DatabaseNotification;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -11,7 +11,7 @@ class NotificationController extends BaseController
 {
     public function index()
     {
-        $data = QueryBuilder::for(DatabaseNotification::with('notifiable')->whereHas('notifiable', fn ($q) => $q->where('id', auth('sanctum')->id())))
+        $data = QueryBuilder::for(DatabaseNotification::whereHas('notifiable', fn ($q) => $q->where('id', auth('sanctum')->id())))
             ->allowedFilters([
                 AllowedFilter::callback('message', fn (\Illuminate\Database\Eloquent\Builder $query, string $value) => $query->where('data->message', 'like', '%' . $value . '%')),
             ])

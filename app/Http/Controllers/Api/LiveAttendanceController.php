@@ -75,8 +75,9 @@ class LiveAttendanceController extends BaseController
         try {
             $liveAttendance->update($request->validated());
 
-            if ($liveAttendance->is_flexible) {
-                $liveAttendance->locations()->delete();
+            $liveAttendance->locations()->delete();
+            if (!$liveAttendance->is_flexible) {
+                $liveAttendance->locations()->createMany($request->locations);
             }
 
             if ($request->user_ids && count($request->user_ids) > 0) {
