@@ -9,4 +9,5 @@ enum RateType: string
     case AMOUNT = 'amount';
     case SALARY = 'salary';
     case ALLOWANCES = 'allowances';
+    case FORMULA = 'formula';
 }

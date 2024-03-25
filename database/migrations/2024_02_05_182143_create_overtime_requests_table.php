@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('shift_id')->constrained();
             // $table->foreignId('overtime_id')->constrained();
             $table->date('date');
-            $table->duration('date');
+            // $table->duration('date');
             $table->text('note')->nullable();
             $table->boolean('is_approved')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users');
