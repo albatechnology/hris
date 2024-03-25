@@ -28,6 +28,25 @@ class OvertimeRequest extends BaseModel
         'approved_at' => 'datetime',
     ];
 
+    protected $appends = ['duration_text'];
+    public function getDurationTextAttribute()
+    {
+        list($hours, $minutes, $seconds) = explode(':', $this->duration);
+
+        $result = '';
+        if ((int)$hours > 0) {
+            $result .= (int)$hours . 'h ';
+        }
+        if ((int)$minutes > 0) {
+            $result .= (int)$minutes . 'm ';
+        }
+        if ((int)$seconds > 0) {
+            $result .= (int)$seconds . 's';
+        }
+
+        return trim($result);
+    }
+
     public function overtime(): BelongsTo
     {
         return $this->belongsTo(Overtime::class);
