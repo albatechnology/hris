@@ -14,13 +14,13 @@ class FormulaService
      * @param  array|null  $formulas
      * @param  Formula|null  $parent,  used for insert recursively (nested $formulas)
      */
-    public static function sync(Model $model, array $formulas = [], ?Formula $parent = null): void
+    public static function sync(Model $model, ?array $formulas = [], ?Formula $parent = null): void
     {
         // delete all existing formulas
         self::destroy($model);
 
         // create new formula
-        self::create($model, $formulas, $parent);
+        if ($formulas) self::create($model, $formulas, $parent);
     }
 
     /**

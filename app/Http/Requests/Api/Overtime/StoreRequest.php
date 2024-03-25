@@ -66,7 +66,7 @@ class StoreRequest extends FormRequest
             'overtime_allowances.*.payroll_component_id' => 'required_with:overtime_allowances|exists:payroll_components,id|distinct',
             'overtime_allowances.*.amount' => 'required_with:overtime_allowances|numeric',
 
-            'formulas' => 'nullable|array',
+            'formulas' => 'required_if:rate_type,formula|array',
             'formulas.*.component' => ['required_with:formulas', Rule::enum(FormulaComponentEnum::class)],
             'formulas.*.value' => 'required_with:formulas|string',
             'formulas.*.amount' => 'required_without:formulas.*.child|string',
