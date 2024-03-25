@@ -16,6 +16,7 @@ use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
 use App\Models\NationalHoliday;
+use App\Models\OvertimeRequest;
 use App\Models\TimeoffRegulation;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
@@ -75,11 +76,13 @@ class AttendanceController extends BaseController
         $data = [];
         $schedule = ScheduleService::getTodaySchedule(date: $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
         if ($schedule) {
+            $userId = auth('sanctum')->id();
             $order = $schedule->shifts->where('id', $schedule->shift->id);
             $orderKey = array_keys($order->toArray())[0];
             $totalShifts = $schedule->shifts->count();
 
             $attendances = Attendance::tenanted()
+                ->where('user_id', $userId)
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
@@ -104,6 +107,10 @@ class AttendanceController extends BaseController
 
                 if ($attendance) {
                     $shift = $attendance->shift;
+
+                    // load overtime
+                    $totalOvertime = AttendanceService::getSumOvertimeDuration($userId, $date);
+                    $attendance->total_overtime = $totalOvertime;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
                 }
