@@ -16,7 +16,6 @@ use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
 use App\Models\NationalHoliday;
-use App\Models\OvertimeRequest;
 use App\Models\TimeoffRegulation;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
@@ -41,27 +40,6 @@ class AttendanceController extends BaseController
         $this->middleware('permission:attendance_edit', ['only' => 'update']);
         $this->middleware('permission:attendance_delete', ['only' => ['destroy', 'forceDelete']]);
     }
-
-    // public function index()
-    // {
-    //     $attendances = QueryBuilder::for(Attendance::tenanted())
-    //         ->allowedFilters([
-    //             AllowedFilter::exact('id'),
-    //             AllowedFilter::exact('user_id'),
-    //             AllowedFilter::exact('schedule_id'),
-    //             AllowedFilter::exact('shift_id'),
-    //             AllowedFilter::scope('company_id', 'whereCompanyId'),
-    //             AllowedFilter::scope('shift_id', 'whereShiftId'),
-    //             'is_clock_in', 'time', 'type', 'is_approved', 'approved_by',
-    //         ])
-    //         ->allowedIncludes(self::ALLOWED_INCLUDES)
-    //         ->allowedSorts([
-    //             'id', 'user_id', 'schedule_id', 'shift_id', 'is_clock_in', 'time', 'type', 'is_approved', 'approved_by', 'created_at',
-    //         ])
-    //         ->paginate($this->per_page);
-
-    //     return AttendanceResource::collection($attendances);
-    // }
 
     public function index(IndexRequest $request)
     {
@@ -201,7 +179,7 @@ class AttendanceController extends BaseController
                 $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
 
-            AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendance);
+            AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -225,24 +203,24 @@ class AttendanceController extends BaseController
             }
 
             if ($request->is_clock_in) {
-                $attendance->details()->create([
+                $attendanceDetailClockIn = $attendance->details()->create([
                     'is_clock_in' => true,
                     'time' => $request->date . ' ' . $request->clock_in_hour,
                     'type' => $request->type,
                     'note' => $request->note,
                 ]);
+                AttendanceRequested::dispatchIf($attendanceDetailClockIn->type->is(AttendanceType::MANUAL), $attendanceDetailClockIn);
             }
 
             if ($request->is_clock_out) {
-                $attendance->details()->create([
+                $attendanceDetailClockOut = $attendance->details()->create([
                     'is_clock_in' => false,
                     'time' => $request->date . ' ' . $request->clock_out_hour,
                     'type' => $request->type,
                     'note' => $request->note,
                 ]);
+                AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
-
-            AttendanceRequested::dispatchIf($attendance->details->contains('type', AttendanceType::MANUAL), $attendance);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -312,7 +290,7 @@ class AttendanceController extends BaseController
         $attendanceDetail->update($request->validated());
 
         $notificationType = NotificationType::ATTENDANCE_APPROVED;
-        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->is_approved));
+        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->is_approved, $attendanceDetail));
 
         return new AttendanceDetailResource($attendanceDetail);
     }

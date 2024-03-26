@@ -23,10 +23,10 @@ class RequestAttendanceNotification
      */
     public function handle(AttendanceRequested $event): void
     {
-        $attendance = $event->attendance;
-        if (!$attendance->details->contains('type', AttendanceType::MANUAL)) return;
+        $attendanceDetail = $event->attendanceDetail;
+        if (!$attendanceDetail->type->is(AttendanceType::MANUAL)) return;
 
         $notificationType = NotificationType::REQUEST_ATTENDANCE;
-        $attendance->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $attendance->user));
+        $attendanceDetail->attendance->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->user));
     }
 }

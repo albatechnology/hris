@@ -76,7 +76,7 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest = OvertimeRequest::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_OVERTIME;
-            $overtimeRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user));
+            $overtimeRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -90,7 +90,7 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest->update($request->validated());
 
             $notificationType = NotificationType::OVERTIME_APPROVED;
-            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->is_approved));
+            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->is_approved, $overtimeRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }

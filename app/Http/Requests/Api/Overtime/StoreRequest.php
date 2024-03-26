@@ -46,7 +46,7 @@ class StoreRequest extends FormRequest
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',
             'rate_type' => ['nullable', Rule::enum(RateType::class)],
-            'rate_amount' => 'required|numeric',
+            'rate_amount' => [Rule::requiredIf(in_array($this->rate_type, [RateType::AMOUNT->value, RateType::SALARY->value])), 'numeric'],
 
             'overtime_roundings' => 'required_if:is_rounding,true|array',
             'overtime_roundings.*.start_minute' => [
