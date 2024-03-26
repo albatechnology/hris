@@ -38,7 +38,7 @@ enum NotificationType: string
     public function getMessage(): string
     {
         return match ($this) {
-            self::REQUEST_ATTENDANCE => '%s membutuhkan approval attendance dari anda',
+            self::REQUEST_ATTENDANCE => 'Requesting for %s', // Monday, 01 Jan 2024
             self::ATTENDANCE_APPROVED => '%s %s request attendance anda', // difa menyetujui/menolak attendance anda
             self::REQUEST_TIMEOFF => '%s membutuhkan approval timeoff dari anda',
             self::TIMEOFF_APPROVED => '%s %s request timeoff anda', // difa menyetujui/menolak timeoff anda
