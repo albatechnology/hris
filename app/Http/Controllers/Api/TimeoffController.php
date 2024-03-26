@@ -191,7 +191,7 @@ class TimeoffController extends BaseController
 
             if (!is_null($timeoff->is_approved)) {
                 $notificationType = NotificationType::TIMEOFF_APPROVED;
-                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->manager, $timeoff->is_approved));
+                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->manager, $timeoff->is_approved, $timeoff));
             }
             DB::commit();
         } catch (\Exception $th) {

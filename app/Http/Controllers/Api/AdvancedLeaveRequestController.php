@@ -59,7 +59,7 @@ class AdvancedLeaveRequestController extends BaseController
             $advancedLeaveRequest = AdvancedLeaveRequest::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_ADVANCED_LEAVE;
-            $advancedLeaveRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->user));
+            $advancedLeaveRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->user, $advancedLeaveRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -88,7 +88,7 @@ class AdvancedLeaveRequestController extends BaseController
             }
 
             $notificationType = NotificationType::ADVANCED_LEAVE_APPROVED;
-            $advancedLeaveRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->approvedBy, $advancedLeaveRequest->is_approved));
+            $advancedLeaveRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->approvedBy, $advancedLeaveRequest->is_approved, $advancedLeaveRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
