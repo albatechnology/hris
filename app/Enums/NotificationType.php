@@ -18,6 +18,9 @@ enum NotificationType: string
     case REQUEST_ADVANCED_LEAVE = 'request_advanced_leave';
     case ADVANCED_LEAVE_APPROVED = 'advanced_leave_approved';
 
+    case REQUEST_CHANGE_DATA = 'request_change_data';
+    case CHANGE_DATA_APPROVED = 'change_data_approved';
+
     public function getNotificationClass(): string
     {
         return match ($this) {
