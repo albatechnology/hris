@@ -87,4 +87,21 @@ class UpdatePayrollComponentController extends BaseController
 
         return (new UpdatePayrollComponentResource($updatePayrollComponent->load(['details.user', 'details.payrollComponent'])->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
+
+    public function destroy(UpdatePayrollComponent $updatePayrollComponent): JsonResponse
+    {
+        DB::beginTransaction();
+        try {
+            $updatePayrollComponent->details()->delete();
+            $updatePayrollComponent->delete();
+
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return $this->deletedResponse();
+    }
 }
