@@ -39,9 +39,9 @@ enum NotificationType: string
     {
         return match ($this) {
             self::REQUEST_ATTENDANCE => 'Requesting for %s', // Monday, 01 Jan 2024
-            self::ATTENDANCE_APPROVED => '%s %s request attendance anda', // difa menyetujui/menolak attendance anda
-            self::REQUEST_TIMEOFF => '%s membutuhkan approval timeoff dari anda',
-            self::TIMEOFF_APPROVED => '%s %s request timeoff anda', // difa menyetujui/menolak timeoff anda
+            self::ATTENDANCE_APPROVED => 'Your attendance request at %s on %s, has been %s.', // 09:00:00, Monday, 01 Jan 2024, approved/rejected
+            self::REQUEST_TIMEOFF => '%s - %s', // 01 feb - 12 feb 2024, 12 days
+            self::TIMEOFF_APPROVED => 'Your time off for %s has been %s.', // 1 March 2024/1 March 2024 to 10 March 2024, approved/rejected
             self::REQUEST_OVERTIME => '%s membutuhkan approval overtime dari anda',
             self::OVERTIME_APPROVED => '%s %s request overtime anda', // difa menyetujui/menolak overtime anda
             self::REQUEST_ADVANCED_LEAVE => '%s membutuhkan approval advance leave dari anda',

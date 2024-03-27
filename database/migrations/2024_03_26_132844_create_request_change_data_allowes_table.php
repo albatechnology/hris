@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Company::class)->constrained();
             $table->string('type');
+            $table->boolean('is_active')->default(0);
             $table->timestamps();
         });
     }

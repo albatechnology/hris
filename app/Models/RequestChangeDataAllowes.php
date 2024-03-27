@@ -14,9 +14,11 @@ class RequestChangeDataAllowes extends Model implements TenantedInterface
     protected $fillable = [
         'company_id',
         'type',
+        'is_active',
     ];
 
     protected $casts = [
         'type' => RequestChangeDataType::class,
+        'is_active' => 'boolean',
     ];
 }

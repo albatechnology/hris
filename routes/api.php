@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
+use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
@@ -127,7 +128,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);
     // Route::get('live-attendances/locations', [LiveAttendanceController::class, 'locations']);
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
-        Route::apiResource('/locations', LiveAttendanceLocationController::class);
+        Route::apiResource('locations', LiveAttendanceLocationController::class);
     });
     Route::apiResource('live-attendances', LiveAttendanceController::class);
 
@@ -159,4 +160,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
+    Route::apiResource('request-change-data-allowances', RequestChangeDataAllowesController::class);
 });

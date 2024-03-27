@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\RequestChangeDataType;
 use App\Http\Requests\Api\RequestChangeDataAllowes\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RequestChangeDataAllowes;
@@ -14,25 +15,25 @@ class RequestChangeDataAllowesController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->middleware('permission:request_change_data_allowes_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:request_change_data_allowes_create', ['only' => 'store']);
-        $this->middleware('permission:request_change_data_allowes_edit', ['only' => 'update']);
-        $this->middleware('permission:request_change_data_allowes_delete', ['only' => 'destroy']);
+        // $this->middleware('permission:request_change_data_allowes_read', ['only' => ['index', 'show']]);
+        // $this->middleware('permission:request_change_data_allowes_create', ['only' => 'store']);
+        // $this->middleware('permission:request_change_data_allowes_edit', ['only' => 'update']);
+        // $this->middleware('permission:request_change_data_allowes_delete', ['only' => 'destroy']);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(RequestChangeDataAllowes::tenanted())
-            ->allowedFilters([
-                AllowedFilter::exact('id'),
-                'type',
-            ])
-            ->allowedSorts([
-                'id', 'type', 'created_at',
-            ])
-            ->paginate($this->per_page);
-
-        return DefaultResource::collection($data);
+        $requestChangeDataAllowes = RequestChangeDataAllowes::whereIn('type', RequestChangeDataType::getValues())->get();
+        $requestChangeDataTypes = RequestChangeDataType::cases();
+        dd($requestChangeDataTypes);
+        $data = [];
+        foreach ($requestChangeDataTypes as $type => $value) {
+            $requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type', $type);
+            dump($type);
+            dump($requestChangeDataAllowes);
+            dd($requestChangeDataAllow);
+        }
+        return $requestChangeDataTypes;
     }
 
     public function show(RequestChangeDataAllowes $requestChangeDataAllowes)

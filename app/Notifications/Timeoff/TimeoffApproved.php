@@ -50,9 +50,18 @@ class TimeoffApproved extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
+            $message = sprintf($this->notificationType->getMessage(), date('l, d M Y', strtotime($this->timeoff->start_at)), $this->isApproved ? 'approved' : 'rejected');
+        } else {
+            $message = sprintf(
+                $this->notificationType->getMessage(),
+                date('l, d M Y', strtotime($this->timeoff->start_at)) . ' to ' . date('l, d M Y', strtotime($this->timeoff->end_at)),
+                $this->isApproved ? 'approved' : 'rejected'
+            );
+        }
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->user->name, $this->isApproved ? 'menyetujui' : 'menolak'),
+            'message' => $message,
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->timeoff->id

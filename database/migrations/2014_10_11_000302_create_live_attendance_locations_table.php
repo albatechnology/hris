@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('live_attendance_locations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('live_attendance_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
             $table->unsignedSmallInteger('radius')->nullable();
             $table->string('lat');
             $table->string('lng');

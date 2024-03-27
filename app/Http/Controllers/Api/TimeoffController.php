@@ -66,16 +66,19 @@ class TimeoffController extends BaseController
         // if ($request->is_advanced_leave) {
         //     1, cek min_advanced_leave_working_month di timeoff_regulations
         //     2. cek history advanced leave user, apakah sudah melebihi max_advanced_leave_request
-            // 3.
+        // 3.
         // }
         // dd($request->validated());
 
+        DB::beginTransaction();
         try {
             $timeoff = Timeoff::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_TIMEOFF;
             $timeoff->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse(message: $e->getMessage());
         }
 

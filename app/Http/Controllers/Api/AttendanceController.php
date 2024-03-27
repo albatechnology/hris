@@ -77,8 +77,8 @@ class AttendanceController extends BaseController
             foreach ($dateRange as $date) {
                 // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
                 // 2. kalo company event(holiday), shiftnya pake holiday
-                // 3. kalo schedulenya !is_overide_national_holiday, shiftnya pake shift
-                // 4. kalo schedulenya !is_overide_company_holiday, shiftnya pake shift
+                // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift
+                // 4. kalo schedulenya is_overide_company_holiday == false, shiftnya pake shift
                 // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
                 $date = $date->format('Y-m-d');
                 $attendance = $attendances->firstWhere('date', $date);
@@ -95,7 +95,7 @@ class AttendanceController extends BaseController
                 $shiftType = 'shift';
 
                 $companyHolidayData = null;
-                if (!$schedule->is_overide_company_holiday) {
+                if ($schedule->is_overide_company_holiday == false) {
                     $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
                         return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
                     });
@@ -106,7 +106,7 @@ class AttendanceController extends BaseController
                     }
                 }
 
-                if (!$schedule->is_overide_national_holiday && is_null($companyHolidayData)) {
+                if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
                     $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
                     if ($nationalHoliday) {
                         $shift = $nationalHoliday;
