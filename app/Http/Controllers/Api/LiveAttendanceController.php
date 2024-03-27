@@ -143,7 +143,9 @@ class LiveAttendanceController extends BaseController
                 AllowedFilter::exact('live_attendance_id'),
                 'name', 'email', 'nik',
             ])
-            ->allowedIncludes('liveAttendance')
+            ->allowedIncludes([
+                \Spatie\QueryBuilder\AllowedInclude::callback('liveAttendance', fn ($q) => $q->select('id', 'name')),
+            ])
             ->allowedSorts([
                 'id', 'company_id', 'branch_id', 'live_attendance_id', 'name', 'email', 'nik', 'created_at',
             ])
