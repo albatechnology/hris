@@ -129,12 +129,10 @@ class LiveAttendanceController extends BaseController
     {
         $query = User::select('id', 'name', 'nik', 'branch_id', 'company_id', 'live_attendance_id')
             ->tenanted()
-            // ->where('live_attendance_id', $liveAttendance->id)
             ->with([
                 'company' => fn ($q) => $q->select('id', 'name'),
                 'branch' => fn ($q) => $q->select('id', 'name'),
                 'detail' => fn ($q) => $q->select('id', 'job_position'),
-                'liveAttendance'
             ]);
 
         $users = QueryBuilder::for($query)
@@ -142,40 +140,15 @@ class LiveAttendanceController extends BaseController
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'email', 'nik', 'phone',
+                AllowedFilter::exact('live_attendance_id'),
+                'name', 'email', 'nik',
             ])
+            ->allowedIncludes('liveAttendance')
             ->allowedSorts([
-                'id', 'company_id', 'branch_id', 'manager_id', 'name', 'email', 'nik', 'phone', 'created_at',
+                'id', 'company_id', 'branch_id', 'live_attendance_id', 'name', 'email', 'nik', 'created_at',
             ])
             ->paginate($this->per_page);
 
         return UserResource::collection($users);
     }
-
-    // public function locations()
-    // {
-    //     $query = User::select('id', 'name', 'nik', 'branch_id', 'company_id', 'live_attendance_id')
-    //         ->tenanted()
-    //         // ->where('live_attendance_id', $liveAttendance->id)
-    //         ->with([
-    //             'company' => fn ($q) => $q->select('id', 'name'),
-    //             'branch' => fn ($q) => $q->select('id', 'name'),
-    //             'detail' => fn ($q) => $q->select('id', 'job_position'),
-    //             'liveAttendance'
-    //         ]);
-
-    //     $users = QueryBuilder::for($query)
-    //         ->allowedFilters([
-    //             AllowedFilter::exact('id'),
-    //             AllowedFilter::exact('branch_id'),
-    //             AllowedFilter::exact('company_id'),
-    //             'name', 'email', 'nik', 'phone',
-    //         ])
-    //         ->allowedSorts([
-    //             'id', 'company_id', 'branch_id', 'manager_id', 'name', 'email', 'nik', 'phone', 'created_at',
-    //         ])
-    //         ->paginate($this->per_page);
-
-    //     return UserResource::collection($users);
-    // }
 }
