@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\TimeoffPolicyController;
 use App\Http\Controllers\Api\TimeoffRegulationController;
 use App\Http\Controllers\Api\TimeoffRegulationMonthController;
+use App\Http\Controllers\Api\UpdatePayrollComponentController;
 use App\Http\Controllers\Api\UserContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserCustomFieldController;
@@ -58,6 +59,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('bank-information', [UserPayrollInfoController::class, 'bankInformation']);
         Route::put('tax-configuration', [UserPayrollInfoController::class, 'taxConfiguration']);
         Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
+        Route::put('payroll-component', [UserPayrollInfoController::class, 'payrollComponent']);
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
@@ -155,4 +157,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('payroll-components', PayrollComponentController::class);
     Route::get('payroll-setting', [PayrollSettingController::class, 'index']);
     Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
+
+    Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 });

@@ -17,6 +17,7 @@ use App\Enums\SalaryType;
 use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
 use App\Traits\Models\BelongsToUser;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserPayrollInfo extends BaseModel
 {
@@ -70,4 +71,9 @@ class UserPayrollInfo extends BaseModel
         'jht_cost' => JhtCost::class,
         'jaminan_pensiun_cost' => JaminanPensiunCost::class,
     ];
+
+    public function components(): HasMany
+    {
+        return $this->hasMany(UserPayrollInfoComponent::class);
+    }
 }
