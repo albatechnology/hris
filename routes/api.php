@@ -58,6 +58,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('bank-information', [UserPayrollInfoController::class, 'bankInformation']);
         Route::put('tax-configuration', [UserPayrollInfoController::class, 'taxConfiguration']);
         Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
+        Route::put('payroll-component', [UserPayrollInfoController::class, 'payrollComponent']);
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
