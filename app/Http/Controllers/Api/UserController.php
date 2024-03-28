@@ -14,7 +14,6 @@ use App\Http\Resources\User\UserResource;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\User;
-use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -233,11 +232,46 @@ class UserController extends BaseController
                 $user->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
         return new UserResource($user);
+    }
+
+    public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
+    {
+        $data = [];
+        foreach ($request->details ?? [] as $type => $value) {
+            $data[] = [
+                'type' => $type,
+                'value' => $value,
+            ];
+        }
+
+        DB::beginTransaction();
+        try {
+            /** @var \App\Models\RequestChangeData $requestChangeData */
+            $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+
+            if ($request->hasFile('file')) {
+                $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+                foreach ($request->file as $file) {
+                    if ($file->isValid()) {
+                        $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
+                    }
+                }
+            }
+
+            $requestChangeData->details()->createMany($data);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->createdResponse();
     }
 }

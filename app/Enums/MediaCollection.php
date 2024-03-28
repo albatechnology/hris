@@ -10,4 +10,5 @@ enum MediaCollection: string
     case USER = 'user';
     case USER_EDUCATION = 'user_education';
     case ATTENDANCE = 'attendance';
+    case REQUEST_CHANGE_DATA = 'request_change_data';
 }

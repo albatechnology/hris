@@ -6,59 +6,53 @@ use App\Enums\RequestChangeDataType;
 use App\Http\Requests\Api\RequestChangeDataAllowes\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RequestChangeDataAllowes;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class RequestChangeDataAllowesController extends BaseController
 {
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:request_change_data_allowes_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:request_change_data_allowes_create', ['only' => 'store']);
-        // $this->middleware('permission:request_change_data_allowes_edit', ['only' => 'update']);
-        // $this->middleware('permission:request_change_data_allowes_delete', ['only' => 'destroy']);
+        $this->middleware('permission:request_change_data_allowes_read', ['only' => 'index']);
+        $this->middleware('permission:request_change_data_allowes_edit', ['only' => 'update']);
     }
 
-    public function index()
+    public function index(int $companyId)
     {
-        $requestChangeDataAllowes = RequestChangeDataAllowes::whereIn('type', RequestChangeDataType::getValues())->get();
+        $requestChangeDataAllowes = RequestChangeDataAllowes::where('company_id', $companyId)->whereIn('type', RequestChangeDataType::getValues())->get();
         $requestChangeDataTypes = RequestChangeDataType::cases();
-        dd($requestChangeDataTypes);
+
         $data = [];
-        foreach ($requestChangeDataTypes as $type => $value) {
+        foreach ($requestChangeDataTypes as $type) {
             $requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type', $type);
-            dump($type);
-            dump($requestChangeDataAllowes);
-            dd($requestChangeDataAllow);
+            $data[] = [
+                'type' => $type->value,
+                'is_active' => $requestChangeDataAllow?->is_active ?? false,
+            ];
         }
-        return $requestChangeDataTypes;
+
+        return $data;
     }
 
-    public function show(RequestChangeDataAllowes $requestChangeDataAllowes)
+    public function store(StoreRequest $request, int $companyId)
     {
-        return new DefaultResource($requestChangeDataAllowes);
-    }
+        $requestChangeDataAllowes = RequestChangeDataAllowes::where('company_id', $companyId)->where('type', $request->type)->get();
 
-    public function store(StoreRequest $request)
-    {
-        $requestChangeDataAllowes = RequestChangeDataAllowes::create($request->validated());
+        $requestChangeDataAllow = null;
+        if ($requestChangeDataAllowes->count() > 0) {
+            $requestChangeDataAllow = $requestChangeDataAllowes[0];
+        }
+        $requestChangeDataAllowes->each->delete();
 
-        return new DefaultResource($requestChangeDataAllowes);
-    }
+        if (!$requestChangeDataAllow) {
+            $requestChangeDataAllow = new RequestChangeDataAllowes();
+            $requestChangeDataAllow->company_id = $companyId;
+        }
 
-    public function update(RequestChangeDataAllowes $requestChangeDataAllowes, StoreRequest $request)
-    {
-        $requestChangeDataAllowes->update($request->validated());
+        $requestChangeDataAllow->type = $request->type;
+        $requestChangeDataAllow->is_active = $request->is_active ?? false;
+        $requestChangeDataAllow->updated_at = now();
+        $requestChangeDataAllow->save();
 
-        return (new DefaultResource($requestChangeDataAllowes))->response()->setStatusCode(Response::HTTP_ACCEPTED);
-    }
-
-    public function destroy(RequestChangeDataAllowes $requestChangeDataAllowes)
-    {
-        $requestChangeDataAllowes->delete();
-
-        return $this->deletedResponse();
+        return new DefaultResource($requestChangeDataAllow);
     }
 }

@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
-use App\Enums\RequestChangeDataType;
 use App\Traits\Models\BelongsToUser;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class RequestChangeData extends Model
+class RequestChangeData extends BaseModel implements HasMedia
 {
-    use BelongsToUser;
+    use BelongsToUser, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
-        'type',
-        'value',
         'description',
         'is_approved',
         'approved_by',
         'approved_at',
     ];
 
-    protected $casts = [
-        'type' => RequestChangeDataType::class,
-    ];
+    public function details(): HasMany
+    {
+        return $this->hasMany(RequestChangeDataDetail::class);
+    }
 }

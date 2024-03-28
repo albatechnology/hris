@@ -5,9 +5,8 @@ namespace App\Models;
 use App\Enums\RequestChangeDataType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
-use Illuminate\Database\Eloquent\Model;
 
-class RequestChangeDataAllowes extends Model implements TenantedInterface
+class RequestChangeDataAllowes extends BaseModel implements TenantedInterface
 {
     use CompanyTenanted;
 
@@ -21,4 +20,15 @@ class RequestChangeDataAllowes extends Model implements TenantedInterface
         'type' => RequestChangeDataType::class,
         'is_active' => 'boolean',
     ];
+
+    public static function createForCompany(Company $company): void
+    {
+        foreach (RequestChangeDataType::getValues() as $value) {
+            self::create([
+                'company_id' => $company->id,
+                'type' => $value,
+                'is_active' => true
+            ]);
+        }
+    }
 }

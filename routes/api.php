@@ -61,6 +61,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('tax-configuration', [UserPayrollInfoController::class, 'taxConfiguration']);
         Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
         Route::put('payroll-component', [UserPayrollInfoController::class, 'payrollComponent']);
+        Route::post('request-change-data', [UserController::class, 'requestChangeData']);
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
@@ -79,6 +80,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
         Route::post('timeoff-regulation', [TimeoffRegulationController::class, 'store']);
         Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
+        Route::get('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'index']);
+        Route::post('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'store']);
     });
     Route::apiResource('companies', CompanyController::class)->except('destroy');
 
@@ -160,5 +163,4 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
-    Route::apiResource('request-change-data-allowances', RequestChangeDataAllowesController::class);
 });
