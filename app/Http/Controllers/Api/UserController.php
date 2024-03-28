@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\MediaCollection;
+use App\Enums\RequestChangeDataType;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
@@ -242,14 +243,26 @@ class UserController extends BaseController
 
     public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
     {
-        $data = [];
-        foreach ($request->details ?? [] as $type => $value) {
-            $data[] = [
-                'type' => $type,
-                'value' => $value,
-            ];
-        }
+        $requestChangeDataAllowes = \App\Models\RequestChangeDataAllowes::where('company_id', $user->company_id)->get();
 
+        $dataRequested = [];
+        $dataAllowedToUpdate = [];
+        foreach ($request->details ?? [] as $type => $value) {
+            if ($requestChangeDataAllowes->firstWhere('type.value', $type)?->is_active == true) {
+                $dataRequested[] = [
+                    'type' => $type,
+                    'value' => $value,
+                ];
+            } elseif ($requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type.value', $type)) {
+                $dataAllowedToUpdate[] = [
+                    'type' => $requestChangeDataAllow->type,
+                    'value' => $value,
+                ];
+            }
+        }
+        // dump($dataRequested);
+        // dump($dataAllowedToUpdate);
+        // dd($request->validated());
         DB::beginTransaction();
         try {
             /** @var \App\Models\RequestChangeData $requestChangeData */
@@ -264,7 +277,13 @@ class UserController extends BaseController
                 }
             }
 
-            $requestChangeData->details()->createMany($data);
+            if (count($dataRequested) > 0) $requestChangeData->details()->createMany($dataRequested);
+
+            if (count($dataAllowedToUpdate) > 0) {
+                foreach ($dataAllowedToUpdate as $data) {
+                    RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
+                }
+            }
 
             DB::commit();
         } catch (\Exception $e) {
