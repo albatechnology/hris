@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\PayrollComponent;
 
+use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
+use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,6 +32,8 @@ class StoreRequest extends FormRequest
             'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
             'type' => ['required', Rule::enum(PayrollComponentType::class)],
+            'category' => ['required', Rule::enum(PayrollComponentCategory::class)],
+            'setting' => ['required', Rule::enum(PayrollComponentSetting::class)],
             'amount' => 'required|numeric',
             'is_taxable' => 'required|boolean',
             'period_type' => ['required', Rule::enum(PayrollComponentPeriodType::class)],
@@ -38,6 +42,10 @@ class StoreRequest extends FormRequest
             'daily_maximum_amount_type' => ['required', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
             'daily_maximum_amount' => 'required|numeric',
             'is_one_time_bonus' => 'required|boolean',
+
+            'includes' => 'nullable|array',
+            'includes.*.payroll_component_id' => 'required_with:includes|string',
+            'includes.*.type' => 'required_with:includes|string',
 
             'formulas' => 'nullable|array',
             'formulas.*.component' => 'required_with:formulas|string',

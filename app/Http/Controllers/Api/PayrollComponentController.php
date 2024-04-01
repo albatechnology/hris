@@ -55,6 +55,15 @@ class PayrollComponentController extends BaseController
         try {
             $payrollComponent = PayrollComponent::create($request->validated());
 
+            if ($request->includes) {
+                foreach ($request->includes as $include) {
+                    $payrollComponent->includes()->create([
+                        'included_payroll_component_id' => $include['payroll_component_id'],
+                        'type' => $include['type'],
+                    ]);
+                }
+            }
+
             FormulaService::sync($payrollComponent, $request->formulas);
 
             DB::commit();
@@ -73,6 +82,16 @@ class PayrollComponentController extends BaseController
         try {
             $payrollComponent->update($request->validated());
 
+            $payrollComponent->includes()->delete();
+            if ($request->includes) {
+                foreach ($request->includes as $include) {
+                    $payrollComponent->includes()->create([
+                        'included_payroll_component_id' => $include['payroll_component_id'],
+                        'type' => $include['type'],
+                    ]);
+                }
+            }
+
             FormulaService::sync($payrollComponent, $request->formulas);
 
             DB::commit();
@@ -89,6 +108,7 @@ class PayrollComponentController extends BaseController
     {
         try {
             // sync with empty data []
+            $payrollComponent->includes()->delete();
             FormulaService::sync($payrollComponent, []);
 
             // delete payroll component

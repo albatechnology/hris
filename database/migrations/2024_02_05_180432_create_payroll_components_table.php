@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('name');
             $table->string('type'); // PayrollComponentType::class
+            $table->string('category'); // PayrollComponentCategory::class
+            $table->string('setting'); // PayrollComponentSetting::class
             $table->unsignedDouble('amount', 13, 2)->default(0);
             $table->boolean('is_taxable')->default(0);
             $table->string('period_type'); // PayrollComponentPeriodType::class
