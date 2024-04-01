@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\MediaCollection;
+use App\Enums\RequestChangeDataType;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
 use App\Http\Requests\Api\User\StoreRequest;
@@ -14,7 +15,6 @@ use App\Http\Resources\User\UserResource;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\User;
-use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -233,11 +233,68 @@ class UserController extends BaseController
                 $user->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
         return new UserResource($user);
+    }
+
+    public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
+    {
+        $requestChangeDataAllowes = \App\Models\RequestChangeDataAllowes::where('company_id', $user->company_id)->get();
+
+        $dataRequested = [];
+        $dataAllowedToUpdate = [];
+        foreach ($request->details ?? [] as $type => $value) {
+            if ($requestChangeDataAllowes->firstWhere('type.value', $type)?->is_active == true) {
+                $dataRequested[] = [
+                    'type' => $type,
+                    'value' => $value,
+                ];
+            } elseif ($requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type.value', $type)) {
+                $dataAllowedToUpdate[] = [
+                    'type' => $requestChangeDataAllow->type,
+                    'value' => $value,
+                ];
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            /** @var \App\Models\RequestChangeData $requestChangeData */
+            $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+
+            if (count($dataRequested) > 0) {
+                if ($request->hasFile('file')) {
+                    $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+                    foreach ($request->file as $file) {
+                        if ($file->isValid()) {
+                            $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
+                        }
+                    }
+                }
+
+                $requestChangeData->details()->createMany($dataRequested);
+
+                $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
+                $requestChangeData->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
+            }
+
+            if (count($dataAllowedToUpdate) > 0) {
+                // auto update, no need approval
+                foreach ($dataAllowedToUpdate as $data) {
+                    RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->createdResponse();
     }
 }

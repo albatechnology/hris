@@ -179,6 +179,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->hasMany(UserBranch::class);
     }
 
+    public function requestChangeDatas(): HasMany
+    {
+        return $this->hasMany(RequestChangeData::class);
+    }
+
     public function timeoffPolicies(): BelongsToMany
     {
         return $this->belongsToMany(TimeoffPolicy::class, 'user_timeoff_policies');

@@ -2,10 +2,6 @@
 
 namespace App\Enums;
 
-use App\Models\User;
-use App\Models\UserDetail;
-use App\Models\UserPayrollInfo;
-
 enum RequestChangeDataType: string
 {
     use BaseEnum;
@@ -15,6 +11,7 @@ enum RequestChangeDataType: string
     case NIK = 'nik';
     case PHONE = 'phone';
     case ADDRESS = 'address';
+    case ADDRESS_KTP = 'address_ktp';
     case BIRTH_PLACE = 'birth_place';
     case BIRTHDATE = 'birthdate';
     case GENDER = 'gender';
@@ -31,35 +28,79 @@ enum RequestChangeDataType: string
     case PHOTO_PROFILE = 'photo_profile';
     case PTKP_STATUS = 'ptkp_status';
 
-    public function getValue(?int $userId = null)
+    public function getValidation()
     {
-        if (!$userId) $userId = auth('sanctum')->id();
-
         return match ($this) {
-            self::PHOTO_PROFILE => User::where('id', $userId)->first([$this->value]),
-            self::NAME => User::where('id', $userId)->first([$this->value]),
-            self::EMAIL => User::where('id', $userId)->first([$this->value]),
-            self::NIK => User::where('id', $userId)->first([$this->value]),
-            self::PHONE => User::where('id', $userId)->first([$this->value]),
-            self::GENDER => User::where('id', $userId)->first([$this->value]),
-
-            self::ADDRESS => UserDetail::where('user_id', $userId)->first([$this->value]),
-            self::BIRTH_PLACE => UserDetail::where('user_id', $userId)->first([$this->value]),
-            self::BIRTHDATE => UserDetail::where('user_id', $userId)->first([$this->value]),
-            self::MARITAL_STATUS => UserDetail::where('user_id', $userId)->first([$this->value]),
-            self::BLOOD_TYPE => UserDetail::where('user_id', $userId)->first([$this->value]),
-            self::RELIGION => UserDetail::where('user_id', $userId)->first([$this->value]),
-
-            self::BPJS_KETENAGAKERJAAN_NO => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::BPJS_KESEHATAN_NO => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::BPJS_KESEHATAN_FAMILY_NO => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::NPWP => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::BANK_ACCOUNT_NO => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::BANK_NAME => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::BANK_ACCOUNT_HOLDER => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-            self::PTKP_STATUS => UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
+            self::EMAIL => 'required|email|unique:users,email',
+            self::BIRTHDATE => 'required|date',
+            self::GENDER => ['required', \Illuminate\Validation\Rule::enum(Gender::class)],
+            self::MARITAL_STATUS => ['required', \Illuminate\Validation\Rule::enum(MaritalStatus::class)],
+            self::BLOOD_TYPE => ['required', \Illuminate\Validation\Rule::enum(BloodType::class)],
+            self::RELIGION => ['required', \Illuminate\Validation\Rule::enum(Religion::class)],
+            self::PTKP_STATUS => ['required', \Illuminate\Validation\Rule::enum(PtkpStatus::class)],
+            self::PHOTO_PROFILE => 'required|mimes:' . config('app.file_mimes_types'),
+            default => 'required|string'
         };
     }
+
+    public static function updateData(self $self, int $userId, mixed $value)
+    {
+        return match ($self) {
+            self::NAME,
+            self::EMAIL,
+            self::NIK,
+            self::PHONE,
+            self::GENDER => \App\Models\User::where('id', $userId)->update([$self->value => $value]),
+
+            self::ADDRESS,
+            self::ADDRESS_KTP,
+            self::BIRTH_PLACE,
+            self::BIRTHDATE,
+            self::MARITAL_STATUS,
+            self::BLOOD_TYPE,
+            self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->update([$self->value => $value]),
+
+            self::BPJS_KETENAGAKERJAAN_NO,
+            self::BPJS_KESEHATAN_NO,
+            self::BPJS_KESEHATAN_FAMILY_NO,
+            self::NPWP,
+            self::BANK_ACCOUNT_NO,
+            self::BANK_NAME,
+            self::BANK_ACCOUNT_HOLDER,
+            self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->update([$self->value => $value]),
+        };
+    }
+
+    // public function getValue(?int $userId = null)
+    // {
+    //     if (!$userId) $userId = auth('sanctum')->id();
+
+    //     return match ($this) {
+    //         self::PHOTO_PROFILE,
+    //         self::NAME,
+    //         self::EMAIL,
+    //         self::NIK,
+    //         self::PHONE,
+    //         self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value]),
+
+    //         self::ADDRESS,
+    //         self::ADDRESS_KTP,
+    //         self::BIRTH_PLACE,
+    //         self::BIRTHDATE,
+    //         self::MARITAL_STATUS,
+    //         self::BLOOD_TYPE,
+    //         self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value]),
+
+    //         self::BPJS_KETENAGAKERJAAN_NO,
+    //         self::BPJS_KESEHATAN_NO,
+    //         self::BPJS_KESEHATAN_FAMILY_NO,
+    //         self::NPWP,
+    //         self::BANK_ACCOUNT_NO,
+    //         self::BANK_NAME,
+    //         self::BANK_ACCOUNT_HOLDER,
+    //         self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
+    //     };
+    // }
 
     public function getInputType()
     {
@@ -82,7 +123,7 @@ enum RequestChangeDataType: string
     {
         return match ($this) {
             self::PHOTO_PROFILE => 'file',
-            self::BIRTHDATE => 'date',
+            // self::BIRTHDATE => 'date',
 
             self::GENDER => Gender::all(),
 

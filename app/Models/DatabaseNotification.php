@@ -21,18 +21,22 @@ class DatabaseNotification extends NotificationsDatabaseNotification
                         unset($data['user_id']);
                     }
                 }
-
-                if (isset($data['model_id']) && $data['model_id'] != '') {
-                    $notificationType = NotificationType::from($data['type']);
-                    $model = match ($notificationType) {
-                        NotificationType::REQUEST_ATTENDANCE => AttendanceDetail::find($data['model_id']),
-                    };
-
-                    $data['model'] = $model;
-                    unset($data['model_id']);
-                }
-
                 return $data;
+                // if (isset($data['model_id']) && $data['model_id'] != '') {
+                //     $notificationType = NotificationType::from($data['type']);
+
+                //     if (in_array($notificationType, [NotificationType::REQUEST_ATTENDANCE, NotificationType::ATTENDANCE_APPROVED])) {
+                //         $data['attendance_detail'] = AttendanceDetail::find($data['model_id']);
+                //     } elseif (in_array($notificationType, [NotificationType::REQUEST_TIMEOFF, NotificationType::TIMEOFF_APPROVED])) {
+                //         $data['timeoff'] = Timeoff::select('id', 'timeoff_policy_id', 'request_type', 'start_at', 'end_at', 'reason')
+                //             ->with(['timeoffPolicy' => fn ($q) => $q->select('id', 'name')])
+                //             ->find($data['model_id'])->append('total_days');
+                //     } else {
+                //         $data['model'] = null;
+                //     }
+
+                //     unset($data['model_id']);
+                // }
             },
         );
     }

@@ -8,6 +8,7 @@ class LiveAttendanceLocation extends BaseModel
 {
     protected $fillable = [
         'live_attendance_id',
+        'name',
         'radius',
         'lat',
         'lng',

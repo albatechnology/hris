@@ -26,6 +26,8 @@ class ApproveRequest extends FormRequest
     {
         $this->merge([
             'is_approved' => $this->toBoolean($this->is_approved),
+            'approved_by' => auth('sanctum')->id(),
+            'approved_at' => now()
         ]);
     }
 
@@ -38,6 +40,8 @@ class ApproveRequest extends FormRequest
     {
         return [
             'is_approved' => 'required|boolean',
+            'approved_by' => 'required',
+            'approved_at' => 'required',
         ];
     }
 }

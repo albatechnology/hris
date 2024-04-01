@@ -15,6 +15,7 @@ class CompanyObserver
     {
         TimeoffRegulationService::create($company, TimeoffRenewType::MONTHLY);
         $company->createPayrollSetting();
+        \App\Models\RequestChangeDataAllowes::createForCompany($company);
     }
 
     /**

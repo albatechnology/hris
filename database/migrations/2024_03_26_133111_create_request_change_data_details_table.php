@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Company;
+use App\Models\RequestChangeData;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,11 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('request_change_data_allowes', function (Blueprint $table) {
+        Schema::create('request_change_data_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Company::class)->constrained();
+            $table->foreignId('request_change_data_id')->constrained('request_change_data')->cascadeOnDelete();
             $table->string('type');
-            $table->boolean('is_active')->default(0);
+            $table->string('value');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('request_change_data_allowes');
+        Schema::dropIfExists('request_change_data_details');
     }
 };

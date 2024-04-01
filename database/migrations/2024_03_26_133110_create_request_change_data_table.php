@@ -15,8 +15,6 @@ return new class extends Migration
         Schema::create('request_change_data', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
-            $table->string('type');
-            $table->string('value');
             $table->text('description')->nullable();
             $table->boolean('is_approved')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users');

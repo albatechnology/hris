@@ -96,4 +96,62 @@ class Timeoff extends BaseModel
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function getTotalDaysAttribute(): int|null
+    {
+        $interval = new \DateInterval('P1D');
+        $realEnd = new \DateTime($this->end_at);
+        $realEnd->add($interval);
+        $period = new \DatePeriod(new \DateTime($this->start_at), $interval, $realEnd);
+        $this->load(['user' => fn($q) => $q->select('id')]);
+
+        $schedule = \App\Services\ScheduleService::getTodaySchedule($this->user, $this->start_at)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        if ($schedule) {
+            $order = $schedule->shifts->where('id', $schedule->shift->id);
+            $orderKey = array_keys($order->toArray())[0];
+            $totalShifts = $schedule->shifts->count();
+
+            $companyHolidays = Event::tenanted()->where('company_id', $this->user->company_id)->whereHoliday()->get();
+            $nationalHolidays = NationalHoliday::orderBy('date')->get(['date']);
+            $totalDays = 0;
+            foreach ($period as $date) {
+                $totalDays += 1;
+                $date = $date->format('Y-m-d');
+                $shift = $schedule->shifts[$orderKey];
+
+                $companyHolidayData = null;
+                if ($schedule->is_overide_company_holiday == false) {
+                    $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                        return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                    });
+
+                    if ($companyHolidayData) {
+                        $totalDays -= 1;
+                    }
+                }
+
+                $nationalHoliday = null;
+                if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                    $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                    if ($nationalHoliday) {
+                        $totalDays -= 1;
+                    }
+                }
+
+                if ($shift->is_dayoff && is_null($nationalHoliday)) {
+                    $totalDays -= 1;
+                }
+
+                if (($orderKey + 1) === $totalShifts) {
+                    $orderKey = 0;
+                } else {
+                    $orderKey++;
+                }
+            }
+
+            return $totalDays;
+        }
+
+        return null;
+    }
 }

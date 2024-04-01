@@ -50,9 +50,21 @@ class RequestTimeoff extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
+            $message = sprintf(
+                $this->notificationType->getMessage(),
+                date('d M Y', strtotime($this->timeoff->start_at)),
+            );
+        } else {
+            $message = sprintf(
+                $this->notificationType->getMessage(),
+                date('d M Y', strtotime($this->timeoff->start_at)) . ' - ' . date('d M Y', strtotime($this->timeoff->end_at)),
+            );
+        }
+
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->user->name),
+            'message' => $message,
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->timeoff->id

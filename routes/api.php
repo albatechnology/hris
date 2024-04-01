@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
+use App\Http\Controllers\Api\RequestChangeDataAllowesController;
+use App\Http\Controllers\Api\RequestChangeDataController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
@@ -60,6 +62,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('tax-configuration', [UserPayrollInfoController::class, 'taxConfiguration']);
         Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
         Route::put('payroll-component', [UserPayrollInfoController::class, 'payrollComponent']);
+        Route::post('request-change-data', [UserController::class, 'requestChangeData']);
     });
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
@@ -78,6 +81,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
         Route::post('timeoff-regulation', [TimeoffRegulationController::class, 'store']);
         Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
+        Route::get('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'index']);
+        Route::post('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'store']);
     });
     Route::apiResource('companies', CompanyController::class)->except('destroy');
 
@@ -99,6 +104,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('schedules', ScheduleController::class);
 
+    Route::get('attendances/logs', [AttendanceController::class, 'logs']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
     Route::get('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
@@ -127,7 +133,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);
     // Route::get('live-attendances/locations', [LiveAttendanceController::class, 'locations']);
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
-        Route::apiResource('/locations', LiveAttendanceLocationController::class);
+        Route::apiResource('locations', LiveAttendanceLocationController::class);
     });
     Route::apiResource('live-attendances', LiveAttendanceController::class);
 
@@ -159,4 +165,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
+
+    Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
+    Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
+    Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 });

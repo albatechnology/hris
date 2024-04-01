@@ -19,7 +19,7 @@ enum NotificationType: string
     case ADVANCED_LEAVE_APPROVED = 'advanced_leave_approved';
 
     case REQUEST_CHANGE_DATA = 'request_change_data';
-    case CHANGE_DATA_APPROVED = 'change_data_approved';
+    case REQUEST_CHANGE_DATA_APPROVED = 'request_change_data_approved';
 
     public function getNotificationClass(): string
     {
@@ -32,20 +32,24 @@ enum NotificationType: string
             self::OVERTIME_APPROVED => \App\Notifications\Overtime\OvertimeApproved::class,
             self::REQUEST_ADVANCED_LEAVE => \App\Notifications\AdvancedLeave\RequestAdvancedLeave::class,
             self::ADVANCED_LEAVE_APPROVED => \App\Notifications\AdvancedLeave\AdvancedLeaveApproved::class,
+            self::REQUEST_CHANGE_DATA => \App\Notifications\RequestChangeData\RequestChangeData::class,
+            self::REQUEST_CHANGE_DATA_APPROVED => \App\Notifications\RequestChangeData\RequestChangeDataApproved::class,
         };
     }
 
     public function getMessage(): string
     {
         return match ($this) {
-            self::REQUEST_ATTENDANCE => 'Requesting for %s', // Monday, 01 Jan 2024
-            self::ATTENDANCE_APPROVED => '%s %s request attendance anda', // difa menyetujui/menolak attendance anda
-            self::REQUEST_TIMEOFF => '%s membutuhkan approval timeoff dari anda',
-            self::TIMEOFF_APPROVED => '%s %s request timeoff anda', // difa menyetujui/menolak timeoff anda
-            self::REQUEST_OVERTIME => '%s membutuhkan approval overtime dari anda',
-            self::OVERTIME_APPROVED => '%s %s request overtime anda', // difa menyetujui/menolak overtime anda
-            self::REQUEST_ADVANCED_LEAVE => '%s membutuhkan approval advance leave dari anda',
-            self::ADVANCED_LEAVE_APPROVED => '%s %s request advance leave anda', // difa menyetujui/menolak overtime anda
+            self::REQUEST_ATTENDANCE => 'Requesting attendance for %s', // Monday, 01 Jan 2024
+            self::ATTENDANCE_APPROVED => 'Your attendance request at %s on %s, has been %s.', // 09:00:00, Monday, 01 Jan 2024, approved/rejected
+            self::REQUEST_TIMEOFF => 'Requesting time off for %s', // 01 feb - 12 feb 2024
+            self::TIMEOFF_APPROVED => 'Your time off for %s has been %s.', // 1 March 2024/1 March 2024 to 10 March 2024, approved/rejected
+            self::REQUEST_OVERTIME => 'Requesting overtime for %s',
+            self::OVERTIME_APPROVED => 'Your overtime request has been %s.', // approved/rejected
+            self::REQUEST_ADVANCED_LEAVE => 'Requesting advanced leave for %s %s', // 1 day/5 days
+            self::ADVANCED_LEAVE_APPROVED => 'Your advanced leave request has been %s.', // approved/rejected
+            self::REQUEST_CHANGE_DATA => 'Requesting change data',
+            self::REQUEST_CHANGE_DATA_APPROVED => 'Your change data request has been %s.', // approved/rejected
             default => null,
         };
     }

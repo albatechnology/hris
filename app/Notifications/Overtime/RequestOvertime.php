@@ -52,7 +52,7 @@ class RequestOvertime extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->user->name),
+            'message' => sprintf($this->notificationType->getMessage(), $this->overtimeRequest->duration_text),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->overtimeRequest->id
