@@ -102,37 +102,37 @@ enum RequestChangeDataType: string
     //     };
     // }
 
-    // public function getInputType()
-    // {
-    //     return match ($this) {
-    //         self::PHOTO_PROFILE => 'file',
-    //         self::BIRTHDATE => 'date',
+    public function getInputType()
+    {
+        return match ($this) {
+            self::PHOTO_PROFILE => 'file',
+            self::BIRTHDATE => 'date',
 
-    //         self::GENDER,
+            self::GENDER,
 
-    //         self::MARITAL_STATUS,
-    //         self::BLOOD_TYPE,
-    //         self::RELIGION,
+            self::MARITAL_STATUS,
+            self::BLOOD_TYPE,
+            self::RELIGION,
 
-    //         self::PTKP_STATUS => 'select',
-    //         default => 'text'
-    //     };
-    // }
+            self::PTKP_STATUS => 'select',
+            default => 'text'
+        };
+    }
 
-    // public function getInputValue()
-    // {
-    //     return match ($this) {
-    //         self::PHOTO_PROFILE => 'file',
-    //         self::BIRTHDATE => 'date',
+    public function getInputValue()
+    {
+        return match ($this) {
+            self::PHOTO_PROFILE => 'file',
+            // self::BIRTHDATE => 'date',
 
-    //         self::GENDER => Gender::all(),
+            self::GENDER => Gender::all(),
 
-    //         self::MARITAL_STATUS => MaritalStatus::all(),
-    //         self::BLOOD_TYPE => BloodType::all(),
-    //         self::RELIGION => Religion::all(),
+            self::MARITAL_STATUS => MaritalStatus::all(),
+            self::BLOOD_TYPE => BloodType::all(),
+            self::RELIGION => Religion::all(),
 
-    //         self::PTKP_STATUS => PtkpStatus::all(),
-    //         default => ''
-    //     };
-    // }
+            self::PTKP_STATUS => PtkpStatus::all(),
+            default => ''
+        };
+    }
 }

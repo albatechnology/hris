@@ -12,8 +12,8 @@ class RequestChangeDataAllowesController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->middleware('permission:request_change_data_allowes_read', ['only' => 'index']);
-        $this->middleware('permission:request_change_data_allowes_edit', ['only' => 'update']);
+        // $this->middleware('permission:request_change_data_allowes_read', ['only' => 'index']);
+        // $this->middleware('permission:request_change_data_allowes_edit', ['only' => 'update']);
     }
 
     public function index(int $companyId)
@@ -26,6 +26,8 @@ class RequestChangeDataAllowesController extends BaseController
             $requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type', $type);
             $data[] = [
                 'type' => $type->value,
+                'input_type' => $type->getInputType(),
+                'input_value' => $type->getInputValue(),
                 'is_active' => $requestChangeDataAllow?->is_active ?? false,
             ];
         }
