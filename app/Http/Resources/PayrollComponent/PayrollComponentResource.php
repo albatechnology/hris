@@ -16,6 +16,7 @@ class PayrollComponentResource extends JsonResource
     {
         return [
             ...parent::toArray($request),
+            'includes' => $this->includes->load('includedPayrollComponent'),
             'formulas' => $this->formulas->load('formulaComponents', 'child'),
         ];
     }

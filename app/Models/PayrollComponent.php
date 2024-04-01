@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
+use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\MorphManyFormulas;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollComponent extends BaseModel
 {
@@ -16,6 +19,8 @@ class PayrollComponent extends BaseModel
         'company_id',
         'name',
         'type',
+        'category',
+        'setting',
         'amount',
         'is_taxable',
         'period_type',
@@ -29,6 +34,8 @@ class PayrollComponent extends BaseModel
 
     protected $casts = [
         'type' => PayrollComponentType::class,
+        'category' => PayrollComponentCategory::class,
+        'setting' => PayrollComponentSetting::class,
         'amount' => 'double',
         'is_taxable' => 'boolean',
         'period_type' => PayrollComponentPeriodType::class,
@@ -39,4 +46,9 @@ class PayrollComponent extends BaseModel
         'is_one_time_bonus' => 'boolean',
         'is_default' => 'boolean',
     ];
+
+    public function includes(): HasMany
+    {
+        return $this->hasMany(PayrollComponentInclude::class);
+    }
 }
