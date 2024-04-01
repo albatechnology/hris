@@ -51,14 +51,17 @@ class RequestTimeoff extends Notification
     public function toArray(object $notifiable): array
     {
         if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
-            $message = sprintf($this->notificationType->getMessage(), date('d M Y', strtotime($this->timeoff->start_at)), $this->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY) ? '1 day' : 'Half day');
+            $message = sprintf(
+                $this->notificationType->getMessage(),
+                date('d M Y', strtotime($this->timeoff->start_at)),
+            );
         } else {
             $message = sprintf(
                 $this->notificationType->getMessage(),
                 date('d M Y', strtotime($this->timeoff->start_at)) . ' - ' . date('d M Y', strtotime($this->timeoff->end_at)),
-                $this->timeoff->total_days . ' days'
             );
         }
+
         return [
             'type' => $this->notificationType->value,
             'message' => $message,

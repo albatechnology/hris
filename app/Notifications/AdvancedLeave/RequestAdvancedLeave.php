@@ -52,7 +52,7 @@ class RequestAdvancedLeave extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->user->name),
+            'message' => sprintf($this->notificationType->getMessage(), $this->advancedLeaveRequest->amount, $this->advancedLeaveRequest->amount > 1 ? 'days' : 'day'),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->advancedLeaveRequest->id

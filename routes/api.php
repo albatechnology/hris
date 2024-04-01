@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
+use App\Http\Controllers\Api\RequestChangeDataController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
@@ -103,6 +104,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('schedules', ScheduleController::class);
 
+    Route::get('attendances/logs', [AttendanceController::class, 'logs']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
     Route::get('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
@@ -163,4 +165,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
+
+    Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
+    Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
+    Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 });

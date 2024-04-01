@@ -165,6 +165,14 @@ class PermissionService
                 'advanced_leave_request_edit',
                 'advanced_leave_request_delete',
             ],
+            'request_change_data_access' => [
+                'request_change_data_read',
+                'request_change_data_create',
+            ],
+            'request_change_data_allowes_access' => [
+                'request_change_data_allowes_read',
+                'request_change_data_allowes_edit',
+            ],
             'timeoff_policy_access' => [
                 'timeoff_policy_read',
                 'timeoff_policy_create',
@@ -314,6 +322,14 @@ class PermissionService
                 'advanced_leave_request_create',
                 'advanced_leave_request_edit',
                 'advanced_leave_request_delete',
+            ],
+            'request_change_data_access' => [
+                'request_change_data_read',
+                'request_change_data_create',
+            ],
+            'request_change_data_allowes_access' => [
+                'request_change_data_allowes_read',
+                'request_change_data_allowes_edit',
             ],
             'timeoff_policy_access' => [
                 'timeoff_policy_read',

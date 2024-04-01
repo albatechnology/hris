@@ -52,7 +52,7 @@ class OvertimeApproved extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->user->name, $this->isApproved ? 'menyetujui' : 'menolak'),
+            'message' => sprintf($this->notificationType->getMessage(), $this->isApproved ? 'approved' : 'rejected'),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->overtimeRequest->id

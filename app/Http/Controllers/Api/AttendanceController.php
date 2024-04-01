@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Resources\Attendance\AttendanceResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
@@ -24,6 +25,8 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class AttendanceController extends BaseController
@@ -134,6 +137,26 @@ class AttendanceController extends BaseController
         return response()->json([
             'data' => $data
         ]);
+    }
+
+    public function logs()
+    {
+        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn ($q) => $q->tenanted()))
+            ->allowedFilters([
+                'is_clock_in', 'is_approved', 'approved_by',
+                AllowedFilter::callback('user_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('user_id', $value))),
+                AllowedFilter::callback('shift_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('shift_id', $value))),
+            ])
+            ->allowedIncludes([
+                AllowedInclude::callback('attendance', function ($query) {
+                    $query->select('id', 'schedule_id', 'shift_id', 'code')
+                        ->with('shift', fn ($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
+                }),
+            ])
+            ->allowedSorts(['is_clock_in', 'is_approved', 'approved_by', 'created_at'])
+            ->paginate($this->per_page);
+
+        return new DefaultResource($attendance);
     }
 
     public function show(Attendance $attendance)

@@ -260,26 +260,30 @@ class UserController extends BaseController
                 ];
             }
         }
-        // dump($dataRequested);
-        // dump($dataAllowedToUpdate);
-        // dd($request->validated());
+
         DB::beginTransaction();
         try {
             /** @var \App\Models\RequestChangeData $requestChangeData */
             $requestChangeData = $user->requestChangeDatas()->create($request->validated());
 
-            if ($request->hasFile('file')) {
-                $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
-                foreach ($request->file as $file) {
-                    if ($file->isValid()) {
-                        $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
+            if (count($dataRequested) > 0) {
+                if ($request->hasFile('file')) {
+                    $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+                    foreach ($request->file as $file) {
+                        if ($file->isValid()) {
+                            $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
+                        }
                     }
                 }
+
+                $requestChangeData->details()->createMany($dataRequested);
+
+                $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
+                $requestChangeData->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
             }
 
-            if (count($dataRequested) > 0) $requestChangeData->details()->createMany($dataRequested);
-
             if (count($dataAllowedToUpdate) > 0) {
+                // auto update, no need approval
                 foreach ($dataAllowedToUpdate as $data) {
                     RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
                 }

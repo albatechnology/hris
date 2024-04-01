@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Notifications\AdvancedLeave;
+namespace App\Notifications\RequestChangeData;
 
 use App\Enums\NotificationType;
-use App\Models\AdvancedLeaveRequest;
+use App\Models\RequestChangeData as RequestChangeDataModel;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AdvancedLeaveApproved extends Notification
+class RequestChangeData extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private bool $isApproved, private AdvancedLeaveRequest $advancedLeaveRequest)
+    public function __construct(private NotificationType $notificationType, private User $user, private RequestChangeDataModel $requestChangeData)
     {
         //
     }
@@ -52,10 +52,10 @@ class AdvancedLeaveApproved extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->isApproved ? 'approved' : 'rejected'),
+            'message' => sprintf($this->notificationType->getMessage()),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
-            'model_id' => $this->advancedLeaveRequest->id
+            'model_id' => $this->requestChangeData->id
         ];
     }
 }

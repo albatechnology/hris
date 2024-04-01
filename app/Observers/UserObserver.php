@@ -44,6 +44,7 @@ class UserObserver
     public function created(User $user): void
     {
         $user->payrollInfo()->create([]);
+        $user->detail()->create([]);
 
         if ($user->type->is(UserType::USER)) {
             $timeoffRegulation = TimeoffRegulation::firstWhere('company_id', $user->company_id);
