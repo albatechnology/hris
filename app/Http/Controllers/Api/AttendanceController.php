@@ -284,8 +284,6 @@ class AttendanceController extends BaseController
             ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
                 'user' => fn ($q) => $q->select('id', 'name'),
-                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
-                'schedule' => fn ($q) => $q->select('id', 'name')
             ]));
 
         $attendances = QueryBuilder::for($query)
@@ -299,19 +297,19 @@ class AttendanceController extends BaseController
 
     public function showApproval(AttendanceDetail $attendanceDetail)
     {
-        // return new AttendanceDetailResource($attendanceDetail);
-        return new AttendanceDetailResource(
-            $attendanceDetail->load(
-                [
-                    'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
-                        ->with([
-                            'user' => fn ($q) => $q->select('id', 'name'),
-                            'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
-                            'schedule' => fn ($q) => $q->select('id', 'name')
-                        ])
-                ]
-            )
+        $attendanceDetail->load(
+            [
+                'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
+                    ->with([
+                        'user' => fn ($q) => $q->select('id', 'name'),
+                        'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                        'schedule' => fn ($q) => $q->select('id', 'name')
+                    ])
+            ]
         );
+        $attendanceDetail->attendance->user?->append('image');
+
+        return new AttendanceDetailResource($attendanceDetail);
     }
 
     public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
