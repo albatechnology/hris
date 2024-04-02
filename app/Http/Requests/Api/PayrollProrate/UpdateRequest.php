@@ -23,7 +23,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'prorate_setting' => 'required',
-            'is_count_national_holiday_as_working_day' => 'required|boolean',
+            'is_count_national_holiday_as_working_day' => 'nullable|boolean',
         ];
     }
 }

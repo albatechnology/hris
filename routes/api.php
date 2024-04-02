@@ -169,8 +169,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('payroll-schedule', [PayrollScheduleController::class, 'index']);
     Route::put('payroll-schedule', [PayrollScheduleController::class, 'update']);
 
-    Route::get('payroll-prorate/{id}', [PayrollProrateController::class, 'index']);
-    Route::put('payroll-prorate/{id}', [PayrollProrateController::class, 'update']);
+    Route::get('payroll-prorate', [PayrollProrateController::class, 'index']);
+    Route::put('payroll-prorate', [PayrollProrateController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 
