@@ -284,7 +284,7 @@ class AttendanceController extends BaseController
             ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
                 'user' => fn ($q) => $q->select('id', 'name'),
-                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                 'schedule' => fn ($q) => $q->select('id', 'name')
             ]));
 
@@ -312,7 +312,6 @@ class AttendanceController extends BaseController
                     ])
             ]
         );
-        $attendanceDetail->attendance->user?->append('image');
 
         return new AttendanceDetailResource($attendanceDetail);
     }
