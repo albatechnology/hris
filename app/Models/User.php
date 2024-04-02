@@ -74,6 +74,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'gender' => Gender::class,
     ];
 
+    protected $appends = ['image'];
+
     public function scopeTenanted(Builder $query): Builder
     {
         /** @var User $user */

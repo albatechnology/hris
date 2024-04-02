@@ -283,10 +283,15 @@ class AttendanceController extends BaseController
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
             ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
-                'user',
+                'user' => fn ($q) => $q->select('id', 'name'),
+                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                'schedule' => fn ($q) => $q->select('id', 'name')
             ]));
 
         $attendances = QueryBuilder::for($query)
+            ->allowedFilters([
+                'is_approved', 'created_at',
+            ])
             ->allowedSorts([
                 'id', 'is_approved', 'created_at',
             ])
