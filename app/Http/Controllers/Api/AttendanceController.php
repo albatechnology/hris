@@ -299,7 +299,19 @@ class AttendanceController extends BaseController
 
     public function showApproval(AttendanceDetail $attendanceDetail)
     {
-        return new AttendanceDetailResource($attendanceDetail);
+        // return new AttendanceDetailResource($attendanceDetail);
+        return new AttendanceDetailResource(
+            $attendanceDetail->load(
+                [
+                    'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
+                        ->with([
+                            'user' => fn ($q) => $q->select('id', 'name'),
+                            'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                            'schedule' => fn ($q) => $q->select('id', 'name')
+                        ])
+                ]
+            )
+        );
     }
 
     public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)

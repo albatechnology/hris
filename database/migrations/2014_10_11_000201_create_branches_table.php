@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('lat')->nullable();
             $table->string('lng')->nullable();
             $table->text('address')->nullable();
+            $table->integer('umk')->default(0);
             $table->timestamps();
 
             // softDeletes must implement deleted_by

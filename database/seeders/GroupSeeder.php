@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Division;
 use App\Models\Group;
 use Illuminate\Database\Seeder;
 
@@ -88,6 +87,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '11610',
             'lat' => '-6.1979899',
             'lng' => '106.742916',
+            'umk' => 5000000,
         ]);
         $company->branches()->create([
             'name' => 'SUN Alam Sutera',
@@ -98,6 +98,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '15320',
             'lat' => '-6.2348656',
             'lng' => '106.5766001',
+            'umk' => 5000000,
         ]);
 
         $company = $group->companies()->create([
@@ -122,6 +123,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '47500',
             'lat' => '3.0649282',
             'lng' => '101.5256048',
+            'umk' => 5000000,
         ]);
         $company->branches()->create([
             'name' => 'SUN KL',
@@ -132,6 +134,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '47800',
             'lat' => '3.1380439',
             'lng' => '101.5275401',
+            'umk' => 5000000,
         ]);
 
         $group = Group::create([
@@ -160,6 +163,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '15320',
             'lat' => '-6.2348656',
             'lng' => '106.5766001',
+            'umk' => 5000000,
         ]);
         $company->branches()->create([
             'name' => 'Alba Eliafood',
@@ -170,6 +174,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '15320',
             'lat' => '-6.2348656',
             'lng' => '106.5766001',
+            'umk' => 5000000,
         ]);
     }
 }
