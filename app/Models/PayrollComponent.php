@@ -29,6 +29,7 @@ class PayrollComponent extends BaseModel
         'daily_maximum_amount_type',
         'daily_maximum_amount',
         'is_one_time_bonus',
+        'is_include_backpay',
         'is_default',
     ];
 
@@ -44,6 +45,7 @@ class PayrollComponent extends BaseModel
         'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::class,
         'daily_maximum_amount' => 'double',
         'is_one_time_bonus' => 'boolean',
+        'is_include_backpay' => 'boolean',
         'is_default' => 'boolean',
     ];
 
