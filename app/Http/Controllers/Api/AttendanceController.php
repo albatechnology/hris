@@ -307,7 +307,7 @@ class AttendanceController extends BaseController
                 'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
                     ->with([
                         'user' => fn ($q) => $q->select('id', 'name'),
-                        'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                        'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                         'schedule' => fn ($q) => $q->select('id', 'name')
                     ])
             ]
@@ -318,10 +318,8 @@ class AttendanceController extends BaseController
 
     public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
     {
-        if ($attendanceDetail->is_approved == $request->is_approved) {
-            return response()->json([
-                'message' => 'Attendance is already ' . ($attendanceDetail->is_approved ? 'approved' : 'rejected'),
-            ]);
+        if (!is_null($attendanceDetail->is_approved)) {
+            return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $attendanceDetail->update($request->validated());
