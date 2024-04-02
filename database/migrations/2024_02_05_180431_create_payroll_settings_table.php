@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payroll_settings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained();
-            // $table->integer('payroll_schedule')->nullable();
+            $table->integer('payroll_schedule_date')->nullable();
             // $table->boolean('is_default_cutoff')->default(0);
             $table->char('cutoff_attendance_start_date', 2)->nullable();
             $table->char('cutoff_attendance_end_date', 2)->nullable();
@@ -24,6 +24,8 @@ return new class extends Migration
             $table->string('default_employee_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
             $table->string('default_employee_salary_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
             $table->string('default_oas_setting')->nullable(); // DefaultEmployeeTaxSetting::class
+            $table->string('prorate_setting')->nullable();
+            $table->boolean('is_count_national_holiday_as_working_day')->nullable();
             $table->timestamps();
         });
     }
