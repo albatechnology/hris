@@ -24,8 +24,8 @@ class IndexRequest extends FormRequest
         $this->merge([
             'filter' => [
                 ...($this->filter ?? []),
-                'month' => !empty($this->filter['month']) ? date('m', strtotime(sprintf('2024-%s-01', $this->filter['month']))) : date('m'),
-                'year' => !empty($this->filter['year']) ? date('Y', strtotime(sprintf('%s-01-01', $this->filter['year']))) : date('Y'),
+                // 'month' => !empty($this->filter['month']) ? date('m', strtotime(sprintf('2024-%s-01', $this->filter['month']))) : date('m'),
+                // 'year' => !empty($this->filter['year']) ? date('Y', strtotime(sprintf('%s-01-01', $this->filter['year']))) : date('Y'),
             ],
         ]);
     }
@@ -39,6 +39,8 @@ class IndexRequest extends FormRequest
     {
         return [
             'filter' => 'nullable|array',
+            'filter.month' => 'nullable|date_format:m',
+            'filter.year' => 'nullable|date_format:Y',
             'sort' => 'nullable|string',
             'include' => 'nullable|string',
         ];

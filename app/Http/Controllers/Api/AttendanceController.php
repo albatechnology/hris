@@ -48,7 +48,13 @@ class AttendanceController extends BaseController
     {
         $timeoffRegulation = TimeoffRegulation::tenanted()->first(['id', 'cut_off_date']);
 
-        $startDate = date(sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $timeoffRegulation->cut_off_date));
+        if (($month = date('d')) < $timeoffRegulation->cut_off_date) {
+            $month = date('m') - 1;
+        }
+
+        $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
+        $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
+        $startDate = date(sprintf('%s-%s-%s', $year, $month, $timeoffRegulation->cut_off_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
