@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PayrollComponentController;
+use App\Http\Controllers\Api\PayrollProrateController;
+use App\Http\Controllers\Api\PayrollScheduleController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
@@ -163,6 +165,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('payroll-components', PayrollComponentController::class);
     Route::get('payroll-setting', [PayrollSettingController::class, 'index']);
     Route::put('payroll-setting', [PayrollSettingController::class, 'update']);
+
+    Route::get('payroll-schedule', [PayrollScheduleController::class, 'index']);
+    Route::put('payroll-schedule', [PayrollScheduleController::class, 'update']);
+
+    Route::get('payroll-prorate/{id}', [PayrollProrateController::class, 'index']);
+    Route::put('payroll-prorate/{id}', [PayrollProrateController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 
