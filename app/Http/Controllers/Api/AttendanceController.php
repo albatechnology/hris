@@ -283,7 +283,7 @@ class AttendanceController extends BaseController
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
             ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
-                'user' => fn ($q) => $q->select('id', 'name','image'),
+                'user',
             ]));
 
         $attendances = QueryBuilder::for($query)
