@@ -32,8 +32,8 @@ class UpdateRequest extends FormRequest
             'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
             'type' => ['required', Rule::enum(PayrollComponentType::class)],
-            'category' => ['required', Rule::enum(PayrollComponentCategory::class)],
-            'setting' => ['required', Rule::enum(PayrollComponentSetting::class)],
+            'category' => ['nullable', Rule::enum(PayrollComponentCategory::class)],
+            'setting' => ['nullable', Rule::enum(PayrollComponentSetting::class)],
             'amount' => 'required|numeric',
             'is_taxable' => 'required|boolean',
             'period_type' => ['required', Rule::enum(PayrollComponentPeriodType::class)],
@@ -42,6 +42,7 @@ class UpdateRequest extends FormRequest
             'daily_maximum_amount_type' => ['required', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
             'daily_maximum_amount' => 'required|numeric',
             'is_one_time_bonus' => 'required|boolean',
+            'is_include_backpay' => 'nullable|boolean',
 
             'includes' => 'nullable|array',
             'includes.*.payroll_component_id' => 'required_with:includes|string',

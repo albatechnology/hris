@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('name');
             $table->string('type'); // PayrollComponentType::class
-            $table->string('category'); // PayrollComponentCategory::class
-            $table->string('setting'); // PayrollComponentSetting::class
+            $table->string('category')->nullable(); // PayrollComponentCategory::class
+            $table->string('setting')->nullable(); // PayrollComponentSetting::class
             $table->unsignedDouble('amount', 13, 2)->default(0);
             $table->boolean('is_taxable')->default(0);
             $table->string('period_type'); // PayrollComponentPeriodType::class
@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('daily_maximum_amount_type')->comment('Only for the data which had the "daily" value of period_type column and is_daily_default is false (0)'); // PayrollComponentDailyMaximumAmountType::class
             $table->unsignedDouble('daily_maximum_amount', 13, 2)->default(0)->comment('Only for the data which had the "daily" value of period_type column and is_daily_default is false (0) and daily_maximum_amouont_type IN(basic_salary_percentage, custom_amount)');
             $table->boolean('is_one_time_bonus')->default(0)->comment('Only for the data which had the "one_time" value of period_type column');
+            $table->boolean('is_include_backpay')->default(0)->comment('Only for the data which had the "bpjs" value of category column');;
             $table->boolean('is_default')->default(0);
             $table->timestamps();
         });
