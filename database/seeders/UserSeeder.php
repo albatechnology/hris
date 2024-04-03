@@ -127,7 +127,7 @@ class UserSeeder extends Seeder
                 for ($i = 1; $i < 4; $i++) {
                     /** @var User $user */
                     $user = $branch->users()->create([
-                        'manager_id' => $admin->id,
+                        'parent_id' => $admin->id,
                         'name' => sprintf('User %s %s', $i, $branch->name),
                         'email' => sprintf('user%s.%s@gmail.com', $i, $branch->id),
                         'password' => self::PASSWORD,

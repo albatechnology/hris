@@ -1,4 +1,11 @@
 <?php return array (
+  'kalnoy/nestedset' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Kalnoy\\Nestedset\\NestedSetServiceProvider',
+    ),
+  ),
   'laravel/sail' => 
   array (
     'providers' => 

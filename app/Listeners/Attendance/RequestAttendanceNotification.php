@@ -25,7 +25,7 @@ class RequestAttendanceNotification
     {
         $attendanceDetail = $event->attendanceDetail->load([
             'attendance' => fn ($q) => $q->select('id', 'user_id')
-                ->with('user', fn ($q) => $q->select('id', 'manager_id')->with('manager', fn ($q) => $q->select('id'))),
+                ->with('user', fn ($q) => $q->select('id', 'parent_id')->with('manager', fn ($q) => $q->select('id'))),
         ]);
 
         if (!$attendanceDetail->type->is(AttendanceType::MANUAL)) return;

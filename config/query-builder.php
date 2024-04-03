@@ -36,13 +36,13 @@ return [
      * By default the package will throw an `InvalidFilterQuery` exception when a filter in the
      * URL is not allowed in the `allowedFilters()` method.
      */
-    'disable_invalid_filter_query_exception' => false,
+    'disable_invalid_filter_query_exception' => true,
 
     /*
      * By default the package will throw an `InvalidSortQuery` exception when a sort in the
      * URL is not allowed in the `allowedSorts()` method.
      */
-    'disable_invalid_sort_query_exception' => false,
+    'disable_invalid_sort_query_exception' => true,
 
     /*
      * By default the package will throw an `InvalidIncludeQuery` exception when an include in the

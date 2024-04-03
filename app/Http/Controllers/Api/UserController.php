@@ -40,13 +40,13 @@ class UserController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::exact('manager_id'),
+                AllowedFilter::exact('parent_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 'name', 'email', 'type', 'nik', 'phone',
             ])
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->allowedSorts([
-                'id', 'branch_id', 'manager_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
+                'id', 'branch_id', 'parent_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
             ])
             ->paginate($this->per_page);
 

@@ -70,7 +70,7 @@ class RequestChangeDataController extends BaseController
 
     public function approvals()
     {
-        $query = RequestChangeData::tenanted()->whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()));
+        $query = RequestChangeData::tenanted()->whereHas('user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

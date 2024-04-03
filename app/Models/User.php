@@ -9,7 +9,6 @@ use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
@@ -24,7 +24,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, InteractsWithMedia;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, NodeTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -37,7 +37,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'branch_id',
         'live_attendance_id',
         'overtime_id',
-        'manager_id',
+        'parent_id',
         'name',
         'email',
         'password',
@@ -109,6 +109,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         $query->whereHas('schedules', fn ($q) => $q->where('user_schedules.schedule_id', $scheduleId));
     }
 
+    // public function getParentIdName()
+    // {
+    //     return 'parent';
+    // }
+
     protected function serializeDate(\DateTimeInterface $date): string
     {
         return $date->format('Y-m-d H:i');
@@ -133,7 +138,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
 
     public function manager(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'manager_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function branch(): BelongsTo
@@ -149,6 +154,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
     public function payrollInfo(): HasOne
     {
         return $this->hasOne(UserPayrollInfo::class);
+    }
+
+    public function attendance(): HasOne
+    {
+        return $this->hasOne(Attendance::class);
     }
 
     public function attendances(): HasMany

@@ -98,7 +98,7 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function approvals()
     {
-        $query = AdvancedLeaveRequest::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()));
+        $query = AdvancedLeaveRequest::whereHas('user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

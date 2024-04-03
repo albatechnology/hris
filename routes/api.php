@@ -106,6 +106,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('schedules', ScheduleController::class);
 
+    Route::get('attendances/children', [AttendanceController::class, 'children']);
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);

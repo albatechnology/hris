@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
+use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
+use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
@@ -18,6 +20,7 @@ use App\Models\AttendanceDetail;
 use App\Models\Event;
 use App\Models\NationalHoliday;
 use App\Models\TimeoffRegulation;
+use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
@@ -143,6 +146,112 @@ class AttendanceController extends BaseController
         return response()->json([
             'data' => $data
         ]);
+    }
+
+    public function children(ChildrenRequest $request)
+    {
+        $user = auth('sanctum')->user();
+
+        if (!$user->is_super_admin) {
+            $query = User::select('id', 'name', 'nik')
+                ->where('type', '!=', UserType::SUPER_ADMIN);
+        } else {
+            $query = $user->descendants()->select('id', 'name', 'nik');
+        }
+
+        $users = QueryBuilder::for($query)
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+                'nik',
+                'name',
+            ])
+            ->allowedSorts([
+                'nik',
+                'name',
+            ])
+            ->paginate($this->per_page);
+
+        $date = $request->filter['date'];
+
+        $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        $nationalHolidays = NationalHoliday::orderBy('date')->get();
+        $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date);
+
+            $attendance = $user->attendances()
+                ->where('date', $date)
+                ->with([
+                    'shift',
+                    'timeoff.timeoffPolicy',
+                    'clockIn',
+                    'clockOut',
+                    // 'details' => fn ($q) => $q->orderBy('created_at')
+                ])->first();
+
+            if ($attendance) {
+                $shift = $attendance->shift;
+
+                // load overtime
+                $totalOvertime = AttendanceService::getSumOvertimeDuration($user->id, $date);
+                $attendance->total_overtime = $totalOvertime;
+            } else {
+                $shift = $schedule->shift ?? null;
+            }
+            $shiftType = 'shift';
+
+            $companyHolidayData = null;
+            if ($schedule?->is_overide_company_holiday == false) {
+                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                });
+
+                if ($companyHolidayData) {
+                    $shift = $companyHolidayData;
+                    $shiftType = 'company_holiday';
+                }
+            }
+
+            if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                if ($nationalHoliday) {
+                    $shift = $nationalHoliday;
+                    $shiftType = 'national_holiday';
+                }
+            }
+
+            unset($shift->pivot);
+
+            $user->date = $date;
+            $user->shift_type = $shiftType;
+            $user->shift = $shift;
+            $user->attendance = $attendance;
+        });
+
+        if ($request->sort) {
+            if (str_contains($request->sort, 'shift')) {
+                if ($request->sort[0] === '-') {
+                    $users = $users->sortByDesc('shift.name');
+                }
+                $users = $users->sortBy('shift.name');
+            }
+            // if (str_contains($request->sort, 'schedule_in') || str_contains($request->sort, 'schedule_out')) {
+            //     $key = str_contains($request->sort, 'schedule_in') ? 'clock_in' : 'clock_out';
+            //     // die('shift.' . $key);
+            //     if ($request->sort[0] === '-') {
+            //         $users = $users->sortByDesc('shift.' . $key);
+            //     }
+            //     $users = $users->sortBy('shift.' . $key);
+            // }
+            // if (str_contains($request->sort, 'clock_in') || str_contains($request->sort, 'clock_out')) {
+            //     $key = str_contains($request->sort, 'schedule_in') ? 'clock_in' : 'clock_out';
+            //     if ($request->sort[0] === '-') {
+            //         $users = $users->sortByDesc("attendance.$key.time");
+            //     }
+            //     $users = $users->sortBy("attendance.$key.time");
+            // }
+        }
+
+        return DefaultResource::collection($users);
     }
 
     public function logs()
@@ -287,7 +396,7 @@ class AttendanceController extends BaseController
     public function approvals()
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
-            ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()))
+            ->whereHas('attendance.user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
                 'user' => fn ($q) => $q->select('id', 'name'),
                 'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
