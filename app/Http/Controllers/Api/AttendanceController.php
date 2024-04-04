@@ -49,7 +49,13 @@ class AttendanceController extends BaseController
 
     public function index(IndexRequest $request)
     {
-        $timeoffRegulation = TimeoffRegulation::tenanted()->first(['id', 'cut_off_date']);
+        if (isset($request->filter['user_id'])) {
+            $user = User::where('id', $request->filter['user_id'])->firstOrFail(['id', 'company_id']);
+        } else {
+            $user = auth('sanctum')->user();
+        }
+
+        $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
         if (($month = date('d')) < $timeoffRegulation->cut_off_date) {
             $month = date('m') - 1;
@@ -64,15 +70,14 @@ class AttendanceController extends BaseController
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
-        $schedule = ScheduleService::getTodaySchedule(date: $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
         if ($schedule) {
-            $userId = auth('sanctum')->id();
             $order = $schedule->shifts->where('id', $schedule->shift->id);
             $orderKey = array_keys($order->toArray())[0];
             $totalShifts = $schedule->shifts->count();
 
             $attendances = Attendance::tenanted()
-                ->where('user_id', $userId)
+                ->where('user_id', $user->id)
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
@@ -99,7 +104,7 @@ class AttendanceController extends BaseController
                     $shift = $attendance->shift;
 
                     // load overtime
-                    $totalOvertime = AttendanceService::getSumOvertimeDuration($userId, $date);
+                    $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                     $attendance->total_overtime = $totalOvertime;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
@@ -227,31 +232,7 @@ class AttendanceController extends BaseController
             $user->attendance = $attendance;
         });
 
-        if ($request->sort) {
-            if (str_contains($request->sort, 'shift')) {
-                if ($request->sort[0] === '-') {
-                    $users = $users->sortByDesc('shift.name');
-                }
-                $users = $users->sortBy('shift.name');
-            }
-            // if (str_contains($request->sort, 'schedule_in') || str_contains($request->sort, 'schedule_out')) {
-            //     $key = str_contains($request->sort, 'schedule_in') ? 'clock_in' : 'clock_out';
-            //     // die('shift.' . $key);
-            //     if ($request->sort[0] === '-') {
-            //         $users = $users->sortByDesc('shift.' . $key);
-            //     }
-            //     $users = $users->sortBy('shift.' . $key);
-            // }
-            // if (str_contains($request->sort, 'clock_in') || str_contains($request->sort, 'clock_out')) {
-            //     $key = str_contains($request->sort, 'schedule_in') ? 'clock_in' : 'clock_out';
-            //     if ($request->sort[0] === '-') {
-            //         $users = $users->sortByDesc("attendance.$key.time");
-            //     }
-            //     $users = $users->sortBy("attendance.$key.time");
-            // }
-        }
-
-        return DefaultResource::collection($users);
+        return DefaultResource::collection($users->values());
     }
 
     public function logs()

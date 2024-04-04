@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IndexRequest extends FormRequest
@@ -39,6 +40,21 @@ class IndexRequest extends FormRequest
     {
         return [
             'filter' => 'nullable|array',
+            'filter.user_id' => ['nullable', function ($attribute, $value, \Closure $fail) {
+                if ($value) {
+                    $userLogin = auth('sanctum')->user();
+
+                    if (!$userLogin->is_super_admin) {
+                        $user = User::where('id', $value)->firstOrFail(['id', 'parent_id', '_lft', '_rgt']);
+
+                        if ($user->id === $userLogin->id) return;
+
+                        if (!$user->isDescendantOf($userLogin)) {
+                            $fail("User is not your descendant.");
+                        }
+                    }
+                }
+            }],
             'filter.month' => 'nullable|date_format:m',
             'filter.year' => 'nullable|date_format:Y',
             'sort' => 'nullable|string',
