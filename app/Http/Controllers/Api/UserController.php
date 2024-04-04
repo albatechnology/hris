@@ -6,6 +6,7 @@ use App\Enums\MediaCollection;
 use App\Enums\RequestChangeDataType;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
+use App\Http\Requests\Api\User\RegisterRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
@@ -69,6 +70,45 @@ class UserController extends BaseController
         $user = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->firstOrFail();
+
+        return new UserResource($user);
+    }
+
+    public function register(RegisterRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            $user = User::create($request->validated());
+            $user->detail()->create($request->validated());
+            $user->payrollInfo()->create($request->validated());
+            $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id]);
+
+            $companyIds = collect($request->company_ids ?? []);
+            if ($user->company_id) {
+                $companyIds->push($user->company_id);
+            }
+            $companyIds = $companyIds->unique()->values()
+                ->map(function ($companyId) {
+                    return ['company_id' => $companyId];
+                })->all();
+            $user->companies()->createMany($companyIds);
+
+            $branchIds = collect($request->branch_ids ?? []);
+            if ($user->branch_id) {
+                $branchIds->push($user->branch_id);
+            }
+            $branchIds = $branchIds->unique()->values()
+                ->map(function ($branchId) {
+                    return ['branch_id' => $branchId];
+                })->all();
+            $user->branches()->createMany($branchIds);
+
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+
+            return $this->errorResponse($th->getMessage());
+        }
 
         return new UserResource($user);
     }

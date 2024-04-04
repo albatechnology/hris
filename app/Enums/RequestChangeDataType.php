@@ -10,6 +10,8 @@ enum RequestChangeDataType: string
     case EMAIL = 'email';
     case NIK = 'nik';
     case PHONE = 'phone';
+    case NO_KTP = 'no_ktp';
+    case KK_NO = 'kk_no';
     case ADDRESS = 'address';
     case ADDRESS_KTP = 'address_ktp';
     case BIRTH_PLACE = 'birth_place';
@@ -52,6 +54,7 @@ enum RequestChangeDataType: string
             self::PHONE,
             self::GENDER => \App\Models\User::where('id', $userId)->update([$self->value => $value]),
 
+            self::NO_KTP,
             self::ADDRESS,
             self::ADDRESS_KTP,
             self::BIRTH_PLACE,

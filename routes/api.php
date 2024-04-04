@@ -50,6 +50,7 @@ Route::group(['prefix' => 'auth', 'controller' => AuthController::class], functi
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('users/me', [UserController::class, 'me']);
+    Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::get('companies', [UserController::class, 'companies']);

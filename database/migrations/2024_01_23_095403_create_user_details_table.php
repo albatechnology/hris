@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained();
             $table->string('no_ktp', 20)->nullable();
             $table->string('kk_no')->nullable();
+            $table->text('postal_code', 20)->nullable();
             $table->text('address', 20)->nullable();
             $table->text('address_ktp', 20)->nullable();
             $table->string('job_position')->nullable();
