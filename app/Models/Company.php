@@ -126,11 +126,13 @@ class Company extends BaseModel implements TenantedInterface
     {
         $this->payrollSetting()->create([
             'company_id' => $this->id,
+            'payroll_schedule_date' => '20',
             'cutoff_attendance_start_date' => '02',
             'cutoff_attendance_end_date' => '05',
             'default_employee_tax_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
             'default_employee_salary_tax_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
             'default_oas_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
+            'prorate_setting' => \App\Enums\ProrateSetting::BASE_ON_CALENDAR_DAY,
         ]);
     }
 }
