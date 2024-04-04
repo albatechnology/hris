@@ -42,12 +42,13 @@ class UserController extends BaseController
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('parent_id'),
+                AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 'name', 'email', 'type', 'nik', 'phone',
             ])
             ->allowedIncludes(self::ALLOWED_INCLUDES)
             ->allowedSorts([
-                'id', 'branch_id', 'parent_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
+                'id', 'branch_id', 'parent_id', 'approval_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -319,7 +320,7 @@ class UserController extends BaseController
                 $requestChangeData->details()->createMany($dataRequested);
 
                 $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
-                $requestChangeData->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
+                $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
             }
 
             if (count($dataAllowedToUpdate) > 0) {

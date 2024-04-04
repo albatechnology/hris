@@ -75,7 +75,7 @@ class TimeoffController extends BaseController
             $timeoff = Timeoff::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_TIMEOFF;
-            $timeoff->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
+            $timeoff->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -194,7 +194,7 @@ class TimeoffController extends BaseController
 
             if (!is_null($timeoff->is_approved)) {
                 $notificationType = NotificationType::TIMEOFF_APPROVED;
-                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->manager, $timeoff->is_approved, $timeoff));
+                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->approval, $timeoff->is_approved, $timeoff));
             }
             DB::commit();
         } catch (\Exception $th) {
@@ -208,7 +208,7 @@ class TimeoffController extends BaseController
 
     public function approvals()
     {
-        $query = Timeoff::whereHas('user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()));
+        $query = Timeoff::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

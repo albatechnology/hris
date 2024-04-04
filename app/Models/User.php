@@ -37,6 +37,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'branch_id',
         'live_attendance_id',
         'overtime_id',
+        'approval_id',
         'parent_id',
         'name',
         'email',
@@ -124,6 +125,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return Attribute::make(
             set: fn (?string $value) => empty($value) ? null : bcrypt($value),
         );
+    }
+
+    public function approval(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approval_id');
     }
 
     public function group(): BelongsTo

@@ -66,7 +66,7 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest = OvertimeRequest::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_OVERTIME;
-            $overtimeRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
+            $overtimeRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -90,7 +90,7 @@ class OvertimeRequestController extends BaseController
 
     public function approvals()
     {
-        $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()));
+        $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

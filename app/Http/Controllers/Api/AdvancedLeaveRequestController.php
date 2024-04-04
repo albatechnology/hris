@@ -30,7 +30,7 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(AdvancedLeaveRequest::query())
+        $data = QueryBuilder::for(AdvancedLeaveRequest::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
             ])
@@ -59,7 +59,7 @@ class AdvancedLeaveRequestController extends BaseController
             $advancedLeaveRequest = AdvancedLeaveRequest::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_ADVANCED_LEAVE;
-            $advancedLeaveRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->user, $advancedLeaveRequest));
+            $advancedLeaveRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->user, $advancedLeaveRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -98,7 +98,7 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function approvals()
     {
-        $query = AdvancedLeaveRequest::whereHas('user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()));
+        $query = AdvancedLeaveRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

@@ -48,6 +48,7 @@ class RegisterRequest extends FormRequest
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'overtime_id' => ['nullable', new CompanyTenantedRule(Overtime::class, 'Overtime data not found')],
+            'approval_id' => 'nullable|exists:users,id',
             'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',

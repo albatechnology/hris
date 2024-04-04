@@ -377,7 +377,7 @@ class AttendanceController extends BaseController
     public function approvals()
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
-            ->whereHas('attendance.user', fn ($q) => $q->where('parent_id', auth('sanctum')->id()))
+            ->whereHas('attendance.user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
                 'user' => fn ($q) => $q->select('id', 'name'),
                 'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
