@@ -45,12 +45,15 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
+        $administrator->payrollInfo()->create([]);
+        $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
             'model_type' => get_class($administrator),
             'model_id' => $administrator->id,
             'group_id' => $group->id,
         ]);
+
         $administrator = User::create([
             'group_id' => $group->id,
             'company_id' => null,
@@ -60,6 +63,8 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
+        $administrator->payrollInfo()->create([]);
+        $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
             'model_type' => get_class($administrator),
@@ -77,6 +82,8 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
+        $administrator->payrollInfo()->create([]);
+        $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
             'model_type' => get_class($administrator),
@@ -105,6 +112,8 @@ class UserSeeder extends Seeder
                 'sign_date' => date('Y') . '-01-01',
                 'join_date' => date('Y') . '-01-01',
             ]);
+            $admin->payrollInfo()->create([]);
+            $admin->detail()->create([]);
             DB::table('model_has_roles')->insert([
                 'role_id' => $adminRole->id,
                 'model_type' => get_class($admin),
@@ -137,6 +146,8 @@ class UserSeeder extends Seeder
                         'sign_date' => date('Y') . '-01-01',
                         'join_date' => date('Y') . '-01-01',
                     ]);
+                    $user->payrollInfo()->create([]);
+                    $user->detail()->create([]);
                     DB::table('model_has_roles')->insert([
                         'role_id' => $userRole->id,
                         'model_type' => get_class($user),
