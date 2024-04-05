@@ -39,10 +39,16 @@ class UserController extends BaseController
             AllowedInclude::callback('branches', function ($query) {
                 $query->select('user_id', 'branch_id')->with('branch', fn ($q) => $q->select('id', 'name'));
             }),
+            AllowedInclude::callback('positions', function ($query) {
+                $query->select('user_id', 'department_id', 'position_id')->with([
+                    'position' => fn ($q) => $q->select('id', 'name'),
+                    'department' => fn ($q) => $q->select('id', 'name'),
+                ]);
+            }),
             AllowedInclude::callback('roles', function ($query) {
                 $query->select('id', 'name');
             }),
-            'detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'schedules'
+            'detail', 'payrollInfo', 'schedules'
         ];
     }
 
@@ -103,7 +109,7 @@ class UserController extends BaseController
             $user = User::create($request->validated());
             $user->detail()->create($request->validated());
             $user->payrollInfo()->create($request->validated());
-            $user->departmentPositions()->createMany($request->positions ?? []);
+            $user->positions()->createMany($request->positions ?? []);
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id]);
 
             $companyIds = collect($request->company_ids ?? []);
@@ -179,8 +185,8 @@ class UserController extends BaseController
         try {
             $user->update($request->validated());
             // if ($request->positions) {
-            //     $user->departmentPositions()->delete();
-            //     $user->departmentPositions()->createMany($request->positions ?? []);
+            //     $user->positions()->delete();
+            //     $user->positions()->createMany($request->positions ?? []);
             // }
             $user->deleteRoles();
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
