@@ -19,11 +19,32 @@ use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
-    const ALLOWED_INCLUDES = ['company', 'branch', 'roles', 'detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'companies', 'branches', 'schedules'];
+    private function getAllowedIncludes()
+    {
+        return [
+            AllowedInclude::callback('company', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('branch', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('companies', function ($query) {
+                $query->select('user_id', 'company_id')->with('company', fn ($q) => $q->select('id', 'name'));
+            }),
+            AllowedInclude::callback('branches', function ($query) {
+                $query->select('user_id', 'branch_id')->with('branch', fn ($q) => $q->select('id', 'name'));
+            }),
+            AllowedInclude::callback('roles', function ($query) {
+                $query->select('id', 'name');
+            }),
+            'detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'schedules'
+        ];
+    }
 
     public function __construct()
     {
@@ -46,7 +67,7 @@ class UserController extends BaseController
                 AllowedFilter::scope('has_schedule_id'),
                 'name', 'email', 'type', 'nik', 'phone',
             ])
-            ->allowedIncludes(self::ALLOWED_INCLUDES)
+            ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id', 'branch_id', 'parent_id', 'approval_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
             ])
@@ -60,7 +81,7 @@ class UserController extends BaseController
         /** @var User $user */
         $user = auth('sanctum')->user();
         $user = QueryBuilder::for(User::where('id', $user->id))
-            ->allowedIncludes(self::ALLOWED_INCLUDES)
+            ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 
         return new UserResource($user);
@@ -69,7 +90,7 @@ class UserController extends BaseController
     public function show(User $user)
     {
         $user = QueryBuilder::for(User::where('id', $user->id))
-            ->allowedIncludes(self::ALLOWED_INCLUDES)
+            ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 
         return new UserResource($user);
@@ -82,6 +103,7 @@ class UserController extends BaseController
             $user = User::create($request->validated());
             $user->detail()->create($request->validated());
             $user->payrollInfo()->create($request->validated());
+            $user->departmentPositions()->createMany($request->positions ?? []);
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id]);
 
             $companyIds = collect($request->company_ids ?? []);
@@ -156,6 +178,10 @@ class UserController extends BaseController
         DB::beginTransaction();
         try {
             $user->update($request->validated());
+            // if ($request->positions) {
+            //     $user->departmentPositions()->delete();
+            //     $user->departmentPositions()->createMany($request->positions ?? []);
+            // }
             $user->deleteRoles();
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id ?? 1]);
 

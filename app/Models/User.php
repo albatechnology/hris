@@ -202,6 +202,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->hasMany(RequestChangeData::class);
     }
 
+    public function departmentPositions(): HasMany
+    {
+        return $this->hasMany(UserDepartmentPosition::class);
+    }
+
     public function timeoffPolicies(): BelongsToMany
     {
         return $this->belongsToMany(TimeoffPolicy::class, 'user_timeoff_policies');
