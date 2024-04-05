@@ -23,7 +23,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
-    const ALLOWED_INCLUDES = ['roles', 'detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'companies', 'branches', 'schedules'];
+    const ALLOWED_INCLUDES = ['company', 'branch', 'roles', 'detail', 'payrollInfo', 'experiences', 'educations', 'contacts', 'companies', 'branches', 'schedules'];
 
     public function __construct()
     {
