@@ -239,7 +239,7 @@ class AttendanceController extends BaseController
     {
         $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn ($q) => $q->tenanted()))
             ->allowedFilters([
-                'is_clock_in', 'is_approved', 'approved_by',
+                'is_clock_in', 'is_approved', 'approved_by', 'type',
                 AllowedFilter::callback('user_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('user_id', $value))),
                 AllowedFilter::callback('shift_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('shift_id', $value))),
             ])
@@ -252,7 +252,7 @@ class AttendanceController extends BaseController
             ->allowedSorts(['is_clock_in', 'is_approved', 'approved_by', 'created_at'])
             ->paginate($this->per_page);
 
-        return new DefaultResource($attendance);
+        return DefaultResource::collection($attendance);
     }
 
     public function show(Attendance $attendance)
