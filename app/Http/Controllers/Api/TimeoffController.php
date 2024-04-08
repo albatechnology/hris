@@ -12,7 +12,6 @@ use App\Models\Attendance;
 use App\Models\Timeoff;
 use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
-use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -79,7 +78,7 @@ class TimeoffController extends BaseController
             $notificationType = NotificationType::REQUEST_TIMEOFF;
             $timeoff->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return $this->errorResponse(message: $e->getMessage());
         }
@@ -126,6 +125,7 @@ class TimeoffController extends BaseController
         // dump($request->validated());
         // dump($timeoff);
         $timeoff->approval_status = $request->approval_status;
+        // dd($timeoff);
         if (!$timeoff->isDirty('approval_status')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
@@ -159,8 +159,7 @@ class TimeoffController extends BaseController
             // 1. kalo pending, approval_status=null dan delete attendance
             // 2. kalo approve, approval_status=1 dan create attendance
             // 3. kalo reject, approval_status=0 dan delete attendance
-
-            if ($timeoff->approval_status->in(ApprovalStatus::PENDING, ApprovalStatus::REJECTED)) {
+            if ($timeoff->approval_status->in([ApprovalStatus::PENDING, ApprovalStatus::REJECTED])) {
                 Attendance::where('timeoff_id', $timeoff->id)->delete();
 
                 UserTimeoffHistory::create([
@@ -171,6 +170,10 @@ class TimeoffController extends BaseController
                     'description' => sprintf(UserTimeoffHistory::DESCRIPTION['TIMEOFF'], $timeoff->timeoffPolicy->name),
                 ]);
             } else {
+                if ($value > $timeoff->user->total_timeoff) {
+                    return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
                 foreach ($dateRange as $date) {
                     $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
                     Attendance::create([
