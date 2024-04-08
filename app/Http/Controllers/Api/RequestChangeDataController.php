@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Enums\RequestChangeDataType;
 use App\Http\Requests\Api\RequestChangeData\ApproveRequest;
@@ -45,20 +46,20 @@ class RequestChangeDataController extends BaseController
 
     public function approve(ApproveRequest $request, RequestChangeData $requestChangeData): DefaultResource|JsonResponse
     {
-        if (!is_null($requestChangeData->is_approved)) {
+        if (!$requestChangeData->approval_status->is(ApprovalStatus::PENDING)) {
             return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         DB::beginTransaction();
         try {
             $requestChangeData->update($request->validated());
-            if ($requestChangeData->is_approved === true) {
+            if ($requestChangeData->approval_status->is(ApprovalStatus::APPROVED)) {
                 $userId = $requestChangeData->user_id;
                 $requestChangeData->details->each(fn ($detail) => RequestChangeDataType::updateData($detail->type, $userId, $detail->value));
             }
 
             $notificationType = NotificationType::REQUEST_CHANGE_DATA_APPROVED;
-            $requestChangeData->user->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->approvedBy, $requestChangeData->is_approved, $requestChangeData));
+            $requestChangeData->user->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->approvedBy, $requestChangeData->approval_status, $requestChangeData));
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();

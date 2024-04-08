@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class AdvancedLeaveRequest extends BaseModel
         'user_id',
         'data',
         'amount',
-        'is_approved',
+        'approval_status',
         'approved_by',
         'approved_at',
     ];
@@ -22,6 +23,7 @@ class AdvancedLeaveRequest extends BaseModel
     protected $casts = [
         'data' => 'array',
         'amount' => 'float',
+        'approval_status' => ApprovalStatus::class,
     ];
 
     public function scopeTenanted(Builder $query): Builder

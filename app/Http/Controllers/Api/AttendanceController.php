@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
@@ -239,7 +240,7 @@ class AttendanceController extends BaseController
     {
         $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn ($q) => $q->tenanted()))
             ->allowedFilters([
-                'is_clock_in', 'is_approved', 'approved_by', 'type',
+                'is_clock_in', 'approval_status', 'approved_by', 'type',
                 AllowedFilter::callback('user_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('user_id', $value))),
                 AllowedFilter::callback('shift_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('shift_id', $value))),
             ])
@@ -249,7 +250,7 @@ class AttendanceController extends BaseController
                         ->with('shift', fn ($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
                 }),
             ])
-            ->allowedSorts(['is_clock_in', 'is_approved', 'approved_by', 'created_at'])
+            ->allowedSorts(['is_clock_in', 'approval_status', 'approved_by', 'created_at'])
             ->paginate($this->per_page);
 
         return DefaultResource::collection($attendance);
@@ -386,10 +387,10 @@ class AttendanceController extends BaseController
 
         $attendances = QueryBuilder::for($query)
             ->allowedFilters([
-                'is_approved', 'created_at',
+                'approval_status', 'created_at',
             ])
             ->allowedSorts([
-                'id', 'is_approved', 'created_at',
+                'id', 'approval_status', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -414,14 +415,14 @@ class AttendanceController extends BaseController
 
     public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
     {
-        if (!is_null($attendanceDetail->is_approved)) {
+        if (!$attendanceDetail->approval_status->is(ApprovalStatus::PENDING)) {
             return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $attendanceDetail->update($request->validated());
 
         $notificationType = NotificationType::ATTENDANCE_APPROVED;
-        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->is_approved, $attendanceDetail));
+        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->approval_status, $attendanceDetail));
 
         return new AttendanceDetailResource($attendanceDetail);
     }

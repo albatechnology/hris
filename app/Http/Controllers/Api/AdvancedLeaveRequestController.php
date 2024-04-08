@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\AdvancedLeaveRequest\StoreRequest;
 use App\Http\Requests\Api\AdvancedLeaveRequest\ApproveRequest;
@@ -69,13 +70,13 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function approve(ApproveRequest $request, AdvancedLeaveRequest $advancedLeaveRequest): AdvancedLeaveRequestResource|JsonResponse
     {
-        if (!is_null($advancedLeaveRequest->is_approved)) {
+        if (!$advancedLeaveRequest->approval_status->is(ApprovalStatus::PENDING)) {
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         try {
             $advancedLeaveRequest->update($request->validated());
-            if ($advancedLeaveRequest->is_approved == 1) {
+            if ($advancedLeaveRequest->approval_status->is(ApprovalStatus::APPROVED)) {
                 AdvancedLeaveRequestService::updateMonths($advancedLeaveRequest);
                 UserTimeoffHistory::create([
                     'is_for_total_timeoff' => true,
@@ -88,7 +89,7 @@ class AdvancedLeaveRequestController extends BaseController
             }
 
             $notificationType = NotificationType::ADVANCED_LEAVE_APPROVED;
-            $advancedLeaveRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->approvedBy, $advancedLeaveRequest->is_approved, $advancedLeaveRequest));
+            $advancedLeaveRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->approvedBy, $advancedLeaveRequest->approval_status, $advancedLeaveRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }

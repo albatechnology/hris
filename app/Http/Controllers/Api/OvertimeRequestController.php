@@ -80,7 +80,7 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest->update($request->validated());
 
             $notificationType = NotificationType::OVERTIME_APPROVED;
-            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->is_approved, $overtimeRequest));
+            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->approval_status, $overtimeRequest));
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }

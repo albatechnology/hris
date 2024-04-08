@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
@@ -123,8 +124,8 @@ class TimeoffController extends BaseController
     {
         // dump($request->validated());
         // dump($timeoff);
-        $timeoff->is_approved = $request->is_approved;
-        if (!$timeoff->isDirty('is_approved')) {
+        $timeoff->approval_status = $request->approval_status;
+        if (!$timeoff->isDirty('approval_status')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
 
@@ -154,11 +155,11 @@ class TimeoffController extends BaseController
             $timeoff->approved_by = auth('sanctum')->id();
             $timeoff->approved_at = now();
 
-            // 1. kalo pending, is_approved=null dan delete attendance
-            // 2. kalo approve, is_approved=1 dan create attendance
-            // 3. kalo reject, is_approved=0 dan delete attendance
+            // 1. kalo pending, approval_status=null dan delete attendance
+            // 2. kalo approve, approval_status=1 dan create attendance
+            // 3. kalo reject, approval_status=0 dan delete attendance
 
-            if (is_null($timeoff->is_approved) || $timeoff->is_approved === false) {
+            if ($timeoff->approval_status->in(ApprovalStatus::PENDING, ApprovalStatus::REJECTED)) {
                 Attendance::where('timeoff_id', $timeoff->id)->delete();
 
                 UserTimeoffHistory::create([
@@ -192,9 +193,9 @@ class TimeoffController extends BaseController
 
             $timeoff->save();
 
-            if (!is_null($timeoff->is_approved)) {
+            if (!$timeoff->approval_status->is(ApprovalStatus::PENDING)) {
                 $notificationType = NotificationType::TIMEOFF_APPROVED;
-                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->approval, $timeoff->is_approved, $timeoff));
+                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->approval, $timeoff->approval_status, $timeoff));
             }
             DB::commit();
         } catch (\Exception $th) {

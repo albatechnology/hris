@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApprovalStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +19,7 @@ return new class extends Migration
             $table->unsignedFloat('total_amount')->default(0);
             $table->date('expired_at');
             $table->unsignedFloat('used_amount')->default(0);
-            $table->boolean('is_approved')->nullable();
+            $table->string('approval_status')->default(ApprovalStatus::PENDING);
             $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->dateTime('approved_at');
             $table->text('note')->nullable();

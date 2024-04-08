@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
@@ -16,7 +17,7 @@ class AttendanceDetail extends BaseModel implements HasMedia
         'is_clock_in',
         'time',
         'type',
-        'is_approved',
+        'approval_status',
         'approved_by',
         'approved_at',
         'lat',
@@ -27,6 +28,7 @@ class AttendanceDetail extends BaseModel implements HasMedia
     protected $casts = [
         'is_clock_in' => 'boolean',
         'type' => AttendanceType::class,
+        'approval_status' => ApprovalStatus::class,
     ];
 
     protected $appends = ['image'];

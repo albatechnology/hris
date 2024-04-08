@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApprovalStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,7 +22,7 @@ return new class extends Migration
             $table->boolean('is_after_shift')->default(true);
             $table->time('duration');
             $table->text('note')->nullable();
-            $table->boolean('is_approved')->nullable();
+            $table->string('approval_status')->default(ApprovalStatus::PENDING);
             $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->datetime('approved_at')->nullable();
             $table->timestamps();
