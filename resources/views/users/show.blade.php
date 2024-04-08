@@ -88,11 +88,15 @@
                                             </tr>
                                             <tr>
                                                 <td width="300">Join date</td>
-                                                <td>: {{ $model->detail?->join_date }}</td>
+                                                <td>: {{ $model->join_date }}</td>
                                             </tr>
                                             <tr>
                                                 <td width="300">Sign date</td>
-                                                <td>: {{ $model->detail?->sign_date }}</td>
+                                                <td>: {{ $model->sign_date }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td width="300">End contract date</td>
+                                                <td>: {{ $model->end_contract_date }}</td>
                                             </tr>
                                             <tr>
                                                 <td width="300">Birth place</td>
