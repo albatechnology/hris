@@ -59,6 +59,7 @@ class RegisterRequest extends FormRequest
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',
             'sign_date' => 'nullable|date',
+            'end_contract_date' => 'nullable|date',
 
             'no_ktp' => 'required|string',
             'kk_no' => 'nullable|string',

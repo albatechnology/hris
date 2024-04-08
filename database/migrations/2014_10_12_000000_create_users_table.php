@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('gender', 6)->default(Gender::MALE->value);
             $table->date('join_date')->nullable();
             $table->date('sign_date')->nullable();
+            $table->date('end_contract_date')->nullable();
             $table->unsignedSmallInteger('total_timeoff')->default(0);
             $table->unsignedSmallInteger('remaining_timeoff')->default(0);
             $table->timestamps();

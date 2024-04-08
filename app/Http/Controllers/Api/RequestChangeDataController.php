@@ -28,6 +28,9 @@ class RequestChangeDataController extends BaseController
     public function index(): ResourceCollection
     {
         $data = QueryBuilder::for(RequestChangeData::tenanted()->where('user_id', auth('sanctum')->id()))
+            ->allowedFilters([
+                'approval_status'
+            ])
             ->allowedIncludes('details')
             ->allowedSorts('id')
             ->paginate($this->per_page);
@@ -77,6 +80,7 @@ class RequestChangeDataController extends BaseController
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
+                'approval_status'
             ])
             ->allowedIncludes('details')
             ->allowedSorts([

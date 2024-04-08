@@ -32,9 +32,12 @@ class UserObserver
             $user->type = UserType::USER;
         }
 
+        if (empty($user->join_date)) {
+            $user->join_date = '2024-01-01';
+        }
+
         if (empty($user->sign_date)) {
-            $user->sign_date = '2024-01-26';
-            $user->join_date = '2024-01-26';
+            $user->sign_date = $user->join_date;
         }
     }
 

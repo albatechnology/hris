@@ -41,6 +41,7 @@ class TimeoffController extends BaseController
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
                 'request_type',
+                'approval_status',
             ])
             ->allowedIncludes(['user', 'timeoffPolicy', 'delegateTo'])
             ->allowedSorts([
@@ -221,6 +222,7 @@ class TimeoffController extends BaseController
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
                 'request_type',
+                'approval_status',
             ])
             ->allowedIncludes(['user', 'timeoffPolicy', 'approvedBy', 'delegateTo'])
             ->allowedSorts([

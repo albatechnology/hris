@@ -49,6 +49,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'gender',
         'join_date',
         'sign_date',
+        'end_contract_date',
         'total_timeoff',
         'remaining_timeoff',
     ];
