@@ -209,9 +209,7 @@ class TimeoffController extends BaseController
     public function approvals()
     {
         $query = Timeoff::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with([
-                'user' => fn ($q) => $q->select('id', 'name')
-            ]);
+            ->with('user', fn ($q) => $q->select('id', 'name'));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

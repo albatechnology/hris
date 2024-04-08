@@ -213,6 +213,7 @@ class UserSeeder extends Seeder
                             'sign_date' => date('Y') . '-01-01',
                             'join_date' => date('Y') . '-01-01',
                         ]);
+                        $user->addMedia(public_path('img/difa.jpg'))->preservingOriginal()->toMediaCollection('user');
                         $user->payrollInfo()->create([]);
                         $user->detail()->create([]);
                         DB::table('model_has_roles')->insert([
