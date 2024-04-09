@@ -33,6 +33,15 @@ class AttendanceDetail extends BaseModel implements HasMedia
 
     protected $appends = ['image'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if ($model->type->is(AttendanceType::MANUAL)) {
+                $model->approved_by = $model->attendance->user->approval?->id ?? null;
+            }
+        });
+    }
+
     public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class);

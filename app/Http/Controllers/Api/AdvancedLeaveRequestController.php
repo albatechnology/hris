@@ -98,6 +98,13 @@ class AdvancedLeaveRequestController extends BaseController
         return new AdvancedLeaveRequestResource($advancedLeaveRequest);
     }
 
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = AdvancedLeaveRequest::where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
+    }
+
     public function approvals()
     {
         $query = AdvancedLeaveRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))

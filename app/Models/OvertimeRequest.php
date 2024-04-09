@@ -35,6 +35,10 @@ class OvertimeRequest extends BaseModel
         static::saving(function (self $model) {
             $model->duration = date('H:i:s', strtotime($model->duration));
         });
+
+        static::creating(function (self $model) {
+            $model->approved_by = $model->user->approval?->id ?? null;
+        });
     }
 
     protected $appends = ['duration_text'];

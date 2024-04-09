@@ -89,6 +89,13 @@ class OvertimeRequestController extends BaseController
         return new OvertimeRequestResource($overtimeRequest);
     }
 
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = OvertimeRequest::where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
+    }
+
     public function approvals()
     {
         $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))

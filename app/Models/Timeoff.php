@@ -39,6 +39,8 @@ class Timeoff extends BaseModel
             if (empty($model->user_id)) {
                 $model->user_id = auth('sanctum')->id();
             }
+
+            $model->approved_by = $model->user->approval?->id ?? null;
         });
     }
 

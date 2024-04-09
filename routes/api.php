@@ -111,6 +111,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
+    Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
     Route::get('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
     Route::put('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
     Route::apiResource('attendances', AttendanceController::class)->except('update');
@@ -122,6 +123,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
 
     Route::get('timeoffs/approvals', [TimeoffController::class, 'approvals']);
+    Route::get('timeoffs/approvals/count-total', [TimeoffController::class, 'countTotalapprovals']);
     Route::group(['prefix' => 'timeoffs/{timeoff}'], function () {
         Route::put('approve', [TimeoffController::class, 'approve']);
     });
@@ -131,6 +133,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);
 
     Route::get('overtime-requests/approvals', [OvertimeRequestController::class, 'approvals']);
+    Route::get('overtime-requests/approvals/count-total', [OvertimeRequestController::class, 'countTotalApprovals']);
     Route::apiResource('overtime-requests', OvertimeRequestController::class);
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
 
@@ -152,12 +155,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('custom-fields', CustomFieldController::class);
 
     Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/count-total', [NotificationController::class, 'countTotal']);
     Route::put('notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead']);
     Route::get('notifications/{notification}', [NotificationController::class, 'show']);
     Route::delete('notifications/{notification}', [NotificationController::class, 'destroy']);
 
     Route::get('advanced-leave-requests/get-available-days', [AdvancedLeaveRequestController::class, 'getAvailableDays']);
     Route::get('advanced-leave-requests/approvals', [AdvancedLeaveRequestController::class, 'approvals']);
+    Route::get('advanced-leave-requests/approvals/count-total', [AdvancedLeaveRequestController::class, 'countTotalApprovals']);
     Route::put('advanced-leave-requests/{advanced_leave_request}/approve', [AdvancedLeaveRequestController::class, 'approve']);
     Route::apiResource('advanced-leave-requests', AdvancedLeaveRequestController::class);
 
@@ -177,6 +182,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
+    Route::get('request-change-datas/approvals/count-total', [RequestChangeDataController::class, 'countTotalApprovals']);
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 });

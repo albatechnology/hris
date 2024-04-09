@@ -67,7 +67,7 @@ class TimeoffController extends BaseController
         // if ($request->is_advanced_leave) {
         //     1, cek min_advanced_leave_working_month di timeoff_regulations
         //     2. cek history advanced leave user, apakah sudah melebihi max_advanced_leave_request
-        // 3.
+        //     3.
         // }
         // dd($request->validated());
 
@@ -209,6 +209,13 @@ class TimeoffController extends BaseController
         }
 
         return new TimeoffResource($timeoff);
+    }
+
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = Timeoff::where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
     }
 
     public function approvals()

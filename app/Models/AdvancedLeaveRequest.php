@@ -26,6 +26,13 @@ class AdvancedLeaveRequest extends BaseModel
         'approval_status' => ApprovalStatus::class,
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            $model->approved_by = $model->user->approval?->id ?? null;
+        });
+    }
+
     public function scopeTenanted(Builder $query): Builder
     {
         /** @var User $user */

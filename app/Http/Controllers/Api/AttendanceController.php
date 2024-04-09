@@ -375,6 +375,13 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = AttendanceDetail::where('approved_by', auth('sanctum')->id())->where('type', AttendanceType::MANUAL)->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
+    }
+
     public function approvals()
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
