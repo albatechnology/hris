@@ -31,7 +31,7 @@ class ReevaluateTimeoffRegulationUserPeriod implements ShouldQueue
     public function handle(): void
     {
         $companies = Company::whereHas('timeoffRegulation', fn ($q) => $q->where('renew_type', TimeoffRenewType::USER_PERIOD))
-            ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'end_period', 'is_expired_in_end_period', 'expired_max_month'))
+            ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'end_period_date', 'end_period_month', 'is_expired_in_end_period', 'expired_max_month'))
             ->get();
 
         $companies->each(function (Company $company) {

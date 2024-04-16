@@ -16,8 +16,10 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         'company_id',
         'renew_type',
         'total_day',
-        'start_period',
-        'end_period',
+        'start_period_date',
+        'start_period_month',
+        'end_period_date',
+        'end_period_month',
         // 'max_consecutively_day',
         // 'is_allow_halfday',
         'halfday_not_applicable_in',
@@ -49,7 +51,7 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         if (is_null($date)) {
             return $query;
         }
-        $query->whereDate('start_period', '>=', $date);
+        $query->where('start_period_month', date('m', strtotime($date)))->where('start_period_date', date('d', strtotime($date)));
     }
 
     public function scopeEndPeriod(Builder $query, $date = null)
@@ -57,6 +59,6 @@ class TimeoffRegulation extends BaseModel implements TenantedInterface
         if (is_null($date)) {
             return $query;
         }
-        $query->whereDate('end_period', '<=', $date);
+        $query->where('end_period_month', date('m', strtotime($date)))->where('end_period_date', date('d', strtotime($date)));
     }
 }
