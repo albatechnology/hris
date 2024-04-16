@@ -12,6 +12,7 @@ enum RequestChangeDataType: string
     case EMAIL = 'email';
     case NIK = 'nik';
     case PHONE = 'phone';
+    case POSTAL_CODE = 'postal_code';
     case NO_KTP = 'no_ktp';
     case KK_NO = 'kk_no';
     case ADDRESS = 'address';
