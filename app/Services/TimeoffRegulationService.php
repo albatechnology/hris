@@ -180,15 +180,14 @@ class TimeoffRegulationService
         if (empty($timeoffRegulation->start_period_date) || empty($timeoffRegulation->end_period_date)) {
             return;
         }
-
-        $startAt = new \DateTime(date('Y-') . $timeoffRegulation->start_period_date);
-        $endAt = new \DateTime(date('Y-') . $timeoffRegulation->end_period_date);
+        $startAt = new \DateTime(date('Y-') . $timeoffRegulation->start_period_month . '-' . $timeoffRegulation->start_period_date);
+        $endAt = new \DateTime(date('Y-') . $timeoffRegulation->end_period_month . '-' . $timeoffRegulation->end_period_date);
 
         $interval = $startAt->diff($endAt);
+        $intervalMonth = $interval->m > 0 ? $interval->m : 1;
 
-        $startAt->add($interval)->modify('+1 day');
-        $endAt->add($interval);
-
+        $startAt->modify('+' . $intervalMonth . ' month');
+        $endAt->modify('+' . $intervalMonth . ' month');
         $timeoffRegulation->update([
             'start_period_date' => $startAt->format('d'),
             'start_period_month' => $startAt->format('m'),

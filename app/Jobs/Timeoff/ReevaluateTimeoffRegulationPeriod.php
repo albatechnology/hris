@@ -9,7 +9,6 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\UserTimeoffHistory;
 use App\Services\TimeoffRegulationService;
-use DateTime;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -32,8 +31,9 @@ class ReevaluateTimeoffRegulationPeriod implements ShouldQueue
      */
     public function handle(): void
     {
-        $companies = Company::whereHas('timeoffRegulation', fn ($q) => $q->where('renew_type', TimeoffRenewType::PERIOD)->whereMonth('end_period', date('m'))->whereDay('end_period', date('d')))
-            ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'is_expired_in_end_period', 'expired_max_month'))
+        $companies = Company::whereHas('timeoffRegulation', fn ($q) => $q->where('renew_type', TimeoffRenewType::PERIOD)
+            ->where('end_period_month', date('m'))->where('end_period_date', date('d')))
+            ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'is_expired_in_end_period', 'expired_max_month', 'start_period_date', 'end_period_date', 'start_period_month', 'end_period_month'))
             ->get();
 
         $companies->each(function (Company $company) {
@@ -41,7 +41,7 @@ class ReevaluateTimeoffRegulationPeriod implements ShouldQueue
             $timeoffRegulation = $company->timeoffRegulation;
 
             User::where('company_id', $company->id)
-                ->where('type', UserType::USER)
+                ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->get()->each(function (User $user) use ($timeoffRegulation) {
                     if (
                         !$timeoffRegulation->is_expired_in_end_period &&
@@ -54,10 +54,10 @@ class ReevaluateTimeoffRegulationPeriod implements ShouldQueue
                             'is_increment' => true,
                             'value' => $user->total_timeoff,
                             'properties' => ['user' => $user],
-                            'description' => UserTimeoffHistory::DESCRIPTION['ADD_REMAINING_TIMEOFF'],
+                            'description' => UserTimeoffHistory::DESCRIPTION['ADD_TOTAL_REMAINING_TIMEOFF'],
                         ]);
 
-                        // create cron for clean user remaining_timeoff in expired_max_month
+                        // create cron for clean user total_remaining_timeoff in expired_max_month
                         CleanRemainingTimeoff::dispatch($user)->delay(now()->addMonths($timeoffRegulation->expired_max_month));
                     }
 
