@@ -32,6 +32,7 @@ class OvertimeRequestController extends BaseController
         $data = QueryBuilder::for(OvertimeRequest::query())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
+                AllowedFilter::exact('user_id'),
                 'approval_status'
             ])
             ->allowedSorts([
