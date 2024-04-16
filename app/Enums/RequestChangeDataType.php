@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Models\User;
+
 enum RequestChangeDataType: string
 {
     use BaseEnum;
@@ -30,10 +32,10 @@ enum RequestChangeDataType: string
     case PHOTO_PROFILE = 'photo_profile';
     case PTKP_STATUS = 'ptkp_status';
 
-    public function getValidation()
+    public function getValidation(?User $user = null)
     {
         return match ($this) {
-            self::EMAIL => 'required|email|unique:users,email',
+            self::EMAIL => 'required|email|unique:users,email,' . $user->id,
             self::BIRTHDATE => 'required|date',
             self::GENDER => ['required', \Illuminate\Validation\Rule::enum(Gender::class)],
             self::MARITAL_STATUS => ['required', \Illuminate\Validation\Rule::enum(MaritalStatus::class)],
