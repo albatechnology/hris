@@ -75,9 +75,9 @@ class AdvancedLeaveRequestController extends BaseController
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $availableDays = AdvancedLeaveRequestService::getAvailableDays(User::findOrFail($request->user_id));
+        $availableDays = AdvancedLeaveRequestService::getAvailableDays($advancedLeaveRequest->user);
         if ($advancedLeaveRequest->amount > $availableDays) {
-            $message = $availableDays == 0 ? 'You have no available days' : 'Request days exceeds available days';
+            $message = $availableDays == 0 ? 'User have no available days' : 'Request days exceeds available days';
             return $this->errorResponse(message: $message, code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -113,8 +113,7 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function approvals()
     {
-        $query = AdvancedLeaveRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with('user', fn ($q) => $q->select('id', 'name'));
+        $query = AdvancedLeaveRequest::where('approved_by', auth('sanctum')->id())->with('user', fn ($q) => $q->select('id', 'name'));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([

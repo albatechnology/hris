@@ -59,7 +59,7 @@ class StoreRequest extends FormRequest
             'is_monthly_prorate' => 'nullable|boolean',
             'is_daily_default' => 'nullable|boolean',
             'daily_maximum_amount_type' => ['nullable', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
-            'daily_maximum_amount' => 'required|numeric',
+            'daily_maximum_amount' => 'nullable|numeric',
             'is_one_time_bonus' => 'nullable|boolean',
             'is_include_backpay' => 'nullable|boolean',
 
