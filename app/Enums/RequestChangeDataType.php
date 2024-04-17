@@ -60,6 +60,7 @@ enum RequestChangeDataType: string
             self::NO_KTP,
             self::ADDRESS,
             self::ADDRESS_KTP,
+            self::POSTAL_CODE,
             self::BIRTH_PLACE,
             self::BIRTHDATE,
             self::MARITAL_STATUS,
