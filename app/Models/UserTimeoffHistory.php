@@ -37,7 +37,7 @@ class UserTimeoffHistory extends BaseModel
     protected static function booted(): void
     {
         static::creating(function (self $model) {
-            if (empty($model->is_for_total_timeoff)) {
+            if (!isset($model->is_for_total_timeoff)) {
                 $model->is_for_total_timeoff = true;
             }
 
@@ -48,6 +48,7 @@ class UserTimeoffHistory extends BaseModel
 
         static::created(function (self $model) {
             $column = $model->is_for_total_timeoff ? 'total_timeoff' : 'total_remaining_timeoff';
+
             if ($model->is_increment) {
                 $model->user->increment($column, $model->value);
             } else {

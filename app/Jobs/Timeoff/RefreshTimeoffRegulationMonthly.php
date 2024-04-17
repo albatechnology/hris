@@ -15,7 +15,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ReevaluateTimeoffRegulationMonthly implements ShouldQueue
+class RefreshTimeoffRegulationMonthly implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -32,9 +32,9 @@ class ReevaluateTimeoffRegulationMonthly implements ShouldQueue
     public function handle(): void
     {
         $companies = Company::whereHas('timeoffRegulation', fn ($q) => $q->where('renew_type', TimeoffRenewType::MONTHLY)
-            ->where('end_period_month', date('m'))->where('end_period_date', date('d')))
+            ->where('cut_off_date', date('d')))
             ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'is_expired_in_end_period', 'expired_max_month', 'start_period_date', 'end_period_date', 'start_period_month', 'end_period_month'))
-            ->get();
+            ->get(['id']);
 
         $companies->each(function (Company $company) {
             /** @var \App\Models\TimeoffRegulation $timeoffRegulation */
