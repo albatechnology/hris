@@ -44,7 +44,7 @@ class AdvancedLeaveRequest extends BaseModel
             return $query->whereHas('user', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
-        return $query->where('id', $user->id);
+        return $query->where('user_id', $user->id);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

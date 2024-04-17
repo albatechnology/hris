@@ -75,6 +75,12 @@ class AdvancedLeaveRequestController extends BaseController
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        $availableDays = AdvancedLeaveRequestService::getAvailableDays(User::findOrFail($request->user_id));
+        if ($advancedLeaveRequest->amount > $availableDays) {
+            $message = $availableDays == 0 ? 'You have no available days' : 'Request days exceeds available days';
+            return $this->errorResponse(message: $message, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         try {
             $advancedLeaveRequest->update($request->validated());
             if ($advancedLeaveRequest->approval_status->is(ApprovalStatus::APPROVED)) {
