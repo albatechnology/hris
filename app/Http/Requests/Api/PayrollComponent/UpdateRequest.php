@@ -8,17 +8,36 @@ use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_taxable' => $this->toBoolean($this->is_taxable),
+            'is_monthly_prorate' => $this->toBoolean($this->is_monthly_prorate),
+            'is_daily_default' => $this->toBoolean($this->is_daily_default),
+            'is_one_time_bonus' => $this->toBoolean($this->is_one_time_bonus),
+            'is_include_backpay' => $this->toBoolean($this->is_include_backpay),
+        ]);
     }
 
     /**
@@ -37,11 +56,11 @@ class UpdateRequest extends FormRequest
             'amount' => 'required|numeric',
             'is_taxable' => 'required|boolean',
             'period_type' => ['required', Rule::enum(PayrollComponentPeriodType::class)],
-            'is_monthly_prorate' => 'required|boolean',
-            'is_daily_default' => 'required|boolean',
+            'is_monthly_prorate' => 'nullable|boolean',
+            'is_daily_default' => 'nullable|boolean',
             'daily_maximum_amount_type' => ['required', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
             'daily_maximum_amount' => 'required|numeric',
-            'is_one_time_bonus' => 'required|boolean',
+            'is_one_time_bonus' => 'nullable|boolean',
             'is_include_backpay' => 'nullable|boolean',
 
             'includes' => 'nullable|array',
