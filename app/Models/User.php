@@ -263,7 +263,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         DB::table('model_has_roles')->where('model_type', get_class($this))->where('model_id', $this->id)->delete();
     }
 
-    public function getTotalWorkingMonth(?string $cutoffDate = null)
+    public function getTotalWorkingMonth(?string $cutoffDate = null, bool $returnAllData = false): int|array
     {
         if ($cutoffDate == null) {
             $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $this->company_id)->first(['cut_off_date']);
@@ -275,7 +275,25 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         $cutoffDate = date_create(date('Y-m-' . $cutoffDate));
         $diff = date_diff($joinDate, $cutoffDate);
 
-        return (int)$diff->format('%m');
+        $totalYear = 0;
+        $totalMonth = 0;
+        if ($joinDate < $cutoffDate) {
+            $totalYear = (int)$diff->format('%y');
+
+            $totalMonth = $totalYear > 0 ? ($totalYear * 12) : 0;
+            $totalMonth += (int)$diff->format('%m');
+        }
+
+        if ($returnAllData) {
+            return [
+                'join_date' => $joinDate,
+                'cut_off_date' => $cutoffDate,
+                'diff' => $diff,
+                'total_year' => $totalYear,
+                'total_month' => $totalMonth
+            ];
+        }
+        return $totalMonth;
     }
 
     public function registerMediaCollections(): void

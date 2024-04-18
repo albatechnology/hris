@@ -6,7 +6,6 @@ use App\Http\Requests\Api\UserContact\StoreRequest;
 use App\Http\Resources\UserContact\UserContactResource;
 use App\Models\User;
 use App\Models\UserContact;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserContactController extends BaseController
@@ -15,12 +14,10 @@ class UserContactController extends BaseController
     {
         $data = QueryBuilder::for(UserContact::where('user_id', $user->id))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
-                AllowedFilter::exact('user_id'),
                 'type', 'name', 'id_number', 'email', 'phone',
             ])
             ->allowedSorts([
-                'id', 'user_id', 'type', 'name', 'id_number', 'email', 'phone', 'created_at',
+                'id', 'type', 'name', 'id_number', 'email', 'phone', 'created_at',
             ])
             ->paginate($this->per_page);
 

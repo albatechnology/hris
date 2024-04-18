@@ -17,7 +17,7 @@ class AdvancedLeaveRequestService
 
         $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first();
 
-        $totalDayAdvanceLeaveReequest = $advancedLeaveRequest->amount;
+        $totalDayAdvanceLeaveRequest = $advancedLeaveRequest->amount;
         $startMonth = date('m');
         $endMonth = date('m', strtotime('+ ' . $timeoffRegulation->max_advanced_leave_request . 'month'));
 
@@ -28,10 +28,10 @@ class AdvancedLeaveRequestService
                 if (
                     $timeoffRegulationMonth->month > $startMonth &&
                     $timeoffRegulationMonth->month <= $endMonth &&
-                    $totalDayAdvanceLeaveReequest > 0
+                    $totalDayAdvanceLeaveRequest > 0
                 ) {
-                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveReequest, 0);
-                    $totalDayAdvanceLeaveReequest -= $timeoffRegulationMonth->amount;
+                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveRequest, 0);
+                    $totalDayAdvanceLeaveRequest -= $timeoffRegulationMonth->amount;
                     $timeoffRegulationMonth->amount = $amount;
                 } elseif ($timeoffRegulationMonth->month < $startMonth) {
                     $timeoffRegulationMonth->amount = 0;
@@ -50,12 +50,12 @@ class AdvancedLeaveRequestService
                 if (
                     $timeoffRegulationMonth->month > $startMonth &&
                     $timeoffRegulationMonth->month <= $endMonth &&
-                    $totalDayAdvanceLeaveReequest > 0
+                    $totalDayAdvanceLeaveRequest > 0
                 ) {
-                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveReequest, 0);
-                    $totalDayAdvanceLeaveReequest -= $timeoffRegulationMonth->amount;
+                    $amount = max($timeoffRegulationMonth->amount - $totalDayAdvanceLeaveRequest, 0);
+                    $totalDayAdvanceLeaveRequest -= $timeoffRegulationMonth->amount;
                     $timeoffRegulationMonth->amount = $amount;
-                } elseif ($timeoffRegulationMonth->month < $startMonth) {
+                } elseif ($timeoffRegulationMonth->month < $startMonth || ($timeoffRegulationMonth->month == $startMonth && date('d') >= $timeoffRegulation->cut_off_date)) {
                     $timeoffRegulationMonth->amount = 0;
                 }
                 // handle total amount untuk bulan $startMonth

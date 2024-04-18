@@ -33,8 +33,8 @@ class ReevaluateTimeoffRegulationMonthly implements ShouldQueue
     {
         $companies = Company::whereHas('timeoffRegulation', fn ($q) => $q->where('renew_type', TimeoffRenewType::MONTHLY)
             ->where('end_period_month', date('m'))->where('end_period_date', date('d')))
-            ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'is_expired_in_end_period', 'expired_max_month', 'start_period_date', 'end_period_date', 'start_period_month', 'end_period_month'))
-            ->get();
+            ->with('timeoffRegulation', fn ($q) => $q->select('id', 'company_id', 'total_day', 'is_expired_in_end_period', 'expired_max_month', 'start_period_date', 'end_period_date', 'start_period_month', 'end_period_month', 'cut_off_date'))
+            ->get(['id']);
 
         $companies->each(function (Company $company) {
             /** @var \App\Models\TimeoffRegulation $timeoffRegulation */
@@ -42,7 +42,8 @@ class ReevaluateTimeoffRegulationMonthly implements ShouldQueue
 
             User::where('company_id', $company->id)
                 ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
-                ->get()->each(function (User $user) use ($timeoffRegulation) {
+                ->get(['id', 'join_date', 'total_timeoff'])
+                ->each(function (User $user) use ($timeoffRegulation) {
                     if (
                         !$timeoffRegulation->is_expired_in_end_period &&
                         !is_null($timeoffRegulation->expired_max_month) &&

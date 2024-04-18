@@ -52,7 +52,7 @@ class UserObserver
             if ($timeoffRegulation) {
                 $totalTimeoff = 0;
 
-                if ($timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+                if ($timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY) && $user->getTotalWorkingMonth($timeoffRegulation->cut_off_date) >= $timeoffRegulation->min_working_month) {
                     // 1. check min_working_month timeoffPeriodRegulations
                     // 2. check join_date user
                     // 3. urutkan min_working_month dari yang terbesar

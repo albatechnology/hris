@@ -15,6 +15,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -81,6 +82,7 @@ class AdvancedLeaveRequestController extends BaseController
             return $this->errorResponse(message: $message, code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        DB::beginTransaction();
         try {
             $advancedLeaveRequest->update($request->validated());
             if ($advancedLeaveRequest->approval_status->is(ApprovalStatus::APPROVED)) {
@@ -97,7 +99,9 @@ class AdvancedLeaveRequestController extends BaseController
 
             $notificationType = NotificationType::ADVANCED_LEAVE_APPROVED;
             $advancedLeaveRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $advancedLeaveRequest->approvedBy, $advancedLeaveRequest->approval_status, $advancedLeaveRequest));
+            DB::commit();
         } catch (Exception $th) {
+            DB::rollBack();
             return $this->errorResponse($th->getMessage());
         }
 

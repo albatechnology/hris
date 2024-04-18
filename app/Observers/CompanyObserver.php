@@ -13,7 +13,7 @@ class CompanyObserver
      */
     public function created(Company $company): void
     {
-        TimeoffRegulationService::create($company, TimeoffRenewType::PERIOD);
+        TimeoffRegulationService::create($company, TimeoffRenewType::MONTHLY);
         $company->createPayrollSetting();
         \App\Models\RequestChangeDataAllowes::createForCompany($company);
     }
