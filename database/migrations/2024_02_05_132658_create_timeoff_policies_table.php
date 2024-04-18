@@ -21,7 +21,6 @@ return new class extends Migration
             $table->date('effective_date')->nullable();
             $table->date('expired_date')->nullable();
             $table->unsignedSmallInteger('max_consecutively_day')->nullable();
-            // $table->boolean('is_unlimited_day')->default(0)->comment('jika false, maka max day akan ambil dari kolom max_consecutively_day table timeoff_regulations');
             $table->boolean('is_allow_halfday')->default(1);
             $table->boolean('is_for_all_user')->default(1)->comment('jika false, maka harus isi list user nya di table user_timeoff_policies');
             $table->boolean('is_enable_block_leave')->default(0);

@@ -316,6 +316,7 @@ class UserController extends BaseController
 
     public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
     {
+
         $requestChangeDataAllowes = \App\Models\RequestChangeDataAllowes::where('company_id', $user->company_id)->get();
 
         $dataRequested = [];
@@ -340,8 +341,16 @@ class UserController extends BaseController
             $requestChangeData = $user->requestChangeDatas()->create($request->validated());
 
             if (count($dataRequested) > 0) {
+                $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+
+                $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
+                if ($photoProfile && $photoProfile['value']?->isValid()) {
+                    $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);
+                    $hasil = $requestChangeDataDetail->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
+                    $requestChangeDataDetail->update(['value' => $hasil->getFullUrl()]);
+                }
+
                 if ($request->hasFile('file')) {
-                    $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
                     foreach ($request->file as $file) {
                         if ($file->isValid()) {
                             $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
@@ -349,7 +358,7 @@ class UserController extends BaseController
                     }
                 }
 
-                $requestChangeData->details()->createMany($dataRequested);
+                $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
 
                 $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
                 $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));

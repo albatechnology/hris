@@ -57,8 +57,16 @@ class RequestChangeDataController extends BaseController
         try {
             $requestChangeData->update($request->validated());
             if ($requestChangeData->approval_status->is(ApprovalStatus::APPROVED)) {
-                $userId = $requestChangeData->user_id;
-                $requestChangeData->details->each(fn ($detail) => RequestChangeDataType::updateData($detail->type, $userId, $detail->value));
+                $requestChangeData->load(['user' => fn ($q) => $q->select('id')]);
+                $user = $requestChangeData->user;
+
+                $requestChangeData->details->each(function (\App\Models\RequestChangeDataDetail $detail) use ($user) {
+                    if ($detail->type->is(RequestChangeDataType::PHOTO_PROFILE)) {
+                        $detail->getFirstMedia(\App\Enums\MediaCollection::REQUEST_CHANGE_DATA->value)->copy($user, \App\Enums\MediaCollection::USER->value);
+                    } else {
+                        RequestChangeDataType::updateData($detail->type, $user->id, $detail->value);
+                    }
+                });
             }
 
             $notificationType = NotificationType::REQUEST_CHANGE_DATA_APPROVED;

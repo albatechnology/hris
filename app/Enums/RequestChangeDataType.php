@@ -51,6 +51,7 @@ enum RequestChangeDataType: string
     public static function updateData(self $self, int $userId, mixed $value)
     {
         return match ($self) {
+            // self::PHOTO_PROFILE, updated in controller
             self::NAME,
             self::EMAIL,
             self::NIK,
@@ -78,36 +79,38 @@ enum RequestChangeDataType: string
         };
     }
 
-    // public function getValue(?int $userId = null)
-    // {
-    //     if (!$userId) $userId = auth('sanctum')->id();
+    public function getValue(?int $userId = null)
+    {
+        if (!$userId) $userId = auth('sanctum')->id();
 
-    //     return match ($this) {
-    //         self::PHOTO_PROFILE,
-    //         self::NAME,
-    //         self::EMAIL,
-    //         self::NIK,
-    //         self::PHONE,
-    //         self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value]),
+        return match ($this) {
+            self::PHOTO_PROFILE => \App\Models\User::where('id', $userId)->first(['id'])->getFirstMediaUrl(MediaCollection::USER->value),
+            self::NAME,
+            self::EMAIL,
+            self::NIK,
+            self::PHONE,
+            self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value])->{$this->value},
 
-    //         self::ADDRESS,
-    //         self::ADDRESS_KTP,
-    //         self::BIRTH_PLACE,
-    //         self::BIRTHDATE,
-    //         self::MARITAL_STATUS,
-    //         self::BLOOD_TYPE,
-    //         self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value]),
+            self::NO_KTP,
+            self::ADDRESS,
+            self::ADDRESS_KTP,
+            self::POSTAL_CODE,
+            self::BIRTH_PLACE,
+            self::BIRTHDATE,
+            self::MARITAL_STATUS,
+            self::BLOOD_TYPE,
+            self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value])->{$this->value},
 
-    //         self::BPJS_KETENAGAKERJAAN_NO,
-    //         self::BPJS_KESEHATAN_NO,
-    //         self::BPJS_KESEHATAN_FAMILY_NO,
-    //         self::NPWP,
-    //         self::BANK_ACCOUNT_NO,
-    //         self::BANK_NAME,
-    //         self::BANK_ACCOUNT_HOLDER,
-    //         self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-    //     };
-    // }
+            self::BPJS_KETENAGAKERJAAN_NO,
+            self::BPJS_KESEHATAN_NO,
+            self::BPJS_KESEHATAN_FAMILY_NO,
+            self::NPWP,
+            self::BANK_ACCOUNT_NO,
+            self::BANK_NAME,
+            self::BANK_ACCOUNT_HOLDER,
+            self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value])->{$this->value},
+        };
+    }
 
     public function getInputType()
     {
