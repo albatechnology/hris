@@ -228,6 +228,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->belongsToMany(Event::class, 'user_events', 'user_id', 'event_id');
     }
 
+    public function tasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'user_tasks');
+    }
+
     // public function customFields(): BelongsToMany
     // {
     //     return $this->belongsToMany(CustomField::class, 'user_custom_fields', 'user_id', 'custom_field_id');

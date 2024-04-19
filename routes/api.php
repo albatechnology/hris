@@ -27,6 +27,8 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SupervisorTypeController;
+use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\TaskHourController;
 use App\Http\Controllers\Api\TimeoffController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\TimeoffPolicyController;
@@ -185,4 +187,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('request-change-datas/approvals/count-total', [RequestChangeDataController::class, 'countTotalApprovals']);
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
+
+    Route::group(['prefix' => 'tasks/{task}'], function () {
+        Route::get('hours/{hour}/users', [TaskHourController::class, 'users']);
+        Route::post('hours/{hour}/users', [TaskHourController::class, 'addUsers']);
+        Route::delete('hours/{hour}/users', [TaskHourController::class, 'deleteUsers']);
+        Route::apiResource('hours', TaskHourController::class);
+        Route::put('restore', [TaskController::class, 'restore']);
+        Route::delete('force-delete', [TaskController::class, 'forceDelete']);
+    });
+    Route::apiResource('tasks', TaskController::class);
 });
