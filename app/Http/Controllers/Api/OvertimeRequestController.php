@@ -9,10 +9,10 @@ use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
 use App\Models\User;
 use App\Services\AttendanceService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -69,7 +69,7 @@ class OvertimeRequestController extends BaseController
 
             $notificationType = NotificationType::REQUEST_OVERTIME;
             $overtimeRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
-        } catch (Exception $th) {
+        } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
@@ -83,7 +83,7 @@ class OvertimeRequestController extends BaseController
 
             $notificationType = NotificationType::OVERTIME_APPROVED;
             $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->approval_status, $overtimeRequest));
-        } catch (Exception $th) {
+        } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
@@ -92,7 +92,7 @@ class OvertimeRequestController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = OvertimeRequest::where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = DB::table('overtime_requests')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }

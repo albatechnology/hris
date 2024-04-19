@@ -27,7 +27,6 @@ use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
@@ -58,12 +57,14 @@ class AttendanceController extends BaseController
 
         $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
-        if (($month = date('d')) < $timeoffRegulation->cut_off_date) {
-            $month = date('m') - 1;
+        $month = date('m');
+        if (date('d') < $timeoffRegulation->cut_off_date) {
+            $month += 1;
         }
 
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
+
         $startDate = date(sprintf('%s-%s-%s', $year, $month, $timeoffRegulation->cut_off_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
@@ -276,7 +277,7 @@ class AttendanceController extends BaseController
                 if (!$compareFace) {
                     return $this->errorResponse(message: 'Face not match!', code: 400);
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return $this->errorResponse(message: $e->getMessage());
             }
         }
@@ -301,7 +302,7 @@ class AttendanceController extends BaseController
 
             AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
             return $this->errorResponse($e->getMessage());
@@ -342,7 +343,7 @@ class AttendanceController extends BaseController
                 AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return $this->errorResponse($e->getMessage());
@@ -377,7 +378,7 @@ class AttendanceController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = AttendanceDetail::where('approved_by', auth('sanctum')->id())->where('type', AttendanceType::MANUAL)->where('approval_status', $request->filter['approval_status'])->count();
+        $total = DB::table('attendance_details')->where('approved_by', auth('sanctum')->id())->where('type', AttendanceType::MANUAL)->where('approval_status', $request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }

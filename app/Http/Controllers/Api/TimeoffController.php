@@ -213,7 +213,7 @@ class TimeoffController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = Timeoff::where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = DB::table('timeoffs')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }

@@ -110,7 +110,7 @@ class AdvancedLeaveRequestController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = AdvancedLeaveRequest::where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = DB::table('advanced_leave_requests')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }
