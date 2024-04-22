@@ -40,8 +40,13 @@ class AdvancedLeaveRequest extends BaseModel
         if ($user->is_super_admin) {
             return $query;
         }
+
         if ($user->is_administrator) {
             return $query->whereHas('user', fn ($q) => $q->where('group_id', $user->group_id));
+        }
+
+        if ($user->descendants()->exists()) {
+            return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
         }
 
         return $query->where('user_id', $user->id);

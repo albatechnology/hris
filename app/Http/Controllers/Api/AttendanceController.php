@@ -159,11 +159,11 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        $query = User::select('id', 'name', 'nik');
         if (!$user->is_super_admin) {
-            $query = User::select('id', 'name', 'nik')
-                ->where('type', '!=', UserType::SUPER_ADMIN);
+            $query->where('type', '!=', UserType::SUPER_ADMIN);
         } else {
-            $query = $user->descendants()->select('id', 'name', 'nik');
+            $query->whereDescendantOf($user)->select('id', 'name', 'nik');
         }
 
         $users = QueryBuilder::for($query)
