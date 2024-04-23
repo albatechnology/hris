@@ -53,7 +53,6 @@ class StoreRequest extends FormRequest
             'max_consecutively_day' => 'nullable|integer',
             'is_allow_halfday' => 'nullable|boolean',
             'is_for_all_user' => 'nullable|boolean',
-            // 'is_unlimited_day' => 'nullable|boolean',
             'is_enable_block_leave' => 'nullable|boolean',
             'block_leave_take_days' => 'nullable|integer',
             'block_leave_min_working_month' => 'nullable|integer',

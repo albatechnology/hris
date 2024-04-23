@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Attendance;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Models\AttendanceDetail;
 use App\Models\User;
@@ -17,7 +18,7 @@ class AttendanceApproved extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private bool $isApproved, private AttendanceDetail $attendanceDetail)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private AttendanceDetail $attendanceDetail)
     {
         //
     }
@@ -52,7 +53,13 @@ class AttendanceApproved extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), date('H:i:s', strtotime($this->attendanceDetail->time)), date('d l Y', strtotime($this->attendanceDetail->time)), $this->isApproved ? 'approved' : 'rejected'),
+            'message' => sprintf(
+                $this->notificationType->getMessage(),
+                $this->attendanceDetail->is_clock_in ? 'Clock In' : 'Clock Out',
+                date('H:i:s', strtotime($this->attendanceDetail->time)),
+                date('d l Y', strtotime($this->attendanceDetail->time)),
+                $this->approvalStatus->value
+            ),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->attendanceDetail->id

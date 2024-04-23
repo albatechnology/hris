@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class AdvancedLeaveRequest extends BaseModel
         'user_id',
         'data',
         'amount',
-        'is_approved',
+        'approval_status',
         'approved_by',
         'approved_at',
     ];
@@ -22,7 +23,15 @@ class AdvancedLeaveRequest extends BaseModel
     protected $casts = [
         'data' => 'array',
         'amount' => 'float',
+        'approval_status' => ApprovalStatus::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            $model->approved_by = $model->user->approval?->id ?? null;
+        });
+    }
 
     public function scopeTenanted(Builder $query): Builder
     {
@@ -35,7 +44,7 @@ class AdvancedLeaveRequest extends BaseModel
             return $query->whereHas('user', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
-        return $query->whereHas('user', fn ($q) => $q->where('manager_id', $user->id));
+        return $query->where('user_id', $user->id);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

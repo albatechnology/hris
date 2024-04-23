@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\PayrollComponentCategory;
+use App\Enums\PayrollComponentSetting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,8 +18,8 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('name');
             $table->string('type'); // PayrollComponentType::class
-            $table->string('category')->nullable(); // PayrollComponentCategory::class
-            $table->string('setting')->nullable(); // PayrollComponentSetting::class
+            $table->string('category')->default(PayrollComponentCategory::DEFAULT->value); // PayrollComponentCategory::class
+            $table->string('setting')->default(PayrollComponentSetting::DEFAULT->value); // PayrollComponentSetting::class
             $table->unsignedDouble('amount', 13, 2)->default(0);
             $table->boolean('is_taxable')->default(0);
             $table->string('period_type'); // PayrollComponentPeriodType::class

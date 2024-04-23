@@ -16,10 +16,10 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('renew_type', 15);
             $table->unsignedSmallInteger('total_day')->default(0);
-            $table->char('start_period', 5)->nullable()->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == period');
-            $table->char('end_period', 5)->nullable()->comment('periode awal timeoff (format date: m-d). diisi jika renew_type == period');
-            // $table->unsignedSmallInteger('max_consecutively_day')->nullable()->comment('Maksimal pengajuan cuti tahunan (hari) berturut-turut');
-            // $table->boolean('is_allow_halfday')->default(1);
+            $table->char('start_period_date', 2)->nullable()->comment('periode awal(date) timeoff (format date: d). diisi jika renew_type == period');
+            $table->char('start_period_month', 2)->nullable()->comment('periode awal(month) timeoff (format date: m). diisi jika renew_type == period');
+            $table->char('end_period_date', 2)->nullable()->comment('periode awal(date) timeoff (format date: d). diisi jika renew_type == period');
+            $table->char('end_period_month', 2)->nullable()->comment('periode awal(month) timeoff (format date: m). diisi jika renew_type == period');
             $table->text('halfday_not_applicable_in')->nullable()->comment('hari(array) yang tidak bisa diajukan cuti setengah hari (is_allow_halfday harus true)');
             $table->boolean('is_expired_in_end_period')->default(1)->comment('jika true, maka cuti akan hangus diakhir periode');
             $table->unsignedSmallInteger('expired_max_month')->nullable()->comment('jika null, maka sisa cuti tahun sebelumnya akan aktif tanpa batas waktu');

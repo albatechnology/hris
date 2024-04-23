@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,7 +16,7 @@ class UserDayoff extends BaseModel
         'total_amount',
         'expired_at',
         'used_amount',
-        'is_approved',
+        'approval_status',
         'approved_by',
         'approved_at',
         'note',
@@ -24,7 +25,7 @@ class UserDayoff extends BaseModel
     protected $casts = [
         'total_amount' => 'float',
         'used_amount' => 'float',
-        'is_approved' => 'boolean',
+        'approval_status' => ApprovalStatus::class,
     ];
 
     public function timeoffPolicy(): BelongsTo
@@ -34,6 +35,6 @@ class UserDayoff extends BaseModel
 
     public function approvedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'is_approved');
+        return $this->belongsTo(User::class, 'approval_status');
     }
 }

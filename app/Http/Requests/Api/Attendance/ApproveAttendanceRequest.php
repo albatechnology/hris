@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Enums\ApprovalStatus;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ApproveAttendanceRequest extends FormRequest
 {
@@ -25,7 +27,6 @@ class ApproveAttendanceRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'is_approved' => $this->toBoolean($this->is_approved),
             'approved_at' => now(),
             'approved_by' => auth('sanctum')->id(),
         ]);
@@ -39,7 +40,7 @@ class ApproveAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_approved' => 'required|boolean',
+            'approval_status' => ['required', Rule::enum(ApprovalStatus::class)],
             'approved_at' => 'required',
             'approved_by' => 'required',
         ];

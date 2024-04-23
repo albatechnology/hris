@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
+use App\Enums\OvertimeRequestType;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,18 +16,20 @@ class OvertimeRequest extends BaseModel
         'user_id',
         'schedule_id',
         'shift_id',
+        'type',
         'date',
         'is_after_shift',
         'duration',
         'note',
-        'is_approved',
+        'approval_status',
         'approved_by',
         'approved_at',
     ];
 
     protected $casts = [
         'is_after_shift' => 'boolean',
-        'is_approved' => 'boolean',
+        'type' => OvertimeRequestType::class,
+        'approval_status' => ApprovalStatus::class,
         'approved_at' => 'datetime',
     ];
 
@@ -33,6 +37,10 @@ class OvertimeRequest extends BaseModel
     {
         static::saving(function (self $model) {
             $model->duration = date('H:i:s', strtotime($model->duration));
+        });
+
+        static::creating(function (self $model) {
+            $model->approved_by = $model->user->approval?->id ?? null;
         });
     }
 

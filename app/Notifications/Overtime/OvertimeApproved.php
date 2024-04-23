@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Overtime;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Models\OvertimeRequest;
 use App\Models\User;
@@ -17,7 +18,7 @@ class OvertimeApproved extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private bool $isApproved, private OvertimeRequest $overtimeRequest)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private OvertimeRequest $overtimeRequest)
     {
         //
     }
@@ -52,7 +53,7 @@ class OvertimeApproved extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->isApproved ? 'approved' : 'rejected'),
+            'message' => sprintf($this->notificationType->getMessage(), $this->approvalStatus->value),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->overtimeRequest->id

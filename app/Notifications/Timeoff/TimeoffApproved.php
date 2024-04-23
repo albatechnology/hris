@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Timeoff;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Models\Timeoff;
 use App\Models\User;
@@ -17,7 +18,7 @@ class TimeoffApproved extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private bool $isApproved, private Timeoff $timeoff)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private Timeoff $timeoff)
     {
         //
     }
@@ -51,12 +52,12 @@ class TimeoffApproved extends Notification
     public function toArray(object $notifiable): array
     {
         if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
-            $message = sprintf($this->notificationType->getMessage(), date('l, d M Y', strtotime($this->timeoff->start_at)), $this->isApproved ? 'approved' : 'rejected');
+            $message = sprintf($this->notificationType->getMessage(), date('l, d M Y', strtotime($this->timeoff->start_at)), $this->approvalStatus->value);
         } else {
             $message = sprintf(
                 $this->notificationType->getMessage(),
                 date('l, d M Y', strtotime($this->timeoff->start_at)) . ' to ' . date('l, d M Y', strtotime($this->timeoff->end_at)),
-                $this->isApproved ? 'approved' : 'rejected'
+                $this->approvalStatus->value
             );
         }
         return [

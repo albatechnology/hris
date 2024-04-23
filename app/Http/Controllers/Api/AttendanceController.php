@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
+use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
+use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
@@ -18,12 +21,12 @@ use App\Models\AttendanceDetail;
 use App\Models\Event;
 use App\Models\NationalHoliday;
 use App\Models\TimeoffRegulation;
+use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
@@ -46,24 +49,37 @@ class AttendanceController extends BaseController
 
     public function index(IndexRequest $request)
     {
-        $timeoffRegulation = TimeoffRegulation::tenanted()->first(['id', 'cut_off_date']);
+        if (isset($request->filter['user_id'])) {
+            $user = User::where('id', $request->filter['user_id'])->firstOrFail(['id', 'company_id']);
+        } else {
+            $user = auth('sanctum')->user();
+        }
 
-        $startDate = date(sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $timeoffRegulation->cut_off_date));
+        $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
+
+        $month = date('m');
+        if (date('d') < $timeoffRegulation->cut_off_date) {
+            $month += 1;
+        }
+
+        $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
+        $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
+
+        $startDate = date(sprintf('%s-%s-%s', $year, $month, $timeoffRegulation->cut_off_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
-        $schedule = ScheduleService::getTodaySchedule(date: $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
         if ($schedule) {
-            $userId = auth('sanctum')->id();
             $order = $schedule->shifts->where('id', $schedule->shift->id);
             $orderKey = array_keys($order->toArray())[0];
             $totalShifts = $schedule->shifts->count();
 
             $attendances = Attendance::tenanted()
-                ->where('user_id', $userId)
+                ->where('user_id', $user->id)
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
@@ -90,7 +106,7 @@ class AttendanceController extends BaseController
                     $shift = $attendance->shift;
 
                     // load overtime
-                    $totalOvertime = AttendanceService::getSumOvertimeDuration($userId, $date);
+                    $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                     $attendance->total_overtime = $totalOvertime;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
@@ -139,11 +155,93 @@ class AttendanceController extends BaseController
         ]);
     }
 
+    public function children(ChildrenRequest $request)
+    {
+        $user = auth('sanctum')->user();
+
+        if (!$user->is_super_admin) {
+            $query = User::select('id', 'name', 'nik')
+                ->where('type', '!=', UserType::SUPER_ADMIN);
+        } else {
+            $query = $user->descendants()->select('id', 'name', 'nik');
+        }
+
+        $users = QueryBuilder::for($query)
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+                'nik',
+                'name',
+            ])
+            ->allowedSorts([
+                'nik',
+                'name',
+            ])
+            ->paginate($this->per_page);
+
+        $date = $request->filter['date'];
+
+        $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        $nationalHolidays = NationalHoliday::orderBy('date')->get();
+        $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date);
+
+            $attendance = $user->attendances()
+                ->where('date', $date)
+                ->with([
+                    'shift',
+                    'timeoff.timeoffPolicy',
+                    'clockIn',
+                    'clockOut',
+                    // 'details' => fn ($q) => $q->orderBy('created_at')
+                ])->first();
+
+            if ($attendance) {
+                $shift = $attendance->shift;
+
+                // load overtime
+                $totalOvertime = AttendanceService::getSumOvertimeDuration($user->id, $date);
+                $attendance->total_overtime = $totalOvertime;
+            } else {
+                $shift = $schedule->shift ?? null;
+            }
+            $shiftType = 'shift';
+
+            $companyHolidayData = null;
+            if ($schedule?->is_overide_company_holiday == false) {
+                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                });
+
+                if ($companyHolidayData) {
+                    $shift = $companyHolidayData;
+                    $shiftType = 'company_holiday';
+                }
+            }
+
+            if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                if ($nationalHoliday) {
+                    $shift = $nationalHoliday;
+                    $shiftType = 'national_holiday';
+                }
+            }
+
+            unset($shift->pivot);
+
+            $user->date = $date;
+            $user->shift_type = $shiftType;
+            $user->shift = $shift;
+            $user->attendance = $attendance;
+        });
+
+        return DefaultResource::collection($users->values());
+    }
+
     public function logs()
     {
         $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn ($q) => $q->tenanted()))
             ->allowedFilters([
-                'is_clock_in', 'is_approved', 'approved_by',
+                'is_clock_in', 'approval_status', 'approved_by', 'type',
                 AllowedFilter::callback('user_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('user_id', $value))),
                 AllowedFilter::callback('shift_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('shift_id', $value))),
             ])
@@ -153,10 +251,10 @@ class AttendanceController extends BaseController
                         ->with('shift', fn ($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
                 }),
             ])
-            ->allowedSorts(['is_clock_in', 'is_approved', 'approved_by', 'created_at'])
+            ->allowedSorts(['is_clock_in', 'approval_status', 'approved_by', 'created_at'])
             ->paginate($this->per_page);
 
-        return new DefaultResource($attendance);
+        return DefaultResource::collection($attendance);
     }
 
     public function show(Attendance $attendance)
@@ -179,7 +277,7 @@ class AttendanceController extends BaseController
                 if (!$compareFace) {
                     return $this->errorResponse(message: 'Face not match!', code: 400);
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 return $this->errorResponse(message: $e->getMessage());
             }
         }
@@ -204,7 +302,7 @@ class AttendanceController extends BaseController
 
             AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
             return $this->errorResponse($e->getMessage());
@@ -245,7 +343,7 @@ class AttendanceController extends BaseController
                 AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return $this->errorResponse($e->getMessage());
@@ -278,19 +376,29 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = DB::table('attendance_details')->where('approved_by', auth('sanctum')->id())->where('type', AttendanceType::MANUAL)->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
+    }
+
     public function approvals()
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
-            ->whereHas('attendance.user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()))
+            ->whereHas('attendance.user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
             ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
                 'user' => fn ($q) => $q->select('id', 'name'),
-                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
+                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                 'schedule' => fn ($q) => $q->select('id', 'name')
             ]));
 
         $attendances = QueryBuilder::for($query)
+            ->allowedFilters([
+                'approval_status', 'created_at',
+            ])
             ->allowedSorts([
-                'id', 'is_approved', 'created_at',
+                'id', 'approval_status', 'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -299,33 +407,30 @@ class AttendanceController extends BaseController
 
     public function showApproval(AttendanceDetail $attendanceDetail)
     {
-        // return new AttendanceDetailResource($attendanceDetail);
-        return new AttendanceDetailResource(
-            $attendanceDetail->load(
-                [
-                    'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
-                        ->with([
-                            'user' => fn ($q) => $q->select('id', 'name'),
-                            'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff'),
-                            'schedule' => fn ($q) => $q->select('id', 'name')
-                        ])
-                ]
-            )
+        $attendanceDetail->load(
+            [
+                'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
+                    ->with([
+                        'user' => fn ($q) => $q->select('id', 'name'),
+                        'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                        'schedule' => fn ($q) => $q->select('id', 'name')
+                    ])
+            ]
         );
+
+        return new AttendanceDetailResource($attendanceDetail);
     }
 
     public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
     {
-        if ($attendanceDetail->is_approved == $request->is_approved) {
-            return response()->json([
-                'message' => 'Attendance is already ' . ($attendanceDetail->is_approved ? 'approved' : 'rejected'),
-            ]);
+        if (!$attendanceDetail->approval_status->is(ApprovalStatus::PENDING)) {
+            return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $attendanceDetail->update($request->validated());
 
         $notificationType = NotificationType::ATTENDANCE_APPROVED;
-        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->is_approved, $attendanceDetail));
+        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->approval_status, $attendanceDetail));
 
         return new AttendanceDetailResource($attendanceDetail);
     }

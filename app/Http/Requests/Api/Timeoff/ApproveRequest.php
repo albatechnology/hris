@@ -2,31 +2,18 @@
 
 namespace App\Http\Requests\Api\Timeoff;
 
-use App\Traits\Requests\RequestToBoolean;
+use App\Enums\ApprovalStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ApproveRequest extends FormRequest
 {
-    use RequestToBoolean;
-
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
-    }
-
-    /**
-     * Prepare inputs for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'is_approved' => is_null($this->is_approved) ? null : $this->toBoolean($this->is_approved),
-        ]);
     }
 
     /**
@@ -37,7 +24,7 @@ class ApproveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_approved' => 'nullable|boolean',
+            'approval_status' => ['nullable', Rule::enum(ApprovalStatus::class)],
         ];
     }
 }

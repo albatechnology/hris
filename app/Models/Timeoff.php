@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\TimeoffRequestType;
 use App\Enums\UserType;
 use App\Traits\Models\BelongsToUser;
@@ -21,7 +22,7 @@ class Timeoff extends BaseModel
         'end_at',
         'delegate_to',
         'reason',
-        'is_approved',
+        'approval_status',
         'is_advanced_leave',
         'approved_by',
         'approved_at',
@@ -29,6 +30,7 @@ class Timeoff extends BaseModel
 
     protected $casts = [
         'request_type' => TimeoffRequestType::class,
+        'approval_status' => ApprovalStatus::class,
     ];
 
     protected static function booted(): void
@@ -37,6 +39,8 @@ class Timeoff extends BaseModel
             if (empty($model->user_id)) {
                 $model->user_id = auth('sanctum')->id();
             }
+
+            $model->approved_by = $model->user->approval?->id ?? null;
         });
     }
 

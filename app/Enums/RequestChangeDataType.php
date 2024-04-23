@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Models\User;
+
 enum RequestChangeDataType: string
 {
     use BaseEnum;
@@ -10,6 +12,9 @@ enum RequestChangeDataType: string
     case EMAIL = 'email';
     case NIK = 'nik';
     case PHONE = 'phone';
+    case POSTAL_CODE = 'postal_code';
+    case NO_KTP = 'no_ktp';
+    case KK_NO = 'kk_no';
     case ADDRESS = 'address';
     case ADDRESS_KTP = 'address_ktp';
     case BIRTH_PLACE = 'birth_place';
@@ -28,10 +33,10 @@ enum RequestChangeDataType: string
     case PHOTO_PROFILE = 'photo_profile';
     case PTKP_STATUS = 'ptkp_status';
 
-    public function getValidation()
+    public function getValidation(?User $user = null)
     {
         return match ($this) {
-            self::EMAIL => 'required|email|unique:users,email',
+            self::EMAIL => 'required|email|unique:users,email,' . $user->id,
             self::BIRTHDATE => 'required|date',
             self::GENDER => ['required', \Illuminate\Validation\Rule::enum(Gender::class)],
             self::MARITAL_STATUS => ['required', \Illuminate\Validation\Rule::enum(MaritalStatus::class)],
@@ -46,14 +51,17 @@ enum RequestChangeDataType: string
     public static function updateData(self $self, int $userId, mixed $value)
     {
         return match ($self) {
+            // self::PHOTO_PROFILE, updated in controller
             self::NAME,
             self::EMAIL,
             self::NIK,
             self::PHONE,
             self::GENDER => \App\Models\User::where('id', $userId)->update([$self->value => $value]),
 
+            self::NO_KTP,
             self::ADDRESS,
             self::ADDRESS_KTP,
+            self::POSTAL_CODE,
             self::BIRTH_PLACE,
             self::BIRTHDATE,
             self::MARITAL_STATUS,
@@ -71,36 +79,38 @@ enum RequestChangeDataType: string
         };
     }
 
-    // public function getValue(?int $userId = null)
-    // {
-    //     if (!$userId) $userId = auth('sanctum')->id();
+    public function getValue(?int $userId = null)
+    {
+        if (!$userId) $userId = auth('sanctum')->id();
 
-    //     return match ($this) {
-    //         self::PHOTO_PROFILE,
-    //         self::NAME,
-    //         self::EMAIL,
-    //         self::NIK,
-    //         self::PHONE,
-    //         self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value]),
+        return match ($this) {
+            self::PHOTO_PROFILE => \App\Models\User::where('id', $userId)->first(['id'])->getFirstMediaUrl(MediaCollection::USER->value),
+            self::NAME,
+            self::EMAIL,
+            self::NIK,
+            self::PHONE,
+            self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value])->{$this->value},
 
-    //         self::ADDRESS,
-    //         self::ADDRESS_KTP,
-    //         self::BIRTH_PLACE,
-    //         self::BIRTHDATE,
-    //         self::MARITAL_STATUS,
-    //         self::BLOOD_TYPE,
-    //         self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value]),
+            self::NO_KTP,
+            self::ADDRESS,
+            self::ADDRESS_KTP,
+            self::POSTAL_CODE,
+            self::BIRTH_PLACE,
+            self::BIRTHDATE,
+            self::MARITAL_STATUS,
+            self::BLOOD_TYPE,
+            self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value])->{$this->value},
 
-    //         self::BPJS_KETENAGAKERJAAN_NO,
-    //         self::BPJS_KESEHATAN_NO,
-    //         self::BPJS_KESEHATAN_FAMILY_NO,
-    //         self::NPWP,
-    //         self::BANK_ACCOUNT_NO,
-    //         self::BANK_NAME,
-    //         self::BANK_ACCOUNT_HOLDER,
-    //         self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value]),
-    //     };
-    // }
+            self::BPJS_KETENAGAKERJAAN_NO,
+            self::BPJS_KESEHATAN_NO,
+            self::BPJS_KESEHATAN_FAMILY_NO,
+            self::NPWP,
+            self::BANK_ACCOUNT_NO,
+            self::BANK_NAME,
+            self::BANK_ACCOUNT_HOLDER,
+            self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value])->{$this->value},
+        };
+    }
 
     public function getInputType()
     {

@@ -6,15 +6,14 @@ enum RelationshipType: string
 {
     use BaseEnum;
 
-    case AYAH = 'ayah';
-    case IBU = 'ibu';
-    case ADIK = 'adik';
-    case KAKAK = 'kakak';
-    case KAKEK = 'kakek';
-    case NENEK = 'nenek';
-    case PAMAN = 'paman';
-    case BIBI = 'bibi';
-    case SEPUPU = 'sepupu';
-    case TEMAN = 'teman';
+    case FATHER = 'father';
+    case MOTHER = 'mother';
+    case BROTHER = 'brother';
+    case GRANDFATHER = 'grandfather';
+    case GRANDMOTHER = 'grandmother';
+    case UNCLE = 'uncle';
+    case AUNT = 'aunt';
+    case COUSIN = 'cousin';
+    case FRIEND = 'friend';
     case OTHER = 'other';
 }

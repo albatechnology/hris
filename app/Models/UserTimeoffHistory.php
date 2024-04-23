@@ -12,7 +12,7 @@ class UserTimeoffHistory extends BaseModel
         'USER_CREATED' => 'User created',
         'PERIOD_EXPIRED' => 'Timeoff expired',
         'PERIOD_RENEWED' => 'Timeoff renewed in new period',
-        'ADD_REMAINING_TIMEOFF' => 'Add remaining timeoff',
+        'ADD_TOTAL_REMAINING_TIMEOFF' => 'Add remaining timeoff',
         'ADJUST' => 'Timeoff adjusted',
         'TIMEOFF' => 'Timeoff: %s',
         'ADVANCED_LEAVE' => 'Advanced leave',
@@ -37,7 +37,7 @@ class UserTimeoffHistory extends BaseModel
     protected static function booted(): void
     {
         static::creating(function (self $model) {
-            if (empty($model->is_for_total_timeoff)) {
+            if (!isset($model->is_for_total_timeoff)) {
                 $model->is_for_total_timeoff = true;
             }
 
@@ -47,7 +47,8 @@ class UserTimeoffHistory extends BaseModel
         });
 
         static::created(function (self $model) {
-            $column = $model->is_for_total_timeoff ? 'total_timeoff' : 'remaining_timeoff';
+            $column = $model->is_for_total_timeoff ? 'total_timeoff' : 'total_remaining_timeoff';
+
             if ($model->is_increment) {
                 $model->user->increment($column, $model->value);
             } else {

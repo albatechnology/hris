@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\NotificationType;
 use Illuminate\Notifications\DatabaseNotification as NotificationsDatabaseNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 

@@ -9,7 +9,6 @@ use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
@@ -24,7 +24,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, InteractsWithMedia;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, NodeTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -37,7 +37,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'branch_id',
         'live_attendance_id',
         'overtime_id',
-        'manager_id',
+        'approval_id',
+        'parent_id',
         'name',
         'email',
         'password',
@@ -48,8 +49,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'gender',
         'join_date',
         'sign_date',
+        'end_contract_date',
         'total_timeoff',
-        'remaining_timeoff',
+        'total_remaining_timeoff',
     ];
 
     /**
@@ -73,6 +75,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'type' => UserType::class,
         'gender' => Gender::class,
     ];
+
+    protected $appends = ['image'];
 
     public function scopeTenanted(Builder $query): Builder
     {
@@ -107,6 +111,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         $query->whereHas('schedules', fn ($q) => $q->where('user_schedules.schedule_id', $scheduleId));
     }
 
+    // public function getParentIdName()
+    // {
+    //     return 'parent';
+    // }
+
     protected function serializeDate(\DateTimeInterface $date): string
     {
         return $date->format('Y-m-d H:i');
@@ -117,6 +126,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return Attribute::make(
             set: fn (?string $value) => empty($value) ? null : bcrypt($value),
         );
+    }
+
+    public function approval(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approval_id');
     }
 
     public function group(): BelongsTo
@@ -131,7 +145,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
 
     public function manager(): BelongsTo
     {
-        return $this->belongsTo(self::class, 'manager_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function branch(): BelongsTo
@@ -147,6 +161,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
     public function payrollInfo(): HasOne
     {
         return $this->hasOne(UserPayrollInfo::class);
+    }
+
+    public function attendance(): HasOne
+    {
+        return $this->hasOne(Attendance::class);
     }
 
     public function attendances(): HasMany
@@ -184,6 +203,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->hasMany(RequestChangeData::class);
     }
 
+    public function positions(): HasMany
+    {
+        return $this->hasMany(UserDepartmentPosition::class);
+    }
+
     public function timeoffPolicies(): BelongsToMany
     {
         return $this->belongsToMany(TimeoffPolicy::class, 'user_timeoff_policies');
@@ -202,6 +226,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
     public function events(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'user_events', 'user_id', 'event_id');
+    }
+
+    public function tasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'user_tasks');
     }
 
     // public function customFields(): BelongsToMany
@@ -239,7 +268,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         DB::table('model_has_roles')->where('model_type', get_class($this))->where('model_id', $this->id)->delete();
     }
 
-    public function getTotalWorkingMonth(?string $cutoffDate = null)
+    public function getTotalWorkingMonth(?string $cutoffDate = null, bool $returnAllData = false): int|array
     {
         if ($cutoffDate == null) {
             $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $this->company_id)->first(['cut_off_date']);
@@ -251,7 +280,25 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         $cutoffDate = date_create(date('Y-m-' . $cutoffDate));
         $diff = date_diff($joinDate, $cutoffDate);
 
-        return (int)$diff->format('%m');
+        $totalYear = 0;
+        $totalMonth = 0;
+        if ($joinDate < $cutoffDate) {
+            $totalYear = (int)$diff->format('%y');
+
+            $totalMonth = $totalYear > 0 ? ($totalYear * 12) : 0;
+            $totalMonth += (int)$diff->format('%m');
+        }
+
+        if ($returnAllData) {
+            return [
+                'join_date' => $joinDate,
+                'cut_off_date' => $cutoffDate,
+                'diff' => $diff,
+                'total_year' => $totalYear,
+                'total_month' => $totalMonth
+            ];
+        }
+        return $totalMonth;
     }
 
     public function registerMediaCollections(): void

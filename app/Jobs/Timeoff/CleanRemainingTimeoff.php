@@ -26,6 +26,6 @@ class CleanRemainingTimeoff implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->user->update(['remaining_timeoff', 0]);
+        $this->user->update(['total_remaining_timeoff', 0]);
     }
 }

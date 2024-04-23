@@ -26,12 +26,12 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        // dd($this->all());
         return [
             'group_id' => 'nullable|exists:groups,id',
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'manager_id' => 'nullable|exists:users,id',
+            'approval_id' => 'nullable|exists:users,id',
+            'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string',
@@ -41,6 +41,7 @@ class StoreRequest extends FormRequest
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',
             'sign_date' => 'nullable|date',
+            'end_contract_date' => 'nullable|date',
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
 

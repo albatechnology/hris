@@ -47,7 +47,12 @@ class RequestChangeDataRequest extends FormRequest
         foreach ($this->all() as $type => $value) {
             $requestChangeDataType = RequestChangeDataType::tryFrom($type);
             if ($requestChangeDataType) {
-                $validations['details.' . $type] = $requestChangeDataType->getValidation();
+                if ($requestChangeDataType->is(RequestChangeDataType::EMAIL)) {
+                    $user = \App\Models\User::where('id', $this->segment(3))->firstOrFail(['id']);
+                    $validations['details.' . $type] = $requestChangeDataType->getValidation($user);
+                } else {
+                    $validations['details.' . $type] = $requestChangeDataType->getValidation();
+                }
             }
         }
 

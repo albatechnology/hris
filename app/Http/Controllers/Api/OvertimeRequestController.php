@@ -9,10 +9,10 @@ use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
 use App\Models\User;
 use App\Services\AttendanceService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -32,6 +32,8 @@ class OvertimeRequestController extends BaseController
         $data = QueryBuilder::for(OvertimeRequest::query())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
+                AllowedFilter::exact('user_id'),
+                'approval_status'
             ])
             ->allowedSorts([
                 'id', 'date',
@@ -66,8 +68,8 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest = OvertimeRequest::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_OVERTIME;
-            $overtimeRequest->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
-        } catch (Exception $th) {
+            $overtimeRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
+        } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
@@ -80,21 +82,30 @@ class OvertimeRequestController extends BaseController
             $overtimeRequest->update($request->validated());
 
             $notificationType = NotificationType::OVERTIME_APPROVED;
-            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->is_approved, $overtimeRequest));
-        } catch (Exception $th) {
+            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->approval_status, $overtimeRequest));
+        } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
         return new OvertimeRequestResource($overtimeRequest);
     }
 
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = DB::table('overtime_requests')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
+    }
+
     public function approvals()
     {
-        $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()));
+        $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
+            ->with('user', fn ($q) => $q->select('id', 'name'));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('id'),
+                'approval_status'
             ])
             ->allowedSorts([
                 'id', 'date',

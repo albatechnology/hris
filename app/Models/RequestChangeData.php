@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,10 +17,21 @@ class RequestChangeData extends BaseModel implements HasMedia
     protected $fillable = [
         'user_id',
         'description',
-        'is_approved',
+        'approval_status',
         'approved_by',
         'approved_at',
     ];
+
+    protected $casts = [
+        'approval_status' => ApprovalStatus::class
+    ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            $model->approved_by = $model->user->approval?->id ?? null;
+        });
+    }
 
     public function scopeTenanted(Builder $query): Builder
     {

@@ -18,6 +18,7 @@ class UserDetail extends BaseModel
         'user_id',
         'no_ktp',
         'kk_no',
+        'postal_code',
         'address',
         'address_ktp',
         'job_position',

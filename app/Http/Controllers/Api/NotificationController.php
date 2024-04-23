@@ -25,6 +25,22 @@ class NotificationController extends BaseController
         return NotificationResource::collection($data);
     }
 
+    public function countTotal(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'filter.type' => 'required|in:read,unread,all'
+        ]);
+
+        $query = DatabaseNotification::query();
+        if ($request->filter['type'] == 'read') {
+            $query->read();
+        } elseif ($request->filter['type'] == 'unread') {
+            $query->unread();
+        }
+
+        return response()->json(['message' => $query->count()]);
+    }
+
     public function markAsRead(DatabaseNotification $notification)
     {
         $notification->markAsRead();

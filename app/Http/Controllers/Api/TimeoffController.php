@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
@@ -11,7 +12,6 @@ use App\Models\Attendance;
 use App\Models\Timeoff;
 use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
-use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -40,6 +40,7 @@ class TimeoffController extends BaseController
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
                 'request_type',
+                'approval_status',
             ])
             ->allowedIncludes(['user', 'timeoffPolicy', 'delegateTo'])
             ->allowedSorts([
@@ -66,7 +67,7 @@ class TimeoffController extends BaseController
         // if ($request->is_advanced_leave) {
         //     1, cek min_advanced_leave_working_month di timeoff_regulations
         //     2. cek history advanced leave user, apakah sudah melebihi max_advanced_leave_request
-        // 3.
+        //     3.
         // }
         // dd($request->validated());
 
@@ -75,9 +76,9 @@ class TimeoffController extends BaseController
             $timeoff = Timeoff::create($request->validated());
 
             $notificationType = NotificationType::REQUEST_TIMEOFF;
-            $timeoff->user->manager?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
+            $timeoff->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return $this->errorResponse(message: $e->getMessage());
         }
@@ -123,8 +124,9 @@ class TimeoffController extends BaseController
     {
         // dump($request->validated());
         // dump($timeoff);
-        $timeoff->is_approved = $request->is_approved;
-        if (!$timeoff->isDirty('is_approved')) {
+        $timeoff->approval_status = $request->approval_status;
+        // dd($timeoff);
+        if (!$timeoff->isDirty('approval_status')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
 
@@ -154,11 +156,10 @@ class TimeoffController extends BaseController
             $timeoff->approved_by = auth('sanctum')->id();
             $timeoff->approved_at = now();
 
-            // 1. kalo pending, is_approved=null dan delete attendance
-            // 2. kalo approve, is_approved=1 dan create attendance
-            // 3. kalo reject, is_approved=0 dan delete attendance
-
-            if (is_null($timeoff->is_approved) || $timeoff->is_approved === false) {
+            // 1. kalo pending, approval_status=null dan delete attendance
+            // 2. kalo approve, approval_status=1 dan create attendance
+            // 3. kalo reject, approval_status=0 dan delete attendance
+            if ($timeoff->approval_status->in([ApprovalStatus::PENDING, ApprovalStatus::REJECTED])) {
                 Attendance::where('timeoff_id', $timeoff->id)->delete();
 
                 UserTimeoffHistory::create([
@@ -169,6 +170,10 @@ class TimeoffController extends BaseController
                     'description' => sprintf(UserTimeoffHistory::DESCRIPTION['TIMEOFF'], $timeoff->timeoffPolicy->name),
                 ]);
             } else {
+                if ($value > $timeoff->user->total_timeoff) {
+                    return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
                 foreach ($dateRange as $date) {
                     $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
                     Attendance::create([
@@ -192,9 +197,9 @@ class TimeoffController extends BaseController
 
             $timeoff->save();
 
-            if (!is_null($timeoff->is_approved)) {
+            if (!$timeoff->approval_status->is(ApprovalStatus::PENDING)) {
                 $notificationType = NotificationType::TIMEOFF_APPROVED;
-                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->manager, $timeoff->is_approved, $timeoff));
+                $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->approval, $timeoff->approval_status, $timeoff));
             }
             DB::commit();
         } catch (\Exception $th) {
@@ -206,9 +211,17 @@ class TimeoffController extends BaseController
         return new TimeoffResource($timeoff);
     }
 
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    {
+        $total = DB::table('timeoffs')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+
+        return response()->json(['message' => $total]);
+    }
+
     public function approvals()
     {
-        $query = Timeoff::whereHas('user', fn ($q) => $q->where('manager_id', auth('sanctum')->id()));
+        $query = Timeoff::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
+            ->with('user', fn ($q) => $q->select('id', 'name'));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
@@ -219,6 +232,7 @@ class TimeoffController extends BaseController
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
                 'request_type',
+                'approval_status',
             ])
             ->allowedIncludes(['user', 'timeoffPolicy', 'approvedBy', 'delegateTo'])
             ->allowedSorts([

@@ -165,16 +165,16 @@ class GroupSeeder extends Seeder
             'lng' => '106.5766001',
             'umk' => 5000000,
         ]);
-        $company->branches()->create([
-            'name' => 'Alba Eliafood',
-            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
-            'country' => 'Indonesia',
-            'province' => 'Banten',
-            'city' => 'Kota Tangerang Selatan',
-            'zip_code' => '15320',
-            'lat' => '-6.2348656',
-            'lng' => '106.5766001',
-            'umk' => 5000000,
-        ]);
+        // $company->branches()->create([
+        //     'name' => 'Alba Eliafood',
+        //     'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+        //     'country' => 'Indonesia',
+        //     'province' => 'Banten',
+        //     'city' => 'Kota Tangerang Selatan',
+        //     'zip_code' => '15320',
+        //     'lat' => '-6.2348656',
+        //     'lng' => '106.5766001',
+        //     'umk' => 5000000,
+        // ]);
     }
 }

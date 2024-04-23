@@ -49,6 +49,15 @@ class PayrollComponent extends BaseModel
         'is_default' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (!$model->daily_maximum_amount_type) {
+                $model->daily_maximum_amount_type = PayrollComponentDailyMaximumAmountType::NOT_USE;
+            }
+        });
+    }
+
     public function includes(): HasMany
     {
         return $this->hasMany(PayrollComponentInclude::class);

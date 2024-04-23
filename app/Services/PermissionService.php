@@ -209,6 +209,12 @@ class PermissionService
             //     'supervisor_type_edit',
             //     'supervisor_type_delete',
             // ],
+            'task_access' => [
+                'task_read',
+                'task_create',
+                'task_edit',
+                'task_delete',
+            ],
         ];
     }
 
@@ -360,6 +366,12 @@ class PermissionService
                 // 'national_holiday_create',
                 // 'national_holiday_edit',
                 // 'national_holiday_delete',
+            ],
+            'task_access' => [
+                'task_read',
+                'task_create',
+                'task_edit',
+                'task_delete',
             ],
         ];
     }

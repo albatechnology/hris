@@ -32,9 +32,12 @@ class UserObserver
             $user->type = UserType::USER;
         }
 
+        if (empty($user->join_date)) {
+            $user->join_date = '2024-01-01';
+        }
+
         if (empty($user->sign_date)) {
-            $user->sign_date = '2024-01-26';
-            $user->join_date = '2024-01-26';
+            $user->sign_date = $user->join_date;
         }
     }
 
@@ -43,16 +46,13 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        $user->payrollInfo()->create([]);
-        $user->detail()->create([]);
-
         if ($user->type->is(UserType::USER)) {
             $timeoffRegulation = TimeoffRegulation::firstWhere('company_id', $user->company_id);
 
             if ($timeoffRegulation) {
                 $totalTimeoff = 0;
 
-                if ($timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY)) {
+                if ($timeoffRegulation->renew_type->is(TimeoffRenewType::MONTHLY) && $user->getTotalWorkingMonth($timeoffRegulation->cut_off_date) >= $timeoffRegulation->min_working_month) {
                     // 1. check min_working_month timeoffPeriodRegulations
                     // 2. check join_date user
                     // 3. urutkan min_working_month dari yang terbesar

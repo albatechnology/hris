@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApprovalStatus;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
             $table->text('description')->nullable();
-            $table->boolean('is_approved')->nullable();
+            $table->string('approval_status')->default(ApprovalStatus::PENDING);
             $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->datetime('approved_at')->nullable();
             $table->timestamps();

@@ -52,7 +52,7 @@ class RequestAttendance extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), date("l, d M Y", strtotime($this->attendanceDetail->time))),
+            'message' => sprintf($this->notificationType->getMessage(), $this->attendanceDetail->is_clock_in ? 'Clock In' : 'Clock Out', date("l, d M Y", strtotime($this->attendanceDetail->time))),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->attendanceDetail->id

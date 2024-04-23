@@ -58,13 +58,15 @@ class TimeoffRegulationService
         $timeoffRegulation = $company->timeoffRegulation()->create([
             'renew_type' => TimeoffRenewType::USER_PERIOD,
             'total_day' => 12,
-            'start_period' => '01-01',
-            'end_period' => '12-31',
+            'start_period_date' => '01',
+            'start_period_month' => '01',
+            'end_period_date' => '17',
+            'end_period_month' => '04',
             // 'max_consecutively_day' => 5,
             'halfday_not_applicable_in' => ['saturday', 'sunday'],
-            'is_expired_in_end_period' => true,
-            'expired_max_month' => null,
-            'min_working_month' => 1,
+            'is_expired_in_end_period' => false,
+            'expired_max_month' => 2,
+            'min_working_month' => 0,
             'cut_off_date' => '20',
             'min_advanced_leave_working_month' => 2,
             'max_advanced_leave_request' => 3,
@@ -81,14 +83,16 @@ class TimeoffRegulationService
         $timeoffRegulation = $company->timeoffRegulation()->createQuietly([
             'renew_type' => TimeoffRenewType::MONTHLY,
             'total_day' => 12,
-            'start_period' => '01-01',
-            'end_period' => '12-31',
+            'start_period_date' => '01',
+            'start_period_month' => '01',
+            'end_period_date' => '18',
+            'end_period_month' => '04',
             // 'max_consecutively_day' => 5,
             'halfday_not_applicable_in' => ['saturday', 'sunday'],
             'is_expired_in_end_period' => true,
             'expired_max_month' => null,
-            'min_working_month' => 3,
-            'cut_off_date' => '20',
+            'min_working_month' => 2,
+            'cut_off_date' => '01',
             'min_advanced_leave_working_month' => 2,
             'max_advanced_leave_request' => 3,
             'dayoff_consecutively_working_day' => 15,
@@ -123,8 +127,10 @@ class TimeoffRegulationService
         $timeoffRegulation = $company->timeoffRegulation()->create([
             'renew_type' => TimeoffRenewType::PERIOD,
             'total_day' => 12,
-            'start_period' => '01-01',
-            'end_period' => '12-31',
+            'start_period_date' => '01',
+            'start_period_month' => '01',
+            'end_period_date' => '31',
+            'end_period_month' => '12',
             // 'max_consecutively_day' => 5,
             'halfday_not_applicable_in' => ['saturday', 'sunday'],
             'is_expired_in_end_period' => true,
@@ -171,21 +177,22 @@ class TimeoffRegulationService
      */
     public static function updateEndPeriod(TimeoffRegulation $timeoffRegulation): void
     {
-        if (empty($timeoffRegulation->start_period) || empty($timeoffRegulation->end_period)) {
+        if (empty($timeoffRegulation->start_period_date) || empty($timeoffRegulation->end_period_date)) {
             return;
         }
-
-        $startAt = new \DateTime(date('Y-') . $timeoffRegulation->start_period);
-        $endAt = new \DateTime(date('Y-') . $timeoffRegulation->end_period);
+        $startAt = new \DateTime(date('Y-') . $timeoffRegulation->start_period_month . '-' . $timeoffRegulation->start_period_date);
+        $endAt = new \DateTime(date('Y-') . $timeoffRegulation->end_period_month . '-' . $timeoffRegulation->end_period_date);
 
         $interval = $startAt->diff($endAt);
+        $intervalMonth = $interval->m > 0 ? $interval->m : 1;
 
-        $startAt->add($interval)->modify('+1 day');
-        $endAt->add($interval);
-
+        $startAt->modify('+' . $intervalMonth . ' month');
+        $endAt->modify('+' . $intervalMonth . ' month');
         $timeoffRegulation->update([
-            'start_period' => $startAt->format('m-d'),
-            'end_period' => $endAt->format('m-d'),
+            'start_period_date' => $startAt->format('d'),
+            'start_period_month' => $startAt->format('m'),
+            'end_period_date' => $endAt->format('d'),
+            'end_period_month' => $endAt->format('m'),
         ]);
     }
 }

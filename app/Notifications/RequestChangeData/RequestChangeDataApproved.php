@@ -2,6 +2,7 @@
 
 namespace App\Notifications\RequestChangeData;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Models\RequestChangeData;
 use App\Models\User;
@@ -17,7 +18,7 @@ class RequestChangeDataApproved extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private bool $isApproved, private RequestChangeData $requestChangeData)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private RequestChangeData $requestChangeData)
     {
         //
     }
@@ -52,7 +53,7 @@ class RequestChangeDataApproved extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->isApproved ? 'approved' : 'rejected'),
+            'message' => sprintf($this->notificationType->getMessage(), $this->approvalStatus->value),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->requestChangeData->id
