@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\RunPayrollController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SupervisorTypeController;
@@ -173,6 +174,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('payroll-prorate', [PayrollProrateController::class, 'update']);
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
+
+    Route::apiResource('run-payrolls', RunPayrollController::class);
 
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
