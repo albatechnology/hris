@@ -6,7 +6,7 @@ enum FormulaComponentEnum: string
 {
     use BaseEnum;
 
-    case ATTENDANCE_DAILY = 'attendance_daily';
+    case DAILY_ATTENDANCE = 'daily_attendance';
     case SHIFT = 'shift';
     case BRANCH = 'branch';
     case HOLIDAY = 'holiday';
@@ -26,10 +26,7 @@ enum FormulaComponentEnum: string
     public function getData(): array
     {
         return match ($this) {
-            self::ATTENDANCE_DAILY => [
-                'present' => 'Present',
-                'alpha' => 'Alpha'
-            ],
+            self::DAILY_ATTENDANCE => DailyAttendance::all(),
             self::SHIFT => \App\Models\Shift::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
             self::BRANCH => \App\Models\Branch::tenanted()->get(['branches.id', 'branches.name'])->pluck('name', 'id')->toArray(),
             self::HOLIDAY => [

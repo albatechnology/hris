@@ -42,4 +42,9 @@ trait CompanyTenanted
 
         return $query->first();
     }
+
+    public function scopeWhereCompany(Builder $query, $companyId): Builder
+    {
+        return $query->tenanted()->where('company_id', $companyId);
+    }
 }
