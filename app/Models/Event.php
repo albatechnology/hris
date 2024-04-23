@@ -25,15 +25,23 @@ class Event extends Model
     ];
 
     protected $casts = [
-        'company_id' => 'integer',
         'type' => EventType::class,
-        'name' => 'string',
-        'start_at' => 'datetime',
-        'end_at' => 'datetime',
         'is_public' => 'boolean',
         'is_send_email' => 'boolean',
-        'description' => 'string',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $model) {
+            if ($model->type->is(EventType::NATIONAL_HOLIDAY)) {
+                // $model->company_id = null;
+                $model->start_at = date('Y-m-d H:i:s', strtotime($model->start_at));
+                $model->end_at = $model->start_at;
+                $model->is_public = true;
+                $model->is_send_email = false;
+            }
+        });
+    }
 
     public function userEvents(): HasMany
     {
@@ -53,5 +61,10 @@ class Event extends Model
     public function scopeWhereEvent(Builder $query)
     {
         return $query->where('type', EventType::EVENT);
+    }
+
+    public function scopeWhereNationalHoliday(Builder $query)
+    {
+        return $query->where('type', EventType::NATIONAL_HOLIDAY);
     }
 }

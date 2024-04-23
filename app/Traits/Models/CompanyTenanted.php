@@ -16,7 +16,7 @@ trait CompanyTenanted
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
-        if(!$user){
+        if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }

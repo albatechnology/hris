@@ -153,6 +153,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('users', [UserEventController::class, 'store']);
         Route::delete('users/{user}', [UserEventController::class, 'destroy']);
     });
+    Route::get('calendar', [EventController::class, 'calendar']);
     Route::apiResource('events', EventController::class);
     Route::apiResource('custom-fields', CustomFieldController::class);
 
