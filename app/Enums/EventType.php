@@ -8,4 +8,5 @@ enum EventType: string
 
     case EVENT = 'event';
     case HOLIDAY = 'holiday';
+    case NATIONAL_HOLIDAY = 'national_holiday';
 }

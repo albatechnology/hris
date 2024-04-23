@@ -43,13 +43,19 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
         if ($user->is_super_admin) {
             return $query;
         }
+
         if ($user->is_administrator) {
             return $query->whereHas('user', fn ($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
         }
 
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        if ($user->descendants()->exists()) {
+            return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
+        }
 
-        return $query->whereHas('user', fn ($q) => $q->whereIn('company_id', $companyIds));
+        return $query->where('user_id', $user->id);
+        // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+
+        // return $query->whereHas('user', fn ($q) => $q->whereIn('company_id', $companyIds));
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

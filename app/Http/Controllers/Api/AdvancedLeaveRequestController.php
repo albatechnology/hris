@@ -35,6 +35,7 @@ class AdvancedLeaveRequestController extends BaseController
         $data = QueryBuilder::for(AdvancedLeaveRequest::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
+                AllowedFilter::exact('user_id'),
                 'approval_status'
             ])
             ->allowedSorts([

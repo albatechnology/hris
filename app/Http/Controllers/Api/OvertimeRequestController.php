@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\NotificationType;
+use App\Enums\OvertimeRequestType;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Requests\Api\OvertimeRequest\ApproveRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
@@ -29,7 +30,7 @@ class OvertimeRequestController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(OvertimeRequest::query())
+        $data = QueryBuilder::for(OvertimeRequest::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
@@ -51,17 +52,20 @@ class OvertimeRequestController extends BaseController
     public function store(StoreRequest $request): OvertimeRequestResource|JsonResponse
     {
         $user = User::findOrFail($request->user_id);
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->date);
-        if (!$attendance) {
-            return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
 
-        if ($attendance->clockIn()->doesntExist()) {
-            return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        if ($request->type === OvertimeRequestType::OVERTIME->value) {
+            $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->date);
+            if (!$attendance) {
+                return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
-        if ($attendance->clockOut()->doesntExist()) {
-            return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            if ($attendance->clockIn()->doesntExist()) {
+                return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            if ($attendance->clockOut()->doesntExist()) {
+                return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
         try {
