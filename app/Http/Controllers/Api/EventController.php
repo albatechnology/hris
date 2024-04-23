@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Event\CalendarRequest;
 use App\Http\Requests\Api\Event\StoreRequest;
 use App\Http\Resources\Event\EventResource;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -95,18 +96,11 @@ class EventController extends BaseController
 
         $data = [];
         foreach ($events as $event) {
-            if ($fullDate) {
+            if ($fullDate || (date('Y-m-d', strtotime($event->start_at)) == date('Y-m-d', strtotime($event->end_at)))) {
                 $data[] = [
                     'type' => $event->type,
                     'name' => $event->name,
-                    'date' => $fullDate,
-                    'description' => $event->description,
-                ];
-            } elseif (date('Y-m-d', strtotime($event->start_at)) == date('Y-m-d', strtotime($event->end_at))) {
-                $data[] = [
-                    'type' => $event->type,
-                    'name' => $event->name,
-                    'date' => date('Y-m-d', strtotime($event->start_at)),
+                    'date' => $fullDate ?? date('Y-m-d', strtotime($event->start_at)),
                     'description' => $event->description,
                 ];
             } else {
@@ -129,6 +123,10 @@ class EventController extends BaseController
                 }
             }
         }
+
+        $birthdays = User::tenanted()->whereHas('detail', fn ($q) => $q->whereMonth('birthdate', $request->filter['month']))->with('detail', fn ($q) => $q->select('user_id', 'birthdate'))->get(['id', 'name']);
+
+        // $timeoffs = Timeoff::tenanted()->
 
         return \App\Http\Resources\DefaultResource::collection($data);
     }
