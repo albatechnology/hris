@@ -25,6 +25,10 @@ class StoreRequest extends FormRequest
             'name' => 'required|string',
             'min_working_hour' => 'required|integer',
             'max_working_hour' => 'required|integer',
+            'hours' => 'nullable|array',
+            'hours.*.name' => 'required|string',
+            'hours.*.clock_in' => 'required|date_format:H:i',
+            'hours.*.clock_out' => 'required|date_format:H:i',
         ];
     }
 }

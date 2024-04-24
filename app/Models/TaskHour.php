@@ -11,6 +11,11 @@ class TaskHour extends BaseModel
         'name',
         'min_working_hour',
         'max_working_hour',
+        'hours',
+    ];
+
+    protected $casts = [
+        'hours' => 'array',
     ];
 
     public function task(): BelongsTo

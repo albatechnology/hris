@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('task_hours', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->json('hours')->nullable();
             $table->foreignIdFor(Task::class)->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('min_working_hour')->default(0);
             $table->unsignedSmallInteger('max_working_hour')->default(0);
