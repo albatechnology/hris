@@ -39,19 +39,24 @@ class AttendanceService
             // ->where('approval_status', true)
             ->where('user_id', $user)
             ->where('date', $date)
-            ->get(['duration']);
+            ->get(['start_at', 'end_at']);
 
         if ($overtimeRequests->count() <= 0) return null;
 
         $totalSeconds = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
-            $totalSeconds += $hours * 3600 + $minutes * 60 + $seconds;
+            // list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
+            $startAt = new \DateTime($overtimeRequest->start_at);
+            $endAt = new \DateTime($overtimeRequest->end_at);
+            $interval = $startAt->diff($endAt);
+
+            $totalSeconds += ((int)$interval->format('%d') * 3600 * 24) + ((int)$interval->format('%h') * 3600) + ((int)$interval->format('%s') * 60) + (int)$interval->format('%s');
+            // $totalSeconds += $hours * 3600 + $minutes * 60 + $seconds;
         }
 
         $hours = floor($totalSeconds / 3600);
         $minutes = floor(($totalSeconds % 3600) / 60);
-        $seconds = $totalSeconds % 60;
+        // $seconds = $totalSeconds % 60;
 
         $result = '';
         if ((int)$hours > 0) {
@@ -60,9 +65,9 @@ class AttendanceService
         if ((int)$minutes > 0) {
             $result .= (int)$minutes . 'm ';
         }
-        if ((int)$seconds > 0) {
-            $result .= (int)$seconds . 's';
-        }
+        // if ((int)$seconds > 0) {
+        //     $result .= (int)$seconds . 's';
+        // }
 
         return trim($result);
     }

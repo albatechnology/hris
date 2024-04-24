@@ -47,7 +47,9 @@ class StoreRequest extends FormRequest
             'type' => ['required', Rule::enum(OvertimeRequestType::class)],
             'date' => 'required|date',
             'is_after_shift' => 'required|boolean',
-            'duration' => 'required|date_format:H:i',
+            'start_at' => 'required|date_format:Y-m-d H:i',
+            'end_at' => 'required|date_format:Y-m-d H:i',
+            // 'duration' => 'required|date_format:H:i',
             'note' => 'nullable|string',
         ];
     }
