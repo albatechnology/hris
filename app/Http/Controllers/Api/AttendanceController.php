@@ -10,6 +10,7 @@ use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
+use App\Http\Requests\Api\Attendance\ExportReportRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
@@ -45,6 +46,34 @@ class AttendanceController extends BaseController
         $this->middleware('permission:attendance_create', ['only' => ['store', 'request']]);
         $this->middleware('permission:attendance_edit', ['only' => 'update']);
         $this->middleware('permission:attendance_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    public function report(ExportReportRequest $request, ?string $export = null)
+    {
+        $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
+        $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        $users = User::tenanted(true)->get(['id','name']);
+        return $users;
+
+        $query = Attendance::select(['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date', 'created_at'])
+            ->with([
+                'details' => fn ($q) => $q->select('id', 'attendance_id', 'is_clock_in', 'time', 'type', 'lat', 'lng', 'approval_status', 'approved_at', 'approved_by', 'note', 'created_at'),
+                'user' => fn ($q) => $q->select('id', 'name')
+            ])
+            ->whereDateBetween($request->filter['start_date'], $request->filter['end_date']);
+
+        $attendances = QueryBuilder::for($query)
+            ->allowedSorts(['user_id'])
+            ->get();
+
+        $data = [];
+        foreach ($attendances as $attendance) {
+            $data[] = $attendance;
+        }
+
+        return DefaultResource::collection($data);
     }
 
     public function index(IndexRequest $request)
@@ -108,6 +137,10 @@ class AttendanceController extends BaseController
                     // load overtime
                     $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                     $attendance->total_overtime = $totalOvertime;
+
+                    // load task
+                    $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                    $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
                 }
@@ -161,9 +194,10 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'name', 'nik');
         if (!$user->is_super_admin) {
-            $query->where('type', '!=', UserType::SUPER_ADMIN);
-        } else {
-            $query->whereDescendantOf($user)->select('id', 'name', 'nik');
+            $query->tenanted();
+            if (!$user->type->is(UserType::ADMINISTRATOR)) {
+                $query->whereDescendantOf($user);
+            }
         }
 
         $users = QueryBuilder::for($query)
@@ -199,8 +233,12 @@ class AttendanceController extends BaseController
                 $shift = $attendance->shift;
 
                 // load overtime
-                $totalOvertime = AttendanceService::getSumOvertimeDuration($user->id, $date);
+                $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                 $attendance->total_overtime = $totalOvertime;
+
+                // load task
+                $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                $attendance->total_task = $totalTask;
             } else {
                 $shift = $schedule->shift ?? null;
             }
@@ -234,7 +272,7 @@ class AttendanceController extends BaseController
             $user->attendance = $attendance;
         });
 
-        return DefaultResource::collection($users->values());
+        return DefaultResource::collection($users);
     }
 
     public function logs()

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OvertimeRequestType;
 use App\Models\Attendance;
 use App\Models\User;
 use DateTime;
@@ -29,16 +30,19 @@ class AttendanceService
         return $attendance;
     }
 
-    public static function getSumOvertimeDuration(User|int $user, $date)
+    public static function getSumOvertimeDuration(User|int $user, $date, OvertimeRequestType $requestType = null)
     {
         if ($user instanceof User) {
             $user = $user->id;
         }
 
+        if (!$requestType) $requestType = OvertimeRequestType::OVERTIME;
+
         $overtimeRequests = \App\Models\OvertimeRequest::tenanted()
-            // ->where('approval_status', true)
+            ->where('type', $requestType)
+            ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)
-            ->where('date', $date)
+            ->whereDate('start_at', $date)
             ->get(['start_at', 'end_at']);
 
         if ($overtimeRequests->count() <= 0) return null;

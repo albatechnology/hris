@@ -18,7 +18,7 @@ class OvertimeRequest extends BaseModel
         'schedule_id',
         'shift_id',
         'type',
-        'date',
+        // 'date',
         'is_after_shift',
         'start_at',
         'end_at',
@@ -32,7 +32,7 @@ class OvertimeRequest extends BaseModel
         'is_after_shift' => 'boolean',
         'type' => OvertimeRequestType::class,
         'approval_status' => ApprovalStatus::class,
-        'approved_at' => 'datetime',
+        // 'approved_at' => 'datetime',
     ];
 
     protected static function booted(): void

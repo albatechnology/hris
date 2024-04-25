@@ -50,6 +50,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'join_date',
         'sign_date',
         'end_contract_date',
+        'resign_date',
         'total_timeoff',
         'total_remaining_timeoff',
     ];
@@ -78,7 +79,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
 
     protected $appends = ['image'];
 
-    public function scopeTenanted(Builder $query): Builder
+    public function scopeTenanted(Builder $query, bool $isDescendant = false): Builder
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
@@ -89,6 +90,14 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
             return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->whereHas('companies', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('companies.group_id', $user->group_id)));
             // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
+        }
+
+        if ($isDescendant) {
+            if ($user->descendants()->exists()) {
+                return $query->whereDescendantOf($user);
+            }
+
+            return $query->where('id', $user->id);
         }
 
         $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];

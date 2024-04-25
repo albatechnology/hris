@@ -112,6 +112,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('attendances/children', [AttendanceController::class, 'children']);
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
+    Route::get('attendances/report/{export?}', [AttendanceController::class, 'report']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
     Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
