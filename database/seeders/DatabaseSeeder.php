@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             TimeoffPolicySeeder::class,
             CustomFieldSeeder::class,
             NationalHolidaySeeder::class,
+            TaskSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 

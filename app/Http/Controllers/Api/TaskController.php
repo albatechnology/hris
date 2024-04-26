@@ -30,7 +30,7 @@ class TaskController extends BaseController
                 AllowedFilter::exact('company_id'),
                 'name', 'working_period',
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['company','hours'])
             ->allowedSorts([
                 'id', 'company_id', 'name', 'working_period'
             ])
@@ -39,9 +39,13 @@ class TaskController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(Task $task)
+    public function show(int $id)
     {
-        return new DefaultResource($task->load('hours'));
+        $task = QueryBuilder::for(Task::tenanted()->where('id', $id))
+            ->allowedIncludes(['company','hours'])
+            ->firstOrFail();
+
+        return new DefaultResource($task);
     }
 
     public function store(StoreRequest $request)
