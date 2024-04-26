@@ -40,7 +40,7 @@ class TaskHourController extends BaseController
 
     public function show(Task $task, TaskHour $hour)
     {
-        return new DefaultResource($hour);
+        return new DefaultResource($hour->loadCount('users'));
     }
 
     public function store(Task $task, StoreRequest $request)
