@@ -24,7 +24,7 @@ class TaskHourController extends BaseController
 
     public function index(Task $task)
     {
-        $data = QueryBuilder::for(TaskHour::where('task_id', $task->id))
+        $data = QueryBuilder::for(TaskHour::where('task_id', $task->id)->withCount('users'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 'name',
