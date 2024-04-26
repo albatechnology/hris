@@ -193,11 +193,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 
+    Route::apiResource('task-hours', TaskHourController::class);
     Route::group(['prefix' => 'tasks/{task}'], function () {
         Route::get('hours/{hour}/users', [TaskHourController::class, 'users']);
         Route::post('hours/{hour}/users', [TaskHourController::class, 'addUsers']);
         Route::delete('hours/{hour}/users', [TaskHourController::class, 'deleteUsers']);
-        Route::apiResource('hours', TaskHourController::class);
         Route::put('restore', [TaskController::class, 'restore']);
         Route::delete('force-delete', [TaskController::class, 'forceDelete']);
     });

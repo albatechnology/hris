@@ -10,7 +10,7 @@ use App\Models\TaskHour;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class TaskHourController extends BaseController
+class TaskHourControllerBackup extends BaseController
 {
     public function __construct()
     {
@@ -22,13 +22,9 @@ class TaskHourController extends BaseController
         $this->middleware('permission:task_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    private function getTaskHour(int $id){
-        return TaskHour::where('id', $id)->whereHas('task', fn ($q) => $q->tenanted())->firstOrFail();
-    }
-
-    public function index()
+    public function index(Task $task)
     {
-        $data = QueryBuilder::for(TaskHour::whereHas('task', fn ($q) => $q->tenanted())->withCount('users'))
+        $data = QueryBuilder::for(TaskHour::where('task_id', $task->id)->withCount('users'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('task_id'),
@@ -43,25 +39,22 @@ class TaskHourController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(int $id)
+    public function show(Task $task, TaskHour $hour)
     {
-        $taskHour = $this->getTaskHour($id);
-        return new DefaultResource($taskHour->loadCount('users'));
+        return new DefaultResource($hour->loadCount('users'));
     }
 
-    public function store(StoreRequest $request)
+    public function store(Task $task, StoreRequest $request)
     {
-        $taskHour = TaskHour::create($request->validated());
+        $taskHour = $task->hours()->create($request->validated());
 
         return new DefaultResource($taskHour);
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(Task $task, $id, StoreRequest $request)
     {
-        $taskHour = $this->getTaskHour($id);
-
         try {
-            $taskHour->update($request->validated());
+            $task->hours()->where('id', $id)->update($request->validated());
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -69,32 +62,30 @@ class TaskHourController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(Task $task, $id)
     {
-        $taskHour = $this->getTaskHour($id);
-
-        $taskHour->delete();
+        $task->hours()->where('id', $id)->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(Task $task, $id)
     {
-        $taskHour = $this->getTaskHour($id);
+        $taskHour = $task->hours()->where('id', $id)->withTrashed()->findOrFail($id);
         $taskHour->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(Task $task, $id)
     {
-        $taskHour = $this->getTaskHour($id);
+        $taskHour = $task->hours()->where('id', $id)->withTrashed()->findOrFail($id);
         $taskHour->restore();
 
         return new DefaultResource($taskHour);
     }
 
-    public function users(int $taskId, int $id)
+    public function users($taskId, $id)
     {
         $query = \App\Models\User::select('id', 'name')->whereHas('tasks', fn ($q) => $q->where('task_id', $taskId)->where('task_hour_id', $id));
 
@@ -110,10 +101,8 @@ class TaskHourController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function addUsers(int $taskId, int $id, StoreUsersRequest $request)
+    public function addUsers(Task $task, $id, StoreUsersRequest $request)
     {
-        $task = Task::tenanted()->where('id', $taskId)->firstOrFail();
-
         try {
             $task->users()->attach($request->user_ids, ['task_hour_id' => $id]);
         } catch (\Exception $e) {
@@ -123,10 +112,8 @@ class TaskHourController extends BaseController
         return $this->createdResponse();
     }
 
-    public function deleteUsers(int $taskId, int $id, StoreUsersRequest $request)
+    public function deleteUsers(Task $task, $id, StoreUsersRequest $request)
     {
-        $task = Task::tenanted()->where('id', $taskId)->firstOrFail();
-
         try {
             $task->users()->toggle($request->user_ids);
         } catch (\Exception $e) {

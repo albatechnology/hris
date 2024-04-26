@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\TaskHour;
 
+use App\Models\Task;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -22,6 +24,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'task_id' => ['required', new CompanyTenantedRule(Task::class, "Task not found")],
             'name' => 'required|string',
             'min_working_hour' => 'required|integer',
             'max_working_hour' => 'required|integer',
