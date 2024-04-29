@@ -159,6 +159,12 @@ class PermissionService
                 'overtime_request_edit',
                 'overtime_request_delete',
             ],
+            'task_request_access' => [
+                'task_request_read',
+                'task_request_create',
+                'task_request_edit',
+                'task_request_delete',
+            ],
             'advanced_leave_request_access' => [
                 'advanced_leave_request_read',
                 'advanced_leave_request_create',
@@ -322,6 +328,12 @@ class PermissionService
                 'overtime_request_create',
                 'overtime_request_edit',
                 'overtime_request_delete',
+            ],
+            'task_request_access' => [
+                'task_request_read',
+                'task_request_create',
+                'task_request_edit',
+                'task_request_delete',
             ],
             'advanced_leave_request_access' => [
                 'advanced_leave_request_read',

@@ -5,11 +5,12 @@ namespace App\Models;
 use App\Enums\ApprovalStatus;
 use App\Enums\OvertimeRequestType;
 use App\Enums\UserType;
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OvertimeRequest extends BaseModel
+class OvertimeRequest extends BaseModel implements TenantedInterface
 {
     use BelongsToUser;
 

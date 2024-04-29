@@ -195,6 +195,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 
+    Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
+    Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);
+    Route::put('task-requests/{task_request}/approve', [TaskRequestController::class, 'approve']);
     Route::apiResource('task-requests', TaskRequestController::class);
     Route::group(['prefix' => 'task-hours/{task_hour}'], function () {
         Route::get('users', [TaskHourController::class, 'users']);

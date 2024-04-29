@@ -34,7 +34,7 @@ class OvertimeRequestController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                'approval_status'
+                'approval_status', 'type'
             ])
             ->allowedSorts([
                 'id', 'date',

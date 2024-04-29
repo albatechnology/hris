@@ -8,7 +8,6 @@ use App\Http\Resources\UserEducation\UserEducationResource;
 use App\Models\User;
 use App\Models\UserEducation;
 use Exception;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserEducationController extends BaseController

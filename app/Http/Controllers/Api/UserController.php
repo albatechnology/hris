@@ -353,7 +353,7 @@ class UserController extends BaseController
                 }
 
                 if ($request->hasFile('file')) {
-                    foreach ($request->file as $file) {
+                    foreach ($request->file('file') as $file) {
                         if ($file->isValid()) {
                             $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
                         }

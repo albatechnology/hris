@@ -11,7 +11,7 @@ class ScheduleService
     /**
      * get user today schedule.
      */
-    public static function getTodaySchedule(?User $user = null, $date = null)
+    public static function getTodaySchedule(?User $user = null, $date = null, array $scheduleColumn = [], array $shiftColumn = [])
     {
         if (!$user) {
             /** @var User $user */
@@ -21,7 +21,9 @@ class ScheduleService
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
 
         /** @var Schedule $schedule */
-        $schedule = $user->schedules()->whereDate('effective_date', '<=', $date)->orderByDesc('effective_date')->first();
+        $schedule = $user->schedules()
+            ->select(count($scheduleColumn) > 0 ? $scheduleColumn : ['*'])
+            ->whereDate('effective_date', '<=', $date)->orderByDesc('effective_date')->first();
 
         if (!$schedule) {
             return null;
@@ -35,7 +37,7 @@ class ScheduleService
         $order = $order > 0 ? $order : $totalShifts;
 
         unset($schedule->pivot);
-        return $schedule->load(['shift' => fn ($q) => $q->where('order', $order)]);
+        return $schedule->load(['shift' => fn ($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
     }
 
     /**

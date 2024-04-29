@@ -15,6 +15,9 @@ enum NotificationType: string
     case REQUEST_OVERTIME = 'request_overtime';
     case OVERTIME_APPROVED = 'overtime_approved';
 
+    case REQUEST_TASK = 'request_task';
+    case TASK_APPROVED = 'task_approved';
+
     case REQUEST_ADVANCED_LEAVE = 'request_advanced_leave';
     case ADVANCED_LEAVE_APPROVED = 'advanced_leave_approved';
 
@@ -30,6 +33,8 @@ enum NotificationType: string
             self::TIMEOFF_APPROVED => \App\Notifications\Timeoff\TimeoffApproved::class,
             self::REQUEST_OVERTIME => \App\Notifications\Overtime\RequestOvertime::class,
             self::OVERTIME_APPROVED => \App\Notifications\Overtime\OvertimeApproved::class,
+            self::REQUEST_TASK => \App\Notifications\Task\RequestTask::class,
+            self::TASK_APPROVED => \App\Notifications\Task\TaskApproved::class,
             self::REQUEST_ADVANCED_LEAVE => \App\Notifications\AdvancedLeave\RequestAdvancedLeave::class,
             self::ADVANCED_LEAVE_APPROVED => \App\Notifications\AdvancedLeave\AdvancedLeaveApproved::class,
             self::REQUEST_CHANGE_DATA => \App\Notifications\RequestChangeData\RequestChangeData::class,
@@ -46,6 +51,8 @@ enum NotificationType: string
             self::TIMEOFF_APPROVED => 'Your time off for %s has been %s.', // 1 March 2024/1 March 2024 to 10 March 2024, approved/rejected
             self::REQUEST_OVERTIME => 'Requesting overtime for %s',
             self::OVERTIME_APPROVED => 'Your overtime request has been %s.', // approved/rejected
+            self::REQUEST_TASK => 'Requesting task for %s',
+            self::TASK_APPROVED => 'Your task request has been %s.', // approved/rejected
             self::REQUEST_ADVANCED_LEAVE => 'Requesting advanced leave for %s %s', // 1 day/5 days
             self::ADVANCED_LEAVE_APPROVED => 'Your advanced leave request has been %s.', // approved/rejected
             self::REQUEST_CHANGE_DATA => 'Requesting change data',
