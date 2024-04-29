@@ -382,9 +382,9 @@ class UserController extends BaseController
         return $this->createdResponse();
     }
 
-    public function tasks(int $userId)
+    public function tasks()
     {
-        $query = TaskHour::whereHas('users', fn ($q) => $q->where('user_id', $userId))->with('task');
+        $query = TaskHour::whereHas('users', fn ($q) => $q->where('user_id', auth()->id()))->with('task');
 
         $data = QueryBuilder::for($query)
             ->allowedFilters('name')

@@ -55,10 +55,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);
+    Route::get('users/tasks', [UserController::class, 'tasks']);
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
-        Route::get('tasks', [UserController::class, 'tasks']);
         Route::post('detail', [UserController::class, 'detail']);
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
