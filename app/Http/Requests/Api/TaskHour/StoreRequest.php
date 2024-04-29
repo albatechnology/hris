@@ -32,6 +32,8 @@ class StoreRequest extends FormRequest
             'hours.*.name' => 'required|string',
             'hours.*.clock_in' => 'required|date_format:H:i',
             'hours.*.clock_out' => 'required|date_format:H:i',
+            'user_ids' => 'nullable|array',
+            'user_ids.*' => 'required|exists:users,id',
         ];
     }
 }

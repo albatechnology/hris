@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\TaskHour\StoreRequest;
 use App\Http\Requests\Api\TaskHour\StoreUsersRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\Task;
 use App\Models\TaskHour;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -22,7 +22,8 @@ class TaskHourController extends BaseController
         $this->middleware('permission:task_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    private function getTaskHour(int $id){
+    private function getTaskHour(int $id)
+    {
         return TaskHour::where('id', $id)->whereHas('task', fn ($q) => $q->tenanted())->firstOrFail();
     }
 
@@ -51,7 +52,15 @@ class TaskHourController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $taskHour = TaskHour::create($request->validated());
+        DB::beginTransaction();
+        try {
+            $taskHour = TaskHour::create($request->validated());
+            if ($request->user_ids) $taskHour->users()->attach($request->user_ids, ['task_id' => $taskHour->task_id]);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($taskHour);
     }
@@ -62,6 +71,7 @@ class TaskHourController extends BaseController
 
         try {
             $taskHour->update($request->validated());
+            if ($request->user_ids) $taskHour->users()->sync($request->user_ids, ['task_id' => $taskHour->task_id]);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -76,22 +86,6 @@ class TaskHourController extends BaseController
         $taskHour->delete();
 
         return $this->deletedResponse();
-    }
-
-    public function forceDelete(int $id)
-    {
-        $taskHour = $this->getTaskHour($id);
-        $taskHour->forceDelete();
-
-        return $this->deletedResponse();
-    }
-
-    public function restore(int $id)
-    {
-        $taskHour = $this->getTaskHour($id);
-        $taskHour->restore();
-
-        return new DefaultResource($taskHour);
     }
 
     public function users(int $id)
@@ -115,7 +109,7 @@ class TaskHourController extends BaseController
         $taskHour = $this->getTaskHour($id);
 
         try {
-            $taskHour->task->users()->attach($request->user_ids, ['task_hour_id' => $id]);
+            $taskHour->users()->attach($request->user_ids, ['task_id' => $taskHour->task_id]);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -128,7 +122,7 @@ class TaskHourController extends BaseController
         $taskHour = $this->getTaskHour($id);
 
         try {
-            $taskHour->task->users()->toggle($request->user_ids);
+            $taskHour->users()->toggle($request->user_ids);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
