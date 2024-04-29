@@ -94,9 +94,9 @@ class TaskHourController extends BaseController
         return new DefaultResource($taskHour);
     }
 
-    public function users(int $taskId, int $id)
+    public function users(int $id)
     {
-        $query = \App\Models\User::select('id', 'name')->whereHas('tasks', fn ($q) => $q->where('task_id', $taskId)->where('task_hour_id', $id));
+        $query = \App\Models\User::select('id', 'name')->whereHas('tasks', fn ($q) => $q->where('task_hour_id', $id));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
@@ -110,12 +110,12 @@ class TaskHourController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function addUsers(int $taskId, int $id, StoreUsersRequest $request)
+    public function addUsers(int $id, StoreUsersRequest $request)
     {
-        $task = Task::tenanted()->where('id', $taskId)->firstOrFail();
+        $taskHour = $this->getTaskHour($id);
 
         try {
-            $task->users()->attach($request->user_ids, ['task_hour_id' => $id]);
+            $taskHour->task->users()->attach($request->user_ids, ['task_hour_id' => $id]);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -123,12 +123,12 @@ class TaskHourController extends BaseController
         return $this->createdResponse();
     }
 
-    public function deleteUsers(int $taskId, int $id, StoreUsersRequest $request)
+    public function deleteUsers(int $id, StoreUsersRequest $request)
     {
-        $task = Task::tenanted()->where('id', $taskId)->firstOrFail();
+        $taskHour = $this->getTaskHour($id);
 
         try {
-            $task->users()->toggle($request->user_ids);
+            $taskHour->task->users()->toggle($request->user_ids);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
