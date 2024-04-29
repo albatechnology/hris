@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Enums\TaskType;
 use App\Enums\WorkingPeriod;
 use App\Models\Company;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class TaskSeeder extends Seeder
@@ -33,7 +33,8 @@ class TaskSeeder extends Seeder
                 'weekday_overtime_rate' => 50000,
                 'weekend_overtime_rate' => 75000,
             ]);
-            $task->hours()->createMany([
+
+            $taskHour = $task->hours()->create(
                 [
                     'name' => 'Teacher',
                     'min_working_hour' => 60,
@@ -56,6 +57,11 @@ class TaskSeeder extends Seeder
                         ]
                     ],
                 ],
+            );
+
+            $task->users()->attach(User::where('company_id', $company->id)->get(['id'])->pluck('id'), ['task_hour_id' => $taskHour->id]);
+
+            $taskHour = $task->hours()->create(
                 [
                     'name' => 'Student Advisor & Teacher',
                     'min_working_hour' => 0,
@@ -77,7 +83,10 @@ class TaskSeeder extends Seeder
                             'clock_out' => '14:00',
                         ]
                     ],
-                ],
+                ]
+            );
+
+            $taskHour = $task->hours()->create(
                 [
                     'name' => 'Team Leader',
                     'min_working_hour' => 40,
@@ -100,7 +109,7 @@ class TaskSeeder extends Seeder
                         ]
                     ],
                 ]
-            ]);
+            );
         });
     }
 }
