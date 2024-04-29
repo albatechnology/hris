@@ -12,9 +12,11 @@ use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
+use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\TaskHour;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -378,5 +380,17 @@ class UserController extends BaseController
         }
 
         return $this->createdResponse();
+    }
+
+    public function tasks(int $userId)
+    {
+        $query = TaskHour::whereHas('users', fn ($q) => $q->where('user_id', $userId))->with('task');
+
+        $data = QueryBuilder::for($query)
+            ->allowedFilters('name')
+            ->allowedSorts(['id', 'name'])
+            ->paginate($this->per_page);
+
+        return DefaultResource::collection($data);
     }
 }
