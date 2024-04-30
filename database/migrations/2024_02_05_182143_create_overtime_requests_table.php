@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\ApprovalStatus;
-use App\Enums\OvertimeRequestType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
