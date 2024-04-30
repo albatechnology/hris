@@ -149,6 +149,9 @@ class TaskRequestController extends BaseController
                 AllowedFilter::exact('id'),
                 'approval_status'
             ])
+            ->allowedIncludes([
+                AllowedInclude::callback('taskHour', fn ($q) => $q->select('id', 'name', 'task_id')->with('task', fn ($q) => $q->select('id', 'name'))),
+            ])
             ->allowedSorts([
                 'id', 'date',
             ])
