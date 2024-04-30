@@ -41,7 +41,6 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
             'is_clock_in' => 'required|boolean',

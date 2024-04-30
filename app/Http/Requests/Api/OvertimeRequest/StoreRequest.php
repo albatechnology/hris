@@ -2,12 +2,10 @@
 
 namespace App\Http\Requests\Api\OvertimeRequest;
 
-use App\Enums\OvertimeRequestType;
 use App\Models\Schedule;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -44,7 +42,7 @@ class StoreRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
-            'type' => ['required', Rule::enum(OvertimeRequestType::class)],
+            // 'type' => ['required', Rule::enum(OvertimeRequestType::class)],
             // 'date' => 'required|date',
             'is_after_shift' => 'required|boolean',
             'start_at' => 'required|date_format:Y-m-d H:i',

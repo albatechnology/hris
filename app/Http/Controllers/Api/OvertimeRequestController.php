@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\NotificationType;
-use App\Enums\OvertimeRequestType;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Requests\Api\OvertimeRequest\ApproveRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
@@ -34,7 +33,7 @@ class OvertimeRequestController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                'approval_status'
+                'approval_status', 'type'
             ])
             ->allowedSorts([
                 'id', 'date',
@@ -53,7 +52,7 @@ class OvertimeRequestController extends BaseController
     {
         $user = User::findOrFail($request->user_id);
 
-        if ($request->type === OvertimeRequestType::OVERTIME->value) {
+        // if ($request->type === OvertimeRequestType::OVERTIME->value) {
             $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->date);
             if (!$attendance) {
                 return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -66,7 +65,7 @@ class OvertimeRequestController extends BaseController
             if ($attendance->clockOut()->doesntExist()) {
                 return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
-        }
+        // }
 
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());

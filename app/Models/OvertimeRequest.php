@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Enums\ApprovalStatus;
-use App\Enums\OvertimeRequestType;
 use App\Enums\UserType;
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OvertimeRequest extends BaseModel
+class OvertimeRequest extends BaseModel implements TenantedInterface
 {
     use BelongsToUser;
 
@@ -17,7 +17,7 @@ class OvertimeRequest extends BaseModel
         'user_id',
         'schedule_id',
         'shift_id',
-        'type',
+        // 'type',
         // 'date',
         'is_after_shift',
         'start_at',
@@ -30,7 +30,7 @@ class OvertimeRequest extends BaseModel
 
     protected $casts = [
         'is_after_shift' => 'boolean',
-        'type' => OvertimeRequestType::class,
+        // 'type' => OvertimeRequestType::class,
         'approval_status' => ApprovalStatus::class,
         // 'approved_at' => 'datetime',
     ];
