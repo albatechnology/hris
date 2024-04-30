@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use App\Enums\OvertimeRequestType;
 use App\Models\Attendance;
 use App\Models\User;
-use DateTime;
 
 class AttendanceService
 {
@@ -43,20 +41,22 @@ class AttendanceService
             // ->where('type', $requestType)
             ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)
-            ->whereDate('start_at', $date)
-            ->get(['start_at', 'end_at']);
+            ->whereDate('date', $date)
+            ->get(['duration']);
+            // ->get(['start_at', 'end_at']);
 
         if ($overtimeRequests->count() <= 0) return null;
 
         $totalSeconds = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            // list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
-            $startAt = new \DateTime($overtimeRequest->start_at);
-            $endAt = new \DateTime($overtimeRequest->end_at);
-            $interval = $startAt->diff($endAt);
+            // $startAt = new \DateTime($overtimeRequest->start_at);
+            // $endAt = new \DateTime($overtimeRequest->end_at);
+            // $interval = $startAt->diff($endAt);
 
-            $totalSeconds += ((int)$interval->format('%d') * 3600 * 24) + ((int)$interval->format('%h') * 3600) + ((int)$interval->format('%s') * 60) + (int)$interval->format('%s');
-            // $totalSeconds += $hours * 3600 + $minutes * 60 + $seconds;
+            // $totalSeconds += ((int)$interval->format('%d') * 3600 * 24) + ((int)$interval->format('%h') * 3600) + ((int)$interval->format('%s') * 60) + (int)$interval->format('%s');
+
+            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
+            $totalSeconds += ($hours * 3600) + ($minutes * 60) + $seconds;
         }
 
         $hours = floor($totalSeconds / 3600);
