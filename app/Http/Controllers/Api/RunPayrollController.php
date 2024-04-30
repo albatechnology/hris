@@ -27,11 +27,11 @@ class RunPayrollController extends BaseController
     {
         parent::__construct();
 
-        $this->middleware('permission:payroll_access', ['only' => ['restore']]);
-        $this->middleware('permission:payroll_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:payroll_create', ['only' => 'store']);
-        $this->middleware('permission:payroll_edit', ['only' => 'update']);
-        $this->middleware('permission:payroll_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:run_payroll_access', ['only' => ['restore']]);
+        $this->middleware('permission:run_payroll_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:run_payroll_create', ['only' => 'store']);
+        $this->middleware('permission:run_payroll_edit', ['only' => 'update']);
+        $this->middleware('permission:run_payroll_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index(): ResourceCollection
