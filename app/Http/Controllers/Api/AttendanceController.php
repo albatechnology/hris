@@ -8,6 +8,7 @@ use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
 use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
+use App\Exports\AttendanceReport;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
@@ -26,9 +27,11 @@ use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
+use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -102,7 +105,7 @@ class AttendanceController extends BaseController
     //                     $attendance->total_overtime = $totalOvertime;
 
     //                     // load task
-    //                     $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+    //                     $totalTask = TaskService::getSumDuration($user, $date);
     //                     $attendance->total_task = $totalTask;
     //                 } else {
     //                     $shift = $schedule->shifts[$orderKey];
@@ -173,6 +176,31 @@ class AttendanceController extends BaseController
 
     public function report(ExportReportRequest $request, ?string $export = null)
     {
+        // $times = array(
+        //     '01:20:00',
+        //     '01:20:00',
+        //     '01:20:00'
+        // );
+
+        // // Initialize total seconds
+        // $totalSeconds = 0;
+
+        // // Loop through the times and calculate total seconds
+        // foreach ($times as $time) {
+        //     list($hours, $minutes, $seconds) = explode(':', $time);
+        //     $totalSeconds += $hours * 3600 + $minutes * 60 + $seconds;
+        // }
+
+        // // Calculate total hours, minutes, and seconds
+        // $totalHours = floor($totalSeconds / 3600);
+        // $totalMinutes = floor(($totalSeconds % 3600) / 60);
+        // $totalSeconds = $totalSeconds % 60;
+
+        // // Output the total time
+        // // echo "Total Time: " . sprintf('%02d:%02d:%02d', $totalHours, $totalMinutes, $totalSeconds);
+
+        // dd($totalHours,$totalMinutes,$totalSeconds);
+        // return Excel::download(new AttendanceReport($request), 'attendances.xlsx');
         $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -190,7 +218,7 @@ class AttendanceController extends BaseController
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn ($q) => $q->select('id', 'name'),
+                    'shift' => fn ($q) => $q->select('id', 'name', 'clock_in', 'clock_out'),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn ($q) => $q->approved(),
                     'clockOut' => fn ($q) => $q->approved(),
@@ -198,8 +226,9 @@ class AttendanceController extends BaseController
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
 
+            $dataAttendance = [];
             foreach ($dateRange as $date) {
-                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name']);
+                $schedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id', 'name']);
                 $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
                 if ($attendance) {
                     $shift = $attendance->shift;
@@ -209,8 +238,8 @@ class AttendanceController extends BaseController
                     $attendance->total_overtime = $totalOvertime;
 
                     // load task
-                    // $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
-                    // $attendance->total_task = $totalTask;
+                    $totalTask = TaskService::getSumDuration($user, $date);
+                    $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shift;
                 }
@@ -238,14 +267,20 @@ class AttendanceController extends BaseController
 
                 unset($shift->pivot);
 
-                $data[] = [
-                    'user' => $user,
+                $dataAttendance[] = [
+                    // 'user' => $user,
                     'date' => $date,
                     'shift_type' => $shiftType,
                     'shift' => $shift,
                     'attendance' => $attendance
                 ];
             }
+
+            $data[] = [
+                'user' => $user,
+                'attendances' => $dataAttendance,
+                'summary' => $summary ?? null
+            ];
         }
 
         return DefaultResource::collection($data);
@@ -314,7 +349,7 @@ class AttendanceController extends BaseController
                     $attendance->total_overtime = $totalOvertime;
 
                     // load task
-                    // $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                    // $totalTask = TaskService::getSumDuration($user, $date);
                     // $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
@@ -412,7 +447,7 @@ class AttendanceController extends BaseController
                 $attendance->total_overtime = $totalOvertime;
 
                 // load task
-                // $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                // $totalTask = TaskService::getSumDuration($user, $date);
                 // $attendance->total_task = $totalTask;
             } else {
                 $shift = $schedule->shift ?? null;
@@ -499,6 +534,7 @@ class AttendanceController extends BaseController
         try {
             if (!$attendance) {
                 $data = [
+                    'user_id' => $user->id,
                     'date' => date('Y-m-d', strtotime($request->time)),
                     ...$request->validated(),
                 ];
