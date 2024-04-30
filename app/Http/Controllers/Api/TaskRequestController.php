@@ -20,9 +20,9 @@ class TaskRequestController extends BaseController
     {
         parent::__construct();
 
-        // $this->middleware('permission:task_request_access', ['only' => ['restore']]);
-        // $this->middleware('permission:task_request_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:task_request_create', ['only' => 'store']);
+        $this->middleware('permission:task_request_access', ['only' => ['restore']]);
+        $this->middleware('permission:task_request_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:task_request_create', ['only' => 'store']);
     }
 
     public function index(): ResourceCollection

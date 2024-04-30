@@ -209,8 +209,8 @@ class AttendanceController extends BaseController
                     $attendance->total_overtime = $totalOvertime;
 
                     // load task
-                    $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
-                    $attendance->total_task = $totalTask;
+                    // $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                    // $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shift;
                 }
@@ -314,8 +314,8 @@ class AttendanceController extends BaseController
                     $attendance->total_overtime = $totalOvertime;
 
                     // load task
-                    $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
-                    $attendance->total_task = $totalTask;
+                    // $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                    // $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
                 }
@@ -412,8 +412,8 @@ class AttendanceController extends BaseController
                 $attendance->total_overtime = $totalOvertime;
 
                 // load task
-                $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
-                $attendance->total_task = $totalTask;
+                // $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                // $attendance->total_task = $totalTask;
             } else {
                 $shift = $schedule->shift ?? null;
             }
