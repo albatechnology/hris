@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class TaskRequestController extends BaseController
@@ -34,6 +35,9 @@ class TaskRequestController extends BaseController
                 AllowedFilter::exact('task_hour_id'),
                 AllowedFilter::callback('task_id', fn ($query, $value) => $query->whereHas('taskHour', fn ($q) => $q->where('task_id', $value))),
                 'approval_status'
+            ])
+            ->allowedIncludes([
+                AllowedInclude::callback('taskHour', fn ($q) => $q->select('id', 'name', 'task_id')->with('task', fn ($q) => $q->select('id', 'name'))),
             ])
             ->allowedSorts([
                 'id', 'created_at',
