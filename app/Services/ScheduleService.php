@@ -22,7 +22,7 @@ class ScheduleService
 
         /** @var Schedule $schedule */
         $schedule = $user->schedules()
-            ->select(count($scheduleColumn) > 0 ? $scheduleColumn : ['*'])
+            ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
             ->whereDate('effective_date', '<=', $date)->orderByDesc('effective_date')->first();
 
         if (!$schedule) {
