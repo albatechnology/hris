@@ -213,6 +213,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->belongsToMany(TimeoffPolicy::class, 'user_timeoff_policies');
     }
 
+    public function overtime(): BelongsTo
+    {
+        return $this->belongsTo(Overtime::class);
+    }
+
     public function schedules(): BelongsToMany
     {
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');

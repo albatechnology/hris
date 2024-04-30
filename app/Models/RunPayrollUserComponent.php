@@ -22,6 +22,6 @@ class RunPayrollUserComponent extends BaseModel
 
     public function payrollComponent(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(PayrollComponent::class);
     }
 }
