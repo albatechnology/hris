@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\DailyAttendance;
 use App\Enums\EmploymentStatus;
 use App\Enums\FormulaComponentEnum;
@@ -9,12 +10,14 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentType;
 use App\Enums\RateType;
 use App\Models\Formula;
+use App\Models\OvertimeRequest;
 use App\Models\PayrollComponent;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Models\UpdatePayrollComponent;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -101,18 +104,48 @@ class RunPayrollService
             // overtime payroll component
             $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
             if ($overtimePayrollComponent) {
+                // overtime setting
                 $overtime = $runPayrollUser->user->overtime;
+
+                // user overtimes (overtime requests)
+                $overtimeRequests = $runPayrollUser->user->overtimeRequests()->where('start_at', '>=', now())->where('approval_status', ApprovalStatus::APPROVED)->get();
+                $userOvertimes = [];
+
+                foreach ($overtimeRequests as $overtimeRequest) {
+                    $startAt = Carbon::parse($overtimeRequest->start_at);
+                    $endAt = Carbon::parse($overtimeRequest->end_at);
+                    $duration = (int)($endAt->diff($startAt)->format('%I')); // duration in minute
+
+                    // check overtimme rounding
+                    if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $duration)->where('end_minute', '<=', $duration)->first()) {
+                        $duration = $overtimeRounding->rounded;
+                    }
+
+                    // check overtimme multiplier
+                    // if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $duration)->where('end_minute', '<=', $duration)->first()) {
+                    //     $duration = $overtimeRounding->rounded;
+                    // }
+
+                    array_push($userOvertimes, [
+                        'duration' => $duration,
+                        'multiplier' => 1,
+                    ]);
+                }
+
+                dd('test', $userOvertimes);
+
+
                 switch ($overtime->rate_type) {
                     case RateType::AMOUNT:
                         $amount = $overtime->rate_amount;
 
                         break;
                     case RateType::BASIC_SALARY:
-                        $amount = $runPayrollUser->user->payrollInfo?->basic_salary ?? 0;
+                        $amount = ($overtime->rate_amount / 100) * ($runPayrollUser->user->payrollInfo?->basic_salary ?? 0);
 
                         break;
-                    case RateType::AMOUNT:
-                        $amount = $overtime->rate_amount;
+                    case RateType::ALLOWANCES:
+                        $amount = 0;
 
                         break;
                     case RateType::FORMULA:

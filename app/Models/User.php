@@ -227,6 +227,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->belongsTo(Overtime::class);
     }
 
+    public function overtimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class);
+    }
+
     public function schedules(): BelongsToMany
     {
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');
