@@ -10,6 +10,7 @@ use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
+use App\Http\Requests\Api\Attendance\ExportReportRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
@@ -45,6 +46,129 @@ class AttendanceController extends BaseController
         $this->middleware('permission:attendance_create', ['only' => ['store', 'request']]);
         $this->middleware('permission:attendance_edit', ['only' => 'update']);
         $this->middleware('permission:attendance_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    public function report(ExportReportRequest $request, ?string $export = null)
+    {
+        $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
+        $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        $users = User::tenanted(true)
+            ->where('join_date', '<=', $startDate)
+            ->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            ->get(['id', 'name']);
+
+        $data = [];
+        $totalData = 0;
+        $totalDateRange = count($dateRange);
+        $this->per_page = $totalDateRange > $this->per_page ? $totalDateRange : $this->per_page;
+        foreach ($users as $user) {
+            $attendances = Attendance::where('user_id', $user->id)
+                ->with([
+                    'shift' => fn ($q) => $q->select('id', 'name'),
+                    'timeoff.timeoffPolicy',
+                    'clockIn' => fn ($q) => $q->approved(),
+                    'clockOut' => fn ($q) => $q->approved(),
+                ])
+                ->whereDateBetween($startDate, $endDate)
+                ->limit($this->per_page)
+                ->get();
+
+            $schedule = ScheduleService::getTodaySchedule($user, $startDate);
+            if ($schedule) {
+                $order = $schedule->shifts->where('id', $schedule->shift->id);
+                $orderKey = array_keys($order->toArray())[0];
+                $totalShifts = $schedule->shifts->count();
+
+                $companyHolidays = Event::tenanted()->whereHoliday()->get();
+                $nationalHolidays = NationalHoliday::orderBy('date')->get();
+
+                foreach ($dateRange as $date) {
+                    if ($totalData >= $this->per_page) break;
+                    // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
+                    // 2. kalo company event(holiday), shiftnya pake holiday
+                    // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift
+                    // 4. kalo schedulenya is_overide_company_holiday == false, shiftnya pake shift
+                    // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
+                    $date = $date->format('Y-m-d');
+                    $attendance = $attendances->firstWhere('date', $date);
+
+                    if ($attendance) {
+                        $shift = $attendance->shift;
+
+                        // load overtime
+                        $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
+                        $attendance->total_overtime = $totalOvertime;
+
+                        // load task
+                        $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                        $attendance->total_task = $totalTask;
+                    } else {
+                        $shift = $schedule->shifts[$orderKey];
+                    }
+                    $shiftType = 'shift';
+
+                    $companyHolidayData = null;
+                    if ($schedule->is_overide_company_holiday == false) {
+                        $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                            return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                        });
+
+                        if ($companyHolidayData) {
+                            $shift = $companyHolidayData;
+                            $shiftType = 'company_holiday';
+                        }
+                    }
+
+                    if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                        $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                        if ($nationalHoliday) {
+                            $shift = $nationalHoliday;
+                            $shiftType = 'national_holiday';
+                        }
+                    }
+
+                    unset($shift->pivot);
+
+                    $data[] = [
+                        'user' => $user,
+                        'date' => $date,
+                        'shift_type' => $shiftType,
+                        'shift' => $shift,
+                        'attendance' => $attendance
+                    ];
+
+                    if (($orderKey + 1) === $totalShifts) {
+                        $orderKey = 0;
+                    } else {
+                        $orderKey++;
+                    }
+
+                    $totalData++;
+                }
+            }
+        }
+
+        return DefaultResource::collection($data);
+        // dd($request->all());
+
+        // $query = Attendance::select(['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date', 'created_at'])
+        //     ->with([
+        //         'details' => fn ($q) => $q->select('id', 'attendance_id', 'is_clock_in', 'time', 'type', 'lat', 'lng', 'approval_status', 'approved_at', 'approved_by', 'note', 'created_at'),
+        //         'user' => fn ($q) => $q->select('id', 'name')
+        //     ])
+        //     ->whereDateBetween($request->filter['start_date'], $request->filter['end_date']);
+
+        // $attendances = QueryBuilder::for($query)
+        //     ->allowedSorts(['user_id'])
+        //     ->get();
+
+        // $data = [];
+        // foreach ($attendances as $attendance) {
+        //     $data[] = $attendance;
+        // }
+
     }
 
     public function index(IndexRequest $request)
@@ -108,6 +232,10 @@ class AttendanceController extends BaseController
                     // load overtime
                     $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                     $attendance->total_overtime = $totalOvertime;
+
+                    // load task
+                    $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                    $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
                 }
@@ -161,9 +289,10 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'name', 'nik');
         if (!$user->is_super_admin) {
-            $query->where('type', '!=', UserType::SUPER_ADMIN);
-        } else {
-            $query->whereDescendantOf($user)->select('id', 'name', 'nik');
+            $query->tenanted();
+            if (!$user->type->is(UserType::ADMINISTRATOR)) {
+                $query->whereDescendantOf($user);
+            }
         }
 
         $users = QueryBuilder::for($query)
@@ -199,8 +328,12 @@ class AttendanceController extends BaseController
                 $shift = $attendance->shift;
 
                 // load overtime
-                $totalOvertime = AttendanceService::getSumOvertimeDuration($user->id, $date);
+                $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                 $attendance->total_overtime = $totalOvertime;
+
+                // load task
+                $totalTask = AttendanceService::getSumOvertimeDuration($user, $date, \App\Enums\OvertimeRequestType::TASK);
+                $attendance->total_task = $totalTask;
             } else {
                 $shift = $schedule->shift ?? null;
             }
@@ -234,7 +367,7 @@ class AttendanceController extends BaseController
             $user->attendance = $attendance;
         });
 
-        return DefaultResource::collection($users->values());
+        return DefaultResource::collection($users);
     }
 
     public function logs()

@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TaskHourController;
+use App\Http\Controllers\Api\TaskRequestController;
 use App\Http\Controllers\Api\TimeoffController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\TimeoffPolicyController;
@@ -55,6 +56,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);
+    Route::get('users/tasks', [UserController::class, 'tasks']);
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
@@ -112,6 +114,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('attendances/children', [AttendanceController::class, 'children']);
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
+    Route::get('attendances/report/{export?}', [AttendanceController::class, 'report']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
     Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
@@ -192,11 +195,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 
+    Route::apiResource('task-requests', TaskRequestController::class);
+    Route::group(['prefix' => 'task-hours/{task_hour}'], function () {
+        Route::get('users', [TaskHourController::class, 'users']);
+        Route::post('users', [TaskHourController::class, 'addUsers']);
+        Route::delete('users', [TaskHourController::class, 'deleteUsers']);
+    });
+    Route::apiResource('task-hours', TaskHourController::class);
     Route::group(['prefix' => 'tasks/{task}'], function () {
-        Route::get('hours/{hour}/users', [TaskHourController::class, 'users']);
-        Route::post('hours/{hour}/users', [TaskHourController::class, 'addUsers']);
-        Route::delete('hours/{hour}/users', [TaskHourController::class, 'deleteUsers']);
-        Route::apiResource('hours', TaskHourController::class);
         Route::put('restore', [TaskController::class, 'restore']);
         Route::delete('force-delete', [TaskController::class, 'forceDelete']);
     });

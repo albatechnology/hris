@@ -13,7 +13,7 @@ class UserEventController extends BaseController
 {
     public function index(Event $event)
     {
-        $data = QueryBuilder::for(User::tenanted()->whereHas('Events', fn ($q) => $q->where('Event_id', $event->id)))
+        $data = QueryBuilder::for(User::tenanted()->whereHas('events', fn ($q) => $q->where('Event_id', $event->id)))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),

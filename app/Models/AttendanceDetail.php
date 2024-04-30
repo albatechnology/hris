@@ -7,6 +7,7 @@ use App\Enums\AttendanceType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\Builder;
 
 class AttendanceDetail extends BaseModel implements HasMedia
 {
@@ -50,6 +51,12 @@ class AttendanceDetail extends BaseModel implements HasMedia
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function scopeApproved(Builder $q)
+    {
+        $q->where('type', AttendanceType::AUTOMATIC)
+            ->orWhere(fn ($q) => $q->whereNot('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED));
     }
 
     public function getImageAttribute()

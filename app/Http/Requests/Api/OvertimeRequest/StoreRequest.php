@@ -45,9 +45,11 @@ class StoreRequest extends FormRequest
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
             'type' => ['required', Rule::enum(OvertimeRequestType::class)],
-            'date' => 'required|date',
+            // 'date' => 'required|date',
             'is_after_shift' => 'required|boolean',
-            'duration' => 'required|date_format:H:i',
+            'start_at' => 'required|date_format:Y-m-d H:i',
+            'end_at' => 'required|date_format:Y-m-d H:i',
+            // 'duration' => 'required|date_format:H:i',
             'note' => 'nullable|string',
         ];
     }

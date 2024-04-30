@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OvertimeRequestType;
 use App\Models\Attendance;
 use App\Models\User;
 use DateTime;
@@ -29,29 +30,37 @@ class AttendanceService
         return $attendance;
     }
 
-    public static function getSumOvertimeDuration(User|int $user, $date)
+    public static function getSumOvertimeDuration(User|int $user, $date, OvertimeRequestType $requestType = null)
     {
         if ($user instanceof User) {
             $user = $user->id;
         }
 
+        if (!$requestType) $requestType = OvertimeRequestType::OVERTIME;
+
         $overtimeRequests = \App\Models\OvertimeRequest::tenanted()
-            // ->where('approval_status', true)
+            ->where('type', $requestType)
+            ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)
-            ->where('date', $date)
-            ->get(['duration']);
+            ->whereDate('start_at', $date)
+            ->get(['start_at', 'end_at']);
 
         if ($overtimeRequests->count() <= 0) return null;
 
         $totalSeconds = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
-            $totalSeconds += $hours * 3600 + $minutes * 60 + $seconds;
+            // list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
+            $startAt = new \DateTime($overtimeRequest->start_at);
+            $endAt = new \DateTime($overtimeRequest->end_at);
+            $interval = $startAt->diff($endAt);
+
+            $totalSeconds += ((int)$interval->format('%d') * 3600 * 24) + ((int)$interval->format('%h') * 3600) + ((int)$interval->format('%s') * 60) + (int)$interval->format('%s');
+            // $totalSeconds += $hours * 3600 + $minutes * 60 + $seconds;
         }
 
         $hours = floor($totalSeconds / 3600);
         $minutes = floor(($totalSeconds % 3600) / 60);
-        $seconds = $totalSeconds % 60;
+        // $seconds = $totalSeconds % 60;
 
         $result = '';
         if ((int)$hours > 0) {
@@ -60,9 +69,9 @@ class AttendanceService
         if ((int)$minutes > 0) {
             $result .= (int)$minutes . 'm ';
         }
-        if ((int)$seconds > 0) {
-            $result .= (int)$seconds . 's';
-        }
+        // if ((int)$seconds > 0) {
+        //     $result .= (int)$seconds . 's';
+        // }
 
         return trim($result);
     }

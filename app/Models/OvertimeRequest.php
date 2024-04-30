@@ -18,9 +18,10 @@ class OvertimeRequest extends BaseModel
         'schedule_id',
         'shift_id',
         'type',
-        'date',
+        // 'date',
         'is_after_shift',
-        'duration',
+        'start_at',
+        'end_at',
         'note',
         'approval_status',
         'approved_by',
@@ -31,13 +32,13 @@ class OvertimeRequest extends BaseModel
         'is_after_shift' => 'boolean',
         'type' => OvertimeRequestType::class,
         'approval_status' => ApprovalStatus::class,
-        'approved_at' => 'datetime',
+        // 'approved_at' => 'datetime',
     ];
 
     protected static function booted(): void
     {
         static::saving(function (self $model) {
-            $model->duration = date('H:i:s', strtotime($model->duration));
+            // $model->duration = date('H:i:s', strtotime($model->duration));
         });
 
         static::creating(function (self $model) {
@@ -48,20 +49,37 @@ class OvertimeRequest extends BaseModel
     protected $appends = ['duration_text'];
     public function getDurationTextAttribute()
     {
-        list($hours, $minutes, $seconds) = explode(':', $this->duration);
+        $startAt = new \DateTime($this->start_at);
+        $endAt = new \DateTime($this->end_at);
+        $interval = $startAt->diff($endAt);
 
         $result = '';
-        if ((int)$hours > 0) {
-            $result .= (int)$hours . 'h ';
+        if ((int)$interval->format('%h')) {
+            $hour = (int)$interval->format('%h');
+            $hour += (int)$interval->format('%d') * 24;
+
+            $result .= $hour . 'h ';
         }
-        if ((int)$minutes > 0) {
-            $result .= (int)$minutes . 'm ';
-        }
-        if ((int)$seconds > 0) {
-            $result .= (int)$seconds . 's';
+        if ((int)$interval->format('%i')) {
+            $result .= (int)$interval->format('%i') . 'm';
         }
 
         return trim($result);
+
+        // list($hours, $minutes, $seconds) = explode(':', $this->duration);
+
+        // $result = '';
+        // if ((int)$hours > 0) {
+        //     $result .= (int)$hours . 'h ';
+        // }
+        // if ((int)$minutes > 0) {
+        //     $result .= (int)$minutes . 'm ';
+        // }
+        // if ((int)$seconds > 0) {
+        //     $result .= (int)$seconds . 's';
+        // }
+
+        // return trim($result);
     }
 
     public function scopeTenanted(Builder $query): Builder

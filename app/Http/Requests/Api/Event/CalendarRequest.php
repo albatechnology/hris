@@ -2,10 +2,7 @@
 
 namespace App\Http\Requests\Api\Event;
 
-use App\Enums\EventType;
-use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CalendarRequest extends FormRequest
 {

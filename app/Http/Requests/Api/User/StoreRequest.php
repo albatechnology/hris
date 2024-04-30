@@ -42,6 +42,7 @@ class StoreRequest extends FormRequest
             'join_date' => 'nullable|date',
             'sign_date' => 'nullable|date',
             'end_contract_date' => 'nullable|date',
+            'resign_date' => 'nullable|date',
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',
 

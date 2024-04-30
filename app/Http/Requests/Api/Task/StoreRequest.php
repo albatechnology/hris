@@ -44,6 +44,10 @@ class StoreRequest extends FormRequest
             'hours.*.name' => 'required|string',
             'hours.*.min_working_hour' => 'required|integer',
             'hours.*.max_working_hour' => 'required|integer',
+            'hours.*.hours' => 'nullable|array',
+            'hours.*.hours.*.name' => 'required|string',
+            'hours.*.hours.*.clock_in' => 'required|date_format:H:i',
+            'hours.*.hours.*.clock_out' => 'required|date_format:H:i',
             ...$additionalValidation
         ];
     }

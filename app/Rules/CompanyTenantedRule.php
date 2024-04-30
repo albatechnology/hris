@@ -2,7 +2,6 @@
 
 namespace App\Rules;
 
-use App\Models\BaseModel;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
