@@ -69,10 +69,13 @@ class TaskHourController extends BaseController
     {
         $taskHour = $this->getTaskHour($id);
 
+        DB::beginTransaction();
         try {
             $taskHour->update($request->validated());
-            if ($request->user_ids) $taskHour->users()->sync($request->user_ids, ['task_id' => $taskHour->task_id]);
+            if ($request->user_ids) $taskHour->users()->syncWithPivotValues($request->user_ids, ['task_id' => $taskHour->task_id]);
+            DB::commit();
         } catch (\Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
