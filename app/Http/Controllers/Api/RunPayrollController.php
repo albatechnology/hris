@@ -53,30 +53,13 @@ class RunPayrollController extends BaseController
 
     public function show(RunPayroll $runPayroll): RunPayrollResource
     {
-        return new RunPayrollResource($runPayroll);
-    }
-
-    public static function saveRelationship(RunPayroll $runPayroll, Request $request)
-    {
-        $runPayroll->runPayrollRoundings()->delete();
-        $runPayroll->runPayrollMultipliers()->delete();
-        $runPayroll->runPayrollAllowances()->delete();
-
-        if ($request->run_payroll_roundings) {
-            $runPayroll->runPayrollRoundings()->createMany($request->run_payroll_roundings);
-        }
-        if ($request->run_payroll_multipliers) {
-            $runPayroll->runPayrollMultipliers()->createMany($request->run_payroll_multipliers);
-        }
-        if ($request->run_payroll_allowances) {
-            $runPayroll->runPayrollAllowances()->createMany($request->run_payroll_allowances);
-        }
+        return new RunPayrollResource($runPayroll->load(['users.user', 'users.components.payrollComponent']));
     }
 
     public function store(StoreRequest $request): RunPayrollResource|JsonResponse
     {
         $runPayroll = app(RunPayrollService::class)->execute($request->validated());
-        return new RunPayrollResource($runPayroll->refresh()->loadMissing('users.components'));
+        return new RunPayrollResource($runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent'));
     }
 
     // public function update(RunPayroll $runPayroll, UpdateRequest $request): RunPayrollResource|JsonResponse
@@ -99,39 +82,24 @@ class RunPayrollController extends BaseController
     //     return (new RunPayrollResource($runPayroll->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     // }
 
-    // public function destroy(RunPayroll $runPayroll): JsonResponse
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         // sync formula with empty data []
-    //         FormulaService::sync($runPayroll, []);
+    public function destroy(RunPayroll $runPayroll): JsonResponse
+    {
+        DB::beginTransaction();
+        try {
+            foreach ($runPayroll->users as $runPayrollUser) {
+                $runPayrollUser->components()?->delete();
+                $runPayrollUser->delete();
+            }
 
-    //         // delete runPayroll
-    //         $runPayroll->runPayrollRoundings()->delete();
-    //         $runPayroll->runPayrollMultipliers()->delete();
-    //         $runPayroll->runPayrollAllowances()->delete();
-    //         $runPayroll->delete();
+            $runPayroll->delete();
 
-    //         DB::commit();
-    //     } catch (\Exception $th) {
-    //         DB::rollBack();
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
 
-    //         return $this->errorResponse($th->getMessage());
-    //     }
+            return $this->errorResponse($th->getMessage());
+        }
 
-    //     return $this->deletedResponse();
-    // }
-
-    // public function userSetting(UserSettingRequest $request): JsonResponse
-    // {
-    //     try {
-    //         User::find($request->user_id)->update([
-    //             'run_payroll_id' => $request->run_payroll_id,
-    //         ]);
-    //     } catch (\Exception $th) {
-    //         return $this->errorResponse($th->getMessage());
-    //     }
-
-    //     return $this->updatedResponse();
-    // }
+        return $this->deletedResponse();
+    }
 }
