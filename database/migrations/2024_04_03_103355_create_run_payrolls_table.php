@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained();
             $table->string('period');
             $table->date('payment_schedule');
+            $table->unsignedInteger('step');
             $table->timestamps();
         });
     }
