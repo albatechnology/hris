@@ -8,7 +8,6 @@ use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
 use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
-use App\Exports\AttendanceReport;
 use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
@@ -30,8 +29,8 @@ use App\Services\ScheduleService;
 use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use DateTime;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -230,6 +229,7 @@ class AttendanceController extends BaseController
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id', 'name']);
                 $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
+
                 if ($attendance) {
                     $shift = $attendance->shift;
 
@@ -240,9 +240,18 @@ class AttendanceController extends BaseController
                     // load task
                     $totalTask = TaskService::getSumDuration($user, $date);
                     $attendance->total_task = $totalTask;
+
+                    if ($attendance->clockIn) {
+                        $attendance->clockIn->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
+                    }
+
+                    if ($attendance->clockOut) {
+                        $attendance->clockOut->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
+                    }
                 } else {
                     $shift = $schedule->shift;
                 }
+                $shift->interval_working_hour = getIntervalTime($shift?->clock_in, $shift?->clock_out);
                 $shiftType = 'shift';
 
                 $companyHolidayData = null;
