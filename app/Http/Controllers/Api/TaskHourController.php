@@ -93,7 +93,12 @@ class TaskHourController extends BaseController
 
     public function users(int $id)
     {
-        $query = \App\Models\User::select('id', 'name')->whereHas('tasks', fn ($q) => $q->where('task_hour_id', $id));
+        $query = \App\Models\User::select('id', 'name', 'nik', 'branch_id', 'company_id')
+            ->whereHas('tasks', fn ($q) => $q->where('task_hour_id', $id))
+            ->with([
+                'company' => fn ($q) => $q->select('id', 'name'),
+                'branch' => fn ($q) => $q->select('id', 'name'),
+            ]);
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
