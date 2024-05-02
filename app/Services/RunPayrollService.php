@@ -112,9 +112,7 @@ class RunPayrollService
                 $userOvertimes = [];
 
                 foreach ($overtimeRequests as $overtimeRequest) {
-                    $startAt = Carbon::parse($overtimeRequest->start_at);
-                    $endAt = Carbon::parse($overtimeRequest->end_at);
-                    $duration = (int)($endAt->diff($startAt)->format('%I')); // duration in minute
+                    $duration = $overtimeRequest->duration;
 
                     // check overtimme rounding
                     if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $duration)->where('end_minute', '<=', $duration)->first()) {
