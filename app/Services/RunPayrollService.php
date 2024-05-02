@@ -9,7 +9,7 @@ use App\Enums\FormulaComponentEnum;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentType;
 use App\Enums\RateType;
-use App\Enums\RunPayrollStep;
+use App\Enums\RunPayrollStatus;
 use App\Models\Formula;
 use App\Models\OvertimeRequest;
 use App\Models\PayrollComponent;
@@ -60,7 +60,7 @@ class RunPayrollService
             'company_id' => $request->company_id,
             'period' => $request->period,
             'payment_schedule' => $request->payment_schedule,
-            'step' => RunPayrollStep::ONE,
+            'step' => RunPayrollStatus::REVIEW,
         ]);
     }
 
