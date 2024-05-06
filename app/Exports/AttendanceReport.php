@@ -13,7 +13,6 @@ use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Maatwebsite\Excel\Concerns\FromView;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Contracts\View\View;
 
 class AttendanceReport implements FromView
@@ -24,6 +23,7 @@ class AttendanceReport implements FromView
     /**
      * @return array
      */
+    // public function view(): View
     public function view(): View
     {
         $startDate = Carbon::createFromFormat('Y-m-d', $this->request->filter['start_date']);
@@ -43,7 +43,7 @@ class AttendanceReport implements FromView
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn ($q) => $q->select('id', 'name', 'clock_in', 'clock_out'),
+                    'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn ($q) => $q->approved(),
                     'clockOut' => fn ($q) => $q->approved(),
@@ -53,21 +53,49 @@ class AttendanceReport implements FromView
 
             $dataAttendance = [];
             foreach ($dateRange as $date) {
-                $schedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id', 'name']);
+                $schedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id', 'name'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
                 $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
+                if ($attendance?->clockIn) {
+                    $attendance->clock_in = $attendance?->clockIn;
+                }
+                if ($attendance?->clockOut) {
+                    $attendance->clock_out = $attendance?->clockOut;
+                }
+                if ($attendance?->timeoff) {
+                    $attendance->clock_out = $attendance?->timeoff;
+                    if ($attendance->timeoff->timeoffPolicy) {
+                        $attendance->timeoff->timeoffPolicy = $attendance?->timeoff->timeoffPolicy;
+                    }
+                }
                 if ($attendance) {
                     $shift = $attendance->shift;
 
                     // load overtime
-                    $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
-                    $attendance->total_overtime = $totalOvertime;
+                    $overtimeDurationBeforeShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn ($q) => $q->where('is_after_shift', false));
+                    $attendance->overtime_duration_before_shift = $overtimeDurationBeforeShift;
+
+                    $overtimeDurationAfterShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn ($q) => $q->where('is_after_shift', true));
+                    $attendance->overtime_duration_after_shift = $overtimeDurationAfterShift;
 
                     // load task
                     $totalTask = TaskService::getSumDuration($user, $date);
                     $attendance->total_task = $totalTask;
+
+                    if ($attendance->clockIn) {
+                        $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
+                    }
+
+                    if ($attendance->clockOut) {
+                        $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
+                    }
+
+                    if ($attendance->clockIn && $attendance->clockOut) {
+                        $attendance->real_working_hour = getIntervalTime(date('H:i:s', strtotime($attendance->clockIn->time)), date('H:i:s', strtotime($attendance->clockOut->time)));
+                    }
                 } else {
                     $shift = $schedule->shift;
                 }
+                $shift->schedule_working_hour = getIntervalTime($shift?->clock_in, $shift?->clock_out);
                 $shiftType = 'shift';
 
                 $companyHolidayData = null;
@@ -100,11 +128,19 @@ class AttendanceReport implements FromView
                     'attendance' => $attendance
                 ];
             }
+            $dataAttendance = collect($dataAttendance);
 
             $data[] = [
                 'user' => $user,
                 'attendances' => $dataAttendance,
-                'summary' => $summary ?? null
+                'summary' => [
+                    'late_in' => sumTimes($dataAttendance->pluck('attendance.late_in')),
+                    'early_out' => sumTimes($dataAttendance->pluck('attendance.early_out')),
+                    'schedule_working_hour' => sumTimes($dataAttendance->pluck('shift.schedule_working_hour')),
+                    'real_working_hour' => sumTimes($dataAttendance->pluck('attendance.real_working_hour')),
+                    'overtime_duration_before_shift' => sumTimes($dataAttendance->pluck('attendance.overtime_duration_before_shift')),
+                    'overtime_duration_after_shift' => sumTimes($dataAttendance->pluck('attendance.overtime_duration_after_shift')),
+                ]
             ];
         }
 
