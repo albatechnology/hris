@@ -27,6 +27,11 @@ class RunPayrollUser extends BaseModel
         'benefit' => 'double',
     ];
 
+    public function runPayroll(): BelongsTo
+    {
+        return $this->belongsTo(RunPayroll::class);
+    }
+
     public function components(): HasMany
     {
         return $this->hasMany(RunPayrollUserComponent::class);

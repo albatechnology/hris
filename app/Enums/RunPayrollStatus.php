@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum RunPayrollStatus: int
+enum RunPayrollStatus: string
 {
     use BaseEnum;
 

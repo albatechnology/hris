@@ -188,6 +188,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 
+    Route::put('run-payrolls/user-components/{run_payroll}', [RunPayrollController::class, 'updateUserComponent']);
     Route::apiResource('run-payrolls', RunPayrollController::class);
 
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
