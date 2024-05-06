@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Requests\Api\OvertimeRequest\ApproveRequest;
@@ -33,10 +34,11 @@ class OvertimeRequestController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                'approval_status', 'type'
+                AllowedFilter::exact('shift_id'),
+                'approval_status', 'date', 'is_after_shift'
             ])
             ->allowedSorts([
-                'id', 'date',
+                'id', 'user_id', 'shift_id', 'approval_status', 'date',
             ])
             ->paginate($this->per_page);
 
@@ -53,18 +55,18 @@ class OvertimeRequestController extends BaseController
         $user = User::findOrFail($request->user_id);
 
         // if ($request->type === OvertimeRequestType::OVERTIME->value) {
-            $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->date);
-            if (!$attendance) {
-                return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->date);
+        if (!$attendance) {
+            return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
-            if ($attendance->clockIn()->doesntExist()) {
-                return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        if ($attendance->clockIn()->doesntExist()) {
+            return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
-            if ($attendance->clockOut()->doesntExist()) {
-                return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        if ($attendance->clockOut()->doesntExist()) {
+            return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
         // }
 
         try {
@@ -77,6 +79,15 @@ class OvertimeRequestController extends BaseController
         }
 
         return new OvertimeRequestResource($overtimeRequest);
+    }
+
+    public function destroy(int $id)
+    {
+        $overtimeRequest = OvertimeRequest::findTenanted($id);
+        if (!$overtimeRequest->approval_status->is(ApprovalStatus::PENDING)) return $this->errorResponse(message: 'Cannot delete pending overtime request', code: 422);
+
+        $overtimeRequest->delete();
+        return $this->deletedResponse();
     }
 
     public function approve(ApproveRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
@@ -103,15 +114,21 @@ class OvertimeRequestController extends BaseController
     public function approvals()
     {
         $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with('user', fn ($q) => $q->select('id', 'name'));
+            ->with([
+                'user' => fn ($q) => $q->select('id', 'name'),
+                'approvedBy' => fn ($q) => $q->select('id', 'name'),
+                'shift' => fn ($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),
+            ]);
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                'approval_status'
+                AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('shift_id'),
+                'approval_status', 'date', 'is_after_shift'
             ])
             ->allowedSorts([
-                'id', 'date',
+                'id', 'user_id', 'shift_id', 'approval_status', 'date',
             ])
             ->paginate($this->per_page);
 

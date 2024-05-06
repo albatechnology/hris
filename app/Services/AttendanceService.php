@@ -29,21 +29,22 @@ class AttendanceService
     }
 
     // public static function getSumOvertimeDuration(User|int $user, $date, OvertimeRequestType $requestType = null)
-    public static function getSumOvertimeDuration(User|int $user, $date)
+    public static function getSumOvertimeDuration(User|int $user, $startDate, $endDate = null, bool $formatText = true, callable $query = null)
     {
         if ($user instanceof User) {
             $user = $user->id;
         }
 
-        // if (!$requestType) $requestType = OvertimeRequestType::OVERTIME;
-
         $overtimeRequests = \App\Models\OvertimeRequest::tenanted()
-            // ->where('type', $requestType)
             ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)
-            ->whereDate('date', $date)
+            ->when(
+                is_null($endDate),
+                fn ($q) => $q->whereDate('date', $startDate),
+                fn ($q) => $q->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
+            )
+            ->when($query, $query)
             ->get(['duration']);
-            // ->get(['start_at', 'end_at']);
 
         if ($overtimeRequests->count() <= 0) return null;
 
@@ -64,15 +65,20 @@ class AttendanceService
         // $seconds = $totalSeconds % 60;
 
         $result = '';
-        if ((int)$hours > 0) {
-            $result .= (int)$hours . 'h ';
+        if ($formatText) {
+            if ((int)$hours > 0) {
+                $result .= (int)$hours . 'h ';
+            }
+            if ((int)$minutes > 0) {
+                $result .= (int)$minutes . 'm ';
+            }
+            // if ((int)$seconds > 0) {
+            //     $result .= (int)$seconds . 's';
+            // }
+        } else {
+            $result = sprintf("%02d:%02d:00", $hours, $minutes);
+            // $result = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
         }
-        if ((int)$minutes > 0) {
-            $result .= (int)$minutes . 'm ';
-        }
-        // if ((int)$seconds > 0) {
-        //     $result .= (int)$seconds . 's';
-        // }
 
         return trim($result);
     }

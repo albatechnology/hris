@@ -140,7 +140,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('overtime-requests/approvals', [OvertimeRequestController::class, 'approvals']);
     Route::get('overtime-requests/approvals/count-total', [OvertimeRequestController::class, 'countTotalApprovals']);
-    Route::apiResource('overtime-requests', OvertimeRequestController::class);
+    Route::apiResource('overtime-requests', OvertimeRequestController::class)->except('update');
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
 
     Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);

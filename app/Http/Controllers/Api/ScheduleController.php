@@ -99,7 +99,7 @@ class ScheduleController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
         $schedule = Schedule::withTrashed()->findOrFail($id);
         $schedule->forceDelete();
@@ -107,7 +107,7 @@ class ScheduleController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
         $schedule = Schedule::withTrashed()->findOrFail($id);
         $schedule->restore();

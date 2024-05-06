@@ -113,12 +113,6 @@ class OvertimeRequest extends BaseModel implements TenantedInterface
 
         return $query->first();
     }
-
-    public function overtime(): BelongsTo
-    {
-        return $this->belongsTo(Overtime::class);
-    }
-
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);

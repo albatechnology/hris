@@ -12,6 +12,7 @@ use App\Models\Attendance;
 use App\Models\Timeoff;
 use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
+use DateTime;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -122,10 +123,8 @@ class TimeoffController extends BaseController
 
     public function approve(Timeoff $timeoff, ApproveRequest $request)
     {
-        // dump($request->validated());
         // dump($timeoff);
         $timeoff->approval_status = $request->approval_status;
-        // dd($timeoff);
         if (!$timeoff->isDirty('approval_status')) {
             return $this->errorResponse('Nothing to update', [], Response::HTTP_BAD_REQUEST);
         }
@@ -135,8 +134,6 @@ class TimeoffController extends BaseController
         if (!$startSchedule && !$endSchedule) {
             return $this->errorResponse(message: sprintf('There is a schedule that cannot be found between %s and %s', $timeoff->start_at, $timeoff->end_at), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        $dateRange = new \DatePeriod(date_create($timeoff->start_at), new \DateInterval('P1D'), date_create($timeoff->end_at));
 
         // untuk history timeoff
         $value = 0.5;
@@ -174,15 +171,30 @@ class TimeoffController extends BaseController
                     return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
 
-                foreach ($dateRange as $date) {
-                    $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
+                $intervalDays = date_diff(new DateTime($timeoff->start_at), new DateTime($timeoff->end_at))->days;
+                if ($intervalDays > 1) {
+                    $dateRange = new \DatePeriod(date_create($timeoff->start_at), new \DateInterval('P1D'), date_create($timeoff->end_at));
+
+                    foreach ($dateRange as $date) {
+                        $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
+                        Attendance::create([
+                            'user_id' => $timeoff->user_id,
+                            'schedule_id' => $schedule->id,
+                            'shift_id' => $schedule->shift->id,
+                            'timeoff_id' => $timeoff->id,
+                            'code' => $timeoff->timeoffPolicy->code,
+                            'date' => $date->format('Y-m-d'),
+                        ]);
+                    }
+                } else {
+                    $schedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->start_at);
                     Attendance::create([
                         'user_id' => $timeoff->user_id,
                         'schedule_id' => $schedule->id,
                         'shift_id' => $schedule->shift->id,
                         'timeoff_id' => $timeoff->id,
                         'code' => $timeoff->timeoffPolicy->code,
-                        'date' => $date->format('Y-m-d'),
+                        'date' => $timeoff->start_at,
                     ]);
                 }
 
