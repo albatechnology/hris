@@ -57,10 +57,10 @@ class RunPayrollService
     public static function createRunPayroll(array $request): RunPayroll
     {
         return RunPayroll::create([
-            'company_id' => $request->company_id,
-            'period' => $request->period,
-            'payment_schedule' => $request->payment_schedule,
-            'step' => RunPayrollStatus::REVIEW,
+            'company_id' => $request['company_id'],
+            'period' => $request['period'],
+            'payment_schedule' => $request['payment_schedule'],
+            'status' => RunPayrollStatus::REVIEW,
         ]);
     }
 
