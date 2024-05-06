@@ -20,6 +20,11 @@ class RunPayrollUserComponent extends BaseModel
         'is_editable' => 'boolean',
     ];
 
+    public function runPayrollUser(): BelongsTo
+    {
+        return $this->belongsTo(RunPayrollUser::class);
+    }
+
     public function payrollComponent(): BelongsTo
     {
         return $this->belongsTo(PayrollComponent::class);
