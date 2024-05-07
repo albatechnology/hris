@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UpdatePayrollComponentType;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class UpdatePayrollComponent extends BaseModel
 {
@@ -54,5 +55,10 @@ class UpdatePayrollComponent extends BaseModel
     public function details(): HasMany
     {
         return $this->hasMany(UpdatePayrollComponentDetail::class);
+    }
+
+    public function firstDetail(): HasOne
+    {
+        return $this->hasOne(UpdatePayrollComponentDetail::class);
     }
 }
