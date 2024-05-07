@@ -29,16 +29,20 @@ class UpdatePayrollComponentController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(UpdatePayrollComponent::tenanted())
-            ->allowedFilters([
-                AllowedFilter::exact('id'),
-                AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('transaction_id'),
-                AllowedFilter::exact('description'),
-                AllowedFilter::exact('effective_date'),
-                AllowedFilter::exact('end_date'),
-            ])
-            ->allowedIncludes(['company'])
+        $data = QueryBuilder::for(UpdatePayrollComponent::tenanted()->with([
+            'firstDetail.payrollComponent',
+            'details' => function ($q) {
+                $q->selectRaw('update_payroll_component_id')->groupByRaw('update_payroll_component_id, payroll_component_id');
+            }
+        ]))->allowedFilters([
+            AllowedFilter::exact('id'),
+            AllowedFilter::exact('company_id'),
+            AllowedFilter::exact('transaction_id'),
+            AllowedFilter::exact('description'),
+            AllowedFilter::exact('effective_date'),
+            AllowedFilter::exact('end_date'),
+        ])
+            ->allowedIncludes(['details.user', 'details.payrollComponent'])
             ->allowedSorts([
                 'company_id', 'transaction_id', 'type', 'description', 'effective_date', 'end_date', 'backpay_date', 'created_by', 'updated_by',
             ])
