@@ -52,7 +52,7 @@ class RequestTask extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->taskRequest->duration_text),
+            'message' => sprintf($this->notificationType->getMessage(), $this->taskRequest->taskHour?->task?->name ?? ""),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->taskRequest->id

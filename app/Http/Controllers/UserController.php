@@ -8,7 +8,6 @@ use App\Http\Requests\User\UpdateRequest;
 use App\Models\CustomField;
 use App\Models\User;
 use App\View\Components\Datatables\DatatableAction;
-use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -74,7 +73,7 @@ class UserController extends Controller
             $this->model->create($request->validated());
 
             $alert['success'] = self::CREATED_MESSAGE;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $alert['error'] = $e->getMessage();
         }
 
@@ -134,7 +133,7 @@ class UserController extends Controller
             $user->update($request->validated());
 
             $alert['success'] = self::UPDATED_MESSAGE;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $alert['error'] = $e->getMessage();
         }
 
@@ -150,7 +149,7 @@ class UserController extends Controller
             $user->delete();
 
             $alert['success'] = self::DELETED_MESSAGE;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $alert['error'] = $e->getMessage();
         }
 
@@ -166,7 +165,7 @@ class UserController extends Controller
             $this->model->whereIn('id', $request->ids)->delete();
 
             $alert['success'] = self::DELETED_MESSAGE;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $alert['error'] = $e->getMessage();
         }
 
