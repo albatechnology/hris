@@ -34,6 +34,7 @@ class PayrollComponentController extends BaseController
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('type'),
+                AllowedFilter::scope('has_formulas'),
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([

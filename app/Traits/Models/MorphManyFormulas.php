@@ -11,4 +11,11 @@ trait MorphManyFormulas
     {
         return $this->morphMany(Formula::class, 'formulaable')->whereNull('parent_id');
     }
+
+    public function scopeHasFormulas($query, $value)
+    {
+        if ($value == true) return $query->has('formulas');
+
+        return $query->doesntHave('formulas');
+    }
 }
