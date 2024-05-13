@@ -187,6 +187,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         return $this->hasMany(UserExperience::class);
     }
 
+    public function oneTimePayrollComponents(): HasMany
+    {
+        return $this->hasMany(OneTimePayrollComponent::class);
+    }
+
     public function educations(): HasMany
     {
         return $this->hasMany(UserEducation::class);
