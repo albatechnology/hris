@@ -411,7 +411,153 @@ class AttendanceController extends BaseController
         ]);
     }
 
-    public function children(ChildrenRequest $request)
+    public function employeesSummary(ChildrenRequest $request)
+    {
+        $user = auth('sanctum')->user();
+
+        $query = User::select('id', 'name', 'nik');
+        if (!$user->is_super_admin) {
+            $query->tenanted();
+            if (!$user->type->is(UserType::ADMINISTRATOR)) {
+                $query->whereDescendantOf($user);
+            }
+        }
+
+        // $users = QueryBuilder::for($query)
+        //     ->allowedFilters([
+        //         AllowedFilter::exact('id'),
+        //         'nik',
+        //         'name',
+        //     ])
+        //     ->allowedSorts([
+        //         'nik',
+        //         'name',
+        //     ])
+        //     ->get();
+
+        $date = $request->filter['date'];
+
+        $summaryPresentOnTime = 0;
+        $summaryPresentLateClockIn = 0;
+        $summaryPresentEarlyClockOut = 0;
+        $summaryNotPresentAbsent = 0;
+        $summaryNotPresentNoClockIn = 0;
+        $summaryNotPresentNoClockOut = 0;
+        $summaryAwayDayOff = 0;
+        $summaryAwayTimeOff = 0;
+
+        // $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        // $nationalHolidays = NationalHoliday::orderBy('date')->get();
+
+        foreach ($query->get() as $user) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date);
+
+            $attendance = $user->attendances()
+                ->where('date', $date)
+                ->with([
+                    'shift' => fn ($q) => $q->select('id', 'clock_in', 'clock_out'),
+                    'timeoff' => fn ($q) => $q->select('id'),
+                    'clockIn' => fn ($q) => $q->select('attendance_id', 'time'),
+                    'clockOut' => fn ($q) => $q->select('attendance_id', 'time'),
+                ])->first();
+
+            if ($attendance) {
+                $shift = $attendance->shift;
+
+                if ($attendance->clockIn) {
+                    $shiftClockInTime = strtotime($shift->clock_in);
+                    $clockInTime = strtotime(date('H:i:s', strtotime($attendance->clockIn->time)));
+
+                    // calculate present on time (include early clock in)
+                    if ($clockInTime <= $shiftClockInTime) {
+                        $summaryPresentOnTime += 1;
+                    }
+
+                    // calculate late clock in
+                    if ($clockInTime > $shiftClockInTime) {
+                        $summaryPresentLateClockIn += 1;
+                    }
+
+                    // calculate if no clock out but clock in
+                    if (!$attendance->clockOut) {
+                        $summaryNotPresentNoClockOut += 1;
+                    }
+                }
+
+                if ($attendance->clockOut) {
+                    $shiftClockOutTime = strtotime($shift->clock_out);
+                    $clockOutTime = strtotime(date('H:i:s', strtotime($attendance->clockOut->time)));
+
+                    // calculate early clock out
+                    if ($clockOutTime < $shiftClockOutTime) {
+                        $summaryPresentEarlyClockOut += 1;
+                    }
+
+                    // calculate if no clock in but clock out
+                    if (!$attendance->clockIn) {
+                        $summaryNotPresentNoClockIn += 1;
+                    }
+                }
+
+                // calculate timeoff
+                if ($attendance->timeoff) {
+                    $summaryAwayTimeOff += 1;
+                }
+            } else {
+                $shift = $schedule->shift ?? null;
+                $summaryNotPresentAbsent += 1;
+            }
+            // $shiftType = 'shift';
+
+            // $companyHolidayData = null;
+            // if ($schedule?->is_overide_company_holiday == false) {
+            //     $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+            //         return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+            //     });
+
+            //     if ($companyHolidayData) {
+            //         $shift = $companyHolidayData;
+            //         $shiftType = 'company_holiday';
+            //     }
+            // }
+
+            // if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+            //     $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+            //     if ($nationalHoliday) {
+            //         $shift = $nationalHoliday;
+            //         $shiftType = 'national_holiday';
+            //     }
+            // }
+
+            // unset($shift->pivot);
+
+            // $user->date = $date;
+            // $user->shift_type = $shiftType;
+            // $user->shift = $shift;
+            // $user->attendance = $attendance;
+        }
+
+        $summary = [
+            'present' => [
+                'on_time' => $summaryPresentOnTime,
+                'late_clock_in' => $summaryPresentLateClockIn,
+                'early_clock_out' => $summaryPresentEarlyClockOut,
+            ],
+            'not_present' => [
+                'absent' => $summaryNotPresentAbsent,
+                'no_clock_in' => $summaryNotPresentNoClockIn,
+                'no_clock_out' => $summaryNotPresentNoClockOut,
+            ],
+            'away' => [
+                'day_off' => $summaryAwayDayOff,
+                'time_off' => $summaryAwayTimeOff,
+            ]
+        ];
+
+        return new DefaultResource($summary);
+    }
+
+    public function employees(ChildrenRequest $request)
     {
         $user = auth('sanctum')->user();
 
@@ -436,6 +582,23 @@ class AttendanceController extends BaseController
             ->paginate($this->per_page);
 
         $date = $request->filter['date'];
+
+        $summary = [
+            'present' => [
+                'on_time' => 0,
+                'late_clock_in' => 0,
+                'early_clock_out' => 0,
+            ],
+            'not_present' => [
+                'on_time' => 0,
+                'late_clock_in' => 0,
+                'early_clock_out' => 0,
+            ],
+            'away' => [
+                'day_off' => 0,
+                'time_off' => 0,
+            ]
+        ];
 
         $companyHolidays = Event::tenanted()->whereHoliday()->get();
         $nationalHolidays = NationalHoliday::orderBy('date')->get();
