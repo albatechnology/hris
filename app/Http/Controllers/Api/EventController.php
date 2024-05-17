@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Event\CalendarRequest;
 use App\Http\Requests\Api\Event\StoreRequest;
 use App\Http\Resources\Event\EventResource;
 use App\Models\Event;
+use App\Models\Timeoff;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -125,8 +126,51 @@ class EventController extends BaseController
         }
 
         $birthdays = User::tenanted()->whereHas('detail', fn ($q) => $q->whereMonth('birthdate', $request->filter['month']))->with('detail', fn ($q) => $q->select('user_id', 'birthdate'))->get(['id', 'name']);
+        foreach ($birthdays as $user) {
+            $data[] = [
+                'type' => 'birthday',
+                'name' => $user->name . " birthday",
+                'date' => sprintf(date('Y') . '-%s-%s', date('m', strtotime($user->detail->birthdate)), date('d', strtotime($user->detail->birthdate))),
+                'description' => $user->name . " birthday",
+            ];
+        }
 
-        // $timeoffs = Timeoff::tenanted()->
+        $timeoffs = Timeoff::tenanted()->approved()
+            ->with([
+                'timeoffPolicy' => fn ($q) => $q->select('id', 'name'),
+                'user' => fn ($q) => $q->select('id', 'name'),
+
+            ])
+            ->get(['user_id', 'timeoff_policy_id', 'start_at', 'end_at', 'reason']);
+
+        foreach ($timeoffs as $timeoff) {
+            if ($fullDate || (date('Y-m-d', strtotime($timeoff->start_at)) == date('Y-m-d', strtotime($timeoff->end_at)))) {
+                $data[] = [
+                    'type' => 'timeoff',
+                    'name' => $timeoff->user->name . ' ' . $timeoff->timeoffPolicy->name,
+                    'date' => $fullDate ?? date('Y-m-d', strtotime($timeoff->start_at)),
+                    'description' => $timeoff->reason,
+                ];
+            } else {
+                $startDate = $timeoff->start_at;
+                if (date('m') != date('m', strtotime($startDate))) {
+                    $startDate = date('Y-m-01');
+                }
+
+                $startDate = \Carbon\Carbon::createFromFormat('Y-m-d', date('Y-m-d', strtotime($startDate)));
+                $endDate = \Carbon\Carbon::createFromFormat('Y-m-d', date('Y-m-d', strtotime($timeoff->end_at)));
+                $dateRange = \Carbon\CarbonPeriod::create($startDate, $endDate);
+
+                foreach ($dateRange as $date) {
+                    $data[] = [
+                        'type' => 'timeoff',
+                        'name' => $timeoff->user->name . ' ' . $timeoff->timeoffPolicy->name,
+                        'date' => $date->format('Y-m-d'),
+                        'description' => $timeoff->reason,
+                    ];
+                }
+            }
+        }
 
         return \App\Http\Resources\DefaultResource::collection($data);
     }
