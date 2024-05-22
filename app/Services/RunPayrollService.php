@@ -77,8 +77,8 @@ class RunPayrollService
     {
         // dummy companyid
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
-        $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
-        $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_end_date . '-' . $request['period'])->addMonth(1);
+        $cutoffAttendanceStartDate = Carbon::parse($request['period'] . '-' . $payrollSetting->cutoff_attendance_start_date);
+        $cutoffAttendanceEndDate = Carbon::parse($request['period'] . '-' . $payrollSetting->cutoff_attendance_end_date)->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
 
         foreach (explode(',', $request['user_ids']) as $userId) {
@@ -97,6 +97,9 @@ class RunPayrollService
                 });
             })->first();
 
+            // define user basic salary
+            $userBasicSalary = $runPayrollUser->user->payrollInfo?->basic_salary;
+
             // default payroll component
             $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereNotIn('category', [PayrollComponentCategory::OVERTIME])->get();
             foreach ($defaultPayrollComponents as $defaultPayrollComponent) {
@@ -104,11 +107,13 @@ class RunPayrollService
                 $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->first();
                 if ($updatePayrollComponentDetail) {
                     $amount = $updatePayrollComponentDetail->new_amount;
+
+                    // override $userBasicSalary if there's an updated data on UpdatePayrollComponent::class
+                    if ($updatePayrollComponentDetail->payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $userBasicSalary = $amount;
                 } else {
                     // if the default amount is empty || 0
                     if ($defaultPayrollComponent->amount == 0 && count($defaultPayrollComponent->formulas)) {
-                        // WARNING
-                        $amount = FormulaService::calculate($runPayrollUser->user, $defaultPayrollComponent, $defaultPayrollComponent->formulas);
+                        $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas);
                     } else {
                         $amount = $defaultPayrollComponent->amount;
                     }
@@ -147,26 +152,28 @@ class RunPayrollService
             if ($overtimePayrollComponent) {
                 // get overtime setting
                 $overtime = $runPayrollUser->user->overtime;
+                $amount = 0;
 
                 switch ($overtime->rate_type) {
                     case RateType::AMOUNT:
-                        $amount = $overtime->rate_amount;
+                        $hourlyAmount = $overtime->rate_amount;
 
                         break;
                     case RateType::BASIC_SALARY:
-                        $amount = ($overtime->rate_amount / 100) * ($runPayrollUser->user->payrollInfo?->basic_salary ?? 0);
+                        $hourlyAmount = $userBasicSalary / $overtime->rate_amount;
 
                         break;
                     case RateType::ALLOWANCES:
-                        $amount = 0;
+                        $hourlyAmount = 0;
 
                         break;
                     case RateType::FORMULA:
-                        $amount = FormulaService::calculate($runPayrollUser->user, $overtime, $overtime->formulas);
+                        // formula will be counted on the next code below
+                        $hourlyAmount = 0;
 
                         break;
                     default:
-                        $amount = 0;
+                        $hourlyAmount = 0;
 
                         break;
                 }
@@ -178,14 +185,27 @@ class RunPayrollService
 
                 foreach ($overtimeRequests as $overtimeRequest) {
                     // overtimme rounding
-                    $duration = $overtimeRequest->duration;
-                    if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $duration)->where('end_minute', '<=', $duration)->first()) {
-                        $duration = $overtimeRounding->rounded;
+                    $overtimeDuration = $overtimeRequest->duration;
+                    if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
+                        $overtimeDuration = $overtimeRounding->rounded;
                     }
 
+                    if ($overtime->rate_type->is(RateType::FORMULA)) $hourlyAmount = FormulaService::calculate(user: $runPayrollUser->user, model: $overtime, formulas: $overtime->formulas);
+
                     // overtime multiplier
-                    if ($overtimeMultiplier = $overtime->overtimeMultipliers()->where('start_hour', '>=', $duration)->where('end_hour', '<=', $duration)->where('is_weekday', Carbon::parse($overtimeRequest->date)->isWeekday())->first()) {
-                        $amount *= $overtimeMultiplier->multiply;
+                    foreach ($overtime->overtimeMultipliers()->where('is_weekday', Carbon::parse($overtimeRequest->date)->isWeekday())->orderBy('start_hour')->get() as $overtimeMultiplier) {
+                        // break if there's no suitable data for minimum start_hour
+                        if ($overtimeDuration < $overtimeMultiplier->start_hour) break;
+
+                        for ($hour = 1; $hour <= $overtimeDuration; $hour++) {
+                            if ($hour >= $overtimeMultiplier->start_hour && $hour <= $overtimeMultiplier->end_hour) {
+                                $multiply = $overtimeMultiplier->multiply;
+                            } else {
+                                $multiply = 1;
+                            }
+
+                            $amount += ($hourlyAmount * $multiply);
+                        }
                     }
                 }
 
@@ -200,7 +220,7 @@ class RunPayrollService
             // other payroll component
             PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->get()->map(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay) {
                 if ($otherPayrollComponent->amount == 0 && count($otherPayrollComponent->formulas)) {
-                    $amount = FormulaService::calculate($runPayrollUser->user, $otherPayrollComponent, $otherPayrollComponent->formulas);
+                    $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $otherPayrollComponent, formulas: $otherPayrollComponent->formulas);
                 } else {
                     $amount = $otherPayrollComponent->amount;
                 }

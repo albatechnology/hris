@@ -6,6 +6,7 @@ use App\Enums\DailyAttendance;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\PayrollComponentType;
 use App\Models\Formula;
+use App\Models\Overtime;
 use App\Models\PayrollComponent;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -85,8 +86,10 @@ class FormulaService
      * @param  Model        $model
      * @param  Collection   $formulas
      * @param  float        $amount
+     * @param  string       $startPeriod
+     * @param  string       $endPeriod
      */
-    public static function calculate(User $user, Model $model, Collection $formulas, float $amount = 0)
+    public static function calculate(User $user, Model $model, Collection $formulas, float $amount = 0, string $startPeriod = null, string $endPeriod = null)
     {
         foreach ($formulas as $formula) {
             if (count($formula->child)) {
@@ -122,6 +125,9 @@ class FormulaService
                         break;
                     case FormulaComponentEnum::HOLIDAY:
                         //
+                        // if ($model instanceof Overtime){
+                        //     $
+                        // }
 
                         break;
                     case FormulaComponentEnum::EMPLOYEMENT_STATUS:
