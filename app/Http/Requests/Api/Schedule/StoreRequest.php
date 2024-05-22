@@ -51,7 +51,16 @@ class StoreRequest extends FormRequest
             'is_include_early_out' => 'nullable|boolean',
 
             'shifts' => 'nullable|array',
-            'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],
+            // 'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],
+            'shifts.*.id' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (!Shift::tenanted()->where('id', $value)->exists()) {
+                        if (Shift::whereNull('company_id')->where('id', $value)->first(['id'])) return;
+                        $fail("Shift {$value} not found");
+                    };
+                }
+            ],
             'shifts.*.order' => 'required|integer',
         ];
     }

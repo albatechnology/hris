@@ -75,6 +75,11 @@ class Timeoff extends BaseModel
         return $query->first();
     }
 
+    public function scopeApproved(Builder $query)
+    {
+        $query->where('approval_status', ApprovalStatus::APPROVED);
+    }
+
     public function scopeStartAt(Builder $query, $date = null)
     {
         if (is_null($date)) {
@@ -112,7 +117,7 @@ class Timeoff extends BaseModel
         $realEnd = new \DateTime($this->end_at);
         $realEnd->add($interval);
         $period = new \DatePeriod(new \DateTime($this->start_at), $interval, $realEnd);
-        $this->load(['user' => fn($q) => $q->select('id')]);
+        $this->load(['user' => fn ($q) => $q->select('id')]);
 
         $schedule = \App\Services\ScheduleService::getTodaySchedule($this->user, $this->start_at)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
         if ($schedule) {

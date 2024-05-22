@@ -23,18 +23,17 @@ class ScheduleService
         /** @var Schedule $schedule */
         $schedule = $user->schedules()
             ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-            ->whereDate('effective_date', '<=', $date)->orderByDesc('effective_date')->first();
+            ->whereDate('effective_date', '<=', $date)
+            ->withCount('shifts')
+            ->orderByDesc('effective_date')->first();
 
-        if (!$schedule) {
-            return null;
-        }
+        if (!$schedule || $schedule->shifts_count === 0) return null;
 
-        $totalShifts = $schedule->shifts()->count();
         $startDate = new DateTime($schedule->effective_date);
         $endDate = new DateTime($date);
         $interval = $startDate->diff($endDate)->days + 1;
-        $order = $interval % $schedule->shifts()->count();
-        $order = $order > 0 ? $order : $totalShifts;
+        $order = $interval % $schedule->shifts_count;
+        $order = $order > 0 ? $order : $schedule->shifts_count;
 
         unset($schedule->pivot);
         return $schedule->load(['shift' => fn ($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
