@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -35,12 +36,14 @@ class RunPayrollService
      *
      * @param  array $request
      */
-    public static function execute(array $request): RunPayroll | Exception
+    public static function execute(array $request): RunPayroll | Exception | JsonResponse
     {
         DB::beginTransaction();
         try {
             $runPayroll = self::createRunPayroll($request);
-            self::createDetails($runPayroll, $request);
+
+            $runPayrollDetail = self::createDetails($runPayroll, $request);
+            if (!$runPayrollDetail->getData()?->success) return response()->json($runPayrollDetail->getData());
 
             DB::commit();
 
@@ -73,12 +76,19 @@ class RunPayrollService
      * @param  RunPayroll   $runPayroll
      * @param  Request      $request
      */
-    public static function createDetails(RunPayroll $runPayroll, array $request): void
+    public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
         // dummy companyid
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
-        $cutoffAttendanceStartDate = Carbon::parse($request['period'] . '-' . $payrollSetting->cutoff_attendance_start_date);
-        $cutoffAttendanceEndDate = Carbon::parse($request['period'] . '-' . $payrollSetting->cutoff_attendance_end_date)->addMonth(1);
+        if (!$payrollSetting->cutoff_attendance_start_date || !$payrollSetting->cutoff_attendance_end_date) {
+            return response()->json([
+                'success' => false,
+                'data' => 'Please set your Payroll Setting before submit Run Payroll',
+            ]);
+        }
+
+        $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
+        $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_end_date . '-' . $request['period'])->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
 
         foreach (explode(',', $request['user_ids']) as $userId) {
@@ -281,6 +291,11 @@ class RunPayrollService
                 'benefit' => $benefit,
             ]);
         }
+
+        return response()->json([
+            'success' => true,
+            'data' => null,
+        ]);
     }
 
     /**

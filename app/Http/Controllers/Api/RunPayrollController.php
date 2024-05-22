@@ -54,6 +54,8 @@ class RunPayrollController extends BaseController
     public function store(StoreRequest $request): RunPayrollResource|JsonResponse
     {
         $runPayroll = app(RunPayrollService::class)->execute($request->validated());
+
+        if (!$runPayroll instanceof RunPayroll && !$runPayroll->getData()?->success) return response()->json($runPayroll->getData(), 400);
         return new RunPayrollResource($runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent'));
     }
 
