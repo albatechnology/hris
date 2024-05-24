@@ -57,7 +57,7 @@ class RunPayrollService
 
     /**
      * create run payroll
-     * 
+     *
      * @param  Request  $request
      */
     public static function createRunPayroll(array $request): RunPayroll
@@ -72,12 +72,14 @@ class RunPayrollService
 
     /**
      * create run payroll details
-     * 
+     *
      * @param  RunPayroll   $runPayroll
      * @param  Request      $request
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
+        // dump($request);
+        // dump($runPayroll);
         // dummy companyid
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
         if (!$payrollSetting->cutoff_attendance_start_date || !$payrollSetting->cutoff_attendance_end_date) {
@@ -86,14 +88,14 @@ class RunPayrollService
                 'data' => 'Please set your Payroll Setting before submit Run Payroll',
             ]);
         }
-
+        // dump($payrollSetting);
         $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
         $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_end_date . '-' . $request['period'])->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
-
+        // dump($cutoffDiffDay);
         foreach (explode(',', $request['user_ids']) as $userId) {
             $runPayrollUser = self::assignUser($runPayroll, $userId);
-
+            // dump($runPayrollUser);
             // updated payroll component
             $updatePayrollComponent = UpdatePayrollComponent::tenanted()->where(function ($q) use ($request, $userId) {
                 $q->whereCompany($request['company_id']);
@@ -106,27 +108,34 @@ class RunPayrollService
                     $q2->where('user_id', $userId);
                 });
             })->first();
+            // dump($updatePayrollComponent);
 
             // define user basic salary
             $userBasicSalary = $runPayrollUser->user->payrollInfo?->basic_salary;
+            // dump($userBasicSalary);
 
             // default payroll component
             $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereNotIn('category', [PayrollComponentCategory::OVERTIME])->get();
+            // dump($defaultPayrollComponents);
             foreach ($defaultPayrollComponents as $defaultPayrollComponent) {
+                // dump($defaultPayrollComponent);
                 // check if payroll component is updated on UpdatePayrollComponent::class
                 $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->first();
                 if ($updatePayrollComponentDetail) {
+                    // dump('if');
                     $amount = $updatePayrollComponentDetail->new_amount;
 
                     // override $userBasicSalary if there's an updated data on UpdatePayrollComponent::class
                     if ($updatePayrollComponentDetail->payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $userBasicSalary = $amount;
                 } else {
+                    // dump('else');
                     // if the default amount is empty || 0
                     if ($defaultPayrollComponent->amount == 0 && count($defaultPayrollComponent->formulas)) {
                         $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas);
                     } else {
                         $amount = $defaultPayrollComponent->amount;
                     }
+                    // dump($amount);
                 }
 
                 switch ($defaultPayrollComponent->period_type) {
@@ -153,9 +162,10 @@ class RunPayrollService
 
                         break;
                 }
-
-                self::createComponent($runPayrollUser, $defaultPayrollComponent->payroll_component_id, $amount);
+                // dump($amount);
+                self::createComponent($runPayrollUser, $defaultPayrollComponent->id, $amount);
             }
+            // dump('end default paryroll component');
 
             // overtime payroll component
             $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
@@ -226,14 +236,18 @@ class RunPayrollService
             $updatePayrollComponent?->details()->whereNotIn('payroll_component_id', $defaultPayrollComponents->pluck('id')->toArray())->get()->map(function ($updatePayrollComponentDetail) use ($runPayrollUser) {
                 self::createComponent($runPayrollUser, $updatePayrollComponentDetail->payroll_component_id, $updatePayrollComponentDetail->new_amount);
             });
-
+            // dump($updatePayrollComponent);
+            // dump('sampeee');
             // other payroll component
             PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->get()->map(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay) {
                 if ($otherPayrollComponent->amount == 0 && count($otherPayrollComponent->formulas)) {
+                    // dump('ada formula');
                     $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $otherPayrollComponent, formulas: $otherPayrollComponent->formulas);
                 } else {
+                    // dump('ga ada formula');
                     $amount = $otherPayrollComponent->amount;
                 }
+                // dd($amount);
 
                 switch ($otherPayrollComponent->period_type) {
                     case PayrollComponentPeriodType::DAILY:
@@ -300,10 +314,10 @@ class RunPayrollService
 
     /**
      * create run payroll details
-     * 
+     *
      * @param  RunPayroll   $runPayroll
      * @param  string|int   $userId
-     * 
+     *
      */
     public static function assignUser(RunPayroll $runPayroll, string|int $userId): RunPayrollUser
     {

@@ -53,7 +53,7 @@ class StoreRequest extends FormRequest
             'type' => ['required', Rule::enum(PayrollComponentType::class)],
             'category' => ['nullable', Rule::enum(PayrollComponentCategory::class)],
             'setting' => ['nullable', Rule::enum(PayrollComponentSetting::class)],
-            'amount' => 'required|numeric',
+            'amount' => 'required_without:formulas|numeric',
             'is_taxable' => 'required|boolean',
             'period_type' => ['required', Rule::enum(PayrollComponentPeriodType::class)],
             'is_monthly_prorate' => 'nullable|boolean',

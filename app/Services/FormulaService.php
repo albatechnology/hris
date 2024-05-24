@@ -91,7 +91,9 @@ class FormulaService
      */
     public static function calculate(User $user, Model $model, Collection $formulas, float $amount = 0, string $startPeriod = null, string $endPeriod = null)
     {
+        dd($model);
         foreach ($formulas as $formula) {
+            // dump($formula);
             if (count($formula->child)) {
                 $nextChild = false;
 
@@ -166,16 +168,24 @@ class FormulaService
                 // skip current loop and continue to the next loop
                 continue;
             } else {
+                // dump($formula->component);
                 switch ($formula->component) {
                     case FormulaComponentEnum::DAILY_ATTENDANCE:
+                        // dump($formula->formulaComponents);
+                        // dump('daili');
                         foreach ($formula->formulaComponents as $formulaComponent) {
-                            switch ($formulaComponent->component) {
-                                case DailyAttendance::PRESENT:
-                                    $presentAttendance = 12;
+                            // dump($formulaComponent->component);
+                            // dump($formulaComponent->value);
+                            // dump(DailyAttendance::PRESENT->value);
+                            switch ($formulaComponent->value) {
+                                case DailyAttendance::PRESENT->value:
+                                    // dump($formulaComponent);
+                                    // dd($model, $amount, $formula->amount);
+                                    $presentAttendance = 15;
                                     $amount = self::sumAmount($model, $amount, $formula->amount) * $presentAttendance;
 
                                     break;
-                                case DailyAttendance::ALPHA:
+                                case DailyAttendance::ALPHA->value:
                                     $alphaAttendance = 5;
                                     $amount = self::sumAmount($model, $amount, $formula->amount) * $alphaAttendance;
 
@@ -189,7 +199,7 @@ class FormulaService
 
                         break;
                     case FormulaComponentEnum::SHIFT:
-                        //
+                        $amount += $formula->amount;
 
                         break;
                     case FormulaComponentEnum::BRANCH:
