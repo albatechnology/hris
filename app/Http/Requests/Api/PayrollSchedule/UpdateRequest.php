@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\PayrollSchedule;
 
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
@@ -22,6 +23,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'company_id' => ['required', new CompanyTenantedRule()],
             'payroll_schedule_date' => 'required|date_format:d',
         ];
     }

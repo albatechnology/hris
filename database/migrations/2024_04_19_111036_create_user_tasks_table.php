@@ -16,7 +16,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_tasks', function (Blueprint $table) {
-            $table->foreignIdFor(User::class)->constrained();
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Task::class)->constrained();
             $table->foreignIdFor(TaskHour::class)->constrained();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

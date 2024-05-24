@@ -38,6 +38,10 @@ return new class extends Migration
             $table->unsignedSmallInteger('total_timeoff')->default(0);
             $table->unsignedSmallInteger('total_remaining_timeoff')->default(0);
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            // $table->unsignedInteger('deleted_by')->nullable();
+            // $table->softDeletes();
         });
     }
 

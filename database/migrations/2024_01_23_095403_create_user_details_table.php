@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->unique()->constrained();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('no_ktp', 20)->nullable();
             $table->string('kk_no')->nullable();
             $table->text('postal_code', 20)->nullable();

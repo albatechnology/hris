@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_timeoff_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id');
             $table->boolean('is_for_total_timeoff')->default(1);
             $table->boolean('is_increment')->default(0);
             $table->unsignedSmallInteger('value')->default(0);

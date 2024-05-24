@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::create('user_payroll_infos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->unique()->constrained();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('basic_salary')->default(0);
             $table->string('salary_type')->default(SalaryType::MONTHLY);
             $table->string('payment_schedule')->default(PaymentSchedule::DEFAULT);
