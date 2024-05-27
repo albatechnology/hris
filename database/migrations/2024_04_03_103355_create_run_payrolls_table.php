@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('run_payrolls', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained();
+            $table->string('code')->unique();
             $table->string('period');
             $table->date('payment_schedule');
             $table->string('status', 50); // Enum from RunPayrollStatus::class
