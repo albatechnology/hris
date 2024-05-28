@@ -109,40 +109,9 @@ class AttendanceService
 
         if ($dailyAttendance == DailyAttendance::PRESENT) return $totalAttendance;
 
-        $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
-        $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
-        $dateRange = \Carbon\CarbonPeriod::create($startDate, $endDate);
+        $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
 
-        $companyHolidays = Event::tenanted($user)->whereHoliday()->get(['id', 'start_at', 'end_at']);
-        $nationalHolidays = NationalHoliday::orderBy('date')->get(['id', 'date']);
-
-        $totalAlpha = 0;
-        foreach ($dateRange as $date) {
-            $schedule = ScheduleService::getTodaySchedule(
-                $user,
-                $date,
-                ['id', 'is_overide_national_holiday', 'is_overide_national_holiday', 'is_overide_company_holiday'],
-                ['id', 'is_dayoff']
-            );
-
-            $companyHolidayData = null;
-            if ($schedule->is_overide_company_holiday == false) {
-                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
-                });
-            }
-
-            $nationalHoliday = null;
-            if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
-            }
-
-            if (is_null($companyHolidayData) && is_null($nationalHoliday) && !$schedule->shift->is_dayoff) {
-                $totalAlpha += 1;
-            }
-        }
-
-        return abs($totalAttendance - $totalAlpha);
+        return abs($totalAttendance - $totalWorkingDays);
     }
 
     public static function getTotalAttendanceInShifts(User|int $user, $startDate, $endDate, Shift|array $shifts = []): int

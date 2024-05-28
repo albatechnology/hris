@@ -31,7 +31,8 @@ class PayrollComponentSeeder extends Seeder
         $formulas = [
             [
                 "component" => "daily_attendance",
-                "value" => "present,alpha",
+                // "value" => "present,alpha",
+                "value" => "present",
                 "amount" => "1000"
             ]
         ];

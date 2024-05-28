@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Enums\DailyAttendance;
+use App\Enums\FormulaAmountType;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\PayrollComponentType;
 use App\Models\Formula;
+use App\Models\Overtime;
 use App\Models\PayrollComponent;
 use App\Models\User;
 use DateTime;
@@ -174,11 +176,11 @@ class FormulaService
                             switch ($formulaComponent->value) {
                                 case DailyAttendance::PRESENT->value:
                                     $presentAttendance = AttendanceService::getTotalAttendance($user, $startPeriod, $endPeriod);
-                                    $amount = self::sumAmount($model, $amount, $formula->amount) * $presentAttendance;
+                                    $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $presentAttendance;
                                     break;
                                 case DailyAttendance::ALPHA->value:
                                     $alphaAttendance = AttendanceService::getTotalAttendance($user, $startPeriod, $endPeriod, DailyAttendance::ALPHA);
-                                    $amount = self::sumAmount($model, $amount, $formula->amount) * $alphaAttendance;
+                                    $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $alphaAttendance;
 
                                     break;
                                 default:
@@ -191,11 +193,11 @@ class FormulaService
                         break;
                     case FormulaComponentEnum::SHIFT:
                         $totalAttendance = AttendanceService::getTotalAttendanceInShifts($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
-                        $amount = self::sumAmount($model, $amount, $formula->amount) * $totalAttendance;
+                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalAttendance;
                         break;
                     case FormulaComponentEnum::BRANCH:
                         if (self::matchComponentValue($formula, $user->branch_id)) {
-                            $amount = self::sumAmount($model, $amount, $formula->amount);
+                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
                         }
 
                         break;
@@ -205,36 +207,36 @@ class FormulaService
                         break;
                     case FormulaComponentEnum::EMPLOYEMENT_STATUS:
                         if (self::matchComponentValue($formula, $user->detail?->employment_status)) {
-                            $amount = self::sumAmount($model, $amount, $formula->amount);
+                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
                         }
 
                         break;
                     case FormulaComponentEnum::JOB_POSITION:
                         if (self::matchComponentValue($formula, $user->detail?->job_position)) {
-                            $amount = self::sumAmount($model, $amount, $formula->amount);
+                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
                         }
 
                         break;
                     case FormulaComponentEnum::GENDER:
                         if (self::matchComponentValue($formula, $user->gender)) {
-                            $amount = self::sumAmount($model, $amount, $formula->amount);
+                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
                         }
 
                         break;
                     case FormulaComponentEnum::RELIGION:
                         if (self::matchComponentValue($formula, $user->detail?->religion)) {
-                            $amount = self::sumAmount($model, $amount, $formula->amount);
+                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
                         }
 
                         break;
                     case FormulaComponentEnum::MARITAL_STATUS:
                         if (self::matchComponentValue($formula, $user->detail?->marital_status)) {
-                            $amount = self::sumAmount($model, $amount, $formula->amount);
+                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
                         }
 
                         break;
                     case FormulaComponentEnum::ELSE:
-                        $amount = self::sumAmount($model, $amount, $formula->amount);
+                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
 
                         break;
                     default:
@@ -266,13 +268,38 @@ class FormulaService
     /**
      * sync formula with related model
      *
-     * @param  Model            $model
-     * @param  int|float        $oldAmount
-     * @param  int|float        $incomingAmount
+     * @param  PayrollComponent|Overtime $model
+     * @param  Formula                   $formula
+     * @param  int|float                 $oldAmount
      */
-    public static function sumAmount(Model $model, int|float $oldAmount, int|float $incomingAmount): int|float
+    public static function sumAmount(PayrollComponent|Overtime $model, Formula $formula, int|float $oldAmount, ?User $user = null, string|DateTime $startPeriod, string|DateTime $endPeriod): int|float
     {
-        if ($model instanceof PayrollComponent && $model->type->is(PayrollComponentType::DEDUCTION)) $incomingAmount = -abs($incomingAmount);
+        $incomingAmount = $formula->amount;
+        if ($model instanceof PayrollComponent) {
+            switch ($formula->amount_type) {
+                case FormulaAmountType::SALARY_PER_SCHEDULE_CALENDAR_DAY:
+                    $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startPeriod, $endPeriod);
+                    if ($totalWorkingDays > 0) {
+                        $incomingAmount = ($user?->payrollInfo?->basic_salary ?? 0) / $totalWorkingDays;
+                    } else {
+                        $incomingAmount = 0;
+                    }
+                    break;
+                case FormulaAmountType::FULL_SALARY:
+                    $incomingAmount = $user?->payrollInfo?->basic_salary ?? 0;
+                    break;
+                case FormulaAmountType::HALF_OF_SALARY:
+                    $incomingAmount = ($user?->payrollInfo?->basic_salary ?? 0) / 2;
+                    break;
+                default:
+                    $incomingAmount = $formula->amount;
+                    break;
+            }
+
+            if ($model->type->is(PayrollComponentType::DEDUCTION)) {
+                $incomingAmount = -abs($incomingAmount);
+            }
+        }
 
         $newAmount = $oldAmount + $incomingAmount;
 
