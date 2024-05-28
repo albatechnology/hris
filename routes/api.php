@@ -121,7 +121,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
     Route::get('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
     Route::put('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
-    Route::apiResource('attendances', AttendanceController::class)->except('update');
+    Route::apiResource('attendances', AttendanceController::class);
 
     Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
         Route::post('users', [UserTimeoffPolicyController::class, 'store']);

@@ -6,9 +6,9 @@ use App\Enums\DailyAttendance;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\PayrollComponentType;
 use App\Models\Formula;
-use App\Models\Overtime;
 use App\Models\PayrollComponent;
 use App\Models\User;
+use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
@@ -89,8 +89,11 @@ class FormulaService
      * @param  string       $startPeriod
      * @param  string       $endPeriod
      */
-    public static function calculate(User $user, Model $model, Collection $formulas, float $amount = 0, string $startPeriod = null, string $endPeriod = null)
+    public static function calculate(User $user, Model $model, Collection $formulas, float $amount = 0, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null)
     {
+        if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
+        if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
+
         foreach ($formulas as $formula) {
             if (count($formula->child)) {
                 $nextChild = false;
@@ -117,7 +120,6 @@ class FormulaService
                         break;
                     case FormulaComponentEnum::SHIFT:
                         //
-
                         break;
                     case FormulaComponentEnum::BRANCH:
                         $nextChild = self::matchComponentValue($formula, $user->branch_id);
@@ -169,14 +171,13 @@ class FormulaService
                 switch ($formula->component) {
                     case FormulaComponentEnum::DAILY_ATTENDANCE:
                         foreach ($formula->formulaComponents as $formulaComponent) {
-                            switch ($formulaComponent->component) {
-                                case DailyAttendance::PRESENT:
-                                    $presentAttendance = 12;
+                            switch ($formulaComponent->value) {
+                                case DailyAttendance::PRESENT->value:
+                                    $presentAttendance = AttendanceService::getTotalAttendance($user, $startPeriod, $endPeriod);
                                     $amount = self::sumAmount($model, $amount, $formula->amount) * $presentAttendance;
-
                                     break;
-                                case DailyAttendance::ALPHA:
-                                    $alphaAttendance = 5;
+                                case DailyAttendance::ALPHA->value:
+                                    $alphaAttendance = AttendanceService::getTotalAttendance($user, $startPeriod, $endPeriod, DailyAttendance::ALPHA);
                                     $amount = self::sumAmount($model, $amount, $formula->amount) * $alphaAttendance;
 
                                     break;
@@ -189,8 +190,8 @@ class FormulaService
 
                         break;
                     case FormulaComponentEnum::SHIFT:
-                        //
-
+                        $totalAttendance = AttendanceService::getTotalAttendanceInShifts($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
+                        $amount = self::sumAmount($model, $amount, $formula->amount) * $totalAttendance;
                         break;
                     case FormulaComponentEnum::BRANCH:
                         if (self::matchComponentValue($formula, $user->branch_id)) {

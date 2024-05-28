@@ -2,8 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\DailyAttendance;
 use App\Models\Attendance;
+use App\Models\Event;
+use App\Models\NationalHoliday;
+use App\Models\Shift;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AttendanceService
 {
@@ -81,5 +86,79 @@ class AttendanceService
         }
 
         return trim($result);
+    }
+
+    /**
+     * Calculates the total attendance(present/alpha) of a user within a given date range.
+     *
+     * @param User|int $user The user object or user ID.
+     * @param string $startDate The start date of the date range in 'Y-m-d' format.
+     * @param string $endDate The end date of the date range in 'Y-m-d' format.
+     * @param DailyAttendance $dailyAttendance The attendance type to calculate (default: DailyAttendance::PRESENT).
+     * @return int The total attendance(present/alpha) count.
+     */
+    public static function getTotalAttendance(User|int $user, $startDate, $endDate, DailyAttendance $dailyAttendance = DailyAttendance::PRESENT): int
+    {
+        if (!$user instanceof User) {
+            $user = User::find($user, ['id', 'type', 'group_id']);
+        }
+
+        $totalAttendance = Attendance::where('user_id', $user->id)->valid()
+            ->whereDateBetween($startDate, $endDate)
+            ->count();
+
+        if ($dailyAttendance == DailyAttendance::PRESENT) return $totalAttendance;
+
+        $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
+        $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+        $dateRange = \Carbon\CarbonPeriod::create($startDate, $endDate);
+
+        $companyHolidays = Event::tenanted($user)->whereHoliday()->get(['id', 'start_at', 'end_at']);
+        $nationalHolidays = NationalHoliday::orderBy('date')->get(['id', 'date']);
+
+        $totalAlpha = 0;
+        foreach ($dateRange as $date) {
+            $schedule = ScheduleService::getTodaySchedule(
+                $user,
+                $date,
+                ['id', 'is_overide_national_holiday', 'is_overide_national_holiday', 'is_overide_company_holiday'],
+                ['id', 'is_dayoff']
+            );
+
+            $companyHolidayData = null;
+            if ($schedule->is_overide_company_holiday == false) {
+                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                });
+            }
+
+            $nationalHoliday = null;
+            if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+            }
+
+            if (is_null($companyHolidayData) && is_null($nationalHoliday) && !$schedule->shift->is_dayoff) {
+                $totalAlpha += 1;
+            }
+        }
+
+        return abs($totalAttendance - $totalAlpha);
+    }
+
+    public static function getTotalAttendanceInShifts(User|int $user, $startDate, $endDate, Shift|array $shifts = []): int
+    {
+        $shiftIds = [];
+        if ($shifts instanceof Shift) {
+            $shiftIds = [$shifts->id];
+        } elseif (is_array($shifts) && count($shifts) > 0) {
+            $shiftIds = $shifts;
+        }
+
+        $totalAttendance = Attendance::where('user_id', $user->id)->valid()
+            ->whereDateBetween($startDate, $endDate)
+            ->whereIn('shift_id', $shiftIds)
+            ->count();
+
+        return $totalAttendance;
     }
 }

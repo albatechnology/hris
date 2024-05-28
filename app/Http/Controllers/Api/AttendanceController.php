@@ -736,6 +736,52 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
+    public function update(StoreRequest $request)
+    {
+        $user = auth('sanctum')->user();
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
+
+        if (config('app.enable_face_rekognition') === true) {
+            try {
+                $compareFace = Rekognition::compareFace($user, $request->file('file'));
+                if (!$compareFace) {
+                    return $this->errorResponse(message: 'Face not match!', code: 400);
+                }
+            } catch (\Exception $e) {
+                return $this->errorResponse(message: $e->getMessage());
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            if (!$attendance) {
+                $data = [
+                    'user_id' => $user->id,
+                    'date' => date('Y-m-d', strtotime($request->time)),
+                    ...$request->validated(),
+                ];
+                $attendance = Attendance::create($data);
+            }
+
+            /** @var AttendanceDetail $attendanceDetail */
+            $attendanceDetail = $attendance->details()->create($request->validated());
+
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::ATTENDANCE->value;
+                $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+
+            AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return new AttendanceResource($attendance);
+    }
+
     public function request(RequestAttendanceRequest $request)
     {
         // pemeriksaan kehadiran hri ini
