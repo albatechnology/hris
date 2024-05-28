@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
+use App\Enums\AttendanceType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
@@ -76,6 +78,11 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
     public function scopeWhereShiftId(Builder $query, int $shiftId)
     {
         $query->whereHas('schedule', fn ($q) => $q->whereHas('shifts', fn ($q) => $q->where('shift_id', $shiftId)));
+    }
+
+    public function scopeValid(Builder $query)
+    {
+        $query->whereHas('details', fn($q) => $q->whereIn('type', [AttendanceType::AUTOMATIC, AttendanceType::OTHER])->orWhere(fn($q) => $q->where('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED)));
     }
 
     public function timeoff(): BelongsTo

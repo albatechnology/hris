@@ -3,28 +3,19 @@
 namespace App\Services;
 
 use App\Enums\ApprovalStatus;
-use App\Enums\DailyAttendance;
-use App\Enums\EmploymentStatus;
-use App\Enums\FormulaComponentEnum;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Enums\RateType;
 use App\Enums\RunPayrollStatus;
-use App\Models\Formula;
-use App\Models\Overtime;
-use App\Models\OvertimeRequest;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Models\UpdatePayrollComponent;
-use App\Models\User;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -78,8 +69,6 @@ class RunPayrollService
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
-        // dump($request);
-        // dump($runPayroll);
         // dummy companyid
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
         if (!$payrollSetting->cutoff_attendance_start_date || !$payrollSetting->cutoff_attendance_end_date) {
@@ -88,14 +77,13 @@ class RunPayrollService
                 'data' => 'Please set your Payroll Setting before submit Run Payroll',
             ]);
         }
-        // dump($payrollSetting);
+
         $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
-        $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_end_date . '-' . $request['period'])->addMonth(1);
+        $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period'])->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
-        // dump($cutoffDiffDay);
+
         foreach (explode(',', $request['user_ids']) as $userId) {
             $runPayrollUser = self::assignUser($runPayroll, $userId);
-            // dump($runPayrollUser);
             // updated payroll component
             $updatePayrollComponent = UpdatePayrollComponent::tenanted()->where(function ($q) use ($request, $userId) {
                 $q->whereCompany($request['company_id']);
@@ -108,64 +96,33 @@ class RunPayrollService
                     $q2->where('user_id', $userId);
                 });
             })->first();
-            // dump($updatePayrollComponent);
 
             // define user basic salary
             $userBasicSalary = $runPayrollUser->user->payrollInfo?->basic_salary;
-            // dump($userBasicSalary);
 
             // default payroll component
             $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereNotIn('category', [PayrollComponentCategory::OVERTIME])->get();
-            // dump($defaultPayrollComponents);
             foreach ($defaultPayrollComponents as $defaultPayrollComponent) {
-                // dump($defaultPayrollComponent);
                 // check if payroll component is updated on UpdatePayrollComponent::class
                 $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->first();
                 if ($updatePayrollComponentDetail) {
-                    // dump('if');
                     $amount = $updatePayrollComponentDetail->new_amount;
 
                     // override $userBasicSalary if there's an updated data on UpdatePayrollComponent::class
                     if ($updatePayrollComponentDetail->payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $userBasicSalary = $amount;
                 } else {
-                    // dump('else');
                     // if the default amount is empty || 0
                     if ($defaultPayrollComponent->amount == 0 && count($defaultPayrollComponent->formulas)) {
                         $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas);
                     } else {
                         $amount = $defaultPayrollComponent->amount;
                     }
-                    // dump($amount);
                 }
 
-                switch ($defaultPayrollComponent->period_type) {
-                    case PayrollComponentPeriodType::DAILY:
-                        // rate_amount * cutoff diff days
-                        if (!$defaultPayrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
+                $amount = self::calculatePayrollComponentPeriodType($defaultPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
 
-                        break;
-                    case PayrollComponentPeriodType::MONTHLY:
-                        $amount = $amount;
-
-                        break;
-                    case PayrollComponentPeriodType::ONE_TIME:
-                        if ($runPayrollUser->user->oneTimePayrollComponents()->firstWhere('payroll_component_id', $defaultPayrollComponent->id)) {
-                            $amount = 0;
-                        } else {
-                            $runPayrollUser->user->oneTimePayrollComponents()->create(['payroll_component_id' => $defaultPayrollComponent->id]);
-                            $amount = $amount;
-                        }
-
-                        break;
-                    default:
-                        //
-
-                        break;
-                }
-                // dump($amount);
                 self::createComponent($runPayrollUser, $defaultPayrollComponent->id, $amount);
             }
-            // dump('end default paryroll component');
 
             // overtime payroll component
             $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
@@ -236,43 +193,16 @@ class RunPayrollService
             $updatePayrollComponent?->details()->whereNotIn('payroll_component_id', $defaultPayrollComponents->pluck('id')->toArray())->get()->map(function ($updatePayrollComponentDetail) use ($runPayrollUser) {
                 self::createComponent($runPayrollUser, $updatePayrollComponentDetail->payroll_component_id, $updatePayrollComponentDetail->new_amount);
             });
-            // dump($updatePayrollComponent);
-            // dump('sampeee');
+
             // other payroll component
-            PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->get()->map(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay) {
+            PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->get()->map(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay, $cutoffAttendanceStartDate, $cutoffAttendanceEndDate) {
                 if ($otherPayrollComponent->amount == 0 && count($otherPayrollComponent->formulas)) {
-                    // dump('ada formula');
-                    $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $otherPayrollComponent, formulas: $otherPayrollComponent->formulas);
+                    $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $otherPayrollComponent, formulas: $otherPayrollComponent->formulas, startPeriod: $cutoffAttendanceStartDate, endPeriod: $cutoffAttendanceEndDate);
                 } else {
-                    // dump('ga ada formula');
                     $amount = $otherPayrollComponent->amount;
                 }
-                // dd($amount);
 
-                switch ($otherPayrollComponent->period_type) {
-                    case PayrollComponentPeriodType::DAILY:
-                        // rate_amount * cutoff diff days
-                        if (!$otherPayrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
-
-                        break;
-                    case PayrollComponentPeriodType::MONTHLY:
-                        $amount = $amount;
-
-                        break;
-                    case PayrollComponentPeriodType::ONE_TIME:
-                        if ($runPayrollUser->user->oneTimePayrollComponents()->firstWhere('payroll_component_id', $otherPayrollComponent->id)) {
-                            $amount = 0;
-                        } else {
-                            $runPayrollUser->user->oneTimePayrollComponents()->create(['payroll_component_id' => $otherPayrollComponent->id]);
-                            $amount = $amount;
-                        }
-
-                        break;
-                    default:
-                        //
-
-                        break;
-                }
+                $amount = self::calculatePayrollComponentPeriodType($otherPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
 
                 self::createComponent($runPayrollUser, $otherPayrollComponent->id, $amount);
             });
@@ -337,5 +267,44 @@ class RunPayrollService
             'amount' => $amount,
             'is_editable' => $isEditable,
         ]);
+    }
+
+    /**
+     * Calculates the amount of a payroll component based on its period type.
+     *
+     * @param PayrollComponent $payrollComponent The payroll component to calculate.
+     * @param int|float $amount The initial amount of the component. Default is 0.
+     * @param int $cutoffDiffDay The number of days between the cutoff start and end dates. Default is 0.
+     * @param RunPayrollUser|null $runPayrollUser The run payroll user associated with the component. Default is null.
+     * @return int|float The calculated amount of the component.
+     */
+    public static function calculatePayrollComponentPeriodType(PayrollComponent $payrollComponent, int|float $amount = 0, int $cutoffDiffDay = 0, ?RunPayrollUser $runPayrollUser = null): int|float
+    {
+        switch ($payrollComponent->period_type) {
+            case PayrollComponentPeriodType::DAILY:
+                // rate_amount * cutoff diff days
+                if (!$payrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
+
+                break;
+            case PayrollComponentPeriodType::MONTHLY:
+                $amount = $amount;
+
+                break;
+            case PayrollComponentPeriodType::ONE_TIME:
+                if ($runPayrollUser->user->oneTimePayrollComponents()->firstWhere('payroll_component_id', $payrollComponent->id)) {
+                    $amount = 0;
+                } else {
+                    $runPayrollUser->user->oneTimePayrollComponents()->create(['payroll_component_id' => $payrollComponent->id]);
+                    $amount = $amount;
+                }
+
+                break;
+            default:
+                //
+
+                break;
+        }
+
+        return $amount;
     }
 }

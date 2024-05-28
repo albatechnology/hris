@@ -45,7 +45,9 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
-        $administrator->payrollInfo()->create([]);
+        $administrator->payrollInfo()->create([
+                            'basic_salary' => 1000000
+                        ]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -63,7 +65,9 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
-        $administrator->payrollInfo()->create([]);
+        $administrator->payrollInfo()->create([
+                            'basic_salary' => 1000000
+                        ]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -82,7 +86,9 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
-        $administrator->payrollInfo()->create([]);
+        $administrator->payrollInfo()->create([
+                            'basic_salary' => 1000000
+                        ]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -112,7 +118,9 @@ class UserSeeder extends Seeder
                 'sign_date' => date('Y') . '-01-01',
                 'join_date' => date('Y') . '-01-01',
             ]);
-            $admin->payrollInfo()->create([]);
+            $admin->payrollInfo()->create([
+                            'basic_salary' => 1000000
+                        ]);
             $admin->detail()->create([]);
             DB::table('model_has_roles')->insert([
                 'role_id' => $adminRole->id,
@@ -186,7 +194,9 @@ class UserSeeder extends Seeder
                             'join_date' => date('Y') . '-01-01',
                         ]);
                         $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
-                        $user->payrollInfo()->create([]);
+                        $user->payrollInfo()->create([
+                            'basic_salary' => 1000000
+                        ]);
                         $user->detail()->create([]);
                         DB::table('model_has_roles')->insert([
                             'role_id' => $userRole->id,
@@ -214,7 +224,9 @@ class UserSeeder extends Seeder
                             'join_date' => date('Y') . '-01-01',
                         ]);
                         $user->addMedia(public_path('img/difa.jpg'))->preservingOriginal()->toMediaCollection('user');
-                        $user->payrollInfo()->create([]);
+                        $user->payrollInfo()->create([
+                            'basic_salary' => 1000000
+                        ]);
                         $user->detail()->create([]);
                         DB::table('model_has_roles')->insert([
                             'role_id' => $userRole->id,
