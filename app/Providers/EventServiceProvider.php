@@ -6,10 +6,12 @@ use App\Events\Attendance\AttendanceRequested;
 use App\Listeners\Attendance\RequestAttendanceNotification;
 use App\Models\Company;
 use App\Models\OvertimeRequest;
+use App\Models\RunPayroll;
 use App\Models\TimeoffRegulation;
 use App\Models\User;
 use App\Observers\CompanyObserver;
 use App\Observers\OvertimeRequestObserver;
+use App\Observers\RunPayrollObserver;
 use App\Observers\TimeoffRegulationObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
@@ -41,6 +43,7 @@ class EventServiceProvider extends ServiceProvider
         Company::observe(CompanyObserver::class);
         TimeoffRegulation::observe(TimeoffRegulationObserver::class);
         User::observe(UserObserver::class);
+        RunPayroll::observe(RunPayrollObserver::class);
     }
 
     /**
