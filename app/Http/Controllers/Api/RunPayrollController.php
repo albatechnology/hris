@@ -6,6 +6,7 @@ use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
 use App\Models\RunPayroll;
+use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Services\FormulaService;
 use App\Services\RunPayrollService;
@@ -80,15 +81,16 @@ class RunPayrollController extends BaseController
     // }
 
 
-    public function updateUserComponent(RunPayroll $runPayroll, UpdateUserComponentRequest $request): RunPayrollResource|JsonResponse
+    public function updateUserComponent(RunPayrollUser $runPayrollUser, UpdateUserComponentRequest $request): RunPayrollResource|JsonResponse
     {
         DB::beginTransaction();
         try {
             foreach ($request->user_components as $userComponent) {
-                $runPayrollUserComponent = RunPayrollUserComponent::findOrFail($userComponent['id']);
+                $runPayrollUserComponent = RunPayrollUserComponent::where('run_payroll_user_id', $runPayrollUser->id)->findOrFail($userComponent['id'], ['id', 'amount']);
                 $runPayrollUserComponent->update(['amount' => $userComponent['amount']]);
             }
 
+            RunPayrollService::refreshRunPayrollUser($runPayrollUser);
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -96,7 +98,7 @@ class RunPayrollController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new RunPayrollResource($runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new RunPayrollResource($runPayrollUser->runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(RunPayroll $runPayroll): JsonResponse
