@@ -164,7 +164,7 @@ class FormulaService
                 }
 
                 // go to next  child
-                if ($nextChild) $amount = self::calculate($user, $model, $formula->child, $amount);
+                if ($nextChild) $amount = self::calculate(user: $user, model: $model, formulas: $formula->child, amount: $amount, startPeriod: $startPeriod, endPeriod: $endPeriod);
 
                 // skip current loop and continue to the next loop
                 continue;

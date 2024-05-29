@@ -30,8 +30,9 @@ enum FormulaComponentEnum: string
             self::SHIFT => \App\Models\Shift::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
             self::BRANCH => \App\Models\Branch::tenanted()->get(['branches.id', 'branches.name'])->pluck('name', 'id')->toArray(),
             self::HOLIDAY => [
+                'event' => 'Event',
                 'national_holiday' => 'National Holiday',
-                'company_holiday' => 'Company Holiday',
+                'holiday' => 'Company Holiday',
             ],
             self::EMPLOYEMENT_STATUS => EmploymentStatus::all(),
             self::JOB_POSITION => \App\Models\Position::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
