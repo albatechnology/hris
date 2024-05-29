@@ -8,6 +8,8 @@ use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Enums\RateType;
 use App\Enums\RunPayrollStatus;
+use App\Models\Event;
+use App\Models\NationalHoliday;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
@@ -15,6 +17,7 @@ use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Models\UpdatePayrollComponent;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,7 +72,7 @@ class RunPayrollService
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
-        // dummy companyid
+        // define the payroll setting that used to calculate al of run payroll details
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
         if (!$payrollSetting->cutoff_attendance_start_date || !$payrollSetting->cutoff_attendance_end_date) {
             return response()->json([
@@ -78,10 +81,12 @@ class RunPayrollService
             ]);
         }
 
+        // get cut off date
         $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
         $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period'])->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
 
+        // calculate for each user
         foreach (explode(',', $request['user_ids']) as $userId) {
             $runPayrollUser = self::assignUser($runPayroll, $userId);
             // updated payroll component
@@ -143,10 +148,13 @@ class RunPayrollService
                     case RateType::ALLOWANCES:
                         $hourlyAmount = 0;
 
+                        foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
+                            $hourlyAmount += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
+                        }
+
                         break;
                     case RateType::FORMULA:
-                        // formula will be counted on the next code below
-                        $hourlyAmount = 0;
+                        $hourlyAmount = FormulaService::calculate(user: $runPayrollUser->user, model: $overtime, formulas: $overtime->formulas);;
 
                         break;
                     default:
@@ -166,8 +174,6 @@ class RunPayrollService
                     if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
                         $overtimeDuration = $overtimeRounding->rounded;
                     }
-
-                    if ($overtime->rate_type->is(RateType::FORMULA)) $hourlyAmount = FormulaService::calculate(user: $runPayrollUser->user, model: $overtime, formulas: $overtime->formulas);
 
                     // overtime multiplier
                     foreach ($overtime->overtimeMultipliers()->where('is_weekday', Carbon::parse($overtimeRequest->date)->isWeekday())->orderBy('start_hour')->get() as $overtimeMultiplier) {
