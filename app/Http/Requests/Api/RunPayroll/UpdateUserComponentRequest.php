@@ -2,26 +2,18 @@
 
 namespace App\Http\Requests\Api\RunPayroll;
 
-use App\Enums\RateType;
-use App\Models\RunPayroll;
-use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
-use App\Rules\CompanyTenantedRule;
-use App\Traits\Requests\RequestToBoolean;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateUserComponentRequest extends FormRequest
 {
-    use RequestToBoolean;
-
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        if (!$this->run_payroll->tenanted()->exists()) return false;
+        if (!$this->run_payroll_user?->runPayroll()->tenanted()->exists()) return false;
 
         return true;
     }

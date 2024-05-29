@@ -214,32 +214,7 @@ class RunPayrollService
             });
 
             // update total amount for each user
-            $basicSalary = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
-                $q->where('category', PayrollComponentCategory::BASIC_SALARY);
-            })->sum('amount');
-
-            $allowance = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
-                $q->where('type', PayrollComponentType::ALLOWANCE);
-                $q->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY]);
-            })->sum('amount');
-
-            $additionalEarning = 0;
-
-            $deduction = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
-                $q->where('type', PayrollComponentType::DEDUCTION);
-            })->sum('amount');
-
-            $benefit = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
-                $q->where('type', PayrollComponentType::BENEFIT);
-            })->sum('amount');
-
-            $runPayrollUser->update([
-                'basic_salary' => $basicSalary,
-                'allowance' => $allowance,
-                'additional_earning' => $additionalEarning,
-                'deduction' => $deduction,
-                'benefit' => $benefit,
-            ]);
+            self::refreshRunPayrollUser($runPayrollUser);
         }
 
         return response()->json([
@@ -312,5 +287,39 @@ class RunPayrollService
         }
 
         return $amount;
+    }
+
+    public static function refreshRunPayrollUser(RunPayrollUser|int $runPayrollUser)
+    {
+        if (!$runPayrollUser instanceof RunPayrollUser) {
+            $runPayrollUser = RunPayrollUser::findOrFail($runPayrollUser);
+        }
+
+        $basicSalary = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
+            $q->where('category', PayrollComponentCategory::BASIC_SALARY);
+        })->sum('amount');
+
+        $allowance = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
+            $q->where('type', PayrollComponentType::ALLOWANCE);
+            $q->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY]);
+        })->sum('amount');
+
+        $additionalEarning = 0;
+
+        $deduction = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
+            $q->where('type', PayrollComponentType::DEDUCTION);
+        })->sum('amount');
+
+        $benefit = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
+            $q->where('type', PayrollComponentType::BENEFIT);
+        })->sum('amount');
+
+        $runPayrollUser->update([
+            'basic_salary' => $basicSalary,
+            'allowance' => $allowance,
+            'additional_earning' => $additionalEarning,
+            'deduction' => $deduction,
+            'benefit' => $benefit,
+        ]);
     }
 }
