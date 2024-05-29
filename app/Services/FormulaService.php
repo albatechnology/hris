@@ -6,10 +6,12 @@ use App\Enums\DailyAttendance;
 use App\Enums\FormulaAmountType;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\PayrollComponentType;
+use App\Models\Event;
 use App\Models\Formula;
 use App\Models\Overtime;
 use App\Models\PayrollComponent;
 use App\Models\User;
+use Carbon\CarbonPeriod;
 use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -129,9 +131,6 @@ class FormulaService
                         break;
                     case FormulaComponentEnum::HOLIDAY:
                         //
-                        // if ($model instanceof Overtime){
-                        //     $
-                        // }
 
                         break;
                     case FormulaComponentEnum::EMPLOYEMENT_STATUS:
@@ -202,7 +201,8 @@ class FormulaService
 
                         break;
                     case FormulaComponentEnum::HOLIDAY:
-                        //
+                        $totalEvent = EventService::countTotalDateInPeriods($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
+                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalEvent;
 
                         break;
                     case FormulaComponentEnum::EMPLOYEMENT_STATUS:

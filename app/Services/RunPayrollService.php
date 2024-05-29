@@ -8,6 +8,8 @@ use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Enums\RateType;
 use App\Enums\RunPayrollStatus;
+use App\Models\Event;
+use App\Models\NationalHoliday;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
@@ -15,6 +17,7 @@ use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Models\UpdatePayrollComponent;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,7 +72,6 @@ class RunPayrollService
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
-        // dummy companyid
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
         if (!$payrollSetting->cutoff_attendance_start_date || !$payrollSetting->cutoff_attendance_end_date) {
             return response()->json([
