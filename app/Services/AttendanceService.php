@@ -22,6 +22,7 @@ class AttendanceService
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
 
         $attendance = Attendance::where('schedule_id', $scheduleId)
+            ->when($user, fn ($q) => $q->where('user_id', $user->id))
             ->where('shift_id', $shiftId)
             ->whereHas('details', fn ($q) => $q->whereDate('time', $date))
             ->first();
