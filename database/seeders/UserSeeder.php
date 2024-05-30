@@ -46,8 +46,8 @@ class UserSeeder extends Seeder
             'type' => UserType::ADMINISTRATOR,
         ]);
         $administrator->payrollInfo()->create([
-                            'basic_salary' => 1000000
-                        ]);
+            'basic_salary' => 1000000
+        ]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -66,8 +66,8 @@ class UserSeeder extends Seeder
             'type' => UserType::ADMINISTRATOR,
         ]);
         $administrator->payrollInfo()->create([
-                            'basic_salary' => 1000000
-                        ]);
+            'basic_salary' => 1000000
+        ]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -87,8 +87,8 @@ class UserSeeder extends Seeder
             'type' => UserType::ADMINISTRATOR,
         ]);
         $administrator->payrollInfo()->create([
-                            'basic_salary' => 1000000
-                        ]);
+            'basic_salary' => 1000000
+        ]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -119,8 +119,8 @@ class UserSeeder extends Seeder
                 'join_date' => date('Y') . '-01-01',
             ]);
             $admin->payrollInfo()->create([
-                            'basic_salary' => 1000000
-                        ]);
+                'basic_salary' => 1000000
+            ]);
             $admin->detail()->create([]);
             DB::table('model_has_roles')->insert([
                 'role_id' => $adminRole->id,
