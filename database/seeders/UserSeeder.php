@@ -181,7 +181,7 @@ class UserSeeder extends Seeder
                         [
                             'name' => 'Vincent',
                             'email' => 'vincent@gmail.com',
-                            'image' => public_path('img/difa.jpg')
+                            'image' => public_path('img/vincent.jpg')
                         ],
                     ];
 
