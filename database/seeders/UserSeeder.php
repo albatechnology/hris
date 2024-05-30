@@ -177,7 +177,12 @@ class UserSeeder extends Seeder
                             'name' => 'Urinaldi Sri Juliandika',
                             'email' => 'aldynsx@gmail.com',
                             'image' => public_path('img/aldi.jpg')
-                        ]
+                        ],
+                        [
+                            'name' => 'Vincent',
+                            'email' => 'vincent@gmail.com',
+                            'image' => public_path('img/difa.jpg')
+                        ],
                     ];
 
                     foreach ($albaUsers as $i => $albaUser) {
