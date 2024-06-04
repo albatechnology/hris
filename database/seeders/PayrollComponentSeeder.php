@@ -2,6 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PayrollComponentCategory;
+use App\Enums\PayrollComponentDailyMaximumAmountType;
+use App\Enums\PayrollComponentPeriodType;
+use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Models\PayrollComponent;
 use App\Services\FormulaService;
@@ -14,6 +18,42 @@ class PayrollComponentSeeder extends Seeder
      */
     public function run(): void
     {
+        PayrollComponent::create([
+            'company_id' => 1,
+            'name' => 'Basic Salary',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::BASIC_SALARY,
+            'setting' => PayrollComponentSetting::DEFAULT,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_daily_default' => false,
+            'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+            'daily_maximum_amount' => 0,
+            'is_one_time_bonus' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
+        PayrollComponent::create([
+            'company_id' => 1,
+            'name' => 'Overtime',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::OVERTIME,
+            'setting' => PayrollComponentSetting::DEFAULT,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_daily_default' => false,
+            'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+            'daily_maximum_amount' => 0,
+            'is_one_time_bonus' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
         $payrollComponent = PayrollComponent::create([
             "company_id" => "1",
             "name" => "daily attendance",
