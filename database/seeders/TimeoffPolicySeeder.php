@@ -16,7 +16,7 @@ class TimeoffPolicySeeder extends Seeder
 
         Company::all()->each(function ($company) {
             $company->timeoffPolicies()->create([
-                'name' => 'timeoff policy '.$company->name,
+                'name' => 'timeoff policy ' . $company->name,
                 'type' => TimeoffPolicyType::TIME_OFF,
                 'effective_date' => date('Y-m-d'),
             ]);

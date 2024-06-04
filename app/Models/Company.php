@@ -3,6 +3,11 @@
 namespace App\Models;
 
 use App\Enums\CurrencyCode;
+use App\Enums\PayrollComponentCategory;
+use App\Enums\PayrollComponentDailyMaximumAmountType;
+use App\Enums\PayrollComponentPeriodType;
+use App\Enums\PayrollComponentSetting;
+use App\Enums\PayrollComponentType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
@@ -133,6 +138,40 @@ class Company extends BaseModel implements TenantedInterface
             'default_employee_salary_tax_setting' => \App\Enums\TaxSalary::TAXABLE,
             'default_oas_setting' => \App\Enums\JhtCost::PAID_BY_COMPANY,
             'prorate_setting' => \App\Enums\ProrateSetting::BASE_ON_CALENDAR_DAY,
+        ]);
+
+        $this->payrollComponents()->create([
+            'name' => 'Basic Salary',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::BASIC_SALARY,
+            'setting' => PayrollComponentSetting::DEFAULT,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_daily_default' => false,
+            'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+            'daily_maximum_amount' => 0,
+            'is_one_time_bonus' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
+        $this->payrollComponents()->create([
+            'name' => 'Overtime',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::OVERTIME,
+            'setting' => PayrollComponentSetting::DEFAULT,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_daily_default' => false,
+            'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+            'daily_maximum_amount' => 0,
+            'is_one_time_bonus' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
         ]);
     }
 }
