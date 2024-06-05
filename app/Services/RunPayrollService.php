@@ -69,6 +69,7 @@ class RunPayrollService
      *
      * @param  RunPayroll   $runPayroll
      * @param  Request      $request
+     * @return JsonResponse
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
@@ -228,7 +229,7 @@ class RunPayrollService
      *
      * @param  RunPayroll   $runPayroll
      * @param  string|int   $userId
-     *
+     * @return RunPayrollUser
      */
     public static function assignUser(RunPayroll $runPayroll, string|int $userId): RunPayrollUser
     {
@@ -236,10 +237,13 @@ class RunPayrollService
     }
 
     /**
-     * sync formula with related model
+     * create run payroll user components
      *
      * @param  RunPayrollUser   $runPayrollUser
-     * @param  string|int  $userId
+     * @param  int              $payrollComponentId
+     * @param  int|float        $amomunt
+     * @param  bool             $isEditable
+     * @return RunPayrollUserComponent
      */
     public static function createComponent(RunPayrollUser $runPayrollUser, int $payrollComponentId, int|float $amount = 0, ?bool $isEditable = true): RunPayrollUserComponent
     {
