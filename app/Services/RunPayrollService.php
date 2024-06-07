@@ -37,7 +37,12 @@ class RunPayrollService
             $runPayroll = self::createRunPayroll($request);
 
             $runPayrollDetail = self::createDetails($runPayroll, $request);
-            if (!$runPayrollDetail->getData()?->success) return response()->json($runPayrollDetail->getData());
+
+            // check if there's json error response
+            if (!$runPayrollDetail->getData()?->success) {
+                DB::rollBack();
+                return response()->json($runPayrollDetail->getData());
+            }
 
             DB::commit();
 
@@ -135,6 +140,13 @@ class RunPayrollService
             if ($overtimePayrollComponent) {
                 // get overtime setting
                 $overtime = $runPayrollUser->user->overtime;
+                if (!$overtime) {
+                    return response()->json([
+                        'success' => false,
+                        'data' => 'Please set overtime setting for each user before submit Run Payroll',
+                    ]);
+                }
+
                 $amount = 0;
 
                 switch ($overtime->rate_type) {
