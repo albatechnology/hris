@@ -37,7 +37,12 @@ class RunPayrollService
             $runPayroll = self::createRunPayroll($request);
 
             $runPayrollDetail = self::createDetails($runPayroll, $request);
-            if (!$runPayrollDetail->getData()?->success) return response()->json($runPayrollDetail->getData());
+
+            // check if there's json error response
+            if (!$runPayrollDetail->getData()?->success) {
+                DB::rollBack();
+                return response()->json($runPayrollDetail->getData());
+            }
 
             DB::commit();
 
@@ -69,6 +74,7 @@ class RunPayrollService
      *
      * @param  RunPayroll   $runPayroll
      * @param  Request      $request
+     * @return JsonResponse
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
@@ -134,6 +140,13 @@ class RunPayrollService
             if ($overtimePayrollComponent) {
                 // get overtime setting
                 $overtime = $runPayrollUser->user->overtime;
+                if (!$overtime) {
+                    return response()->json([
+                        'success' => false,
+                        'data' => 'Please set overtime setting for each user before submit Run Payroll',
+                    ]);
+                }
+
                 $amount = 0;
 
                 switch ($overtime->rate_type) {
@@ -228,7 +241,7 @@ class RunPayrollService
      *
      * @param  RunPayroll   $runPayroll
      * @param  string|int   $userId
-     *
+     * @return RunPayrollUser
      */
     public static function assignUser(RunPayroll $runPayroll, string|int $userId): RunPayrollUser
     {
@@ -236,10 +249,13 @@ class RunPayrollService
     }
 
     /**
-     * sync formula with related model
+     * create run payroll user components
      *
      * @param  RunPayrollUser   $runPayrollUser
-     * @param  string|int  $userId
+     * @param  int              $payrollComponentId
+     * @param  int|float        $amomunt
+     * @param  bool             $isEditable
+     * @return RunPayrollUserComponent
      */
     public static function createComponent(RunPayrollUser $runPayrollUser, int $payrollComponentId, int|float $amount = 0, ?bool $isEditable = true): RunPayrollUserComponent
     {
