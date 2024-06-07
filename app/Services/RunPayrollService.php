@@ -194,7 +194,7 @@ class RunPayrollService
                         if ($overtimeDuration < $overtimeMultiplier->start_hour) break;
 
                         for ($hour = 1; $hour <= $overtimeDuration; $hour++) {
-                            if ($hour >= $overtimeMultiplier->start_hour && $hour <= $overtimeMultiplier->end_hour) {
+                            if (($hour >= $overtimeMultiplier->start_hour) && ($hour <= $overtimeMultiplier->end_hour)) {
                                 $multiply = $overtimeMultiplier->multiply;
                             } else {
                                 $multiply = 1;

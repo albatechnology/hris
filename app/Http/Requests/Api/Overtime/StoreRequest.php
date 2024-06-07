@@ -69,12 +69,16 @@ class StoreRequest extends FormRequest
                 'integer',
                 function ($attribute, int $value, \Closure $fail) {
                     $index = explode('.', $attribute)[1];
-                    if ($index > 0 && $value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) {
+                    if (
+                        ($index > 0) &&
+                        ($value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) &&
+                        ($this->overtime_multipliers[$index - 1]['is_weekday'] == $this->overtime_multipliers[$index]['is_weekday'])
+                    ) {
                         $fail($attribute . ' must be greater than ' . $this->overtime_multipliers[$index - 1]['end_hour']);
                     }
                 }
             ],
-            'overtime_multipliers.*.end_hour' => 'required_with:overtime_multipliers|integer|gt:overtime_multipliers.*.start_hour',
+            'overtime_multipliers.*.end_hour' => 'required_with:overtime_multipliers|integer|gte:overtime_multipliers.*.start_hour',
             'overtime_multipliers.*.multiply' => 'required_with:overtime_multipliers|integer',
 
             'overtime_allowances' => 'required_if:rate_type,allowances|array',
