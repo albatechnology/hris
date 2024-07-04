@@ -30,6 +30,7 @@ use App\Services\ScheduleService;
 use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -176,7 +177,6 @@ class AttendanceController extends BaseController
 
     public function report(ExportReportRequest $request, ?string $export = null)
     {
-        // return Excel::download(new AttendanceReport($request), 'attendances.xlsx');
         $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -187,7 +187,7 @@ class AttendanceController extends BaseController
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->get(['id', 'name', 'nik', 'resign_date']);
+            ->get(['id', 'name', 'nik']);
 
         $data = [];
         foreach ($users as $user) {
@@ -295,6 +295,8 @@ class AttendanceController extends BaseController
                 ]
             ];
         }
+
+        if ($export) return Excel::download(new AttendanceReport($data), 'attendances.xlsx');
 
         return DefaultResource::collection($data);
     }
@@ -583,23 +585,6 @@ class AttendanceController extends BaseController
 
         $date = $request->filter['date'];
 
-        $summary = [
-            'present' => [
-                'on_time' => 0,
-                'late_clock_in' => 0,
-                'early_clock_out' => 0,
-            ],
-            'not_present' => [
-                'on_time' => 0,
-                'late_clock_in' => 0,
-                'early_clock_out' => 0,
-            ],
-            'away' => [
-                'day_off' => 0,
-                'time_off' => 0,
-            ]
-        ];
-
         $companyHolidays = Event::tenanted()->whereHoliday()->get();
         $nationalHolidays = NationalHoliday::orderBy('date')->get();
         $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays) {
@@ -701,7 +686,7 @@ class AttendanceController extends BaseController
                 if (!$compareFace) {
                     return $this->errorResponse(message: 'Face not match!', code: 400);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->errorResponse(message: $e->getMessage());
             }
         }
@@ -727,9 +712,8 @@ class AttendanceController extends BaseController
 
             AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw $e;
             return $this->errorResponse($e->getMessage());
         }
 
@@ -747,7 +731,7 @@ class AttendanceController extends BaseController
                 if (!$compareFace) {
                     return $this->errorResponse(message: 'Face not match!', code: 400);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return $this->errorResponse(message: $e->getMessage());
             }
         }
@@ -773,7 +757,7 @@ class AttendanceController extends BaseController
 
             AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             throw $e;
             return $this->errorResponse($e->getMessage());
@@ -814,7 +798,7 @@ class AttendanceController extends BaseController
                 AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             return $this->errorResponse($e->getMessage());

@@ -39,6 +39,8 @@ class AttendanceDetail extends BaseModel implements HasMedia
         static::creating(function (self $model) {
             if ($model->type->is(AttendanceType::MANUAL)) {
                 $model->approved_by = $model->attendance->user->approval?->id ?? null;
+            } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
+                $model->approval_status = ApprovalStatus::APPROVED;
             }
         });
     }

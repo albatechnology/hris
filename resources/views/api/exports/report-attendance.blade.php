@@ -26,7 +26,7 @@
                 <tr>
                     <td>{{ $data['user']['nik'] }}</td>
                     <td>{{ $data['user']['name'] }}</td>
-                    <td>{{ $attendance['date']->format('Y-m-d') }}</td>
+                    <td>{{ $attendance['date'] }}</td>
                     <td>{{ $attendance['shift']['name'] }}</td>
                     <td>{{ $attendance['shift']['clock_in'] }}</td>
                     <td>{{ $attendance['shift']['clock_out'] }}</td>
@@ -41,6 +41,8 @@
                         @else
                             @if (isset($attendance['attendance']['shift']) && !is_null($attendance['attendance']['shift']))
                                 H
+                            @else
+                                A
                             @endif
                         @endif
                     </td>
@@ -102,15 +104,15 @@
             @empty
             @endforelse
             <tr>
-                <th style="background: #ffbf00; font-weight: bold" colspan="10">TOTAL FOR EMPLOYEE :
+                <th style="background: #ffcbb1; font-weight: bold" colspan="10">TOTAL FOR EMPLOYEE :
                     {{ $data['user']['nik'] . ' - ' . $data['user']['name'] }}</th>
-                <th style="background: #ffbf00; font-weight: bold">{{ $data['summary']['late_in'] }}</th>
-                <th style="background: #ffbf00; font-weight: bold">{{ $data['summary']['early_out'] }}</th>
-                <th style="background: #ffbf00; font-weight: bold">{{ $data['summary']['schedule_working_hour'] }}</th>
-                <th style="background: #ffbf00; font-weight: bold">{{ $data['summary']['real_working_hour'] }}</th>
-                <th style="background: #ffbf00; font-weight: bold">
+                <th style="background: #ffcbb1; font-weight: bold">{{ $data['summary']['late_in'] }}</th>
+                <th style="background: #ffcbb1; font-weight: bold">{{ $data['summary']['early_out'] }}</th>
+                <th style="background: #ffcbb1; font-weight: bold">{{ $data['summary']['schedule_working_hour'] }}</th>
+                <th style="background: #ffcbb1; font-weight: bold">{{ $data['summary']['real_working_hour'] }}</th>
+                <th style="background: #ffcbb1; font-weight: bold">
                     {{ $data['summary']['overtime_duration_before_shift'] }}</th>
-                <th style="background: #ffbf00; font-weight: bold">
+                <th style="background: #ffcbb1; font-weight: bold">
                     {{ $data['summary']['overtime_duration_after_shift'] }}</th>
             </tr>
         @endforeach

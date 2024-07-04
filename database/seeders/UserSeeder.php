@@ -144,6 +144,11 @@ class UserSeeder extends Seeder
                 if ($company->id == 3) {
                     $albaUsers = [
                         [
+                            'name' => 'Nikko Febika',
+                            'email' => 'febika.nikko@gmail.com',
+                            'image' => public_path('img/nikko.jpg')
+                        ],
+                        [
                             'name' => 'Ibnul Mundzir',
                             'email' => 'ibnulmundzir97@gmail.com',
                             'image' => public_path('img/ibnul.jpg')
@@ -157,11 +162,6 @@ class UserSeeder extends Seeder
                             'name' => 'Muhammad Robbi Zulfikar',
                             'email' => 'mrobbizulfikar@gmail.com',
                             'image' => public_path('img/zulfi.jpg')
-                        ],
-                        [
-                            'name' => 'Nikko Febika',
-                            'email' => 'febika.nikko@gmail.com',
-                            'image' => public_path('img/nikko.jpg')
                         ],
                         [
                             'name' => 'Poedi Udi Maurif',
