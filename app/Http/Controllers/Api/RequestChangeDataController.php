@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Enums\RequestChangeDataType;
-use App\Http\Requests\Api\RequestChangeData\ApproveRequest;
+use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RequestChangeData;
 use Illuminate\Http\JsonResponse;

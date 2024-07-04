@@ -26,6 +26,16 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->middleware('permission:user_access', ['only' => ['restore']]);
+        $this->middleware('permission:user_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:user_create', ['only' => 'store']);
+        $this->middleware('permission:user_edit', ['only' => 'update']);
+        $this->middleware('permission:user_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
     private function getAllowedIncludes()
     {
         return [
@@ -54,19 +64,9 @@ class UserController extends BaseController
         ];
     }
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->middleware('permission:user_access', ['only' => ['restore']]);
-        $this->middleware('permission:user_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:user_create', ['only' => 'store']);
-        $this->middleware('permission:user_edit', ['only' => 'update']);
-        $this->middleware('permission:user_delete', ['only' => ['destroy', 'forceDelete']]);
-    }
-
     public function index()
     {
-        $users = QueryBuilder::for(User::tenanted()->with(['roles' => fn ($q) => $q->select('id', 'name')]))
+        $users = QueryBuilder::for(User::tenanted(request()->filter['is_my_descendant'] ?? false)->with(['roles' => fn ($q) => $q->select('id', 'name')]))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),

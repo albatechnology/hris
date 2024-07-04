@@ -22,8 +22,8 @@ class Timeoff extends BaseModel
         'end_at',
         'delegate_to',
         'reason',
-        'approval_status',
         'is_advanced_leave',
+        'approval_status',
         'approved_by',
         'approved_at',
     ];

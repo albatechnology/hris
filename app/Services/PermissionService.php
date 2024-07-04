@@ -226,6 +226,12 @@ class PermissionService
                 'task_edit',
                 'task_delete',
             ],
+            'user_transfer_access' => [
+                'user_transfer_read',
+                'user_transfer_create',
+                'user_transfer_edit',
+                'user_transfer_delete',
+            ],
         ];
     }
 
@@ -395,6 +401,12 @@ class PermissionService
                 'task_create',
                 'task_edit',
                 'task_delete',
+            ],
+            'user_transfer_access' => [
+                'user_transfer_read',
+                'user_transfer_create',
+                'user_transfer_edit',
+                'user_transfer_delete',
             ],
         ];
     }

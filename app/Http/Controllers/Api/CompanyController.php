@@ -6,7 +6,6 @@ use App\Http\Requests\Api\Company\StoreRequest;
 use App\Http\Requests\Api\Company\UpdateRequest;
 use App\Http\Resources\Company\CompanyResource;
 use App\Models\Company;
-use App\Services\TimeoffRegulationService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -42,11 +41,6 @@ class CompanyController extends BaseController
 
     public function show(Company $company)
     {
-        // $date = date('Y-m-'.$company->payrollSetting->cutoff_attendance_start_date);
-        // dump($date);
-        // dump(date('Y-m-d', strtotime($date.'+4 days')));
-        // dump($company->payrollSetting);
-        // dd($company);
         return new CompanyResource($company);
     }
 

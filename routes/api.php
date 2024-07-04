@@ -46,6 +46,7 @@ use App\Http\Controllers\Api\UserExperienceController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use App\Http\Controllers\Api\UserPayrollInfoController;
+use App\Http\Controllers\Api\UserTransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -212,4 +213,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('force-delete', [TaskController::class, 'forceDelete']);
     });
     Route::apiResource('tasks', TaskController::class);
+
+    Route::get('user-transfers/approvals', [UserTransferController::class, 'approvals']);
+    Route::get('user-transfers/approvals/count-total', [UserTransferController::class, 'countTotalapprovals']);
+    Route::group(['prefix' => 'user-transfers/{user_transfer}'], function () {
+        Route::put('approve', [UserTransferController::class, 'approve']);
+    });
+    Route::apiResource('user-transfers', UserTransferController::class);
 });

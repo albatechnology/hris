@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\AdvancedLeaveRequest;
+namespace App\Http\Requests\Api;
 
 use App\Enums\ApprovalStatus;
 use App\Traits\Requests\RequestToBoolean;

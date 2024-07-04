@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\AdvancedLeaveRequest\StoreRequest;
-use App\Http\Requests\Api\AdvancedLeaveRequest\ApproveRequest;
+use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Resources\AdvancedLeaveRequest\AdvancedLeaveRequestResource;
 use App\Models\AdvancedLeaveRequest;
 use App\Models\User;
