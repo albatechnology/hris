@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class UserTransfer extends BaseModel implements TenantedInterface
+class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
 {
-    use BelongsToUser;
+    use BelongsToUser, InteractsWithMedia;
 
     const FROM_COLUMNS = [
         'employment_status',
@@ -49,7 +51,7 @@ class UserTransfer extends BaseModel implements TenantedInterface
         'approval_status' => ApprovalStatus::class,
     ];
 
-    protected $appends = ['to'];
+    protected $appends = ['to', 'file'];
 
     protected static function booted(): void
     {
@@ -178,6 +180,18 @@ class UserTransfer extends BaseModel implements TenantedInterface
                     };
                 }
                 return $data;
+            },
+        );
+    }
+
+    protected function file(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $file = $this->getFirstMedia(\App\Enums\MediaCollection::USER_TRANSFER->value);
+                return [
+                    'url' => $file ? $file->getUrl() : null,
+                ];
             },
         );
     }

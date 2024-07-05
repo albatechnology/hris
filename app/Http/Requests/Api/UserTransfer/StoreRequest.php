@@ -50,6 +50,7 @@ class StoreRequest extends FormRequest
             'reason' => 'nullable|string',
             'is_notify_manager' => 'nullable|boolean',
             'is_notify_user' => 'nullable|boolean',
+            'file' => 'required|mimes:' . config('app.file_mimes_types'),
 
             'branch_ids' => 'nullable|array',
             'branch_ids.*' => 'required|exists:branches,id',

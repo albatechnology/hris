@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
+use App\Enums\MediaCollection;
 use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\UserTransfer\StoreRequest;
 use App\Http\Resources\DefaultResource;
@@ -82,6 +83,12 @@ class UserTransferController extends BaseController
                     })->all()
             );
             $userTransfer->positions()->createMany($request->positions ?? []);
+
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::USER_TRANSFER->value;
+                $userTransfer->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+
             DB::commit();
 
             if ($userTransfer->is_notify_manager) {

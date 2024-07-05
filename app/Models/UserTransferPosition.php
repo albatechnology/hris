@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserTransferPosition extends BaseModel
 {
+    public $timestamps = false;
     protected $fillable = ['user_transfer_id', 'department_id', 'position_id'];
 
     public function position(): BelongsTo
