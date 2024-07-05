@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class UserDepartmentPosition extends BaseModel
+class UserTransferPosition extends BaseModel
 {
-    protected $fillable = ['user_id', 'department_id', 'position_id'];
+    protected $fillable = ['user_transfer_id', 'department_id', 'position_id'];
 
     public function position(): BelongsTo
     {

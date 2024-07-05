@@ -45,12 +45,18 @@ class StoreRequest extends FormRequest
             'type' => ['required', Rule::enum(TransferType::class)],
             'effective_date' => 'required|date',
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
-            'branch_id' => 'nullable|exists:branches,id',
             'approval_id' => 'nullable|exists:users,id',
             'parent_id' => 'nullable|exists:users,id',
             'reason' => 'nullable|string',
             'is_notify_manager' => 'nullable|boolean',
             'is_notify_user' => 'nullable|boolean',
+
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'required|exists:branches,id',
+
+            'positions' => 'nullable|array',
+            'positions.*.position_id' => 'required|exists:positions,id',
+            'positions.*.department_id' => 'required|exists:departments,id',
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\UserTransfer\StoreRequest;
 use App\Http\Resources\DefaultResource;
@@ -17,21 +18,18 @@ class UserTransferController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        // $this->middleware('permission:user_transfer_access', ['only' => ['restore']]);
-        // $this->middleware('permission:user_transfer_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:user_transfer_create', ['only' => 'store']);
-        // $this->middleware('permission:user_transfer_edit', ['only' => 'update']);
-        // $this->middleware('permission:user_transfer_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:user_transfer_access', ['only' => ['restore']]);
+        $this->middleware('permission:user_transfer_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:user_transfer_create', ['only' => 'store']);
+        $this->middleware('permission:user_transfer_edit', ['only' => 'update']);
+        $this->middleware('permission:user_transfer_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     private function getAllowedIncludes()
     {
         return [
             AllowedInclude::callback('user', function ($q) {
-                $q->select('id', 'name', 'nik');
-            }),
-            AllowedInclude::callback('branch', function ($q) {
-                $q->select('id', 'name');
+                $q->select('id', 'name', 'nik', 'approval_id', 'parent_id');
             }),
             AllowedInclude::callback('approval', function ($q) {
                 $q->select('id', 'name');
@@ -48,7 +46,6 @@ class UserTransferController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('approval_id'),
                 AllowedFilter::exact('parent_id'),
                 'type', 'employment_status', 'approval_status'
@@ -66,7 +63,6 @@ class UserTransferController extends BaseController
     {
         $userTransfer = UserTransfer::with([
             'user' => fn ($q) => $q->select('id', 'name', 'nik'),
-            'branch' => fn ($q) => $q->select('id', 'name'),
             'approval' => fn ($q) => $q->select('id', 'name'),
             'manager' => fn ($q) => $q->select('id', 'name'),
         ])->findTenanted($id);
@@ -79,7 +75,13 @@ class UserTransferController extends BaseController
         DB::beginTransaction();
         try {
             $userTransfer = UserTransfer::create($request->validated());
-
+            $userTransfer->branches()->createMany(
+                collect($request->branch_ids)->unique()->values()
+                    ->map(function ($branchId) {
+                        return ['branch_id' => $branchId];
+                    })->all()
+            );
+            $userTransfer->positions()->createMany($request->positions ?? []);
             DB::commit();
 
             if ($userTransfer->is_notify_manager) {
@@ -123,11 +125,12 @@ class UserTransferController extends BaseController
 
     public function approve(ApproveRequest $request, UserTransfer $userTransfer)
     {
+        if ($userTransfer->approval_status->is(ApprovalStatus::APPROVED) && ($request->approval_status == ApprovalStatus::REJECTED->value)) {
+            return $this->errorResponse('User transfer already approved', code: Response::HTTP_CONFLICT);
+        }
+
         try {
             $userTransfer->update($request->validated());
-
-            // $notificationType = NotificationType::OVERTIME_APPROVED;
-            // $userTransfer->user->notify(new ($notificationType->getNotificationClass())($notificationType, $userTransfer->approvedBy, $userTransfer->approval_status, $userTransfer));
         } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }

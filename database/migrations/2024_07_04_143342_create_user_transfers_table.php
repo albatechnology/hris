@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('type', 20);
             $table->date('effective_date');
             $table->string('employment_status')->nullable();
-            $table->unsignedInteger('branch_id')->nullable();
             $table->unsignedInteger('approval_id')->nullable();
             $table->unsignedInteger('parent_id')->nullable();
             $table->text('reason')->nullable();

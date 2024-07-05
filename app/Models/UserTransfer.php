@@ -9,10 +9,20 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserTransfer extends BaseModel implements TenantedInterface
 {
     use BelongsToUser;
+
+    const FROM_COLUMNS = [
+        'employment_status',
+        'approval_id',
+        'parent_id',
+        'branches',
+        'positions',
+    ];
 
     protected $fillable = [
         'user_id',
@@ -20,7 +30,6 @@ class UserTransfer extends BaseModel implements TenantedInterface
         'type',
         'effective_date',
         'employment_status',
-        'branch_id',
         'approval_id',
         'parent_id',
         'reason',
@@ -40,18 +49,137 @@ class UserTransfer extends BaseModel implements TenantedInterface
         'approval_status' => ApprovalStatus::class,
     ];
 
+    protected $appends = ['to'];
+
     protected static function booted(): void
     {
         static::updating(function (self $model) {
-            if ($model->isDirty('approval_status') && $model->approval_status->is(ApprovalStatus::APPROVED)) {
-                $model->from = [
-                    'employment_status' => $model->user->detail->employment_status,
-                    'branch_id' => $model->user->branch->name,
-                    'approval_id' => $model->user->approval?->name ?? null,
-                    'parent_id' => $model->user->manager?->name ?? null,
-                ];
+            if ($model->isDirty('approval_status') && !$model->approval_status->is(ApprovalStatus::PENDING)) {
+                /** @var User $user */
+                $user = $model->user;
+
+                $data = [];
+                foreach (self::FROM_COLUMNS as $column) {
+                    $data[$column] = match ($column) {
+                        'employment_status' => $user->detail?->employment_status?->value ?? '',
+                        'approval_id' => $user->approval?->name ?? '',
+                        'parent_id' => $user->manager?->name ?? '',
+                        'branches' => $user->branches()->select('branch_id')->with('branch', fn ($q) => $q->select('id', 'name'))->get()->map(function ($data) {
+                            return $data->branch?->name ?? '';
+                        }) ?? [],
+                        'positions' => $user->positions()->with([
+                            'position' => fn ($q) => $q->select('id', 'name'),
+                            'department' => fn ($q) => $q->select('id', 'name'),
+                        ])->get()->map(function ($data) {
+                            return [
+                                'department' => $data->department?->name ?? '',
+                                'position' => $data->position?->name ?? '',
+                            ];
+                        }) ?? [],
+                        default => null,
+                    };
+                }
+                $model->from = $data;
             }
         });
+
+        static::updated(function (self $model) {
+            if ($model->isDirty('approval_status') && $model->approval_status->is(ApprovalStatus::APPROVED)) {
+                /** @var User $user */
+                $user = $model->user;
+                foreach (self::FROM_COLUMNS as $column) {
+                    match ($column) {
+                        'employment_status' => $user->detail->update([$column => $model->{$column}]),
+                        'approval_id',
+                        'parent_id' => $user->update([$column => $model->{$column}]),
+                        default => null,
+                    };
+                }
+
+                $branches = $model->branches()->select('branch_id')->get();
+                if ($branches->count() > 0) {
+                    $user->branch_id = $branches[0]->branch_id;
+                    $user->saveQuietly();
+
+                    $user->branches()->delete();
+                    $user->branches()->createMany(
+                        $branches->pluck('branch_id')->unique()->values()->map(fn ($branchId) => ['branch_id' => $branchId])->toArray()
+                    );
+                }
+
+                $positions = $model->positions()->select('department_id', 'position_id')->get();
+                if ($positions->count() > 0) {
+                    $user->positions()->delete();
+                    $user->positions()->createMany($positions->toArray());
+                }
+            }
+        });
+    }
+
+    protected function from(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (!$this->approval_status->is(ApprovalStatus::PENDING) && !is_null($value)) {
+                    return json_decode($value, true);
+                }
+
+                /** @var User $user */
+                $user = $this->user;
+                $data = [];
+                foreach (self::FROM_COLUMNS as $column) {
+                    $data[$column] = match ($column) {
+                        'employment_status' => $user->detail?->employment_status?->value ?? '',
+                        'approval_id' => $user->approval?->name ?? '',
+                        'parent_id' => $user->manager?->name ?? '',
+                        'branches' => $user->branches()->select('branch_id')->with('branch', fn ($q) => $q->select('id', 'name'))->get()->map(function ($data) {
+                            return $data->branch?->name ?? '';
+                        }) ?? [],
+                        'positions' => $user->positions()->with([
+                            'position' => fn ($q) => $q->select('id', 'name'),
+                            'department' => fn ($q) => $q->select('id', 'name'),
+                        ])->get()->map(function ($data) {
+                            return [
+                                'department' => $data->department?->name ?? '',
+                                'position' => $data->position?->name ?? '',
+                            ];
+                        }) ?? [],
+                        default => null,
+                    };
+                }
+                return $data;
+            },
+        );
+    }
+
+    protected function to(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $data = [];
+                foreach (self::FROM_COLUMNS as $column) {
+                    $data[$column] = match ($column) {
+                        'employment_status' => $this->{$column},
+                        'approval_id' => $this->approval?->name ?? null,
+                        'parent_id' => $this->manager?->name ?? null,
+                        'branches' => $this->branches()->select('branch_id')->with('branch', fn ($q) => $q->select('id', 'name'))->get()->map(function ($data) {
+                            return $data->branch?->name ?? '';
+                        }),
+                        'positions' => $this->positions()->with([
+                            'position' => fn ($q) => $q->select('id', 'name'),
+                            'department' => fn ($q) => $q->select('id', 'name'),
+                        ])->get()->map(function ($data) {
+                            return [
+                                'department' => $data->department?->name ?? '',
+                                'position' => $data->position?->name ?? '',
+                            ];
+                        }),
+                        default => null,
+                    };
+                }
+                return $data;
+            },
+        );
     }
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
@@ -70,11 +198,13 @@ class UserTransfer extends BaseModel implements TenantedInterface
             return $query->whereHas('user', fn ($q) => $q->whereIn('company_id', $companyIds));
         }
 
+        $query->orWhere('approved_by', $user->id)->orWhere('user_id', $user->id)->orWhere('approval_id', $user->id);
+
         if ($user->descendants()->exists()) {
-            return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
+            return $query->orWhereHas('user', fn ($q) => $q->whereDescendantOf($user));
         }
 
-        return $query->where(fn ($q) => $q->whereHas('user', fn ($q) => $q->where('approval_id', $user->id))->orWhere('user_id', $user->id)->where('approval_id', $user->id));
+        return $query->orWhereHas('user', fn ($q) => $q->where('approval_id', $user->id));
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -87,9 +217,14 @@ class UserTransfer extends BaseModel implements TenantedInterface
         return $query->first();
     }
 
-    public function branch(): BelongsTo
+    public function branches(): HasMany
     {
-        return $this->belongsTo(User::class, 'branch_id');
+        return $this->hasMany(UserTransferBranch::class);
+    }
+
+    public function positions(): HasMany
+    {
+        return $this->hasMany(UserTransferPosition::class);
     }
 
     public function approval(): BelongsTo
