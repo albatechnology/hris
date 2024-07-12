@@ -369,6 +369,46 @@ class AttendanceController extends BaseController
                 if ($attendance) {
                     $shift = $attendance->shift;
 
+                    if ($attendance->clockIn) {
+                        $shiftClockInTime = strtotime($shift->clock_in);
+                        $clockInTime = strtotime(date('H:i:s', strtotime($attendance->clockIn->time)));
+
+                        // calculate present on time (include early clock in)
+                        if ($clockInTime <= $shiftClockInTime) {
+                            $summaryPresentOnTime += 1;
+                        }
+
+                        // calculate late clock in
+                        if ($clockInTime > $shiftClockInTime) {
+                            $summaryPresentLateClockIn += 1;
+                        }
+
+                        // calculate if no clock out but clock in
+                        if (!$attendance->clockOut) {
+                            $summaryNotPresentNoClockOut += 1;
+                        }
+                    }
+
+                    if ($attendance->clockOut) {
+                        $shiftClockOutTime = strtotime($shift->clock_out);
+                        $clockOutTime = strtotime(date('H:i:s', strtotime($attendance->clockOut->time)));
+
+                        // calculate early clock out
+                        if ($clockOutTime < $shiftClockOutTime) {
+                            $summaryPresentEarlyClockOut += 1;
+                        }
+
+                        // calculate if no clock in but clock out
+                        if (!$attendance->clockIn) {
+                            $summaryNotPresentNoClockIn += 1;
+                        }
+                    }
+
+                    // calculate timeoff
+                    if ($attendance->timeoff) {
+                        $summaryAwayTimeOff += 1;
+                    }
+
                     // load overtime
                     $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
                     $attendance->total_overtime = $totalOvertime;
@@ -378,6 +418,7 @@ class AttendanceController extends BaseController
                     // $attendance->total_task = $totalTask;
                 } else {
                     $shift = $schedule->shifts[$orderKey];
+                    $summaryNotPresentAbsent += 1;
                 }
                 $shiftType = 'shift';
 

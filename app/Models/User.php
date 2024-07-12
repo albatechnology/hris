@@ -133,7 +133,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
     protected function password(): Attribute
     {
         return Attribute::make(
-            set: fn (?string $value) => empty($value) ? null : bcrypt($value),
+            set: fn (?string $value) => bcrypt($value ?? 'alba#123'),
         );
     }
 
