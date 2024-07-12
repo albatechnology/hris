@@ -9,5 +9,6 @@ enum EmploymentStatus: string
     case PERMANENT = 'permanent';
     case CONTRACT = 'contract';
     case FREELANCE = 'freelance';
-    case VOLUNTEER = 'volunteer';
+    case INTERNSHIP = 'internship';
+    case PART_TIME = 'part_time';
 }

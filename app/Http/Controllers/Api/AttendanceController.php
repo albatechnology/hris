@@ -326,6 +326,16 @@ class AttendanceController extends BaseController
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
+
+        $summaryPresentOnTime = 0;
+        $summaryPresentLateClockIn = 0;
+        $summaryPresentEarlyClockOut = 0;
+        $summaryNotPresentAbsent = 0;
+        $summaryNotPresentNoClockIn = 0;
+        $summaryNotPresentNoClockOut = 0;
+        $summaryAwayDayOff = 0;
+        $summaryAwayTimeOff = 0;
+
         $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
         if ($schedule) {
             $order = $schedule->shifts->where('id', $schedule->shift->id);
@@ -409,7 +419,23 @@ class AttendanceController extends BaseController
         }
 
         return response()->json([
-            'data' => $data
+            'summary' => [
+                'present' => [
+                    'on_time' => $summaryPresentOnTime,
+                    'late_clock_in' => $summaryPresentLateClockIn,
+                    'early_clock_out' => $summaryPresentEarlyClockOut,
+                ],
+                'not_present' => [
+                    'absent' => $summaryNotPresentAbsent,
+                    'no_clock_in' => $summaryNotPresentNoClockIn,
+                    'no_clock_out' => $summaryNotPresentNoClockOut,
+                ],
+                'away' => [
+                    'day_off' => $summaryAwayDayOff,
+                    'time_off' => $summaryAwayTimeOff,
+                ]
+            ],
+            'data' => $data,
         ]);
     }
 

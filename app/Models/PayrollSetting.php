@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\DefaultEmployeeTaxSetting;
+use App\Enums\TaxMethod;
 use App\Enums\JhtCost;
 use App\Enums\ProrateSetting;
 use App\Enums\TaxSalary;
@@ -32,7 +32,7 @@ class PayrollSetting extends Model implements TenantedInterface
 
     protected $casts = [
         'payroll_schedule_date' => 'integer',
-        'default_employee_tax_setting' => DefaultEmployeeTaxSetting::class,
+        'default_employee_tax_setting' => TaxMethod::class,
         'default_employee_salary_tax_setting' => TaxSalary::class,
         'default_oas_setting' => JhtCost::class,
         'prorate_setting' => ProrateSetting::class,

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\PayrollSetting;
 
-use App\Enums\DefaultEmployeeTaxSetting;
+use App\Enums\TaxMethod;
 use App\Enums\JhtCost;
 use App\Enums\TaxSalary;
 use App\Rules\CompanyTenantedRule;
@@ -30,7 +30,7 @@ class UpdateRequest extends FormRequest
             'company_id' => ['required', new CompanyTenantedRule()],
             'cutoff_attendance_start_date' => 'required|date_format:d',
             'cutoff_attendance_end_date' => 'required|date_format:d',
-            'default_employee_tax_setting' => ['required', Rule::enum(DefaultEmployeeTaxSetting::class)],
+            'default_employee_tax_setting' => ['required', Rule::enum(TaxMethod::class)],
             'default_employee_salary_tax_setting' => ['required', Rule::enum(TaxSalary::class)],
             'default_oas_setting' => ['required', Rule::enum(JhtCost::class)],
         ];

@@ -134,7 +134,7 @@ class Company extends BaseModel implements TenantedInterface
             'payroll_schedule_date' => '20',
             'cutoff_attendance_start_date' => '02',
             'cutoff_attendance_end_date' => '05',
-            'default_employee_tax_setting' => \App\Enums\DefaultEmployeeTaxSetting::GROSS,
+            'default_employee_tax_setting' => \App\Enums\TaxMethod::GROSS,
             'default_employee_salary_tax_setting' => \App\Enums\TaxSalary::TAXABLE,
             'default_oas_setting' => \App\Enums\JhtCost::PAID_BY_COMPANY,
             'prorate_setting' => \App\Enums\ProrateSetting::BASE_ON_CALENDAR_DAY,
