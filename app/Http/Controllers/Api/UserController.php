@@ -318,7 +318,6 @@ class UserController extends BaseController
 
     public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
     {
-
         $requestChangeDataAllowes = \App\Models\RequestChangeDataAllowes::where('company_id', $user->company_id)->get();
 
         $dataRequested = [];
@@ -344,8 +343,8 @@ class UserController extends BaseController
 
             if (count($dataRequested) > 0) {
                 $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
-
                 $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
+
                 if ($photoProfile && $photoProfile['value']?->isValid()) {
                     $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);
                     $hasil = $requestChangeDataDetail->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
