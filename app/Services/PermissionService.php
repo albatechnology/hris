@@ -122,6 +122,12 @@ class PermissionService
                 'attendance_edit',
                 'attendance_delete',
             ],
+            'time_management_access' => [
+                'time_management_read',
+                'time_management_create',
+                'time_management_edit',
+                'time_management_delete',
+            ],
             'timeoff_access' => [
                 'timeoff_read',
                 'timeoff_create',
@@ -134,23 +140,35 @@ class PermissionService
                 'timeoff_regulation_edit',
                 'timeoff_regulation_delete',
             ],
+            'payroll_schedule_access' => [
+                'payroll_schedule_read',
+                'payroll_schedule_create',
+                'payroll_schedule_edit',
+                'payroll_schedule_delete',
+            ],
+            'cut_off_and_tax_setting_access' => [
+                'cut_off_and_tax_setting_read',
+                'cut_off_and_tax_setting_create',
+                'cut_off_and_tax_setting_edit',
+                'cut_off_and_tax_setting_delete',
+            ],
             'payroll_component_access' => [
                 'payroll_component_read',
                 'payroll_component_create',
                 'payroll_component_edit',
                 'payroll_component_delete',
             ],
-            'payroll_setting_access' => [
-                'payroll_setting_read',
-                'payroll_setting_create',
-                'payroll_setting_edit',
-                'payroll_setting_delete',
-            ],
             'run_payroll_access' => [
                 'run_payroll_read',
                 'run_payroll_create',
                 'run_payroll_edit',
                 'run_payroll_delete',
+            ],
+            'pro_rate_setting_access' => [
+                'pro_rate_setting_read',
+                'pro_rate_setting_create',
+                'pro_rate_setting_edit',
+                'pro_rate_setting_delete',
             ],
             'overtime_access' => [
                 'overtime_read',
@@ -495,6 +513,18 @@ class PermissionService
                 } else {
                     $allPermissions[$childs] = $myPermissions->search($childs) === false ? false : true;
                 }
+            }
+        }
+
+        $allPermissions['navbar']['company']['user_management_access'] = false;
+        $allPermissions['navbar']['company']['payroll_access'] = false;
+        $allPermissions['navbar']['company']['setting_access'] = false;
+
+        foreach ($allPermissions as $parent => $childs) {
+            foreach ($childs as $key => $value) {
+                if (in_array($key, ['group_access', 'company_access', 'branch_access', 'role_access', 'user_access']) && $value === true) $allPermissions['navbar']['company']['user_management_access'] = true;
+                if (in_array($key, ['payroll_schedule_access', 'cut_off_and_tax_setting_access', 'payroll_component_access', 'run_payroll_access', 'pro_rate_setting_access']) && $value === true) $allPermissions['navbar']['company']['payroll_access'] = true;
+                if (in_array($key, ['company_access', 'time_management_access', 'timeoff_regulation_access']) && $value === true) $allPermissions['navbar']['company']['setting_access'] = true;
             }
         }
 
