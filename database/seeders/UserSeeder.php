@@ -45,29 +45,7 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
-        $administrator->payrollInfo()->create([
-            'basic_salary' => 1000000
-        ]);
-        $administrator->detail()->create([]);
-        DB::table('model_has_roles')->insert([
-            'role_id' => $administratorRole->id,
-            'model_type' => get_class($administrator),
-            'model_id' => $administrator->id,
-            'group_id' => $group->id,
-        ]);
-
-        $administrator = User::create([
-            'group_id' => $group->id,
-            'company_id' => null,
-            'branch_id' => null,
-            'name' => 'Administrator 12 - ' . $group->name,
-            'email' => 'administrator12@gmail.com',
-            'password' => self::PASSWORD,
-            'type' => UserType::ADMINISTRATOR,
-        ]);
-        $administrator->payrollInfo()->create([
-            'basic_salary' => 1000000
-        ]);
+        $administrator->payrollInfo()->create([]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,
@@ -86,9 +64,26 @@ class UserSeeder extends Seeder
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
-        $administrator->payrollInfo()->create([
-            'basic_salary' => 1000000
+        $administrator->payrollInfo()->create([]);
+        $administrator->detail()->create([]);
+        DB::table('model_has_roles')->insert([
+            'role_id' => $administratorRole->id,
+            'model_type' => get_class($administrator),
+            'model_id' => $administrator->id,
+            'group_id' => $group->id,
         ]);
+
+        $group = Group::findOrFail(2);
+        $administrator = User::create([
+            'group_id' => $group->id,
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => 'Administrator Patroli' . $group->name,
+            'email' => 'administrator.patroli@gmail.com',
+            'password' => self::PASSWORD,
+            'type' => UserType::ADMINISTRATOR,
+        ]);
+        $administrator->payrollInfo()->create([]);
         $administrator->detail()->create([]);
         DB::table('model_has_roles')->insert([
             'role_id' => $administratorRole->id,

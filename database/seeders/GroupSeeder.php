@@ -176,5 +176,36 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.5766001',
         //     'umk' => 5000000,
         // ]);
+
+
+        // GROUP PATROL
+        $group = Group::create([
+            'name' => 'Group Patrol',
+        ]);
+
+        $company = $group->companies()->create([
+            'name' => 'PT. Patroli 86',
+            'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+        ]);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
+        $division->departments()->createMany($departments);
+        $company->branches()->create([
+            'name' => 'Branch Patroli 1',
+            'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5000000,
+        ]);
     }
 }

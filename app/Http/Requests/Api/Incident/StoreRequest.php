@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Requests\Api\Branch;
+namespace App\Http\Requests\Api\Incident;
 
-use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -23,15 +22,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => [new CompanyTenantedRule()],
-            'name' => 'required|string',
-            'country' => 'nullable|string',
-            'province' => 'nullable|string',
-            'city' => 'nullable|string',
-            'zip_code' => 'nullable|string',
-            'lat' => 'nullable|string',
-            'lng' => 'nullable|string',
-            'address' => 'nullable|string',
+            'client_location_id' => 'required|exists:client_locations,id',
+            'description' => 'required|string',
         ];
     }
 }
