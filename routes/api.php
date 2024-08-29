@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdvancedLeaveRequestController;
+use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BranchController;
@@ -73,7 +74,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('payroll-component', [UserPayrollInfoController::class, 'payrollComponent']);
         Route::post('request-change-data', [UserController::class, 'requestChangeData']);
     });
+
     Route::apiResource('users', UserController::class);
+    Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
+
     Route::apiResource('roles', RoleController::class);
     Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);
 
@@ -99,6 +103,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::apiResource('positions', PositionController::class);
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('departments', DepartmentController::class);
+
+    Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show', 'store']);
 
     Route::apiResource('shifts', ShiftController::class);
 

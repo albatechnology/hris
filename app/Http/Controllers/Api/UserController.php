@@ -10,6 +10,7 @@ use App\Http\Requests\Api\User\RegisterRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
+use App\Http\Requests\Api\User\FcmTokenRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
@@ -391,5 +392,19 @@ class UserController extends BaseController
             ->paginate($this->per_page);
 
         return DefaultResource::collection($data);
+    }
+
+    public function fcmToken(FcmTokenRequest $request)
+    {
+        /** @var User $user */
+        $user = auth('sanctum')->user();
+        $user->update([
+            'fcm_token' => $request->fcm_token
+        ]);
+        $user = QueryBuilder::for(User::where('id', $user->id))
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->firstOrFail();
+
+        return new UserResource($user);
     }
 }
