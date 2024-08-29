@@ -21,12 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (file_exists(config('firebase.projects.' . config('firebase.default') . '.credentials'))) {
-            Notification::extend('fcm', function ($app) {
-                return new FcmChannel();
-            });
-        } else {
-            abort(500, 'Invalid firebase credentials');
-        }
+        Notification::extend('fcm', function ($app) {
+            return new FcmChannel();
+        });
     }
 }
