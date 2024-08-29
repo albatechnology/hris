@@ -30,7 +30,7 @@ class TimeoffApproved extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'fcm'];
     }
 
     /**
@@ -66,6 +66,34 @@ class TimeoffApproved extends Notification
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->timeoff->id
+        ];
+    }
+    
+    /**
+     * Get the fcm representation of the notification.
+     */
+    public function toFcm(object $notifiable): array
+    {
+        if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
+            $body = sprintf($this->notificationType->getMessage(), date('l, d M Y', strtotime($this->timeoff->start_at)), $this->approvalStatus->value);
+        } else {
+            $body = sprintf(
+                $this->notificationType->getMessage(),
+                date('l, d M Y', strtotime($this->timeoff->start_at)) . ' to ' . date('l, d M Y', strtotime($this->timeoff->end_at)),
+                $this->approvalStatus->value
+            );
+        }
+
+        return [
+            'token' => $this->user->fcm_token,
+            'notification' => [
+                'title' => $this->notificationType->getLabel(),
+                'body' => $body,
+            ],
+            'data' => [
+                'notifiable_type' => $this->notificationType->value,
+                'notifiable_id' => $this->timeoff->id,
+            ],
         ];
     }
 }

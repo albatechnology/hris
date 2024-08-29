@@ -30,7 +30,7 @@ class AdvancedLeaveApproved extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'fcm'];
     }
 
     /**
@@ -57,6 +57,26 @@ class AdvancedLeaveApproved extends Notification
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->advancedLeaveRequest->id
+        ];
+    }
+
+    /**
+     * Get the fcm representation of the notification.
+     */
+    public function toFcm(object $notifiable): array
+    {
+        $body = sprintf($this->notificationType->getMessage(), $this->approvalStatus->value);
+
+        return [
+            'token' => $this->user->fcm_token,
+            'notification' => [
+                'title' => $this->notificationType->getLabel(),
+                'body' => $body,
+            ],
+            'data' => [
+                'notifiable_type' => $this->notificationType->value,
+                'notifiable_id' => $this->advancedLeaveRequest->id,
+            ],
         ];
     }
 }

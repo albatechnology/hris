@@ -6,6 +6,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\FirebaseController;
 use App\Http\Controllers\NationalHolidayController;
 use App\Http\Controllers\OvertimeController;
 use App\Http\Controllers\UserController;

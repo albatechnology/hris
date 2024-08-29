@@ -19,6 +19,10 @@ class AuthController extends BaseController
             ]);
         }
 
+        $user->update([
+            'fcm_token' => $request->fcm_token
+        ]);
+
         return response()->json([
             'data' => ['token' => $user->createToken('default')->plainTextToken],
         ]);

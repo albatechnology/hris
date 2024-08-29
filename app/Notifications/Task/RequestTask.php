@@ -29,7 +29,7 @@ class RequestTask extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'fcm'];
     }
 
     /**
@@ -56,6 +56,26 @@ class RequestTask extends Notification
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->taskRequest->id
+        ];
+    }
+
+    /**
+     * Get the fcm representation of the notification.
+     */
+    public function toFcm(object $notifiable): array
+    {
+        $body = sprintf($this->notificationType->getMessage(), $this->taskRequest->taskHour?->task?->name ?? "");
+
+        return [
+            'token' => $this->user->approval->fcm_token,
+            'notification' => [
+                'title' => $this->notificationType->getLabel(),
+                'body' => $body,
+            ],
+            'data' => [
+                'notifiable_type' => $this->notificationType->value,
+                'notifiable_id' => $this->taskRequest->id,
+            ],
         ];
     }
 }

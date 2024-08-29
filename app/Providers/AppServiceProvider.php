@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Broadcasting\FcmChannel;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (file_exists(config('firebase.projects.' . config('firebase.default') . '.credentials'))) {
+            Notification::extend('fcm', function ($app) {
+                return new FcmChannel();
+            });
+        } else {
+            abort(500, 'Invalid firebase credentials');
+        }
     }
 }

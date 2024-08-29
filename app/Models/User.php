@@ -43,6 +43,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia
         'email',
         'password',
         'email_verified_at',
+        'fcm_token',
         'type',
         'nik',
         'phone',

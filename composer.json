@@ -9,6 +9,7 @@
         "aws/aws-sdk-php": "^3.301",
         "guzzlehttp/guzzle": "^7.2",
         "kalnoy/nestedset": "^6.0",
+        "kreait/laravel-firebase": "^5.9",
         "laravel/framework": "^10.10",
         "laravel/horizon": "^5.24",
         "laravel/sanctum": "^3.3",

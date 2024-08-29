@@ -6,7 +6,6 @@ use App\Enums\NotificationType;
 use App\Models\Timeoff;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -29,7 +28,7 @@ class RequestTimeoff extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'fcm'];
     }
 
     /**
@@ -68,6 +67,37 @@ class RequestTimeoff extends Notification
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->timeoff->id
+        ];
+    }
+    
+    /**
+     * Get the fcm representation of the notification.
+     */
+    public function toFcm(object $notifiable): array
+    {
+        if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
+            $body = sprintf(
+                $this->notificationType->getMessage(),
+                date('d M Y', strtotime($this->timeoff->start_at)),
+            );
+        } else {
+            $body = sprintf(
+                $this->notificationType->getMessage(),
+                date('d M Y', strtotime($this->timeoff->start_at)) . ' - ' . date('d M Y', strtotime($this->timeoff->end_at)),
+            );
+        }
+
+        return [
+            'token' => $this->user->approval->fcm_token,
+            'notification' => [
+                'title' => $this->notificationType->getLabel(),
+                'body' => $body,
+                // 'body' => "You received Time-Off request {$this->timeoff->timeoffPolicy->type->getLabel()} from {$this->user->name} on " . \Carbon\Carbon::parse($this->timeoff->start_at)->format('d M y') . '.',
+            ],
+            'data' => [
+                'notifiable_type' => $this->notificationType->value,
+                'notifiable_id' => $this->timeoff->id,
+            ],
         ];
     }
 }
