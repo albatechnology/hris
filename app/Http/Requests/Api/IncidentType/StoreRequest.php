@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Api\Branch;
+namespace App\Http\Requests\Api\IncidentType;
 
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,13 +25,6 @@ class UpdateRequest extends FormRequest
         return [
             'company_id' => [new CompanyTenantedRule()],
             'name' => 'required|string',
-            'country' => 'nullable|string',
-            'province' => 'nullable|string',
-            'city' => 'nullable|string',
-            'zip_code' => 'nullable|string',
-            'lat' => 'nullable|string',
-            'lng' => 'nullable|string',
-            'address' => 'nullable|string',
         ];
     }
 }

@@ -5,18 +5,25 @@ use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ClientLocationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\IncidentController;
+use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
+use App\Http\Controllers\Api\PatrolController;
+use App\Http\Controllers\Api\PatrolLocationController;
+use App\Http\Controllers\Api\PatrolTaskController;
 use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PayrollProrateController;
 use App\Http\Controllers\Api\PayrollScheduleController;
@@ -226,4 +233,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('approve', [UserTransferController::class, 'approve']);
     });
     Route::apiResource('user-transfers', UserTransferController::class);
+
+    Route::apiResource('incident-types', IncidentTypeController::class);
+    Route::apiResource('incidents', IncidentController::class);
+
+    Route::group(['prefix' => 'clients/{client}'], function () {
+        Route::apiResource('locations', ClientLocationController::class);
+    });
+    Route::apiResource('clients', ClientController::class);
+
+    Route::group(['prefix' => 'patrols/{patrol}'], function () {
+        Route::group(['prefix' => 'locations/{location}'], function () {
+            Route::apiResource('tasks', PatrolTaskController::class);
+        });
+        Route::apiResource('locations', PatrolLocationController::class);
+    });
+    Route::apiResource('patrols', PatrolController::class);
 });

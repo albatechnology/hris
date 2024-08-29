@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Branch;
+namespace App\Http\Requests\Api\Patrol;
 
-use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,15 +22,15 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => [new CompanyTenantedRule()],
+            'client_id' => 'required|exists:clients,id',
             'name' => 'required|string',
-            'country' => 'nullable|string',
-            'province' => 'nullable|string',
-            'city' => 'nullable|string',
-            'zip_code' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'start_time' => 'required|time',
+            'end_time' => 'required|time',
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
-            'address' => 'nullable|string',
+            'description' => 'nullable|string',
         ];
     }
 }
