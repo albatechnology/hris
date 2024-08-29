@@ -4,8 +4,7 @@ namespace App\Models;
 
 use App\Enums\JobLevel;
 use App\Traits\Models\CompanyTenanted;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Announcement extends BaseModel
@@ -29,7 +28,7 @@ class Announcement extends BaseModel
         return $this->morphedByMany(Position::class, 'announcementable');
     }
 
-    public function jobLevels()
+    public function jobLevels(): HasMany
     {
         return $this->hasMany(Announcementable::class)->where('announcementable_type', JobLevel::class);
     }

@@ -250,6 +250,12 @@ class PermissionService
                 'user_transfer_edit',
                 'user_transfer_delete',
             ],
+            'announcement_access' => [
+                'announcement_read',
+                'announcement_create',
+                'announcement_edit',
+                'announcement_delete',
+            ],
         ];
     }
 
@@ -425,6 +431,12 @@ class PermissionService
                 'user_transfer_create',
                 'user_transfer_edit',
                 'user_transfer_delete',
+            ],
+            'announcement_access' => [
+                'announcement_read',
+                'announcement_create',
+                'announcement_edit',
+                'announcement_delete',
             ],
         ];
     }

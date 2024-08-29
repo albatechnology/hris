@@ -19,11 +19,11 @@ class AnnouncementController extends BaseController
   public function __construct()
   {
     parent::__construct();
-    // $this->middleware('permission:announcement_access', ['only' => ['restore']]);
-    // $this->middleware('permission:announcement_read', ['only' => ['index', 'show']]);
-    // $this->middleware('permission:announcement_create', ['only' => 'store']);
-    // $this->middleware('permission:announcement_edit', ['only' => 'update']);
-    // $this->middleware('permission:announcement_delete', ['only' => ['destroy', 'forceDelete']]);
+    $this->middleware('permission:announcement_access', ['only' => ['restore']]);
+    $this->middleware('permission:announcement_read', ['only' => ['index', 'show']]);
+    $this->middleware('permission:announcement_create', ['only' => 'store']);
+    $this->middleware('permission:announcement_edit', ['only' => 'update']);
+    $this->middleware('permission:announcement_delete', ['only' => ['destroy', 'forceDelete']]);
   }
 
   public function index()
