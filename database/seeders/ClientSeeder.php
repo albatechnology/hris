@@ -35,14 +35,14 @@ class ClientSeeder extends Seeder
             ]);
 
             for ($i = 1; $i < 4; $i++) {
-                $clientLocation = $client->locations()->create([
+                $clientLocation = $client->clientLocations()->create([
                     'name' => sprintf("Location %s %s", $i, $client->name),
                     'lat' => fake('id_ID')->latitude(),
                     'lng' => fake('id_ID')->longitude(),
                     'description' => fake('id_ID')->text(),
                 ]);
 
-                $patrolLocation = $patrol->locations()->create([
+                $patrolLocation = $patrol->patrolLocations()->create([
                     'client_location_id' => $clientLocation->id,
                 ]);
 
