@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Client;
 use App\Models\Company;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class ClientSeeder extends Seeder
 {
@@ -13,20 +14,21 @@ class ClientSeeder extends Seeder
      */
     public function run(): void
     {
+        $faker = Faker::create();
         $company = Company::where('name', 'like', '%patroli%')->firstOrFail();
 
         for ($i = 1; $i < 4; $i++) {
             $client = Client::create([
                 'company_id' => $company->id,
                 'name' => sprintf("Client %s %s", $i, $company->name),
-                'phone' => fake('id_ID')->phoneNumber(),
-                'address' => fake('id_ID')->address(),
+                'phone' => $faker->phoneNumber(),
+                'address' => $faker->address(),
             ]);
 
             $patrol = $client->patrols()->create([
                 'name' => sprintf("Patrol %s %s", $i, $client->name),
-                'lat' => fake('id_ID')->latitude(),
-                'lng' => fake('id_ID')->longitude(),
+                'lat' => $faker->latitude(),
+                'lng' => $faker->longitude(),
                 'start_date' => now(),
                 'end_date' => now()->addMonth(),
                 'start_time' => "07:00:00",
@@ -37,9 +39,9 @@ class ClientSeeder extends Seeder
             for ($i = 1; $i < 4; $i++) {
                 $clientLocation = $client->clientLocations()->create([
                     'name' => sprintf("Location %s %s", $i, $client->name),
-                    'lat' => fake('id_ID')->latitude(),
-                    'lng' => fake('id_ID')->longitude(),
-                    'description' => fake('id_ID')->text(),
+                    'lat' => $faker->latitude(),
+                    'lng' => $faker->longitude(),
+                    'description' => $faker->text(),
                 ]);
 
                 $patrolLocation = $patrol->patrolLocations()->create([
@@ -49,7 +51,7 @@ class ClientSeeder extends Seeder
                 for ($i = 1; $i < 4; $i++) {
                     $patrolLocation->tasks()->create([
                         'name' => sprintf("Task %s", $i),
-                        'description' => fake('id_ID')->text(),
+                        'description' => $faker->text(),
                     ]);
                 }
             }
