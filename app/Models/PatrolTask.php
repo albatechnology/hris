@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PatrolTask extends BaseModel
@@ -18,5 +19,10 @@ class PatrolTask extends BaseModel
     public function patrolLocation(): BelongsTo
     {
         return $this->belongsTo(PatrolLocation::class);
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(UserPatrolTask::class);
     }
 }

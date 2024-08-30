@@ -20,4 +20,9 @@ class UserPatrol extends BaseModel
     {
         return $this->belongsTo(Patrol::class);
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

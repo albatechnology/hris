@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Incident\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Incident;
+use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -28,9 +29,14 @@ class IncidentController extends BaseController
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('client_location_id'),
+                AllowedFilter::exact('incident_type_id'),
             ])
             ->allowedSorts([
-                'id', 'user_id', 'client_location_id', 'created_at',
+                'id',
+                'user_id',
+                'client_location_id',
+                'incident_type_id',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -39,27 +45,39 @@ class IncidentController extends BaseController
 
     public function show(Incident $incident)
     {
-        $incident->load(['user', 'clientLocation']);
+        $incident->load(['user', 'clientLocation', 'incidentType']);
         return new DefaultResource($incident);
     }
 
     public function store(StoreRequest $request)
     {
-        $incident = Incident::create($request->validated());
+        try {
+            $incident = Incident::create($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($incident);
     }
 
     public function update(Incident $incident, StoreRequest $request)
     {
-        $incident->update($request->validated());
+        try {
+            $incident->update($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($incident))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(Incident $incident)
     {
-        $incident->delete();
+        try {
+            $incident->delete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -67,7 +85,12 @@ class IncidentController extends BaseController
     public function forceDelete($id)
     {
         $incident = Incident::withTrashed()->findOrFail($id);
-        $incident->forceDelete();
+
+        try {
+            $incident->forceDelete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -75,7 +98,12 @@ class IncidentController extends BaseController
     public function restore($id)
     {
         $incident = Incident::withTrashed()->findOrFail($id);
-        $incident->restore();
+
+        try {
+            $incident->restore();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($incident);
     }

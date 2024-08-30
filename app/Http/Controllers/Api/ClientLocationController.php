@@ -6,6 +6,7 @@ use App\Http\Requests\Api\ClientLocation\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Client;
 use App\Models\ClientLocation;
+use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -19,11 +20,11 @@ class ClientLocationController extends BaseController
         parent::__construct();
         $this->client = Client::tenanted()->where('id', request()->segment(3))->firstOrFail(['id']);
 
-        $this->middleware('permission:client_location_access', ['only' => ['restore']]);
-        $this->middleware('permission:client_location_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:client_location_create', ['only' => 'store']);
-        $this->middleware('permission:client_location_edit', ['only' => 'update']);
-        $this->middleware('permission:client_location_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:client_access', ['only' => ['restore']]);
+        $this->middleware('permission:client_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:client_create', ['only' => 'store']);
+        $this->middleware('permission:client_edit', ['only' => 'update']);
+        $this->middleware('permission:client_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index(int $clientId)
@@ -32,10 +33,15 @@ class ClientLocationController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('client_id'),
-                'name','address'
+                'name',
+                'address'
             ])
             ->allowedSorts([
-                'id', 'client_id', 'name', 'address', 'created_at',
+                'id',
+                'client_id',
+                'name',
+                'address',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -52,7 +58,11 @@ class ClientLocationController extends BaseController
 
     public function store(int $clientId, StoreRequest $request)
     {
-       $clientLocation = $this->client->locations()->create($request->validated());
+        try {
+            $clientLocation = $this->client->locations()->create($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($clientLocation);
     }
@@ -60,7 +70,12 @@ class ClientLocationController extends BaseController
     public function update(int $clientId, int $id, StoreRequest $request)
     {
         $clientLocation = $this->client->clientLocations()->findOrFail($id);
-        $clientLocation->update($request->validated());
+
+        try {
+            $clientLocation->update($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($clientLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
@@ -68,7 +83,12 @@ class ClientLocationController extends BaseController
     public function destroy(int $clientId, int $id)
     {
         $clientLocation = $this->client->clientLocations()->findOrFail($id);
-        $clientLocation->delete();
+
+        try {
+            $clientLocation->delete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -76,7 +96,12 @@ class ClientLocationController extends BaseController
     public function forceDelete(int $clientId, $id)
     {
         $clientLocation = $this->client->clientLocations()->withTrashed()->findOrFail($id);
-        $clientLocation->forceDelete();
+
+        try {
+            $clientLocation->forceDelete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -84,7 +109,12 @@ class ClientLocationController extends BaseController
     public function restore(int $clientId, $id)
     {
         $clientLocation = $this->client->clientLocations()->withTrashed()->findOrFail($id);
-        $clientLocation->restore();
+
+        try {
+            $clientLocation->restore();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($clientLocation);
     }

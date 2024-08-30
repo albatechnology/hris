@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('phone', 20);
             $table->text('address')->nullable();
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
             $table->softDeletes();
         });
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Incident;
+namespace App\Http\Requests\Api\UserPatrolTask;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -22,8 +22,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_location_id' => 'required|exists:client_locations,id',
-            'incident_type_id' => 'required|exists:incident_types,id',
+            'user_id' => 'nullable|exists:users,id',
+            'patrol_task_id' => 'required|exists:patrol_tasks,id',
             'description' => 'required|string',
         ];
     }

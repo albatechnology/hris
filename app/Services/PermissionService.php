@@ -256,6 +256,24 @@ class PermissionService
                 'announcement_edit',
                 'announcement_delete',
             ],
+            'incident_access' => [
+                'incident_read',
+                'incident_create',
+                'incident_edit',
+                'incident_delete',
+            ],
+            'client_access' => [
+                'client_read',
+                'client_create',
+                'client_edit',
+                'client_delete',
+            ],
+            'patrol_access' => [
+                'patrol_read',
+                'patrol_create',
+                'patrol_edit',
+                'patrol_delete',
+            ],
         ];
     }
 
@@ -437,6 +455,24 @@ class PermissionService
                 'announcement_create',
                 'announcement_edit',
                 'announcement_delete',
+            ],
+            'incident_access' => [
+                'incident_read',
+                'incident_create',
+                'incident_edit',
+                'incident_delete',
+            ],
+            'client_access' => [
+                'client_read',
+                'client_create',
+                'client_edit',
+                'client_delete',
+            ],
+            'patrol_access' => [
+                'patrol_read',
+                'patrol_create',
+                'patrol_edit',
+                'patrol_delete',
             ],
         ];
     }

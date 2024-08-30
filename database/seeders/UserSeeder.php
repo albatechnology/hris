@@ -73,7 +73,7 @@ class UserSeeder extends Seeder
             'group_id' => $group->id,
         ]);
 
-        $group = Group::findOrFail(2);
+        $group = Group::findOrFail(3);
         $administrator = User::create([
             'group_id' => $group->id,
             'company_id' => null,

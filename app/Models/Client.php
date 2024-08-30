@@ -18,7 +18,7 @@ class Client extends BaseModel implements TenantedInterface
         'address',
     ];
 
-    public function locations(): HasMany
+    public function clientLocations(): HasMany
     {
         return $this->hasMany(ClientLocation::class);
     }

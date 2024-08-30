@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Incident;
+namespace App\Http\Requests\Api\Patrol;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRequest extends FormRequest
+class UserUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_location_id' => 'required|exists:client_locations,id',
-            'incident_type_id' => 'required|exists:incident_types,id',
-            'description' => 'required|string',
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' => 'required|date_format:H:i:s',
         ];
     }
 }
