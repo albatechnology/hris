@@ -67,7 +67,7 @@ class RequestAttendance extends Notification
         $body = sprintf($this->notificationType->getMessage(), $this->attendanceDetail->is_clock_in ? 'Clock In' : 'Clock Out', date("l, d M Y", strtotime($this->attendanceDetail->time)));
 
         return [
-            'token' => $this->user->approval->fcm_token,
+            'token' => $this->user->fcm_token,
             'notification' => [
                 'title' => $this->notificationType->getLabel(),
                 'body' => $body,

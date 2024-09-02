@@ -88,7 +88,7 @@ class RequestTimeoff extends Notification
         }
 
         return [
-            'token' => $this->user->approval->fcm_token,
+            'token' => $this->user->fcm_token,
             'notification' => [
                 'title' => $this->notificationType->getLabel(),
                 'body' => $body,

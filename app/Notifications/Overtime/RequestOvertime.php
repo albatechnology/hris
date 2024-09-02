@@ -67,7 +67,7 @@ class RequestOvertime extends Notification
         $body = sprintf($this->notificationType->getMessage(), $this->overtimeRequest->duration_text);
 
         return [
-            'token' => $this->user->approval->fcm_token,
+            'token' => $this->user->fcm_token,
             'notification' => [
                 'title' => $this->notificationType->getLabel(),
                 'body' => $body,

@@ -67,7 +67,7 @@ class RequestTask extends Notification
         $body = sprintf($this->notificationType->getMessage(), $this->taskRequest->taskHour?->task?->name ?? "");
 
         return [
-            'token' => $this->user->approval->fcm_token,
+            'token' => $this->user->fcm_token,
             'notification' => [
                 'title' => $this->notificationType->getLabel(),
                 'body' => $body,
