@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Client\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Client;
+use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -27,10 +28,17 @@ class ClientController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name','phone','address'
+                'name',
+                'phone',
+                'address'
             ])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'phone', 'address', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'phone',
+                'address',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -45,21 +53,33 @@ class ClientController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $client = Client::create($request->validated());
+        try {
+            $client = Client::create($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($client);
     }
 
     public function update(Client $client, StoreRequest $request)
     {
-        $client->update($request->validated());
+        try {
+            $client->update($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($client))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(Client $client)
     {
-        $client->delete();
+        try {
+            $client->delete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -67,7 +87,12 @@ class ClientController extends BaseController
     public function forceDelete($id)
     {
         $client = Client::withTrashed()->findOrFail($id);
-        $client->forceDelete();
+
+        try {
+            $client->forceDelete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -75,7 +100,12 @@ class ClientController extends BaseController
     public function restore($id)
     {
         $client = Client::withTrashed()->findOrFail($id);
-        $client->restore();
+
+        try {
+            $client->restore();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($client);
     }

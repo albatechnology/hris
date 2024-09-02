@@ -51,6 +51,7 @@ use App\Http\Controllers\Api\UserCustomFieldController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\UserExperienceController;
+use App\Http\Controllers\Api\UserPatrolTaskController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use App\Http\Controllers\Api\UserPayrollInfoController;
@@ -242,7 +243,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     Route::apiResource('clients', ClientController::class);
 
+    Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
     Route::group(['prefix' => 'patrols/{patrol}'], function () {
+        Route::get('users', [PatrolController::class, 'userIndex']);
+        Route::get('users/{user_patrol_id}', [PatrolController::class, 'userShow']);
+        Route::post('users', [PatrolController::class, 'userStore']);
+        Route::put('users/{user_patrol_id}', [PatrolController::class, 'userUpdate']);
+        Route::delete('users/{user_patrol_id}', [PatrolController::class, 'userDestroy']);
+
         Route::group(['prefix' => 'locations/{location}'], function () {
             Route::apiResource('tasks', PatrolTaskController::class);
         });

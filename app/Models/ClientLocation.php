@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientLocation extends BaseModel
 {
-    use SoftDeletes;
+    use CustomSoftDeletes;
 
     protected $fillable = [
         'client_id',

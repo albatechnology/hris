@@ -19,14 +19,14 @@ class ClientSeeder extends Seeder
             $client = Client::create([
                 'company_id' => $company->id,
                 'name' => sprintf("Client %s %s", $i, $company->name),
-                'phone' => fake('id_ID')->phoneNumber(),
-                'address' => fake('id_ID')->address(),
+                'phone' => rand(1111111111, 9999999999),
+                'address' => 'Address ' . $i,
             ]);
 
             $patrol = $client->patrols()->create([
                 'name' => sprintf("Patrol %s %s", $i, $client->name),
-                'lat' => fake('id_ID')->latitude(),
-                'lng' => fake('id_ID')->longitude(),
+                'lat' => rand(1111111111, 9999999999),
+                'lng' => rand(1111111111, 9999999999),
                 'start_date' => now(),
                 'end_date' => now()->addMonth(),
                 'start_time' => "07:00:00",
@@ -35,21 +35,21 @@ class ClientSeeder extends Seeder
             ]);
 
             for ($i = 1; $i < 4; $i++) {
-                $clientLocation = $client->locations()->create([
+                $clientLocation = $client->clientLocations()->create([
                     'name' => sprintf("Location %s %s", $i, $client->name),
-                    'lat' => fake('id_ID')->latitude(),
-                    'lng' => fake('id_ID')->longitude(),
-                    'description' => fake('id_ID')->text(),
+                    'lat' => rand(1111111111, 9999999999),
+                    'lng' => rand(1111111111, 9999999999),
+                    'description' => 'description ' . $i,
                 ]);
 
-                $patrolLocation = $patrol->locations()->create([
+                $patrolLocation = $patrol->patrolLocations()->create([
                     'client_location_id' => $clientLocation->id,
                 ]);
 
                 for ($i = 1; $i < 4; $i++) {
                     $patrolLocation->tasks()->create([
                         'name' => sprintf("Task %s", $i),
-                        'description' => fake('id_ID')->text(),
+                        'description' => 'description ' . $i,
                     ]);
                 }
             }

@@ -21,9 +21,7 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        dd($this->route('patrolId'));
         return [
-            'patrol_id' => 'required|exists:clients,id',
             'client_location_id' => 'required|exists:clients,id',
         ];
     }

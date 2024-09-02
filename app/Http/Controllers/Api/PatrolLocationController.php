@@ -6,6 +6,7 @@ use App\Http\Requests\Api\PatrolLocation\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Patrol;
 use App\Models\PatrolLocation;
+use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -19,11 +20,11 @@ class PatrolLocationController extends BaseController
         parent::__construct();
         $this->patrol = Patrol::tenanted()->where('id', request()->segment(3))->firstOrFail(['id']);
 
-        $this->middleware('permission:patrol_location_access', ['only' => ['restore']]);
-        $this->middleware('permission:patrol_location_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:patrol_location_create', ['only' => 'store']);
-        $this->middleware('permission:patrol_location_edit', ['only' => 'update']);
-        $this->middleware('permission:patrol_location_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:patrol_access', ['only' => ['restore']]);
+        $this->middleware('permission:patrol_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:patrol_create', ['only' => 'store']);
+        $this->middleware('permission:patrol_edit', ['only' => 'update']);
+        $this->middleware('permission:patrol_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index(int $patrolId)
@@ -52,7 +53,11 @@ class PatrolLocationController extends BaseController
 
     public function store(int $patrolId, StoreRequest $request)
     {
-        $patrolLocation = $this->patrol->locations()->create($request->validated());
+        try {
+            $patrolLocation = $this->patrol->locations()->create($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($patrolLocation);
     }
@@ -60,7 +65,12 @@ class PatrolLocationController extends BaseController
     public function update(int $patrolId, int $id, StoreRequest $request)
     {
         $patrolLocation = $this->patrol->locations()->findOrFail($id);
-        $patrolLocation->update($request->validated());
+
+        try {
+            $patrolLocation->update($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($patrolLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
@@ -68,7 +78,12 @@ class PatrolLocationController extends BaseController
     public function destroy(int $patrolId, int $id)
     {
         $patrolLocation = $this->patrol->locations()->findOrFail($id);
-        $patrolLocation->delete();
+
+        try {
+            $patrolLocation->delete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -76,7 +91,12 @@ class PatrolLocationController extends BaseController
     public function forceDelete(int $patrolId, $id)
     {
         $patrolLocation = $this->patrol->locations()->withTrashed()->findOrFail($id);
-        $patrolLocation->forceDelete();
+
+        try {
+            $patrolLocation->forceDelete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -84,7 +104,12 @@ class PatrolLocationController extends BaseController
     public function restore(int $patrolId, $id)
     {
         $patrolLocation = $this->patrol->locations()->withTrashed()->findOrFail($id);
-        $patrolLocation->restore();
+
+        try {
+            $patrolLocation->restore();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($patrolLocation);
     }

@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\PatrolTask\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\Patrol;
 use App\Models\PatrolLocation;
 use App\Models\PatrolTask;
+use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -18,16 +18,15 @@ class PatrolTaskController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->patrolLocation = PatrolLocation::tenanted()
-            ->where('id', request()->segment(5))
+        $this->patrolLocation = PatrolLocation::where('id', request()->segment(5))
             ->where('patrol_id', request()->segment(3))
             ->firstOrFail(['id']);
 
-        $this->middleware('permission:patrol_task_access', ['only' => ['restore']]);
-        $this->middleware('permission:patrol_task_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:patrol_task_create', ['only' => 'store']);
-        $this->middleware('permission:patrol_task_edit', ['only' => 'update']);
-        $this->middleware('permission:patrol_task_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:patrol_access', ['only' => ['restore']]);
+        $this->middleware('permission:patrol_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:patrol_create', ['only' => 'store']);
+        $this->middleware('permission:patrol_edit', ['only' => 'update']);
+        $this->middleware('permission:patrol_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index(int $patrolId, int $patrolLocationId)
@@ -59,7 +58,11 @@ class PatrolTaskController extends BaseController
 
     public function store(int $patrolId, int $patrolLocationId, StoreRequest $request)
     {
-        $patrolTask = $this->patrolLocation->tasks()->create($request->validated());
+        try {
+            $patrolTask = $this->patrolLocation->tasks()->create($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($patrolTask);
     }
@@ -67,7 +70,12 @@ class PatrolTaskController extends BaseController
     public function update(int $patrolId, int $patrolLocationId, int $id, StoreRequest $request)
     {
         $patrolTask = $this->patrolLocation->tasks()->findOrFail($id);
-        $patrolTask->update($request->validated());
+
+        try {
+            $patrolTask->update($request->validated());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($patrolTask))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
@@ -75,7 +83,12 @@ class PatrolTaskController extends BaseController
     public function destroy(int $patrolId, int $patrolLocationId, int $id)
     {
         $patrolTask = $this->patrolLocation->tasks()->findOrFail($id);
-        $patrolTask->delete();
+
+        try {
+            $patrolTask->delete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -83,7 +96,12 @@ class PatrolTaskController extends BaseController
     public function forceDelete(int $patrolId, int $patrolLocationId, $id)
     {
         $patrolTask = $this->patrolLocation->tasks()->withTrashed()->findOrFail($id);
-        $patrolTask->forceDelete();
+
+        try {
+            $patrolTask->forceDelete();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->deletedResponse();
     }
@@ -91,7 +109,12 @@ class PatrolTaskController extends BaseController
     public function restore(int $patrolId, int $patrolLocationId, $id)
     {
         $patrolTask = $this->patrolLocation->tasks()->withTrashed()->findOrFail($id);
-        $patrolTask->restore();
+
+        try {
+            $patrolTask->restore();
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
+        }
 
         return new DefaultResource($patrolTask);
     }
