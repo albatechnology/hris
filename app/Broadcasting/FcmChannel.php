@@ -37,10 +37,12 @@ class FcmChannel
     {
         $data = $notification->toFcm($notifiable);
 
-        $data = CloudMessage::withTarget('token', $data['token'])
-            ->withNotification($data['notification'])
-            ->withData($data['data']);
-
-        $this->fcm->send($data);
+        if($data['token']){
+            $data = CloudMessage::withTarget('token', $data['token'])
+                ->withNotification($data['notification'])
+                ->withData($data['data']);
+    
+            $this->fcm->send($data);
+        }
     }
 }
