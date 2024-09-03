@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class FcmTokenRequest extends FormRequest
+class SetupPasswordRequest extends FormRequest
 {
   /**
    * Determine if the user is authorized to make this request.
@@ -22,7 +22,8 @@ class FcmTokenRequest extends FormRequest
   public function rules(): array
   {
     return [
-      'fcm_token' => 'nullable|string',
+      'token' => 'required|string',
+      'password' => 'required|min:6|confirmed',
     ];
   }
 }

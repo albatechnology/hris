@@ -62,11 +62,16 @@ Route::group(['prefix' => 'auth', 'controller' => AuthController::class], functi
     Route::post('token', 'login');
 });
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+Route::post('auth/setup-password/resend', [AuthController::class, 'resendSetupPassword']);
+Route::post('auth/setup-password', [AuthController::class, 'setupPassword']);
+
+Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);
     Route::get('users/tasks', [UserController::class, 'tasks']);
+    Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
+    Route::put('users/password', [UserController::class, 'updatePassword']);
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
@@ -84,7 +89,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
 
     Route::apiResource('users', UserController::class);
-    Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
 
     Route::apiResource('roles', RoleController::class);
     Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);

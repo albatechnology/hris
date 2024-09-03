@@ -11,6 +11,8 @@ use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Requests\Api\User\FcmTokenRequest;
+use App\Http\Requests\Api\User\ResendSetupPasswordRequest;
+use App\Http\Requests\Api\User\UpdatePasswordRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
@@ -21,6 +23,7 @@ use App\Models\TaskHour;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -399,7 +402,21 @@ class UserController extends BaseController
         /** @var User $user */
         $user = auth('sanctum')->user();
         $user->update([
-            'fcm_token' => $request->fcm_token
+            'fcm_token' => $request->fcm_token,
+        ]);
+        $user = QueryBuilder::for(User::where('id', $user->id))
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->firstOrFail();
+
+        return new UserResource($user);
+    }
+
+    public function updatePassword(UpdatePasswordRequest $request)
+    {
+        /** @var User $user */
+        $user = auth('sanctum')->user();
+        $user->update([
+            'password' => Hash::make($request->new_password),
         ]);
         $user = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes($this->getAllowedIncludes())

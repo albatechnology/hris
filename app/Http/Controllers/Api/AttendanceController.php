@@ -312,12 +312,12 @@ class AttendanceController extends BaseController
         $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
         $month = date('m');
-        if (date('d') <= $timeoffRegulation->cut_off_date) {
-            $month -= 1;
-        }
 
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
+        if (date('d') <= $timeoffRegulation->cut_off_date) {
+            $month -= 1;
+        }
 
         $startDate = date(sprintf('%s-%s-%s', $year, $month, $timeoffRegulation->cut_off_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));

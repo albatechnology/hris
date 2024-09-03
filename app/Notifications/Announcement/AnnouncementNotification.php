@@ -2,10 +2,9 @@
 
 namespace App\Notifications\Announcement;
 
-use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
+use App\Mail\AnnouncementMailable;
 use App\Models\Announcement;
-use App\Models\TaskRequest;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -32,26 +31,23 @@ class AnnouncementNotification extends Notification
   {
     $via = [];
 
-    if($this->announcement->is_send_email){
-      // $via[] = 'mail';
+    if ($this->announcement->is_send_email) {
+      $via[] = 'mail';
     }
 
-    if($this->user->fcm_token){
+    if ($this->user->fcm_token) {
       $via[] = 'fcm';
     }
-    
+
     return $via;
   }
 
   /**
    * Get the mail representation of the notification.
    */
-  public function toMail(object $notifiable): MailMessage
+  public function toMail(object $notifiable): AnnouncementMailable
   {
-    return (new MailMessage)
-      ->line('The introduction to the notification.')
-      ->action('Notification Action', url('/'))
-      ->line('Thank you for using our application!');
+    return (new AnnouncementMailable($notifiable, $this->announcement))->to($notifiable->email);
   }
 
   /**

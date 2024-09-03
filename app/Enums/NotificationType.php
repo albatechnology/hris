@@ -26,6 +26,8 @@ enum NotificationType: string
     case REQUEST_CHANGE_DATA = 'request_change_data';
     case REQUEST_CHANGE_DATA_APPROVED = 'request_change_data_approved';
 
+    case SETUP_PASSWORD = 'setup_password';
+
     public function getNotificationClass(): string
     {
         return match ($this) {
@@ -42,6 +44,7 @@ enum NotificationType: string
             self::ADVANCED_LEAVE_APPROVED => \App\Notifications\AdvancedLeave\AdvancedLeaveApproved::class,
             self::REQUEST_CHANGE_DATA => \App\Notifications\RequestChangeData\RequestChangeData::class,
             self::REQUEST_CHANGE_DATA_APPROVED => \App\Notifications\RequestChangeData\RequestChangeDataApproved::class,
+            self::SETUP_PASSWORD => \App\Notifications\User\SetupPasswordNotification::class,
         };
     }
 

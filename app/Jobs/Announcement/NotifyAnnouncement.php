@@ -3,13 +3,7 @@
 namespace App\Jobs\Announcement;
 
 use App\Enums\NotificationType;
-use App\Enums\TimeoffRenewType;
-use App\Enums\UserType;
 use App\Models\Announcement;
-use App\Models\Company;
-use App\Models\User;
-use App\Models\UserTimeoffHistory;
-use App\Services\TimeoffRegulationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

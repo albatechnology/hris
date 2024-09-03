@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Gender;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class User extends Authenticatable implements TenantedInterface, HasMedia
+class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
 {
     use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, NodeTrait;
 
