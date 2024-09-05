@@ -125,6 +125,8 @@ class RunPayrollService
                     // if the default amount is empty || 0
                     if ($defaultPayrollComponent->amount == 0 && count($defaultPayrollComponent->formulas)) {
                         $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas, startPeriod: $cutoffAttendanceStartDate, endPeriod: $cutoffAttendanceEndDate);
+                    }else if($defaultPayrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)){
+                        $amount = $userBasicSalary;
                     } else {
                         $amount = $defaultPayrollComponent->amount;
                     }
