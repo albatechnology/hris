@@ -62,6 +62,12 @@ class AuthController extends BaseController
 
             $user = User::where('email', $decryptedEmail)->first();
 
+            if ($user->hasVerifiedEmail()){
+                throw ValidationException::withMessages([
+                    'email' => ['Your email is already verified.'],
+                ]);
+            }
+
             $user->update([
                 'email_verified_at' => now(),
                 'password' => $request->password,

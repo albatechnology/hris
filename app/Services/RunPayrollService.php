@@ -124,7 +124,7 @@ class RunPayrollService
                 } else {
                     // if the default amount is empty || 0
                     if ($defaultPayrollComponent->amount == 0 && count($defaultPayrollComponent->formulas)) {
-                        $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas);
+                        $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas, startPeriod: $cutoffAttendanceStartDate, endPeriod: $cutoffAttendanceEndDate);
                     } else {
                         $amount = $defaultPayrollComponent->amount;
                     }
@@ -167,7 +167,7 @@ class RunPayrollService
 
                         break;
                     case RateType::FORMULA:
-                        $hourlyAmount = FormulaService::calculate(user: $runPayrollUser->user, model: $overtime, formulas: $overtime->formulas);;
+                        $hourlyAmount = FormulaService::calculate(user: $runPayrollUser->user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutoffAttendanceStartDate, endPeriod: $cutoffAttendanceEndDate);
 
                         break;
                     default:
