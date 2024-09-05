@@ -32,6 +32,9 @@ class AnnouncementController extends BaseController
   public function index()
   {
     $data = QueryBuilder::for(Announcement::tenanted()->with([
+      'user' => function ($q) {
+        $q->select('users.id', 'users.name');
+      },
       'branches' => function ($q) {
         $q->select('branches.id', 'branches.name');
       },
@@ -43,7 +46,7 @@ class AnnouncementController extends BaseController
       ->allowedFilters([
         AllowedFilter::exact('id'),
         AllowedFilter::exact('company_id'),
-      ])->allowedIncludes(['branches', 'positions'])
+      ])->allowedIncludes(['user', 'branches', 'positions'])
       ->allowedSorts([
         'id',
         'company_id'
@@ -56,6 +59,9 @@ class AnnouncementController extends BaseController
   public function show(int $id)
   {
     $announcement = QueryBuilder::for(Announcement::tenanted()->where('id', $id)->with([
+      'user' => function ($q) {
+        $q->select('users.id', 'users.name');
+      },
       'branches' => function ($q) {
         $q->select('branches.id', 'branches.name');
       },
@@ -64,7 +70,7 @@ class AnnouncementController extends BaseController
       },
       'jobLevels',
     ]))
-      ->allowedIncludes(['branches', 'positions'])
+      ->allowedIncludes(['user', 'branches', 'positions'])
       ->firstOrFail();
 
     return new DefaultResource($announcement);
@@ -74,7 +80,7 @@ class AnnouncementController extends BaseController
   {
     DB::beginTransaction();
     try {
-      $announcement = Announcement::create($request->validated());
+      $announcement = auth('sanctum')->user()->announcements()->create($request->validated());
       $users = User::query();
 
       if ($request->branch_ids) {
@@ -111,6 +117,9 @@ class AnnouncementController extends BaseController
     }
 
     return new DefaultResource($announcement->load([
+      'user' => function ($q) {
+        $q->select('users.id', 'users.name');
+      },
       'branches' => function ($q) {
         $q->select('branches.id', 'branches.name');
       },

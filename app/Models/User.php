@@ -274,6 +274,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(UserTimeoffRegulationMonth::class);
     }
 
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class);
+    }
+
     public function getIsSuperAdminAttribute(): bool
     {
         return $this->type->is(UserType::SUPER_ADMIN);

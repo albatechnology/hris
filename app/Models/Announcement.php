@@ -3,16 +3,18 @@
 namespace App\Models;
 
 use App\Enums\JobLevel;
+use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Announcement extends BaseModel
 {
-    use CompanyTenanted;
+    use BelongsToUser, CompanyTenanted;
 
     protected $fillable = [
         'company_id',
+        'user_id',
         'subject',
         'content',
         'is_send_email',
