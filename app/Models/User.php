@@ -279,6 +279,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(Announcement::class);
     }
 
+    public function runPayrolls(): HasMany
+    {
+        return $this->hasMany(RunPayroll::class);
+    }
+
     public function getIsSuperAdminAttribute(): bool
     {
         return $this->type->is(UserType::SUPER_ADMIN);

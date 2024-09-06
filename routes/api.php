@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\NppController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
 use App\Http\Controllers\Api\PatrolController;
@@ -261,4 +262,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::apiResource('locations', PatrolLocationController::class);
     });
     Route::apiResource('patrols', PatrolController::class);
+
+    Route::apiResource('npp', NppController::class);
 });

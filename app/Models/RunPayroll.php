@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use App\Enums\RunPayrollStatus;
+use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunPayroll extends BaseModel
 {
-    use CompanyTenanted;
+    use BelongsToUser, CompanyTenanted;
 
     protected $fillable = [
         'company_id',
+        'user_id',
         'code',
         'period',
         'payment_schedule',
@@ -20,6 +22,7 @@ class RunPayroll extends BaseModel
 
     protected $casts = [
         'company_id' => 'integer',
+        'user_id' => 'integer',
         'code' => 'string',
         'period' => 'string',
         'payment_schedule' => 'date',
