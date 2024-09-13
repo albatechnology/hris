@@ -29,7 +29,7 @@ class PayrollComponentController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(PayrollComponent::tenanted())
+        $data = QueryBuilder::for(PayrollComponent::tenanted()->where('is_hidden', false))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),

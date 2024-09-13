@@ -12,7 +12,7 @@ enum SettingValueType: string
     case OPTIONS = 'options';
     case ARRAY = 'array';
     // case JSON = 'json';
-    // case FLOAT = 'float';
+    case FLOAT = 'float';
     // case DATE = 'date';
     // case DATETIME = 'datetime';
 }

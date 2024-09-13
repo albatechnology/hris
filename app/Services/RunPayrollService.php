@@ -3,11 +3,15 @@
 namespace App\Services;
 
 use App\Enums\ApprovalStatus;
+use App\Enums\CountrySettingKey;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
+use App\Enums\PtkpStatus;
 use App\Enums\RateType;
 use App\Enums\RunPayrollStatus;
+use App\Models\Company;
+use App\Models\CountrySetting;
 use App\Models\Event;
 use App\Models\NationalHoliday;
 use App\Models\PayrollComponent;
@@ -78,7 +82,6 @@ class RunPayrollService
      */
     public static function createDetails(RunPayroll $runPayroll, array $request): JsonResponse
     {
-        // define the payroll setting that used to calculate al of run payroll details
         $payrollSetting = PayrollSetting::whereCompany($request['company_id'])->first();
         if (!$payrollSetting->cutoff_attendance_start_date || !$payrollSetting->cutoff_attendance_end_date) {
             return response()->json([
@@ -95,6 +98,8 @@ class RunPayrollService
         // calculate for each user
         foreach (explode(',', $request['user_ids']) as $userId) {
             $runPayrollUser = self::assignUser($runPayroll, $userId);
+            $company = Company::find($request['company_id']);
+
             // updated payroll component
             $updatePayrollComponent = UpdatePayrollComponent::tenanted()->where(function ($q) use ($request, $userId) {
                 $q->whereCompany($request['company_id']);
@@ -108,11 +113,21 @@ class RunPayrollService
                 });
             })->first();
 
-            // define user basic salary
+            // define user basic salary & bpjs
             $userBasicSalary = $runPayrollUser->user->payrollInfo?->basic_salary;
 
             // default payroll component
-            $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereNotIn('category', [PayrollComponentCategory::OVERTIME])->get();
+            $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereNotIn('category', [
+                PayrollComponentCategory::OVERTIME,
+                PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+                PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
+                PayrollComponentCategory::COMPANY_JKK,
+                PayrollComponentCategory::COMPANY_JKM,
+                PayrollComponentCategory::COMPANY_JHT,
+                PayrollComponentCategory::EMPLOYEE_JHT,
+                PayrollComponentCategory::COMPANY_JP,
+                PayrollComponentCategory::EMPLOYEE_JP,
+            ])->get();
             foreach ($defaultPayrollComponents as $defaultPayrollComponent) {
                 // check if payroll component is updated on UpdatePayrollComponent::class
                 $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->first();
@@ -125,7 +140,7 @@ class RunPayrollService
                     // if the default amount is empty || 0
                     if ($defaultPayrollComponent->amount == 0 && count($defaultPayrollComponent->formulas)) {
                         $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $defaultPayrollComponent, formulas: $defaultPayrollComponent->formulas, startPeriod: $cutoffAttendanceStartDate, endPeriod: $cutoffAttendanceEndDate);
-                    }else if($defaultPayrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)){
+                    } else if ($defaultPayrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) {
                         $amount = $userBasicSalary;
                     } else {
                         $amount = $defaultPayrollComponent->amount;
@@ -135,6 +150,90 @@ class RunPayrollService
                 $amount = self::calculatePayrollComponentPeriodType($defaultPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
 
                 self::createComponent($runPayrollUser, $defaultPayrollComponent->id, $amount);
+            }
+
+            // bpjs payroll component
+            if ($company->countryTable?->id == 1 && $runPayrollUser->user->userBpjs) {
+                $bpjsPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereIn('category', [
+                    PayrollComponentCategory::BPJS_KESEHATAN,
+                    PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
+                    PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+                    PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
+                    PayrollComponentCategory::COMPANY_JKK,
+                    PayrollComponentCategory::COMPANY_JKM,
+                    PayrollComponentCategory::COMPANY_JHT,
+                    PayrollComponentCategory::EMPLOYEE_JHT,
+                    PayrollComponentCategory::COMPANY_JP,
+                    PayrollComponentCategory::EMPLOYEE_JP,
+                ])->get();
+
+                // calculate bpjs
+                // init bpjs variable
+                $current_upahBpjsKesehatan = $runPayrollUser->user->userBpjs->upah_bpjs_kesehatan;
+                $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
+                if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
+
+
+                $current_upahBpjsKetenagakerjaan = $runPayrollUser->user->userBpjs->upah_bpjs_ketenagakerjaan;
+                $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
+                if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
+
+                // bpjs kesehatan
+                $company_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
+                $employee_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
+
+                $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
+                $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
+
+                // jkk
+                $company_percentageJkk = $company->npp?->jkk ?? 0;
+                $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
+
+                // jkm
+                $company_percentageJkm = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
+                $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
+
+                // jht
+                $company_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
+                $employee_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
+                $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
+                $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
+
+                // jp
+                $company_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
+                $employee_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+
+                $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
+                $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+
+                // company = benefit (tidak perlu kalkulasi, hanya catat)
+                // employee = deduction (kalkulasi)
+                // dd([
+                //     'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
+                //     'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
+                //     'company_totalJkk' => $company_totalJkk,
+                //     'company_totalJkm' => $company_totalJkm,
+                //     'company_totalJht' => $company_totalJht,
+                //     'employee_totalJht' => $employee_totalJht,
+                //     'company_totalJp' => $company_totalJp,
+                //     'employee_totalJp' => $employee_totalJp,
+                // ]);
+                // end calculate bpjs
+
+                foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+
+                    $amount = self::calculatePayrollComponentPeriodType($defaultPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
+
+                    self::createComponent($runPayrollUser, $defaultPayrollComponent->id, $amount);
+                }
             }
 
             // overtime payroll component
@@ -315,22 +414,303 @@ class RunPayrollService
 
         $basicSalary = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
             $q->where('category', PayrollComponentCategory::BASIC_SALARY);
+            $q->where('is_calculateable', true);
         })->sum('amount');
 
         $allowance = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
             $q->where('type', PayrollComponentType::ALLOWANCE);
             $q->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY]);
+            $q->where('is_calculateable', true);
         })->sum('amount');
 
         $additionalEarning = 0;
 
-        $deduction = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
-            $q->where('type', PayrollComponentType::DEDUCTION);
-        })->sum('amount');
-
         $benefit = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
             $q->where('type', PayrollComponentType::BENEFIT);
+            $q->where('is_calculateable', true);
         })->sum('amount');
+
+        $deduction = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
+            $q->where('type', PayrollComponentType::DEDUCTION);
+            $q->where('is_calculateable', true);
+        })->sum('amount');
+
+        $grossSalary = $basicSalary + $allowance + $additionalEarning + $deduction;
+        $taxPercentage = 0;
+
+        if (in_array($runPayrollUser->user->payrollInfo->ptkp_status, [PtkpStatus::TK_0, PtkpStatus::TK_1, PtkpStatus::K_0])) {
+            if ($grossSalary <= 5400000) {
+                $taxPercentage = 0;
+            } else if ($grossSalary > 5400000 && $grossSalary < 5650000) {
+                $taxPercentage = 0.25;
+            } else if ($grossSalary > 5650000 && $grossSalary < 5950000) {
+                $taxPercentage = 0.5;
+            } else if ($grossSalary > 5950000 && $grossSalary < 6300000) {
+                $taxPercentage = 0.75;
+            } else if ($grossSalary > 6300000 && $grossSalary < 6750000) {
+                $taxPercentage = 1;
+            } else if ($grossSalary > 6750000 && $grossSalary < 7500000) {
+                $taxPercentage = 1.25;
+            } else if ($grossSalary > 7500000 && $grossSalary < 8550000) {
+                $taxPercentage = 1.5;
+            } else if ($grossSalary > 8550000 && $grossSalary < 9650000) {
+                $taxPercentage = 1.75;
+            } else if ($grossSalary > 9650000 && $grossSalary < 10050000) {
+                $taxPercentage = 2;
+            } else if ($grossSalary > 10050000 && $grossSalary < 10350000) {
+                $taxPercentage = 2.25;
+            } else if ($grossSalary > 10350000 && $grossSalary < 10700000) {
+                $taxPercentage = 2.5;
+            } else if ($grossSalary > 10700000 && $grossSalary < 11050000) {
+                $taxPercentage = 3;
+            } else if ($grossSalary > 11050000 && $grossSalary < 11600000) {
+                $taxPercentage = 3.5;
+            } else if ($grossSalary > 11600000 && $grossSalary < 12500000) {
+                $taxPercentage = 4;
+            } else if ($grossSalary > 12500000 && $grossSalary < 13750000) {
+                $taxPercentage = 5;
+            } else if ($grossSalary > 13750000 && $grossSalary < 15100000) {
+                $taxPercentage = 6;
+            } else if ($grossSalary > 15100000 && $grossSalary < 16950000) {
+                $taxPercentage = 7;
+            } else if ($grossSalary > 16950000 && $grossSalary < 19750000) {
+                $taxPercentage = 8;
+            } else if ($grossSalary > 19750000 && $grossSalary < 24150000) {
+                $taxPercentage = 9;
+            } else if ($grossSalary > 24150000 && $grossSalary < 26450000) {
+                $taxPercentage = 10;
+            } else if ($grossSalary > 26450000 && $grossSalary < 28000000) {
+                $taxPercentage = 11;
+            } else if ($grossSalary > 28000000 && $grossSalary < 30050000) {
+                $taxPercentage = 12;
+            } else if ($grossSalary > 30050000 && $grossSalary < 32400000) {
+                $taxPercentage = 13;
+            } else if ($grossSalary > 32400000 && $grossSalary < 35400000) {
+                $taxPercentage = 14;
+            } else if ($grossSalary > 35400000 && $grossSalary < 39100000) {
+                $taxPercentage = 15;
+            } else if ($grossSalary > 39100000 && $grossSalary < 43850000) {
+                $taxPercentage = 16;
+            } else if ($grossSalary > 43850000 && $grossSalary < 47800000) {
+                $taxPercentage = 17;
+            } else if ($grossSalary > 47800000 && $grossSalary < 51400000) {
+                $taxPercentage = 18;
+            } else if ($grossSalary > 51400000 && $grossSalary < 56300000) {
+                $taxPercentage = 19;
+            } else if ($grossSalary > 56300000 && $grossSalary < 62200000) {
+                $taxPercentage = 20;
+            } else if ($grossSalary > 62200000 && $grossSalary < 68600000) {
+                $taxPercentage = 21;
+            } else if ($grossSalary > 68600000 && $grossSalary < 77500000) {
+                $taxPercentage = 22;
+            } else if ($grossSalary > 77500000 && $grossSalary < 89000000) {
+                $taxPercentage = 23;
+            } else if ($grossSalary > 89000000 && $grossSalary < 103000000) {
+                $taxPercentage = 24;
+            } else if ($grossSalary > 103000000 && $grossSalary < 125000000) {
+                $taxPercentage = 25;
+            } else if ($grossSalary > 125000000 && $grossSalary < 157000000) {
+                $taxPercentage = 26;
+            } else if ($grossSalary > 157000000 && $grossSalary < 206000000) {
+                $taxPercentage = 27;
+            } else if ($grossSalary > 206000000 && $grossSalary < 337000000) {
+                $taxPercentage = 28;
+            } else if ($grossSalary > 337000000 && $grossSalary < 454000000) {
+                $taxPercentage = 29;
+            } else if ($grossSalary > 454000000 && $grossSalary < 550000000) {
+                $taxPercentage = 30;
+            } else if ($grossSalary > 550000000 && $grossSalary < 695000000) {
+                $taxPercentage = 31;
+            } else if ($grossSalary > 695000000 && $grossSalary < 910000000) {
+                $taxPercentage = 32;
+            } else if ($grossSalary > 910000000 && $grossSalary < 1400000000) {
+                $taxPercentage = 33;
+            } else if ($grossSalary > 1400000000) {
+                $taxPercentage = 34;
+            } else {
+                $taxPercentage = 0;
+            }
+        }
+
+        if (in_array($runPayrollUser->user->payrollInfo->ptkp_status, [PtkpStatus::TK_2, PtkpStatus::TK_3, PtkpStatus::K_1, PtkpStatus::K_2])) {
+            if ($grossSalary <= 6200000) {
+                $taxPercentage = 0;
+            } else if ($grossSalary > 6200000 && $grossSalary < 6500000) {
+                $taxPercentage = 0.25;
+            } else if ($grossSalary > 6500000 && $grossSalary < 6850000) {
+                $taxPercentage = 0.5;
+            } else if ($grossSalary > 6850000 && $grossSalary < 7300000) {
+                $taxPercentage = 0.75;
+            } else if ($grossSalary > 7300000 && $grossSalary < 9200000) {
+                $taxPercentage = 1;
+            } else if ($grossSalary > 9200000 && $grossSalary < 10750000) {
+                $taxPercentage = 1.5;
+            } else if ($grossSalary > 10750000 && $grossSalary < 11250000) {
+                $taxPercentage = 2;
+            } else if ($grossSalary > 11250000 && $grossSalary < 11600000) {
+                $taxPercentage = 2.5;
+            } else if ($grossSalary > 11600000 && $grossSalary < 12600000) {
+                $taxPercentage = 3;
+            } else if ($grossSalary > 12600000 && $grossSalary < 13600000) {
+                $taxPercentage = 4;
+            } else if ($grossSalary > 13600000 && $grossSalary < 14950000) {
+                $taxPercentage = 5;
+            } else if ($grossSalary > 14950000 && $grossSalary < 16400000) {
+                $taxPercentage = 6;
+            } else if ($grossSalary > 16400000 && $grossSalary < 18450000) {
+                $taxPercentage = 7;
+            } else if ($grossSalary > 18450000 && $grossSalary < 21850000) {
+                $taxPercentage = 8;
+            } else if ($grossSalary > 21850000 && $grossSalary < 26000000) {
+                $taxPercentage = 9;
+            } else if ($grossSalary > 26000000 && $grossSalary < 27700000) {
+                $taxPercentage = 10;
+            } else if ($grossSalary > 27700000 && $grossSalary < 29350000) {
+                $taxPercentage = 11;
+            } else if ($grossSalary > 29350000 && $grossSalary < 31450000) {
+                $taxPercentage = 12;
+            } else if ($grossSalary > 31450000 && $grossSalary < 33950000) {
+                $taxPercentage = 13;
+            } else if ($grossSalary > 33950000 && $grossSalary < 37100000) {
+                $taxPercentage = 14;
+            } else if ($grossSalary > 37100000 && $grossSalary < 41100000) {
+                $taxPercentage = 15;
+            } else if ($grossSalary > 41100000 && $grossSalary < 45800000) {
+                $taxPercentage = 16;
+            } else if ($grossSalary > 45800000 && $grossSalary < 49500000) {
+                $taxPercentage = 17;
+            } else if ($grossSalary > 49500000 && $grossSalary < 53800000) {
+                $taxPercentage = 18;
+            } else if ($grossSalary > 53800000 && $grossSalary < 58500000) {
+                $taxPercentage = 19;
+            } else if ($grossSalary > 58500000 && $grossSalary < 64000000) {
+                $taxPercentage = 20;
+            } else if ($grossSalary > 64000000 && $grossSalary < 71000000) {
+                $taxPercentage = 21;
+            } else if ($grossSalary > 71000000 && $grossSalary < 80000000) {
+                $taxPercentage = 22;
+            } else if ($grossSalary > 80000000 && $grossSalary < 93000000) {
+                $taxPercentage = 23;
+            } else if ($grossSalary > 93000000 && $grossSalary < 109000000) {
+                $taxPercentage = 24;
+            } else if ($grossSalary > 109000000 && $grossSalary < 129000000) {
+                $taxPercentage = 25;
+            } else if ($grossSalary > 129000000 && $grossSalary < 163000000) {
+                $taxPercentage = 26;
+            } else if ($grossSalary > 163000000 && $grossSalary < 211000000) {
+                $taxPercentage = 27;
+            } else if ($grossSalary > 211000000 && $grossSalary < 374000000) {
+                $taxPercentage = 28;
+            } else if ($grossSalary > 374000000 && $grossSalary < 459000000) {
+                $taxPercentage = 29;
+            } else if ($grossSalary > 459000000 && $grossSalary < 555000000) {
+                $taxPercentage = 30;
+            } else if ($grossSalary > 555000000 && $grossSalary < 704000000) {
+                $taxPercentage = 31;
+            } else if ($grossSalary > 704000000 && $grossSalary < 957000000) {
+                $taxPercentage = 32;
+            } else if ($grossSalary > 957000000 && $grossSalary < 1405000000) {
+                $taxPercentage = 33;
+            } else if ($grossSalary > 1405000000) {
+                $taxPercentage = 34;
+            } else {
+                $taxPercentage = 0;
+            }
+        }
+
+        if (in_array($runPayrollUser->user->payrollInfo->ptkp_status, [PtkpStatus::K_3])) {
+            if ($grossSalary <= 6600000) {
+                $taxPercentage = 0;
+            } else if ($grossSalary > 6600000 && $grossSalary < 6950000) {
+                $taxPercentage = 0.25;
+            } else if ($grossSalary > 6950000 && $grossSalary < 7350000) {
+                $taxPercentage = 0.5;
+            } else if ($grossSalary > 7350000 && $grossSalary < 7800000) {
+                $taxPercentage = 0.75;
+            } else if ($grossSalary > 7800000 && $grossSalary < 8850000) {
+                $taxPercentage = 1;
+            } else if ($grossSalary > 8850000 && $grossSalary < 9800000) {
+                $taxPercentage = 1.25;
+            } else if ($grossSalary > 9800000 && $grossSalary < 10950000) {
+                $taxPercentage = 1.5;
+            } else if ($grossSalary > 10950000 && $grossSalary < 11200000) {
+                $taxPercentage = 1.75;
+            } else if ($grossSalary > 11200000 && $grossSalary < 12050000) {
+                $taxPercentage = 2;
+            } else if ($grossSalary > 12050000 && $grossSalary < 12950000) {
+                $taxPercentage = 3;
+            } else if ($grossSalary > 12950000 && $grossSalary < 14150000) {
+                $taxPercentage = 4;
+            } else if ($grossSalary > 14150000 && $grossSalary < 15550000) {
+                $taxPercentage = 5;
+            } else if ($grossSalary > 15550000 && $grossSalary < 17050000) {
+                $taxPercentage = 6;
+            } else if ($grossSalary > 17050000 && $grossSalary < 19500000) {
+                $taxPercentage = 7;
+            } else if ($grossSalary > 19500000 && $grossSalary < 22700000) {
+                $taxPercentage = 8;
+            } else if ($grossSalary > 22700000 && $grossSalary < 26600000) {
+                $taxPercentage = 9;
+            } else if ($grossSalary > 26600000 && $grossSalary < 28100000) {
+                $taxPercentage = 10;
+            } else if ($grossSalary > 28100000 && $grossSalary < 30100000) {
+                $taxPercentage = 11;
+            } else if ($grossSalary > 30100000 && $grossSalary < 32600000) {
+                $taxPercentage = 12;
+            } else if ($grossSalary > 32600000 && $grossSalary < 35400000) {
+                $taxPercentage = 13;
+            } else if ($grossSalary > 35400000 && $grossSalary < 38900000) {
+                $taxPercentage = 14;
+            } else if ($grossSalary > 38900000 && $grossSalary < 43000000) {
+                $taxPercentage = 15;
+            } else if ($grossSalary > 43000000 && $grossSalary < 47400000) {
+                $taxPercentage = 16;
+            } else if ($grossSalary > 47400000 && $grossSalary < 51200000) {
+                $taxPercentage = 17;
+            } else if ($grossSalary > 51200000 && $grossSalary < 55800000) {
+                $taxPercentage = 18;
+            } else if ($grossSalary > 55800000 && $grossSalary < 60400000) {
+                $taxPercentage = 19;
+            } else if ($grossSalary > 60400000 && $grossSalary < 66700000) {
+                $taxPercentage = 20;
+            } else if ($grossSalary > 66700000 && $grossSalary < 74500000) {
+                $taxPercentage = 21;
+            } else if ($grossSalary > 74500000 && $grossSalary < 83200000) {
+                $taxPercentage = 22;
+            } else if ($grossSalary > 83200000 && $grossSalary < 95600000) {
+                $taxPercentage = 23;
+            } else if ($grossSalary > 95600000 && $grossSalary < 110000000) {
+                $taxPercentage = 24;
+            } else if ($grossSalary > 110000000 && $grossSalary < 134000000) {
+                $taxPercentage = 25;
+            } else if ($grossSalary > 134000000 && $grossSalary < 169000000) {
+                $taxPercentage = 26;
+            } else if ($grossSalary > 169000000 && $grossSalary < 221000000) {
+                $taxPercentage = 27;
+            } else if ($grossSalary > 221000000 && $grossSalary < 390000000) {
+                $taxPercentage = 28;
+            } else if ($grossSalary > 390000000 && $grossSalary < 463000000) {
+                $taxPercentage = 29;
+            } else if ($grossSalary > 463000000 && $grossSalary < 561000000) {
+                $taxPercentage = 30;
+            } else if ($grossSalary > 561000000 && $grossSalary < 709000000) {
+                $taxPercentage = 31;
+            } else if ($grossSalary > 709000000 && $grossSalary < 965000000) {
+                $taxPercentage = 32;
+            } else if ($grossSalary > 965000000 && $grossSalary < 1419000000) {
+                $taxPercentage = 33;
+            } else if ($grossSalary > 1419000000) {
+                $taxPercentage = 34;
+            } else {
+                $taxPercentage = 0;
+            }
+        }
+
+        $taxNominal = $grossSalary * ($taxPercentage / 100);
+        
+        $deduction = $deduction + $taxNominal;
+        
+        dd($taxNominal);
 
         $runPayrollUser->update([
             'basic_salary' => $basicSalary,
@@ -341,3 +721,323 @@ class RunPayrollService
         ]);
     }
 }
+
+
+// if($grossSalary <= 5400000){
+//     $taxPercentage = 0;
+//  }else if($grossSalary > 5400000 && $grossSalary < 5650000){
+//     $taxPercentage = 0.25;
+//  }else if($grossSalary > 5650000 && $grossSalary < 5950000){
+//     $taxPercentage = 0.5;
+//  }else if($grossSalary > 5950000 && $grossSalary < 6300000){
+//     $taxPercentage = 0.75;
+//  }else if($grossSalary > 6300000 && $grossSalary < 6750000){
+//     $taxPercentage = 1;
+//  }else if($grossSalary > 6750000 && $grossSalary < 7500000){
+//     $taxPercentage = 1.25;
+//  }else if($grossSalary > 7500000 && $grossSalary < 8550000){
+//     $taxPercentage = 1.5;
+//  }else if($grossSalary > 8550000 && $grossSalary < 9650000){
+//     $taxPercentage = 1.75;
+//  }else if($grossSalary > 9650000 && $grossSalary < 10050000){
+//     $taxPercentage = 2;
+//  }else if($grossSalary > 10050000 && $grossSalary < 10350000){
+//     $taxPercentage = 2.25;
+//  }else if($grossSalary > 10350000 && $grossSalary < 10700000){
+//     $taxPercentage = 2.5;
+//  }else if($grossSalary > 10700000 && $grossSalary < 11050000){
+//     $taxPercentage = 3;
+//  }else if($grossSalary > 11050000 && $grossSalary < 11600000){
+//     $taxPercentage = 3.5;
+//  }else if($grossSalary > 11600000 && $grossSalary < 12500000){
+//     $taxPercentage = 4;
+//  }else if($grossSalary > 12500000 && $grossSalary < 13750000){
+//     $taxPercentage = 5;
+//  }else if($grossSalary > 13750000 && $grossSalary < 15100000){
+//     $taxPercentage = 6;
+//  }else if($grossSalary > 15100000 && $grossSalary < 16950000){
+//     $taxPercentage = 7;
+//  }else if($grossSalary > 16950000 && $grossSalary < 19750000){
+//     $taxPercentage = 8;
+//  }else if($grossSalary > 19750000 && $grossSalary < 24150000){
+//     $taxPercentage = 9;
+//  }else if($grossSalary > 24150000 && $grossSalary < 26450000){
+//     $taxPercentage = 10;
+//  }else if($grossSalary > 26450000 && $grossSalary < 28000000){
+//     $taxPercentage = 11;
+//  }else if($grossSalary > 28000000 && $grossSalary < 30050000){
+//     $taxPercentage = 12;
+//  }else if($grossSalary > 30050000 && $grossSalary < 32400000){
+//     $taxPercentage = 13;
+//  }else if($grossSalary > 32400000 && $grossSalary < 35400000){
+//     $taxPercentage = 14;
+//  }else if($grossSalary > 35400000 && $grossSalary < 39100000){
+//     $taxPercentage = 15;
+//  }else if($grossSalary > 39100000 && $grossSalary < 43850000){
+//     $taxPercentage = 16;
+//  }else if($grossSalary > 43850000 && $grossSalary < 47800000){
+//     $taxPercentage = 17;
+//  }else if($grossSalary > 47800000 && $grossSalary < 51400000){
+//     $taxPercentage = 18;
+//  }else if($grossSalary > 51400000 && $grossSalary < 56300000){
+//     $taxPercentage = 19;
+//  }else if($grossSalary > 56300000 && $grossSalary < 62200000){
+//     $taxPercentage = 20;
+//  }else if($grossSalary > 62200000 && $grossSalary < 68600000){
+//     $taxPercentage = 21;
+//  }else if($grossSalary > 68600000 && $grossSalary < 77500000){
+//     $taxPercentage = 22;
+//  }else if($grossSalary > 77500000 && $grossSalary < 89000000){
+//     $taxPercentage = 23;
+//  }else if($grossSalary > 89000000 && $grossSalary < 103000000){
+//     $taxPercentage = 24;
+//  }else if($grossSalary > 103000000 && $grossSalary < 125000000){
+//     $taxPercentage = 25;
+//  }else if($grossSalary > 125000000 && $grossSalary < 157000000){
+//     $taxPercentage = 26;
+//  }else if($grossSalary > 157000000 && $grossSalary < 206000000){
+//     $taxPercentage = 27;
+//  }else if($grossSalary > 206000000 && $grossSalary < 337000000){
+//     $taxPercentage = 28;
+//  }else if($grossSalary > 337000000 && $grossSalary < 454000000){
+//     $taxPercentage = 29;
+//  }else if($grossSalary > 454000000 && $grossSalary < 550000000){
+//     $taxPercentage = 30;
+//  }else if($grossSalary > 550000000 && $grossSalary < 695000000){
+//     $taxPercentage = 31;
+//  }else if($grossSalary > 695000000 && $grossSalary < 910000000){
+//     $taxPercentage = 32;
+//  }else if($grossSalary > 910000000 && $grossSalary < 1400000000){
+//     $taxPercentage = 33;
+//  }else if($grossSalary > 1400000000){
+//     $taxPercentage = 34;
+//  }else{
+//     $taxPercentage = 0;
+//  }
+ 
+//  TABLE B
+//  if($grossSalary <= 6200000){
+//     $taxPercentage = 0;
+//  }else if($grossSalary > 6200000 && $grossSalary < 6500000 ){
+//     $taxPercentage = 0.25;
+//  }else if($grossSalary > 6500000 && $grossSalary < 6850000 ){
+//     $taxPercentage = 0.5;
+//  }else if($grossSalary > 6850000 && $grossSalary < 7300000 ){
+//     $taxPercentage = 0.75;
+//  }else if($grossSalary > 7300000 && $grossSalary < 9200000 ){
+//     $taxPercentage = 1;
+//  }else if($grossSalary > 9200000 && $grossSalary < 10750000 ){
+//     $taxPercentage = 1.5;
+//  }else if($grossSalary > 10750000 && $grossSalary < 11250000 ){
+//     $taxPercentage = 2;
+//  }else if($grossSalary > 11250000 && $grossSalary < 11600000 ){
+//     $taxPercentage = 2.5;
+//  }else if($grossSalary > 11600000 && $grossSalary < 12600000 ){
+//     $taxPercentage = 3;
+//  }else if($grossSalary > 12600000 && $grossSalary < 13600000 ){
+//     $taxPercentage = 4;
+//  }else if($grossSalary > 13600000 && $grossSalary < 14950000 ){
+//     $taxPercentage = 5;
+//  }else if($grossSalary > 14950000 && $grossSalary < 16400000 ){
+//     $taxPercentage = 6;
+//  }else if($grossSalary > 16400000 && $grossSalary < 18450000 ){
+//     $taxPercentage = 7;
+//  }else if($grossSalary > 18450000 && $grossSalary < 21850000 ){
+//     $taxPercentage = 8;
+//  }else if($grossSalary > 21850000 && $grossSalary < 26000000 ){
+//     $taxPercentage = 9;
+//  }else if($grossSalary > 26000000 && $grossSalary < 27700000 ){
+//     $taxPercentage = 10;
+//  }else if($grossSalary > 27700000 && $grossSalary < 29350000 ){
+//     $taxPercentage = 11;
+//  }else if($grossSalary > 29350000 && $grossSalary < 31450000 ){
+//     $taxPercentage = 12;
+//  }else if($grossSalary > 31450000 && $grossSalary < 33950000 ){
+//     $taxPercentage = 13;
+//  }else if($grossSalary > 33950000 && $grossSalary < 37100000 ){
+//     $taxPercentage = 14;
+//  }else if($grossSalary > 37100000 && $grossSalary < 41100000 ){
+//     $taxPercentage = 15;
+//  }else if($grossSalary > 41100000 && $grossSalary < 45800000){
+//     $taxPercentage = 16;
+//  }else if($grossSalary > 45800000 && $grossSalary < 49500000){
+//     $taxPercentage = 17;
+//  }else if($grossSalary > 49500000 && $grossSalary < 53800000){
+//     $taxPercentage = 18;
+//  }else if($grossSalary > 53800000 && $grossSalary < 58500000){
+//     $taxPercentage = 19;
+//  }else if($grossSalary > 58500000 && $grossSalary < 64000000){
+//     $taxPercentage = 20;
+//  }else if($grossSalary > 64000000 && $grossSalary < 71000000){
+//     $taxPercentage = 21;
+//  }else if($grossSalary > 71000000 && $grossSalary < 80000000){
+//     $taxPercentage = 22;
+//  }else if($grossSalary > 80000000 && $grossSalary < 93000000){
+//     $taxPercentage = 23;
+//  }else if($grossSalary > 93000000 && $grossSalary < 109000000){
+//     $taxPercentage = 24;
+//  }else if($grossSalary > 109000000 && $grossSalary < 129000000){
+//     $taxPercentage = 25;
+//  }else if($grossSalary > 129000000 && $grossSalary < 163000000){
+//     $taxPercentage = 26;
+//  }else if($grossSalary > 163000000 && $grossSalary < 211000000){
+//     $taxPercentage = 27;
+//  }else if($grossSalary > 211000000 && $grossSalary < 374000000){
+//     $taxPercentage = 28;
+//  }else if($grossSalary > 374000000 && $grossSalary < 459000000){
+//     $taxPercentage = 29;
+//  }else if($grossSalary > 459000000 && $grossSalary < 555000000){
+//     $taxPercentage = 30;
+//  }else if($grossSalary > 555000000 && $grossSalary < 704000000){
+//     $taxPercentage = 31;
+//  }else if($grossSalary > 704000000 && $grossSalary < 957000000){
+//     $taxPercentage = 32;
+//  }else if($grossSalary > 957000000 && $grossSalary < 1405000000){
+//     $taxPercentage = 33;
+//  }else if($grossSalary > 1405000000){
+//     $taxPercentage = 34;
+//  }else{
+//     $taxPercentage = 0;
+//  }
+ 
+//  TABLE C
+//  if($grossSalary <= 6600000){
+//     $taxPercentage = 0;
+//  }else if($grossSalary > 6600000 && $grossSalary < 6950000){
+//     $taxPercentage = 0.25;
+//  }else if($grossSalary > 6950000 && $grossSalary < 7350000){
+//     $taxPercentage = 0.5;
+//  }else if($grossSalary > 7350000 && $grossSalary < 7800000){
+//     $taxPercentage = 0.75;
+//  }else if($grossSalary > 7800000 && $grossSalary < 8850000){
+//     $taxPercentage = 1;
+//  }else if($grossSalary > 8850000 && $grossSalary < 9800000){
+//     $taxPercentage = 1.25;
+//  }else if($grossSalary > 9800000 && $grossSalary < 10950000){
+//     $taxPercentage = 1.5;
+//  }else if($grossSalary > 10950000 && $grossSalary < 11200000){
+//     $taxPercentage = 1.75;
+//  }else if($grossSalary > 11200000 && $grossSalary < 12050000){
+//     $taxPercentage = 2;
+//  }else if($grossSalary > 12050000 && $grossSalary < 12950000){
+//     $taxPercentage = 3;
+//  }else if($grossSalary > 12950000 && $grossSalary < 14150000){
+//     $taxPercentage = 4;
+//  }else if($grossSalary > 14150000 && $grossSalary < 15550000){
+//     $taxPercentage = 5;
+//  }else if($grossSalary > 15550000 && $grossSalary < 17050000){
+//     $taxPercentage = 6;
+//  }else if($grossSalary > 17050000 && $grossSalary < 19500000){
+//     $taxPercentage = 7;
+//  }else if($grossSalary > 19500000 && $grossSalary < 22700000){
+//     $taxPercentage = 8;
+//  }else if($grossSalary > 22700000 && $grossSalary < 26600000){
+//     $taxPercentage = 9;
+//  }else if($grossSalary > 26600000 && $grossSalary < 28100000){
+//     $taxPercentage = 10;
+//  }else if($grossSalary > 28100000 && $grossSalary < 30100000){
+//     $taxPercentage = 11;
+//  }else if($grossSalary > 30100000 && $grossSalary < 32600000){
+//     $taxPercentage = 12;
+//  }else if($grossSalary > 32600000 && $grossSalary < 35400000){
+//     $taxPercentage = 13;
+//  }else if($grossSalary > 35400000 && $grossSalary < 38900000){
+//     $taxPercentage = 14;
+//  }else if($grossSalary > 38900000 && $grossSalary < 43000000){
+//     $taxPercentage = 15;
+//  }else if($grossSalary > 43000000 && $grossSalary < 47400000){
+//     $taxPercentage = 16;
+//  }else if($grossSalary > 47400000 && $grossSalary < 51200000){
+//     $taxPercentage = 17;
+//  }else if($grossSalary > 51200000 && $grossSalary < 55800000){
+//     $taxPercentage = 18;
+//  }else if($grossSalary > 55800000 && $grossSalary < 60400000){
+//     $taxPercentage = 19;
+//  }else if($grossSalary > 60400000 && $grossSalary < 66700000){
+//     $taxPercentage = 20;
+//  }else if($grossSalary > 66700000 && $grossSalary < 74500000){
+//     $taxPercentage = 21;
+//  }else if($grossSalary > 74500000 && $grossSalary < 83200000){
+//     $taxPercentage = 22;
+//  }else if($grossSalary > 83200000 && $grossSalary < 95600000){
+//     $taxPercentage = 23;
+//  }else if($grossSalary > 95600000 && $grossSalary < 110000000){
+//     $taxPercentage = 24;
+//  }else if($grossSalary > 110000000 && $grossSalary < 134000000){
+//     $taxPercentage = 25;
+//  }else if($grossSalary > 134000000 && $grossSalary < 169000000){
+//     $taxPercentage = 26;
+//  }else if($grossSalary > 169000000 && $grossSalary < 221000000){
+//     $taxPercentage = 27;
+//  }else if($grossSalary > 221000000 && $grossSalary < 390000000){
+//     $taxPercentage = 28;
+//  }else if($grossSalary > 390000000 && $grossSalary < 463000000){
+//     $taxPercentage = 29;
+//  }else if($grossSalary > 463000000 && $grossSalary < 561000000){
+//     $taxPercentage = 30;
+//  }else if($grossSalary > 561000000 && $grossSalary < 709000000){
+//     $taxPercentage = 31;
+//  }else if($grossSalary > 709000000 && $grossSalary < 965000000){
+//     $taxPercentage = 32;
+//  }else if($grossSalary > 965000000 && $grossSalary < 1419000000){
+//     $taxPercentage = 33;
+//  }else if($grossSalary > 1419000000){
+//     $taxPercentage = 34;
+//  }else{
+//     $taxPercentage = 0;
+//  }
+
+        // // calculate bpjs
+        // if ($runPayrollUser->user->userBpjs) {
+        //     // init bpjs variable
+        //     $current_upahBpjsKesehatan = $runPayrollUser->user->userBpjs->upah_bpjs_kesehatan;
+        //     $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
+        //     if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
+
+
+        //     $current_upahBpjsKetenagakerjaan = $runPayrollUser->user->userBpjs->upah_bpjs_ketenagakerjaan;
+        //     $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
+        //     if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
+
+        //     // bpjs kesehatan
+        //     $company_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
+        //     $employee_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
+
+        //     $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
+        //     $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
+
+        //     // jkk
+        //     $company_percentageJkk = $company->npp?->jkk ?? 0;
+        //     $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
+
+        //     // jkm
+        //     $company_percentageJkm = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
+        //     $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
+
+        //     // jht
+        //     $company_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
+        //     $employee_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
+        //     $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
+        //     $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
+
+        //     // jp
+        //     $company_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
+        //     $employee_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+
+        //     $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
+        //     $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+
+        //     // company = benefit (tidak perlu kalkulasi, hanya catat)
+        //     // employee = deduction (kalkulasi)
+        //     dd([
+        //         'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
+        //         'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
+        //         'company_totalJkk' => $company_totalJkk,
+        //         'company_totalJkm' => $company_totalJkm,
+        //         'company_totalJht' => $company_totalJht,
+        //         'employee_totalJht' => $employee_totalJht,
+        //         'company_totalJp' => $company_totalJp,
+        //         'employee_totalJp' => $employee_totalJp,
+        //     ]);
+        // }
+        // // end calculate bpjs
