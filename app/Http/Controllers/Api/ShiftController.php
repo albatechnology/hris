@@ -27,7 +27,7 @@ class ShiftController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'clock_in', 'clock_out',
+                'name', 'type', 'clock_in', 'clock_out',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([

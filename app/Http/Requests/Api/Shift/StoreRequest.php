@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Api\Shift;
 
+use App\Enums\ScheduleType;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -41,6 +43,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule],
+            'type' => ['required', Rule::enum(ScheduleType::class)],
             'name' => 'required|string',
             'clock_in' => 'required|date_format:H:i',
             'clock_out' => 'required|date_format:H:i',

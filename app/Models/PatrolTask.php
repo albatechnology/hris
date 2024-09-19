@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\PatrolTaskStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PatrolTask extends BaseModel
 {
-    use SoftDeletes;
-
     protected $fillable = [
         'patrol_location_id',
         'name',
         'description',
+        'status',
+    ];
+
+    protected $casts = [
+        'status' => PatrolTaskStatus::class,
     ];
 
     public function patrolLocation(): BelongsTo

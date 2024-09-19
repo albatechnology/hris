@@ -23,6 +23,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'client_location_id' => 'required|exists:clients,id',
+            'description' => 'nullable',
         ];
     }
 }

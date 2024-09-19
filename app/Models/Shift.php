@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ScheduleType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CustomSoftDeletes;
@@ -13,6 +14,7 @@ class Shift extends BaseModel implements TenantedInterface
 
     protected $fillable = [
         'company_id',
+        'type',
         'is_dayoff',
         'name',
         'clock_in',
@@ -33,6 +35,7 @@ class Shift extends BaseModel implements TenantedInterface
     ];
 
     protected $casts = [
+        'type' => ScheduleType::class,
         'is_dayoff' => 'boolean',
         'is_enable_validation' => 'boolean',
         'is_enable_grace_period' => 'boolean',

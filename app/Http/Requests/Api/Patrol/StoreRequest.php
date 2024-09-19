@@ -26,11 +26,21 @@ class StoreRequest extends FormRequest
             'name' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'start_time' => 'required|date_format:H:i:s',
-            'end_time' => 'required|date_format:H:i:s',
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'description' => 'nullable|string',
+
+            'users' => 'required|array',
+            'users.*.id' => 'required|integer|exists:users,id',
+            'users.*.schedules' => 'required|array',
+            'users.*.schedules.*.id' => 'required|exists:schedules,id',
+
+            'locations' => 'required|array',
+            // 'locations.*.client_location_id' => 'required|exists:client_locations,id',
+            'locations.*.client_location_id' => 'required|integer',
+            'locations.*.tasks' => 'required|array',
+            'locations.*.tasks.*.name' => 'required|string',
+            'locations.*.tasks.*.description' => 'required|string',
         ];
     }
 }

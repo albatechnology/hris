@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ScheduleType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,6 +15,7 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained();
+            $table->string('type')->default(ScheduleType::ATTENDANCE->value);
             $table->string('name');
             $table->date('effective_date');
             $table->boolean('is_overide_national_holiday')->default(0);

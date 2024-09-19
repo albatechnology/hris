@@ -17,8 +17,6 @@ class Patrol extends BaseModel implements TenantedInterface
         'name',
         'start_date',
         'end_date',
-        'start_time',
-        'end_time',
         'lat',
         'lng',
         'description',

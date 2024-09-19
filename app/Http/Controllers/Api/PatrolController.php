@@ -57,82 +57,163 @@ class PatrolController extends BaseController
 
     public function show(Patrol $patrol)
     {
-        $patrol->load('client');
-        return new DefaultResource($patrol);
+        return new DefaultResource($patrol->load([
+            'users' => [
+                'user',
+                'userPatrolSchedules.schedule',
+            ],
+            'patrolLocations' => [
+                'clientLocation',
+                'tasks',
+            ],
+        ]));
     }
 
     public function store(StoreRequest $request)
     {
-        try {
-            $patrol = Patrol::create($request->validated());
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return new DefaultResource($patrol);
-    }
-
-    public function update(Patrol $patrol, StoreRequest $request)
-    {
         DB::beginTransaction();
         try {
-            $patrol->update($request->validated());
+            // patrol
+            $patrol = Patrol::create([
+                'client_id' => $request->client_id,
+                'name' => $request->name,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'lat' => $request->lat,
+                'lng' => $request->lng,
+                'description' => $request->description,
+            ]);
 
-            $userPatrols = [];
-            foreach ($request->users?->ids ?? [] as $userId) {
-                $userPatrols[] = [
-                    'patrol_id' => $patrol->id,
-                    'user_id' => $userId,
-                    'start_time' => $request->start_time,
-                    'end_time' => $request->end_time
-                ];
+            // user patrol
+            if ($request->users) {
+                foreach ($request->users as $reqUser) {
+                    $userPatrol = $patrol->users()->create([
+                        'user_id' => $reqUser['id'],
+                    ]);
+
+                    foreach ($reqUser['schedules'] as $reqUserSchedule) {
+                        $userPatrol->userPatrolSchedules()->create([
+                            'schedule_id' => $reqUserSchedule['id'],
+                        ]);
+                    }
+                }
             }
 
-            $patrol->users()->createMany($userPatrols);
+            // patrol location
+            if ($request->locations) {
+                foreach ($request->locations as $reqLocation) {
+                    $patrolLocation = $patrol->patrolLocations()->create([
+                        'client_location_id' => $reqLocation['client_location_id'],
+                    ]);
+
+                    foreach ($reqLocation['tasks'] as $reqLocationTask) {
+                        $patrolLocation->tasks()->create([
+                            'name' => $reqLocationTask['name'],
+                            'description' => $reqLocationTask['description'],
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
-        return (new DefaultResource($patrol))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return new DefaultResource($patrol->load([
+            'users' => [
+                'user',
+                'userPatrolSchedules.schedule',
+            ],
+            'patrolLocations' => [
+                'clientLocation',
+                'tasks',
+            ],
+        ]));
+    }
+
+    public function update(Patrol $patrol, StoreRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            // patrol
+            $patrol->update([
+                'client_id' => $request->client_id,
+                'name' => $request->name,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'lat' => $request->lat,
+                'lng' => $request->lng,
+                'description' => $request->description,
+            ]);
+
+            // user patrol
+            $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
+            $patrol->users()->delete();
+            if ($request->users) {
+                foreach ($request->users as $reqUser) {
+                    $userPatrol = $patrol->users()->create([
+                        'user_id' => $reqUser['id'],
+                    ]);
+
+                    foreach ($reqUser['schedules'] as $reqUserSchedule) {
+                        $userPatrol->userPatrolSchedules()->create([
+                            'schedule_id' => $reqUserSchedule['id'],
+                        ]);
+                    }
+                }
+            }
+
+            // patrol location
+            $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->delete());
+            $patrol->patrolLocations()->delete();
+            if ($request->locations) {
+                foreach ($request->locations as $reqLocation) {
+                    $patrolLocation = $patrol->patrolLocations()->create([
+                        'client_location_id' => $reqLocation['client_location_id'],
+                    ]);
+
+                    foreach ($reqLocation['tasks'] as $reqLocationTask) {
+                        $patrolLocation->tasks()->create([
+                            'name' => $reqLocationTask['name'],
+                            'description' => $reqLocationTask['description'],
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return (new DefaultResource($patrol->load([
+            'users' => [
+                'user',
+                'userPatrolSchedules.schedule',
+            ],
+            'patrolLocations' => [
+                'clientLocation',
+                'tasks',
+            ],
+        ])))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(Patrol $patrol)
     {
         try {
+            $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
+            $patrol->users()->delete();
+            $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->delete());
+            $patrol->patrolLocations()->delete();
             $patrol->delete();
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
 
         return $this->deletedResponse();
-    }
-
-    public function forceDelete($id)
-    {
-        $patrol = Patrol::withTrashed()->findOrFail($id);
-
-        try {
-            $patrol->forceDelete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return $this->deletedResponse();
-    }
-
-    public function restore($id)
-    {
-        $patrol = Patrol::withTrashed()->findOrFail($id);
-
-        try {
-            $patrol->restore();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return new DefaultResource($patrol);
     }
 
     public function userIndex(int $patrolId)

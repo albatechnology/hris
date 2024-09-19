@@ -9,7 +9,8 @@ class PatrolLocation extends BaseModel
 {
     protected $fillable = [
         'patrol_id',
-        'client_location_id'
+        'client_location_id',
+        'description',
     ];
 
     public function patrol(): BelongsTo
