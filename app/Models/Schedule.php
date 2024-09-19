@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ScheduleType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CustomSoftDeletes;
@@ -13,6 +14,7 @@ class Schedule extends BaseModel implements TenantedInterface
 
     protected $fillable = [
         'company_id',
+        'type',
         'name',
         'effective_date',
         'is_overide_national_holiday',
@@ -23,6 +25,7 @@ class Schedule extends BaseModel implements TenantedInterface
     ];
 
     protected $casts = [
+        'type' => ScheduleType::class,
         'is_overide_national_holiday' => 'boolean',
         'is_overide_company_holiday' => 'boolean',
         'is_include_late_in' => 'boolean',

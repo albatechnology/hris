@@ -34,7 +34,7 @@ class ScheduleController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'effective_date',
+                'name', 'type', 'effective_date',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([

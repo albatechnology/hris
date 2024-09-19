@@ -24,6 +24,7 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Super Admin',
             'email' => 'superadmin@gmail.com',
+            'email_verified_at' => now(),
             'password' => self::PASSWORD,
             'type' => UserType::SUPER_ADMIN,
         ]);
@@ -42,6 +43,7 @@ class UserSeeder extends Seeder
             'branch_id' => null,
             'name' => 'Administrator - ' . $group->name,
             'email' => 'administrator1@gmail.com',
+            'email_verified_at' => now(),
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
@@ -61,6 +63,7 @@ class UserSeeder extends Seeder
             'branch_id' => null,
             'name' => 'Administrator - ' . $group->name,
             'email' => 'administrator.alba@gmail.com',
+            'email_verified_at' => now(),
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
@@ -80,6 +83,7 @@ class UserSeeder extends Seeder
             'branch_id' => null,
             'name' => 'Administrator Patroli' . $group->name,
             'email' => 'administrator.patroli@gmail.com',
+            'email_verified_at' => now(),
             'password' => self::PASSWORD,
             'type' => UserType::ADMINISTRATOR,
         ]);
@@ -107,6 +111,7 @@ class UserSeeder extends Seeder
                 'branch_id' => null,
                 'name' => 'Admin ' . $company->name,
                 'email' => $company->id == 3 ? 'admin.alba@gmail.com' : 'admin' . $company->id . '@gmail.com',
+                'email_verified_at' => now(),
                 'password' => self::PASSWORD,
                 'type' => UserType::USER,
                 'nik' => rand(16, 100),
@@ -186,6 +191,7 @@ class UserSeeder extends Seeder
                             'parent_id' => $admin->id,
                             'name' => $albaUser['name'],
                             'email' => $albaUser['email'],
+                            'email_verified_at' => now(),
                             'password' => self::PASSWORD,
                             'type' => UserType::USER,
                             'nik' => rand(16, 100),
@@ -216,6 +222,7 @@ class UserSeeder extends Seeder
                             'parent_id' => $admin->id,
                             'name' => sprintf('User %s %s', $i, $branch->name),
                             'email' => sprintf('user%s.%s@gmail.com', $i, $branch->id),
+                            'email_verified_at' => now(),
                             'password' => self::PASSWORD,
                             'type' => UserType::USER,
                             'nik' => rand(16, 100),

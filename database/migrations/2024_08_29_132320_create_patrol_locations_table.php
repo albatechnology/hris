@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Patrol::class)->constrained();
             $table->foreignIdFor(ClientLocation::class)->constrained();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

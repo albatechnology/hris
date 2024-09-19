@@ -29,8 +29,6 @@ class ClientSeeder extends Seeder
                 'lng' => rand(1111111111, 9999999999),
                 'start_date' => now(),
                 'end_date' => now()->addMonth(),
-                'start_time' => "07:00:00",
-                'end_time' => "17:00:00",
                 'description' => sprintf("Description patrol %s %s", $i, $client->name),
             ]);
 

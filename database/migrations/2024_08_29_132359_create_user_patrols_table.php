@@ -17,8 +17,6 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
             $table->foreignIdFor(Patrol::class)->constrained();
-            $table->time('start_time');
-            $table->time('end_time');
             $table->timestamps();
         });
     }

@@ -18,8 +18,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
             $table->foreignIdFor(TaskHour::class)->constrained();
-            $table->timestamp('start_at');
-            $table->timestamp('end_at');
+            $table->dateTime('start_at');
+            $table->dateTime('end_at');
             $table->text('note')->nullable();
             $table->string('approval_status')->default(ApprovalStatus::PENDING->value);
             $table->foreignId('approved_by')->nullable()->constrained('users');

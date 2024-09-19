@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\PatrolTaskStatus;
-use App\Models\PatrolLocation;
+use App\Models\Schedule;
+use App\Models\UserPatrol;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,12 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('patrol_tasks', function (Blueprint $table) {
+        Schema::create('user_patrol_schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(PatrolLocation::class)->constrained();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('status')->default(PatrolTaskStatus::PENDING->value);
+            $table->foreignIdFor(UserPatrol::class)->constrained();
+            $table->foreignIdFor(Schedule::class)->constrained();
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('patrol_tasks');
+        Schema::dropIfExists('user_patrol_schedules');
     }
 };
