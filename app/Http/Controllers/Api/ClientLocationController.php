@@ -59,7 +59,7 @@ class ClientLocationController extends BaseController
     public function store(int $clientId, StoreRequest $request)
     {
         try {
-            $clientLocation = $this->client->locations()->create($request->validated());
+            $clientLocation = $this->client->clientLocations()->create($request->validated());
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
