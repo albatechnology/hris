@@ -40,6 +40,11 @@ class Department extends BaseModel implements TenantedInterface
         return $query->first();
     }
 
+    public function scopeCompanyId(Builder $query, int $value)
+    {
+        $query->whereHas('division', fn ($q) => $q->where('divisions.company_id', $value));
+    }
+
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);
