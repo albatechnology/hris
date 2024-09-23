@@ -124,7 +124,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function scopeJobLevel(Builder $query, ...$value)
     {
-        $query->whereHas('detail', fn ($q) => $q->whereIn('user_details.job_level', $value));
+        $query->where(function($q) use($value){
+            $q->whereNull('parent_id');
+            $q->orWhereHas('detail', fn ($q2) => $q2->whereIn('user_details.job_level', $value));
+        });
     }
 
     // public function getParentIdName()
