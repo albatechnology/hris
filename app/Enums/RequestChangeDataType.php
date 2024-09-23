@@ -9,7 +9,9 @@ enum RequestChangeDataType: string
     use BaseEnum;
 
     case NAME = 'name';
+    case LAST_NAME = 'last_name';
     case EMAIL = 'email';
+    case WORK_EMAIL = 'work_email';
     case NIK = 'nik';
     case PHONE = 'phone';
     case POSTAL_CODE = 'postal_code';
@@ -22,6 +24,7 @@ enum RequestChangeDataType: string
     case GENDER = 'gender';
     case MARITAL_STATUS = 'marital_status';
     case BLOOD_TYPE = 'blood_type';
+    case RHESUS = 'rhesus';
     case RELIGION = 'religion';
     case BPJS_KETENAGAKERJAAN_NO = 'bpjs_ketenagakerjaan_no';
     case BPJS_KESEHATAN_NO = 'bpjs_kesehatan_no';
@@ -30,6 +33,9 @@ enum RequestChangeDataType: string
     case BANK_ACCOUNT_NO = 'bank_account_no';
     case BANK_NAME = 'bank_name';
     case BANK_ACCOUNT_HOLDER = 'bank_account_holder';
+    case SECONDARY_BANK_ACCOUNT_NO = 'secondary_bank_account_no';
+    case SECONDARY_BANK_NAME = 'secondary_bank_name';
+    case SECONDARY_BANK_ACCOUNT_HOLDER = 'secondary_bank_account_holder';
     case PHOTO_PROFILE = 'photo_profile';
     case PTKP_STATUS = 'ptkp_status';
 
@@ -53,7 +59,9 @@ enum RequestChangeDataType: string
         return match ($self) {
             // self::PHOTO_PROFILE, updated in controller
             self::NAME,
+            self::LAST_NAME,
             self::EMAIL,
+            self::WORK_EMAIL,
             self::NIK,
             self::PHONE,
             self::GENDER => \App\Models\User::where('id', $userId)->update([$self->value => $value]),
@@ -66,6 +74,7 @@ enum RequestChangeDataType: string
             self::BIRTHDATE,
             self::MARITAL_STATUS,
             self::BLOOD_TYPE,
+            self::RHESUS,
             self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->update([$self->value => $value]),
 
             self::BPJS_KETENAGAKERJAAN_NO,
@@ -75,6 +84,9 @@ enum RequestChangeDataType: string
             self::BANK_ACCOUNT_NO,
             self::BANK_NAME,
             self::BANK_ACCOUNT_HOLDER,
+            self::SECONDARY_BANK_ACCOUNT_NO,
+            self::SECONDARY_BANK_NAME,
+            self::SECONDARY_BANK_ACCOUNT_HOLDER,
             self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->update([$self->value => $value]),
         };
     }
@@ -86,7 +98,9 @@ enum RequestChangeDataType: string
         return match ($this) {
             self::PHOTO_PROFILE => \App\Models\User::where('id', $userId)->first(['id'])->getFirstMediaUrl(MediaCollection::USER->value),
             self::NAME,
+            self::LAST_NAME,
             self::EMAIL,
+            self::WORK_EMAIL,
             self::NIK,
             self::PHONE,
             self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value])->{$this->value},
@@ -99,6 +113,7 @@ enum RequestChangeDataType: string
             self::BIRTHDATE,
             self::MARITAL_STATUS,
             self::BLOOD_TYPE,
+            self::RHESUS,
             self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value])->{$this->value},
 
             self::BPJS_KETENAGAKERJAAN_NO,
@@ -108,6 +123,9 @@ enum RequestChangeDataType: string
             self::BANK_ACCOUNT_NO,
             self::BANK_NAME,
             self::BANK_ACCOUNT_HOLDER,
+            self::SECONDARY_BANK_ACCOUNT_NO,
+            self::SECONDARY_BANK_NAME,
+            self::SECONDARY_BANK_ACCOUNT_HOLDER,
             self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value])->{$this->value},
         };
     }

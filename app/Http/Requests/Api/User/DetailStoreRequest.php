@@ -43,6 +43,7 @@ class DetailStoreRequest extends FormRequest
             'birthdate' => 'required|date_format:Y-m-d',
             'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
             'blood_type' => ['required', Rule::enum(BloodType::class)],
+            'rhesus' => ['nullable', 'string'],
             'religion' => ['nullable', Rule::enum(Religion::class)],
             'batik_size' => ['nullable', Rule::enum(ClothesSize::class)],
             'tshirt_size' => ['nullable', Rule::enum(ClothesSize::class)],
