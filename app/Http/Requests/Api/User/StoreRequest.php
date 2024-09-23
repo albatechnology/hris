@@ -36,7 +36,7 @@ class StoreRequest extends FormRequest
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string',
             'type' => ['required', Rule::enum(UserType::class)],
-            'nik' => 'nullable',
+            'nik' => 'required|max:20',
             'phone' => 'nullable',
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',

@@ -8,6 +8,6 @@ enum MaritalStatus: string
 
     case SINGLE = 'single';
     case MARRIED = 'married';
-    case WIDOWED = 'widowed';
-    case DIVORCED = 'divorced';
+    case WIDOW = 'widow';
+    case WIDOWER = 'widower';
 }
