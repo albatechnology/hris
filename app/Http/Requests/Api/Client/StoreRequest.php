@@ -27,6 +27,9 @@ class StoreRequest extends FormRequest
             'name' => 'required|string',
             'phone' => 'required|string',
             'address' => 'nullable|string',
+            'pic_name' => 'nullable|string',
+            'pic_email' => 'nullable|email',
+            'pic_phone' => 'nullable|string',
         ];
     }
 }
