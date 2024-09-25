@@ -258,7 +258,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
             Route::apiResource('tasks', PatrolTaskController::class);
         });
         Route::apiResource('locations', PatrolLocationController::class);
-        Route::post('locations/scan/qr-code', [PatrolLocationController::class, 'scanQrCode']);
+        Route::post('locations/attend/manual', [PatrolLocationController::class, 'attend']);
+        Route::post('locations/attend/scan-qr-code', [PatrolLocationController::class, 'scanQrCode']);
     });
     Route::apiResource('patrols', PatrolController::class);
 
