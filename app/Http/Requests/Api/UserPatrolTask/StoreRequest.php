@@ -22,9 +22,10 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
             'patrol_task_id' => 'required|exists:patrol_tasks,id',
             'description' => 'required|string',
+            'file' => 'required|array|min:3',
+            'file.*' => 'required|mimes:' . config('app.file_mimes_types'),
         ];
     }
 }

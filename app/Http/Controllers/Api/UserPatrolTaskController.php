@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MediaCollection;
+use App\Enums\PatrolTaskStatus;
 use App\Http\Requests\Api\UserPatrolTask\StoreRequest;
 use App\Http\Requests\Api\UserPatrolTask\UpdateRequest;
 use App\Http\Resources\DefaultResource;
+use App\Models\PatrolTask;
 use App\Models\UserPatrolTask;
 use Exception;
 use Illuminate\Http\Response;
@@ -54,7 +57,43 @@ class UserPatrolTaskController extends BaseController
     public function store(StoreRequest $request)
     {
         try {
-            $userPatrolTask = UserPatrolTask::create($request->validated());
+            $checkPatrol = auth('sanctum')->user()->patrols()
+                ->whereDate('patrols.start_date', '<=', now())
+                ->whereDate('patrols.end_date', '>=', now())
+                ->whereHas('patrolLocations.tasks', function ($q) use ($request) {
+                    $q->where('patrol_tasks.id', $request->patrol_task_id);
+                })
+                ->first();
+
+            if (!$checkPatrol) {
+                return $this->errorResponse('Invalid patrol task');
+            }
+
+            $checkUserPatrolTask = auth('sanctum')->user()->userPatrolTasks()
+                ->where('patrol_task_id', $request->patrol_task_id)
+                // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
+                ->first();
+
+            if ($checkUserPatrolTask) {
+                return $this->errorResponse('Cannot submit multiply task report');
+            }
+
+            $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->create([
+                'patrol_task_id' => $request->patrol_task_id,
+                'description' => $request->description,
+            ]);
+
+            if ($request->hasFile('file')) {
+                foreach ($request->file('file') as $file) {
+                    if ($file->isValid()) {
+                        $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                    }
+                }
+            }
+
+            PatrolTask::where('id', $request->patrol_task_id)->update([
+                'status' => PatrolTaskStatus::COMPLETE,
+            ]);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -64,7 +103,7 @@ class UserPatrolTaskController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        $userPatrolTask = UserPatrolTask::findTenanted($id);
+        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->firstWhere('id', $id);
 
         try {
             $userPatrolTask->update($request->validated());
@@ -77,7 +116,7 @@ class UserPatrolTaskController extends BaseController
 
     public function destroy(int $id)
     {
-        $userPatrolTask = UserPatrolTask::findTenanted($id);
+        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->firstWhere('id', $id);
         $userPatrolTask->delete();
 
         return $this->deletedResponse();

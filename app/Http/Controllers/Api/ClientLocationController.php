@@ -143,24 +143,4 @@ class ClientLocationController extends BaseController
 
         return new DefaultResource($clientLocation);
     }
-    
-    public function scanQrCode(ScanClientLocationRequest $request)
-    {
-        /** @var User $user */
-        $user = auth('sanctum')->user();
-
-        $splittedToken = explode(';', $request->token);
-        $type = $splittedToken[0] ?? null;
-        $uuid = $splittedToken[1] ?? null;
-
-        $clientLocation = ClientLocation::firstWhere('uuid', $uuid);
-
-        if(!$clientLocation){
-            return $this->errorResponse('Invalid token');
-        }
-
-        $clientLocation->load('client');
-
-        return new DefaultResource($clientLocation);
-    }
 }

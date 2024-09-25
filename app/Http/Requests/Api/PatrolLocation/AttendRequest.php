@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\ClientLocation;
+namespace App\Http\Requests\Api\PatrolLocation;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ScanClientLocationRequest extends FormRequest
+class AttendRequest extends FormRequest
 {
   /**
    * Determine if the user is authorized to make this request.
@@ -22,7 +22,9 @@ class ScanClientLocationRequest extends FormRequest
   public function rules(): array
   {
     return [
-      'token' => 'required|string',
+      'patrol_location_id' => 'required|exists:patrol_locations,id',
+      'lat' => 'required|string',
+      'lng' => 'required|string',
     ];
   }
 }

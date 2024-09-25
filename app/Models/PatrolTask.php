@@ -19,12 +19,19 @@ class PatrolTask extends BaseModel
         'status' => PatrolTaskStatus::class,
     ];
 
+    protected $appends = ['user_patrol_task'];
+
+    public function getUserPatrolTaskAtttribute()
+    {
+        return $this->userPatrolTasks()->firstWhere('user_id', auth('sanctum')->id());
+    }
+
     public function patrolLocation(): BelongsTo
     {
         return $this->belongsTo(PatrolLocation::class);
     }
 
-    public function users(): HasMany
+    public function userPatrolTasks(): HasMany
     {
         return $this->hasMany(UserPatrolTask::class);
     }
