@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ScheduleType;
 use App\Models\Event;
 use App\Models\NationalHoliday;
 use App\Models\Schedule;
@@ -14,7 +15,7 @@ class ScheduleService
     /**
      * get user today schedule.
      */
-    public static function getTodaySchedule(?User $user = null, $date = null, array $scheduleColumn = [], array $shiftColumn = [])
+    public static function getTodaySchedule(?User $user = null, $date = null, array $scheduleColumn = [], array $shiftColumn = [], string $scheduleType = 'attendance')
     {
         if (!$user) {
             /** @var User $user */
@@ -26,6 +27,7 @@ class ScheduleService
         /** @var Schedule $schedule */
         $schedule = $user->schedules()
             ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+            ->where('type', $scheduleType)
             ->whereDate('effective_date', '<=', $date)
             ->withCount('shifts')
             ->orderByDesc('effective_date')->first();

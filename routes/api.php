@@ -243,10 +243,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('incident-types', IncidentTypeController::class);
     Route::apiResource('incidents', IncidentController::class);
 
-    Route::group(['prefix' => 'clients/{client}'], function () {
-        Route::apiResource('locations', ClientLocationController::class);
-    });
     Route::apiResource('clients', ClientController::class);
+    Route::apiResource('client-locations', ClientLocationController::class);
+    Route::post('client-locations/scan-qr-code', [ClientLocationController::class, 'scanQrCode']);
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
     Route::group(['prefix' => 'patrols/{patrol}'], function () {

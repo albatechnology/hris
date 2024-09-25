@@ -132,6 +132,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         });
     }
 
+    public function scopeScheduleType(Builder $query)
+    {
+        return $query;
+    }
+
     // public function getParentIdName()
     // {
     //     return 'parent';
