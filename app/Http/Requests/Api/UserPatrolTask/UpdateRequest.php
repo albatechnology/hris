@@ -22,8 +22,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
-            'patrol_task_id' => 'nullable|exists:patrol_tasks,id',
+            'patrol_task_id' => 'required|exists:patrol_tasks,id',
             'description' => 'required|string',
         ];
     }

@@ -13,6 +13,13 @@ class PatrolLocation extends BaseModel
         'description',
     ];
 
+    protected $appends = ['attended_at'];
+
+    public function getAttendedAtttribute()
+    {
+        return $this->userPatrolLocations()->where('user_id', auth('sanctum')->id())->first()?->created_at ?? null;
+    }
+
     public function patrol(): BelongsTo
     {
         return $this->belongsTo(Patrol::class);
@@ -26,5 +33,10 @@ class PatrolLocation extends BaseModel
     public function tasks(): HasMany
     {
         return $this->hasMany(PatrolTask::class);
+    }
+
+    public function userPatrolLocations(): HasMany
+    {
+        return $this->hasMany(UserPatrolLocation::class);
     }
 }
