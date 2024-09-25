@@ -27,6 +27,7 @@ class DepartmentController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('division_id'),
+                AllowedFilter::scope('company_id'),
                 'name',
             ])
             ->allowedIncludes(['division'])

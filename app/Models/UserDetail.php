@@ -30,6 +30,7 @@ class UserDetail extends BaseModel
         'birthdate',
         'marital_status',
         'blood_type',
+        'rhesus',
         'religion',
         'batik_size',
         'tshirt_size',

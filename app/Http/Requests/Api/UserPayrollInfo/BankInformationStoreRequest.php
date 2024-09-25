@@ -25,6 +25,9 @@ class BankInformationStoreRequest extends FormRequest
             'bank_name' => 'nullable|string',
             'bank_account_no' => 'nullable|string',
             'bank_account_holder' => 'nullable|string',
+            'secondary_bank_name' => 'nullable|string',
+            'secondary_bank_account_no' => 'nullable|string',
+            'secondary_bank_account_holder' => 'nullable|string',
         ];
     }
 }

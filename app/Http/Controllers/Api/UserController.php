@@ -77,6 +77,7 @@ class UserController extends BaseController
                 AllowedFilter::exact('parent_id'),
                 AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
+                AllowedFilter::scope('job_level'),
                 'name', 'email', 'type', 'nik', 'phone',
             ])
             ->allowedIncludes($this->getAllowedIncludes())

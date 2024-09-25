@@ -16,6 +16,9 @@ class Client extends BaseModel implements TenantedInterface
         'name',
         'phone',
         'address',
+        'pic_name',
+        'pic_email',
+        'pic_phone',
     ];
 
     public function clientLocations(): HasMany
