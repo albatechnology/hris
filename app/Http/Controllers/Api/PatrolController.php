@@ -28,8 +28,15 @@ class PatrolController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Patrol::tenanted())
-            ->allowedIncludes(['client'])
+        $data = QueryBuilder::for(Patrol::tenanted()->where(function ($q) {
+            $user = auth('sanctum')->user();
+
+            if($user->is_user){
+                $q->whereHas('users', function($q2) use($user){
+                    $q2->where('user_patrols.user_id', $user->id);
+                });
+            }
+        }))->allowedIncludes(['client'])
             ->allowedFilters([
                 AllowedFilter::callback('has_user_id', function ($query, $value) {
                     $query->whereHas('users', fn($q) => $q->where('user_id', $value));

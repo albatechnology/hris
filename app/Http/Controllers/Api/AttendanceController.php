@@ -6,6 +6,7 @@ use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
+use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Exports\AttendanceReport;
@@ -519,10 +520,13 @@ class AttendanceController extends BaseController
         // $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
         foreach ($query->get() as $user) {
-            $schedule = ScheduleService::getTodaySchedule($user, $date);
+            $schedule = ScheduleService::getTodaySchedule($user, $date, scheduleType: $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
 
             $attendance = $user->attendances()
                 ->where('date', $date)
+                ->whereHas('schedule', function ($q){
+                    $q->where('schedules.type', $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
+                })
                 ->with([
                     'shift' => fn ($q) => $q->select('id', 'clock_in', 'clock_out'),
                     'timeoff' => fn ($q) => $q->select('id'),
@@ -641,6 +645,7 @@ class AttendanceController extends BaseController
         $users = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('id'),
+                AllowedFilter::scope('schedule_type'),
                 'nik',
                 'name',
             ])
@@ -654,8 +659,8 @@ class AttendanceController extends BaseController
 
         $companyHolidays = Event::tenanted()->whereHoliday()->get();
         $nationalHolidays = NationalHoliday::orderBy('date')->get();
-        $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays) {
-            $schedule = ScheduleService::getTodaySchedule($user, $date);
+        $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays, $request) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date, scheduleType: $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
 
             $attendance = $user->attendances()
                 ->where('date', $date)

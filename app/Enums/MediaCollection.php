@@ -13,4 +13,5 @@ enum MediaCollection: string
     case TASK = 'task';
     case REQUEST_CHANGE_DATA = 'request_change_data';
     case USER_TRANSFER = 'user_transfer';
+    case QR_CODE = 'qr_code';
 }

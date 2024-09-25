@@ -122,6 +122,19 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         $query->whereHas('schedules', fn ($q) => $q->where('user_schedules.schedule_id', $scheduleId));
     }
 
+    public function scopeJobLevel(Builder $query, ...$value)
+    {
+        $query->where(function($q) use($value){
+            $q->whereNull('parent_id');
+            $q->orWhereHas('detail', fn ($q2) => $q2->whereIn('user_details.job_level', $value));
+        });
+    }
+
+    public function scopeScheduleType(Builder $query)
+    {
+        return $query;
+    }
+
     // public function getParentIdName()
     // {
     //     return 'parent';
