@@ -53,6 +53,7 @@ use App\Http\Controllers\Api\UserCustomFieldController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\UserExperienceController;
+use App\Http\Controllers\Api\UserPatrolController;
 use App\Http\Controllers\Api\UserPatrolTaskController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserTimeoffPolicyController;
@@ -265,6 +266,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::post('locations/attend/scan-qr-code', [PatrolLocationController::class, 'scanQrCode']);
     });
     Route::apiResource('patrols', PatrolController::class);
+
+    Route::apiResource('user-patrols', UserPatrolController::class);
 
     Route::apiResource('npp', NppController::class);
 });

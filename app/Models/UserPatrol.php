@@ -15,6 +15,11 @@ class UserPatrol extends BaseModel
         'patrol_id',
     ];
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function patrol(): BelongsTo
     {
         return $this->belongsTo(Patrol::class);
