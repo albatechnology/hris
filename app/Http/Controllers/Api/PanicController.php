@@ -26,7 +26,7 @@ class PanicController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Panic::query())
+        $data = QueryBuilder::for(Panic::with('user'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('client_id'),
@@ -47,7 +47,7 @@ class PanicController extends BaseController
 
     public function show(Panic $panic)
     {
-        return new DefaultResource($panic);
+        return new DefaultResource($panic->load('user'));
     }
 
     public function store(StoreRequest $request)
@@ -63,7 +63,7 @@ class PanicController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($panic);
+        return new DefaultResource($panic->load('user'));
     }
 
     public function update(Panic $panic, UpdateRequest $request)
