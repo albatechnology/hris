@@ -15,7 +15,7 @@ class PatrolLocation extends BaseModel
 
     protected $appends = ['attended_at'];
 
-    public function getAttendedAtttribute()
+    public function getAttendedAtAttribute()
     {
         return $this->userPatrolLocations()->where('user_id', auth('sanctum')->id())->first()?->created_at ?? null;
     }

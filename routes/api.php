@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NppController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
+use App\Http\Controllers\Api\PanicController;
 use App\Http\Controllers\Api\PatrolController;
 use App\Http\Controllers\Api\PatrolLocationController;
 use App\Http\Controllers\Api\PatrolTaskController;
@@ -239,6 +240,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::put('approve', [UserTransferController::class, 'approve']);
     });
     Route::apiResource('user-transfers', UserTransferController::class);
+
+    Route::apiResource('panics', PanicController::class);
 
     Route::apiResource('incident-types', IncidentTypeController::class);
     Route::apiResource('incidents', IncidentController::class);

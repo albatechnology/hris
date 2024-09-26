@@ -24,11 +24,6 @@ class ClientLocationController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->client = Client::tenanted()->where('id', request()->filter['client_id'] ?? null)->first();
-
-        if (!$this->client) {
-            throw ValidationException::withMessages(['client_id' => ['Invalid Client ID.']]);
-        }
 
         $this->middleware('permission:client_access', ['only' => ['restore']]);
         $this->middleware('permission:client_read', ['only' => ['index', 'show']]);
@@ -39,8 +34,9 @@ class ClientLocationController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(ClientLocation::where('client_id', $this->client->id))
-            ->allowedFilters([
+        $data = QueryBuilder::for(ClientLocation::whereHas('client', function ($q) {
+            $q->tenanted();
+        })->with('client'))->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('client_id'),
                 'name',
@@ -58,12 +54,9 @@ class ClientLocationController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(int $id)
+    public function show(ClientLocation $clientLocation)
     {
-        $clientLocation = ClientLocation::findOrFail($id);
-        $clientLocation->load('client');
-
-        return new DefaultResource($clientLocation);
+        return new DefaultResource($clientLocation->load('client'));
     }
 
     public function store(StoreRequest $request)
@@ -89,13 +82,11 @@ class ClientLocationController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($clientLocation);
+        return new DefaultResource($clientLocation->load('client'));
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(ClientLocation $clientLocation, StoreRequest $request)
     {
-        $clientLocation = ClientLocation::findOrFail($id);
-
         try {
             $clientLocation->update($request->validated());
         } catch (Exception $e) {
@@ -105,10 +96,8 @@ class ClientLocationController extends BaseController
         return (new DefaultResource($clientLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(int $id)
+    public function destroy(ClientLocation $clientLocation)
     {
-        $clientLocation = ClientLocation::findOrFail($id);
-
         try {
             $clientLocation->delete();
         } catch (Exception $e) {
@@ -116,31 +105,5 @@ class ClientLocationController extends BaseController
         }
 
         return $this->deletedResponse();
-    }
-
-    public function forceDelete($id)
-    {
-        $clientLocation = ClientLocation::withTrashed()->findOrFail($id);
-
-        try {
-            $clientLocation->forceDelete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return $this->deletedResponse();
-    }
-
-    public function restore($id)
-    {
-        $clientLocation = ClientLocation::withTrashed()->findOrFail($id);
-
-        try {
-            $clientLocation->restore();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return new DefaultResource($clientLocation);
     }
 }

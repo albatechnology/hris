@@ -15,8 +15,8 @@ class Incident extends BaseModel implements HasMedia, TenantedInterface
     use CustomSoftDeletes, BelongsToUser, InteractsWithMedia;
 
     protected $fillable = [
+        'company_id',
         'user_id',
-        'client_location_id',
         'incident_type_id',
         'description',
     ];
@@ -57,11 +57,6 @@ class Incident extends BaseModel implements HasMedia, TenantedInterface
         }
 
         return $query->first();
-    }
-
-    public function clientLocation(): BelongsTo
-    {
-        return $this->belongsTo(ClientLocation::class);
     }
 
     public function incidentType(): BelongsTo
