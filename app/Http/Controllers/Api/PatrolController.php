@@ -31,7 +31,7 @@ class PatrolController extends BaseController
         $data = QueryBuilder::for(Patrol::tenanted()->where(function ($q) {
             $user = auth('sanctum')->user();
 
-            if($user->is_user){
+            if($user->parent_id){
                 $q->whereHas('users', function($q2) use($user){
                     $q2->where('user_patrols.user_id', $user->id);
                 });
