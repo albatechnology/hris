@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PatrolTaskStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,39 @@ class Patrol extends BaseModel implements TenantedInterface
         'lng',
         'description',
     ];
+
+    protected $appends = ['total_task', 'completed_task', 'status'];
+
+    public function getTotalTaskAttribute()
+    {
+        return $this->tasks()->count();
+    }
+
+    public function getCompletedTaskAttribute()
+    {
+        return $this->tasks()->where('status', PatrolTaskStatus::COMPLETE)->count();
+    }
+
+    public function getStatusAttribute()
+    {
+        if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
+            return null;
+        }
+
+        if($this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && ($this->tasks()->where('status', PatrolTaskStatus::COMPLETE || $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first()))->first()){
+            return 'progress';
+        }
+
+        if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && $this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
+            return 'complete';
+        }
+
+        if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
+            return 'cancel';
+        }
+
+        return 'pending';
+    }
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
@@ -54,6 +88,11 @@ class Patrol extends BaseModel implements TenantedInterface
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function tasks()
+    {
+        return $this->hasManyThrough(PatrolTask::class, PatrolLocation::class);
     }
 
     public function patrolLocations(): HasMany
