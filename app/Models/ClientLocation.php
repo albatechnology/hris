@@ -41,7 +41,7 @@ class ClientLocation extends BaseModel implements HasMedia
         $file = $this->getFirstMedia(\App\Enums\MediaCollection::QR_CODE->value);
         if ($file) {
             $url = $file->getUrl();
-            $preview = $file->getUrl('preview');
+            $preview = null;
         } else {
             $url = null;
             $preview = null;

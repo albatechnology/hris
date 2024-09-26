@@ -16,10 +16,8 @@ return new class extends Migration
         Schema::table('incidents', function (Blueprint $table) {
             $table->foreignIdFor(Company::class)->after('id')->constrained()->cascadeOnDelete();
 
-            Schema::disableForeignKeyConstraints();
             $table->dropForeign('incidents_client_location_id_foreign');
             $table->dropColumn('client_location_id');
-            Schema::enableForeignKeyConstraints();
         });
     }
 
@@ -31,7 +29,7 @@ return new class extends Migration
         Schema::table('incidents', function (Blueprint $table) {
             $table->dropForeign('incidents_company_id_foreign');
             $table->dropColumn('company_id');
-            $table->foreignIdFor(ClientLocation::class)->constrained();
+            $table->foreignIdFor(ClientLocation::class)->after('id')->constrained();
         });
     }
 };

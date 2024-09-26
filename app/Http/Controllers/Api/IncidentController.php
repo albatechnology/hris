@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use App\Enums\MediaCollection;
 
 class IncidentController extends BaseController
 {
@@ -24,17 +25,17 @@ class IncidentController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Incident::tenanted())
+        $data = QueryBuilder::for(Incident::tenanted()->with('media'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
+                AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('client_location_id'),
                 AllowedFilter::exact('incident_type_id'),
             ])
             ->allowedSorts([
                 'id',
+                'company_id',
                 'user_id',
-                'client_location_id',
                 'incident_type_id',
                 'created_at',
             ])
@@ -45,14 +46,26 @@ class IncidentController extends BaseController
 
     public function show(Incident $incident)
     {
-        $incident->load(['user', 'clientLocation', 'incidentType']);
+        $incident->load(['user', 'incidentType', 'media']);
         return new DefaultResource($incident);
     }
 
     public function store(StoreRequest $request)
     {
         try {
-            $incident = Incident::create($request->validated());
+            $incident = auth('sanctum')->user()->incidents()->create([
+                'company_id' => $request->company_id,
+                'incident_type_id' => $request->incident_type_id,
+                'description' => $request->description,
+            ]);
+
+            if ($request->hasFile('file')) {
+                foreach ($request->file('file') as $file) {
+                    if ($file->isValid()) {
+                        $incident->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                    }
+                }
+            }
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -63,7 +76,11 @@ class IncidentController extends BaseController
     public function update(Incident $incident, StoreRequest $request)
     {
         try {
-            $incident->update($request->validated());
+            $incident->update([
+                'company_id' => $request->company_id,
+                'incident_type_id' => $request->incident_type_id,
+                'description' => $request->description,
+            ]);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }

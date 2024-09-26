@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Panic extends BaseModel
 {
     protected $fillable = [
+        'client_id',
         'user_id',
         'lat',
         'lng',
@@ -17,6 +18,11 @@ class Panic extends BaseModel
     protected $casts = [
         'status' => PanicStatus::class,
     ];
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
 
     public function user(): BelongsTo
     {
