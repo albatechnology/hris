@@ -21,7 +21,7 @@ class PatrolTask extends BaseModel
 
     protected $appends = ['user_patrol_task'];
 
-    public function getUserPatrolTaskAtttribute()
+    public function getUserPatrolTaskAttribute()
     {
         return $this->userPatrolTasks()->firstWhere('user_id', auth('sanctum')->id());
     }
