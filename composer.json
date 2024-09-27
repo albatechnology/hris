@@ -21,6 +21,8 @@
         "spatie/laravel-medialibrary": "^11.0.0",
         "spatie/laravel-permission": "^6.3",
         "spatie/laravel-query-builder": "^5.7",
+        "symfony/http-client": "^7.1",
+        "symfony/mailgun-mailer": "^7.1",
         "yajra/laravel-datatables-oracle": "^10.3.1"
     },
     "require-dev": {
