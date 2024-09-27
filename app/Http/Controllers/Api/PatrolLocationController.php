@@ -33,7 +33,7 @@ class PatrolLocationController extends BaseController
 
     public function index(int $patrolId)
     {
-        $data = QueryBuilder::for(PatrolLocation::where('patrol_id', $this->patrol->id))
+        $data = QueryBuilder::for(PatrolLocation::where('patrol_id', $this->patrol->id)->with('clientLocation'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('patrol_id'),
