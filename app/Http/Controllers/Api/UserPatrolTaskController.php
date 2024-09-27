@@ -81,6 +81,8 @@ class UserPatrolTaskController extends BaseController
             $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->create([
                 'patrol_task_id' => $request->patrol_task_id,
                 'description' => $request->description,
+                'lat' => $request->lat,
+                'lng' => $request->lng,
             ]);
 
             if ($request->hasFile('file')) {

@@ -17,6 +17,8 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
         'user_id',
         'patrol_task_id',
         'description',
+        'lat',
+        'lng',
     ];
 
     protected static function booted(): void
