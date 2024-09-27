@@ -43,7 +43,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule],
-            'type' => ['required', Rule::enum(ScheduleType::class)],
+            'type' => ['nullable', Rule::enum(ScheduleType::class)],
             'name' => 'required|string',
             'clock_in' => 'required|date_format:H:i',
             'clock_out' => 'required|date_format:H:i',

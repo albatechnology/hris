@@ -45,7 +45,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule],
-            'type' => ['required', Rule::enum(ScheduleType::class)],
+            'type' => ['nullable', Rule::enum(ScheduleType::class)],
             'name' => 'required|string',
             'effective_date' => 'required|date',
             'is_overide_national_holiday' => 'nullable|boolean',
