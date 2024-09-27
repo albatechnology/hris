@@ -27,7 +27,7 @@ class AuthController extends BaseController
             ]);
         }
 
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
 
         $user->update([
             'fcm_token' => $request->fcm_token
