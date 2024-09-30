@@ -33,6 +33,6 @@ class PatrolTask extends BaseModel
 
     public function userPatrolTasks(): HasMany
     {
-        return $this->hasMany(UserPatrolTask::class);
+        return $this->hasMany(UserPatrolTask::class)->with('media');
     }
 }
