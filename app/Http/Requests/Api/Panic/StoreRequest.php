@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Panic;
 
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -22,7 +23,7 @@ class StoreRequest extends FormRequest
   public function rules(): array
   {
     return [
-      'client_id' => 'required|exists:clients,id',
+      'company_id' => ['required', new CompanyTenantedRule()],
       'lat' => 'nullable|string',
       'lng' => 'nullable|string',
     ];

@@ -26,16 +26,16 @@ class PanicController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Panic::with('user'))
+        $data = QueryBuilder::for(Panic::tenanted()->with('user'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('status'),
             ])
             ->allowedSorts([
                 'id',
-                'client_id',
+                'company_id',
                 'user_id',
                 'status',
                 'created_at',
@@ -54,7 +54,7 @@ class PanicController extends BaseController
     {
         try {
             $panic = auth('sanctum')->user()->panics()->create([
-                'client_id' => $request->client_id,
+                'company_id' => $request->company_id,
                 'lat' => $request->lat,
                 'lng' => $request->lng,
                 'status' => PanicStatus::PANIC,
