@@ -81,7 +81,7 @@ class AnnouncementController extends BaseController
     DB::beginTransaction();
     try {
       $announcement = auth('sanctum')->user()->announcements()->create($request->validated());
-      $users = User::query();
+      $users = User::tenanted();
 
       if ($request->branch_ids) {
         $announcement->branches()->attach(explode(',', $request->branch_ids));

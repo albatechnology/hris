@@ -28,7 +28,7 @@ class UserPatrolTaskController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(UserPatrolTask::tenanted())
+        $data = QueryBuilder::for(UserPatrolTask::tenanted()->with('media'))
             ->allowedIncludes(['patrolTask', 'user'])
             ->allowedFilters([
                 AllowedFilter::exact('id'),
@@ -49,7 +49,7 @@ class UserPatrolTaskController extends BaseController
     public function show(int $id)
     {
         $userPatrolTask = UserPatrolTask::findTenanted($id);
-        $userPatrolTask->load(['patrolTask', 'user']);
+        $userPatrolTask->load(['patrolTask', 'user', 'media']);
 
         return new DefaultResource($userPatrolTask);
     }
