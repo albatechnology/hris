@@ -100,7 +100,7 @@ class UserPatrolTaskController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($userPatrolTask);
+        return new DefaultResource($userPatrolTask->load('media'));
     }
 
     public function update(int $id, UpdateRequest $request)
@@ -113,7 +113,7 @@ class UserPatrolTaskController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return (new DefaultResource($userPatrolTask))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($userPatrolTask->load('media')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(int $id)
