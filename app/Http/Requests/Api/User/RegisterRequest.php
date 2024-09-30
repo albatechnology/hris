@@ -51,6 +51,7 @@ class RegisterRequest extends FormRequest
             'approval_id' => 'nullable|exists:users,id',
             'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
+            'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
