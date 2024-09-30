@@ -243,6 +243,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('user-transfers', UserTransferController::class);
 
     Route::apiResource('panics', PanicController::class);
+    Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 
     Route::apiResource('incident-types', IncidentTypeController::class);
     Route::apiResource('incidents', IncidentController::class);

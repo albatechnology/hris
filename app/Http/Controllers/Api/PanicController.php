@@ -113,4 +113,10 @@ class PanicController extends BaseController
 
         return new DefaultResource($panic);
     }
+
+    public function myPanic()
+    {
+        $panic = auth('sanctum')->user()->panics()->with('user')->where('status', PanicStatus::PANIC)->first();
+        return new DefaultResource($panic);
+    }
 }
