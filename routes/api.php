@@ -72,6 +72,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);
+    Route::post('users/update-device', [UserController::class, 'updateDevice']);
     Route::get('users/tasks', [UserController::class, 'tasks']);
     Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
     Route::put('users/password', [UserController::class, 'updatePassword']);
