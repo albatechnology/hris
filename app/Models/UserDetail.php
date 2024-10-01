@@ -34,6 +34,11 @@ class UserDetail extends BaseModel
         'religion',
         'batik_size',
         'tshirt_size',
+        'lat',
+        'lng',
+        'speed',
+        'battery',
+        'detected_at',
     ];
 
     protected $casts = [

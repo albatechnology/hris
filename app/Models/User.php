@@ -92,7 +92,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         }
         if ($user->is_administrator) {
             return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::USER])
-                ->whereHas('companies', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('companies.group_id', $user->group_id)));
+                ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
             // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
@@ -119,16 +119,21 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query->first();
     }
 
+    public function scopeHasActiveSchedule(Builder $query, string $value)
+    {
+        $query->has('activeSchedule');
+    }
+
     public function scopeHasScheduleId(Builder $query, int $scheduleId)
     {
-        $query->whereHas('schedules', fn ($q) => $q->where('user_schedules.schedule_id', $scheduleId));
+        $query->whereHas('schedules', fn($q) => $q->where('user_schedules.schedule_id', $scheduleId));
     }
 
     public function scopeJobLevel(Builder $query, ...$value)
     {
-        $query->where(function($q) use($value){
+        $query->where(function ($q) use ($value) {
             $q->whereNull('parent_id');
-            $q->orWhereHas('detail', fn ($q2) => $q2->whereIn('user_details.job_level', $value));
+            $q->orWhereHas('detail', fn($q2) => $q2->whereIn('user_details.job_level', $value));
         });
     }
 
@@ -150,7 +155,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     protected function password(): Attribute
     {
         return Attribute::make(
-            set: fn (?string $value) => bcrypt($value ?? 'alba#123'),
+            set: fn(?string $value) => bcrypt($value ?? 'alba#123'),
         );
     }
 
@@ -257,6 +262,14 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function schedules(): BelongsToMany
     {
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');
+    }
+
+    public function activeSchedule(): HasOne
+    {
+        return $this->hasOne(UserSchedule::class)->whereHas('schedule', function ($q) {
+            $q->whereDate('effective_date', '<=', now());
+            $q->orderBy('effective_date', 'desc');
+        });
     }
 
     public function liveAttendance(): BelongsTo

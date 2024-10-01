@@ -12,6 +12,7 @@ use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Requests\Api\User\FcmTokenRequest;
 use App\Http\Requests\Api\User\ResendSetupPasswordRequest;
+use App\Http\Requests\Api\User\UpdateDeviceRequest;
 use App\Http\Requests\Api\User\UpdatePasswordRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
@@ -50,39 +51,55 @@ class UserController extends BaseController
                 $query->select('id', 'name');
             }),
             AllowedInclude::callback('companies', function ($query) {
-                $query->select('user_id', 'company_id')->with('company', fn ($q) => $q->select('id', 'name'));
+                $query->select('user_id', 'company_id')->with('company', fn($q) => $q->select('id', 'name'));
             }),
             AllowedInclude::callback('branches', function ($query) {
-                $query->select('user_id', 'branch_id')->with('branch', fn ($q) => $q->select('id', 'name'));
+                $query->select('user_id', 'branch_id')->with('branch', fn($q) => $q->select('id', 'name'));
             }),
             AllowedInclude::callback('positions', function ($query) {
                 $query->select('user_id', 'department_id', 'position_id')->with([
-                    'position' => fn ($q) => $q->select('id', 'name'),
-                    'department' => fn ($q) => $q->select('id', 'name'),
+                    'position' => fn($q) => $q->select('id', 'name'),
+                    'department' => fn($q) => $q->select('id', 'name'),
                 ]);
             }),
             AllowedInclude::callback('roles', function ($query) {
                 $query->select('id', 'name');
             }),
-            'detail', 'payrollInfo', 'schedules'
+            'detail',
+            'payrollInfo',
+            'schedules'
         ];
     }
 
     public function index()
     {
-        $users = QueryBuilder::for(User::tenanted(request()->filter['is_my_descendant'] ?? false)->with(['roles' => fn ($q) => $q->select('id', 'name')]))
+        $users = QueryBuilder::for(User::tenanted(request()->filter['is_my_descendant'] ?? false)->with(['roles' => fn($q) => $q->select('id', 'name')]))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('parent_id'),
                 AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
+                AllowedFilter::scope('has_active_schedule'),
                 AllowedFilter::scope('job_level'),
-                'name', 'email', 'type', 'nik', 'phone',
+                'name',
+                'email',
+                'type',
+                'nik',
+                'phone',
             ])
             ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
-                'id', 'branch_id', 'parent_id', 'approval_id', 'name', 'email', 'type', 'nik', 'phone', 'created_at',
+                'id',
+                'branch_id',
+                'parent_id',
+                'approval_id',
+                'name',
+                'email',
+                'type',
+                'nik',
+                'phone',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -299,7 +316,7 @@ class UserController extends BaseController
             if ($user->branches->count() > 0) {
                 $branches = Branch::whereIn('id', $user->branches->pluck('branch_id'))->get();
             }
-            $branches = Branch::whereHas('company', fn ($q) => $q->where('group_id', $user->group_id))->get();
+            $branches = Branch::whereHas('company', fn($q) => $q->where('group_id', $user->group_id))->get();
         } else {
             $branches = Branch::whereIn('id', $user->branches?->pluck('branch_id') ?? [])->get();
         }
@@ -394,7 +411,7 @@ class UserController extends BaseController
 
     public function tasks()
     {
-        $query = TaskHour::whereHas('users', fn ($q) => $q->where('user_id', auth()->id()))->with('task');
+        $query = TaskHour::whereHas('users', fn($q) => $q->where('user_id', auth()->id()))->with('task');
 
         $data = QueryBuilder::for($query)
             ->allowedFilters('name')
@@ -430,5 +447,30 @@ class UserController extends BaseController
             ->firstOrFail();
 
         return new UserResource($user);
+    }
+
+    public function updateDevice(UpdateDeviceRequest $request)
+    {
+        /** @var User $user */
+        $user = auth('sanctum')->user();
+
+        DB::beginTransaction();
+        try {
+            $user->detail()->update([
+                'lat' => $request->lat,
+                'lng' => $request->lng,
+                'speed' => $request->speed,
+                'battery' => $request->battery,
+                'detected_at' => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return (new UserResource($user))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 }
