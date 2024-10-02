@@ -107,12 +107,12 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
 
     public function clockIn(): HasOne
     {
-        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', true)->orderBy('time');
+        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', true)->orderByDesc('attendance_details.id');
     }
 
     public function clockOut(): HasOne
     {
-        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', false)->orderByDesc('time');
+        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', false)->orderByDesc('attendance_details.id');
     }
 
     public function scopeWhereDateBetween(Builder $query, string $startDate, string $endDate)
