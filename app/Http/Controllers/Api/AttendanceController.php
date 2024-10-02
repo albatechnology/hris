@@ -507,7 +507,7 @@ class AttendanceController extends BaseController
 
         $date = $request->filter['date'];
 
-        if($request->filter['search']){
+        if(isset($request->filter['search'])){
             $query = $query->where(function($q) use($request){
                 $q->where('name', 'LIKE', '%'.$request->filter['search'].'%');
                 $q->orWhere('nik', 'LIKE', '%'.$request->filter['search'].'%');
