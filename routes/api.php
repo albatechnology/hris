@@ -139,6 +139,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('attendances/employees', [AttendanceController::class, 'employees']);
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
     Route::get('attendances/report/{export?}', [AttendanceController::class, 'report']);
+    Route::post('attendances/manual-attendances', [AttendanceController::class, 'manualAttendance']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
     Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
