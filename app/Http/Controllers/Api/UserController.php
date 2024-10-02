@@ -119,7 +119,7 @@ class UserController extends BaseController
 
     public function show(User $user)
     {
-        $user = QueryBuilder::for(User::where('id', $user->id))
+        $user = QueryBuilder::for(User::tenanted()->where('id', $user->id))
             ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 

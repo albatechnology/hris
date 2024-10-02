@@ -14,6 +14,7 @@ use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
+use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
@@ -187,7 +188,7 @@ class AttendanceController extends BaseController
 
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
-            ->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->get(['id', 'name', 'nik']);
 
         $data = [];
@@ -195,10 +196,10 @@ class AttendanceController extends BaseController
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                    'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn ($q) => $q->approved(),
-                    'clockOut' => fn ($q) => $q->approved(),
+                    'clockIn' => fn($q) => $q->approved(),
+                    'clockOut' => fn($q) => $q->approved(),
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
@@ -224,10 +225,10 @@ class AttendanceController extends BaseController
                     $shift = $attendance->shift;
 
                     // load overtime
-                    $overtimeDurationBeforeShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn ($q) => $q->where('is_after_shift', false));
+                    $overtimeDurationBeforeShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn($q) => $q->where('is_after_shift', false));
                     $attendance->overtime_duration_before_shift = $overtimeDurationBeforeShift;
 
-                    $overtimeDurationAfterShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn ($q) => $q->where('is_after_shift', true));
+                    $overtimeDurationAfterShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn($q) => $q->where('is_after_shift', true));
                     $attendance->overtime_duration_after_shift = $overtimeDurationAfterShift;
 
                     // load task
@@ -337,7 +338,7 @@ class AttendanceController extends BaseController
         $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
-        $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
         if ($schedule) {
             $order = $schedule->shifts->where('id', $schedule->shift->id);
             $orderKey = array_keys($order->toArray())[0];
@@ -350,7 +351,7 @@ class AttendanceController extends BaseController
                     'timeoff.timeoffPolicy',
                     'clockIn',
                     'clockOut',
-                    'details' => fn ($q) => $q->orderBy('created_at')
+                    'details' => fn($q) => $q->orderBy('created_at')
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
@@ -507,10 +508,10 @@ class AttendanceController extends BaseController
 
         $date = $request->filter['date'];
 
-        if(isset($request->filter['search'])){
-            $query = $query->where(function($q) use($request){
-                $q->where('name', 'LIKE', '%'.$request->filter['search'].'%');
-                $q->orWhere('nik', 'LIKE', '%'.$request->filter['search'].'%');
+        if (isset($request->filter['search'])) {
+            $query = $query->where(function ($q) use ($request) {
+                $q->where('name', 'LIKE', '%' . $request->filter['search'] . '%');
+                $q->orWhere('nik', 'LIKE', '%' . $request->filter['search'] . '%');
             });
         }
 
@@ -531,14 +532,14 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->whereHas('schedule', function ($q){
+                ->whereHas('schedule', function ($q) {
                     $q->where('schedules.type', $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
                 })
                 ->with([
-                    'shift' => fn ($q) => $q->select('id', 'clock_in', 'clock_out'),
-                    'timeoff' => fn ($q) => $q->select('id'),
-                    'clockIn' => fn ($q) => $q->select('attendance_id', 'time'),
-                    'clockOut' => fn ($q) => $q->select('attendance_id', 'time'),
+                    'shift' => fn($q) => $q->select('id', 'clock_in', 'clock_out'),
+                    'timeoff' => fn($q) => $q->select('id'),
+                    'clockIn' => fn($q) => $q->select('attendance_id', 'time'),
+                    'clockOut' => fn($q) => $q->select('attendance_id', 'time'),
                 ])->first();
 
             if ($attendance) {
@@ -727,16 +728,19 @@ class AttendanceController extends BaseController
 
     public function logs()
     {
-        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn ($q) => $q->tenanted()))
+        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->tenanted()))
             ->allowedFilters([
-                'is_clock_in', 'approval_status', 'approved_by', 'type',
-                AllowedFilter::callback('user_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('user_id', $value))),
-                AllowedFilter::callback('shift_id', fn ($query, $value) => $query->whereHas('attendance', fn ($q) => $q->where('shift_id', $value))),
+                'is_clock_in',
+                'approval_status',
+                'approved_by',
+                'type',
+                AllowedFilter::callback('user_id', fn($query, $value) => $query->whereHas('attendance', fn($q) => $q->where('user_id', $value))),
+                AllowedFilter::callback('shift_id', fn($query, $value) => $query->whereHas('attendance', fn($q) => $q->where('shift_id', $value))),
             ])
             ->allowedIncludes([
                 AllowedInclude::callback('attendance', function ($query) {
                     $query->select('id', 'schedule_id', 'shift_id', 'code')
-                        ->with('shift', fn ($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
+                        ->with('shift', fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
                 }),
             ])
             ->allowedSorts(['is_clock_in', 'approval_status', 'approved_by', 'created_at'])
@@ -797,6 +801,52 @@ class AttendanceController extends BaseController
         }
 
         return new AttendanceResource($attendance);
+    }
+
+    public function manualAttendance(ManualAttendanceRequest $request)
+    {
+        $user = User::find($request->user_id);
+
+        $schedule = ScheduleService::getTodaySchedule($user, $request->date, scheduleType: ScheduleType::ATTENDANCE->value);
+        $attendance = AttendanceService::getTodayAttendance($schedule->id, $request->shift_id, $user, $request->date);
+
+        DB::beginTransaction();
+        try {
+            if (!$attendance) {
+                $attendance = $user->attendances()->create([
+                    'schedule_id' => $schedule->id,
+                    'shift_id' => $request->shift_id,
+                    'date' => $request->date,
+                ]);
+            }
+
+            /** @var AttendanceDetail $attendanceDetail */
+            // clock in
+            $attendance->details()->create([
+                'is_clock_in' => true,
+                'time' => $request->date . ' ' . $request->clock_in,
+                'type' => AttendanceType::MANUAL,
+                'approval_status' => ApprovalStatus::APPROVED,
+                'approved_at' => now(),
+                'approved_by' => auth('sanctum')->id(),
+            ]);
+            // clock out
+            $attendance->details()->create([
+                'is_clock_in' => false,
+                'time' => $request->date . ' ' . $request->clock_out,
+                'type' => AttendanceType::MANUAL,
+                'approval_status' => ApprovalStatus::APPROVED,
+                'approved_at' => now(),
+                'approved_by' => auth('sanctum')->id(),
+            ]);
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return new AttendanceResource($attendance->load('details'));
     }
 
     public function update(StoreRequest $request)
@@ -920,19 +970,22 @@ class AttendanceController extends BaseController
     public function approvals()
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
-            ->whereHas('attendance.user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with('attendance', fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
-                'user' => fn ($q) => $q->select('id', 'name'),
-                'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
-                'schedule' => fn ($q) => $q->select('id', 'name')
+            ->whereHas('attendance.user', fn($q) => $q->where('approval_id', auth('sanctum')->id()))
+            ->with('attendance', fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
+                'user' => fn($q) => $q->select('id', 'name'),
+                'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                'schedule' => fn($q) => $q->select('id', 'name')
             ]));
 
         $attendances = QueryBuilder::for($query)
             ->allowedFilters([
-                'approval_status', 'created_at',
+                'approval_status',
+                'created_at',
             ])
             ->allowedSorts([
-                'id', 'approval_status', 'created_at',
+                'id',
+                'approval_status',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -943,11 +996,11 @@ class AttendanceController extends BaseController
     {
         $attendanceDetail->load(
             [
-                'attendance' => fn ($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
+                'attendance' => fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
                     ->with([
-                        'user' => fn ($q) => $q->select('id', 'name'),
-                        'shift' => fn ($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
-                        'schedule' => fn ($q) => $q->select('id', 'name')
+                        'user' => fn($q) => $q->select('id', 'name'),
+                        'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                        'schedule' => fn($q) => $q->select('id', 'name')
                     ])
             ]
         );
