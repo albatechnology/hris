@@ -13,6 +13,7 @@ use App\Enums\PanicStatus;
 use App\Enums\PatrolTaskStatus;
 use App\Http\Requests\Api\Panic\UpdateRequest;
 use App\Models\UserPatrol;
+use Carbon\Carbon;
 
 class UserPatrolController extends BaseController
 {
@@ -34,17 +35,25 @@ class UserPatrolController extends BaseController
         $q->whereDate('patrols.end_date', '>=', now());
 
         $q->whereHas('client', fn($q2) => $q2->tenanted());
-        $q->whereDoesntHave('tasks', function($q2){
-          $q2->where('status', PatrolTaskStatus::PENDING);
-        });
-      })->has('user.userPatrolLocations')
+        // $q->whereDoesntHave('tasks', function($q2){
+        //   $q2->where('status', PatrolTaskStatus::PENDING);
+        // });
+      })->whereHas('user.detail', function ($q) {
+        $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
+      })
+      // ->has('user.userPatrolLocations')
     )->allowedFilters([
       AllowedFilter::exact('id'),
       AllowedFilter::exact('user_id'),
       AllowedFilter::exact('patrol_id'),
+      AllowedFilter::callback('last_detected', function ($query, $value) {
+        $query->whereHas('user.detail', function ($q) use ($value) {
+          $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
+        });
+      }),
       AllowedFilter::callback('client_id', function ($query, $value) {
         $query->whereHas('patrol', fn($q) => $q->where('client_id', $value));
-    }),
+      }),
     ])->allowedSorts([
       'id',
       'patrol_id',

@@ -235,11 +235,11 @@ class AttendanceController extends BaseController
                     $totalTask = TaskService::getSumDuration($user, $date);
                     $attendance->total_task = $totalTask;
 
-                    if ($attendance->clockIn) {
+                    if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_late_in && $attendance->clockIn) {
                         $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
                     }
 
-                    if ($attendance->clockOut) {
+                    if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_early_out && $attendance->clockOut) {
                         $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
                     }
 

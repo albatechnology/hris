@@ -21,6 +21,7 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_overide_company_holiday',
         'is_include_late_in',
         'is_include_early_out',
+        'is_flexible',
         'deleted_by',
     ];
 
@@ -30,6 +31,7 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_overide_company_holiday' => 'boolean',
         'is_include_late_in' => 'boolean',
         'is_include_early_out' => 'boolean',
+        'is_flexible' => 'boolean',
     ];
 
     public function shifts(): BelongsToMany

@@ -5,8 +5,10 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\Gender;
+use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
+use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -119,9 +121,18 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query->first();
     }
 
-    public function scopeHasActiveSchedule(Builder $query, string $value)
+    public function scopeActivePatrolClientId(Builder $query, int $clientId)
     {
-        $query->has('activeSchedule');
+        $query->whereHas('schedules', function ($q) {
+            $q->where('schedules.type', ScheduleType::PATROL);
+            $q->whereDate('schedules.effective_date', '<=', now());
+            $q->orderBy('schedules.effective_date', 'desc');
+        })->whereHas('detail', function ($q) {
+            $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
+        })->whereHas('patrols.client', function ($q) use ($clientId) {
+            $q->tenanted();
+            $q->where('clients.id', $clientId);
+        });
     }
 
     public function scopeHasScheduleId(Builder $query, int $scheduleId)
@@ -264,13 +275,13 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsToMany(Schedule::class, 'user_schedules', 'user_id', 'schedule_id');
     }
 
-    public function activeSchedule(): HasOne
-    {
-        return $this->hasOne(UserSchedule::class)->whereHas('schedule', function ($q) {
-            $q->whereDate('effective_date', '<=', now());
-            $q->orderBy('effective_date', 'desc');
-        });
-    }
+    // public function activeSchedule(): HasOne
+    // {
+    //     return $this->hasOne(UserSchedule::class)->whereHas('schedule', function ($q) {
+    //         $q->whereDate('effective_date', '<=', now());
+    //         $q->orderBy('effective_date', 'desc');
+    //     });
+    // }
 
     public function liveAttendance(): BelongsTo
     {

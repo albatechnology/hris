@@ -33,6 +33,7 @@ class StoreRequest extends FormRequest
             'is_overide_company_holiday' => $this->toBoolean($this->is_overide_company_holiday),
             'is_include_late_in' => $this->toBoolean($this->is_include_late_in),
             'is_include_early_out' => $this->toBoolean($this->is_include_early_out),
+            'is_flexible' => $this->toBoolean($this->is_flexible),
         ]);
     }
 
@@ -52,6 +53,7 @@ class StoreRequest extends FormRequest
             'is_overide_company_holiday' => 'nullable|boolean',
             'is_include_late_in' => 'nullable|boolean',
             'is_include_early_out' => 'nullable|boolean',
+            'is_flexible' => 'nullable|boolean',
 
             'shifts' => 'nullable|array',
             // 'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],
