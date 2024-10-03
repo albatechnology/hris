@@ -30,7 +30,7 @@ class UserPatrolController extends BaseController
   public function index()
   {
     $data = QueryBuilder::for(
-      UserPatrol::with('user', 'patrol.client')->whereHas('patrol', function ($q) {
+      UserPatrol::with('user.detail', 'patrol.client')->whereHas('patrol', function ($q) {
         $q->whereDate('patrols.start_date', '<=', now());
         $q->whereDate('patrols.end_date', '>=', now());
 
