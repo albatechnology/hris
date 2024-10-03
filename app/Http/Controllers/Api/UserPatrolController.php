@@ -38,8 +38,6 @@ class UserPatrolController extends BaseController
         // $q->whereDoesntHave('tasks', function($q2){
         //   $q2->where('status', PatrolTaskStatus::PENDING);
         // });
-      })->whereHas('user.detail', function ($q) {
-        $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
       })
       // ->has('user.userPatrolLocations')
     )->allowedFilters([
