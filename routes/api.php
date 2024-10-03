@@ -250,6 +250,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('incident-types', IncidentTypeController::class);
     Route::apiResource('incidents', IncidentController::class);
 
+    Route::get('clients/summaries', [ClientController::class, 'summary']);
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('client-locations', ClientLocationController::class);
 

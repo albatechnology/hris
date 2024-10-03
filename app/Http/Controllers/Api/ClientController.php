@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Client\StoreRequest;
 use App\Http\Resources\DefaultResource;
+use App\Models\Attendance;
 use App\Models\Client;
+use App\Models\ClientLocation;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -108,5 +111,24 @@ class ClientController extends BaseController
         }
 
         return new DefaultResource($client);
+    }
+
+    public function summary()
+    {
+        $clientCount = Client::tenanted()->count();
+        $clientLocationCount = ClientLocation::whereHas('client', fn($q) => $q->tenanted())->count();
+        $userCount = User::tenanted()->count();
+        $clockInCount = Attendance::whereHas('schedule', fn($q) => $q->tenanted())->whereHas('details', fn($q) => $q->where('is_clock_in', true)->whereDate('time', now()))->count();
+        $clockOutCount = Attendance::whereHas('schedule', fn($q) => $q->tenanted())->whereHas('details', fn($q) => $q->where('is_clock_in', true)->whereDate('time', now()))->count();
+
+        $summary = [
+            'client' => $clientCount,
+            'client_location' => $clientLocationCount,
+            'active_user' => $userCount,
+            'clock_in' => $clockInCount,
+            'clock_out' => $clockOutCount,
+        ];
+
+        return new DefaultResource($summary);
     }
 }
