@@ -255,7 +255,7 @@ class AttendanceController extends BaseController
                     $shiftType = 'shift';
 
                     $companyHolidayData = null;
-                    if ($schedule->is_overide_company_holiday == false) {
+                    if ($schedule?->is_overide_company_holiday == false) {
                         $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
                             return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
                         });
@@ -266,7 +266,7 @@ class AttendanceController extends BaseController
                         }
                     }
 
-                    if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                    if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
                         $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
                         if ($nationalHoliday) {
                             $shift = $nationalHoliday;
