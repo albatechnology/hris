@@ -247,40 +247,43 @@ class AttendanceController extends BaseController
                         $attendance->real_working_hour = getIntervalTime(date('H:i:s', strtotime($attendance->clockIn->time)), date('H:i:s', strtotime($attendance->clockOut->time)));
                     }
                 } else {
-                    $shift = $schedule->shift;
+                    $shift = $schedule?->shift;
                 }
-                $shift->schedule_working_hour = getIntervalTime($shift?->clock_in, $shift?->clock_out);
-                $shiftType = 'shift';
 
-                $companyHolidayData = null;
-                if ($schedule->is_overide_company_holiday == false) {
-                    $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                        return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
-                    });
+                if ($shift) {
+                    $shift->schedule_working_hour = getIntervalTime($shift?->clock_in, $shift?->clock_out);
+                    $shiftType = 'shift';
 
-                    if ($companyHolidayData) {
-                        $shift = $companyHolidayData;
-                        $shiftType = 'company_holiday';
+                    $companyHolidayData = null;
+                    if ($schedule->is_overide_company_holiday == false) {
+                        $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+                            return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                        });
+
+                        if ($companyHolidayData) {
+                            $shift = $companyHolidayData;
+                            $shiftType = 'company_holiday';
+                        }
                     }
-                }
 
-                if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-                    $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
-                    if ($nationalHoliday) {
-                        $shift = $nationalHoliday;
-                        $shiftType = 'national_holiday';
+                    if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+                        $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                        if ($nationalHoliday) {
+                            $shift = $nationalHoliday;
+                            $shiftType = 'national_holiday';
+                        }
                     }
+
+                    unset($shift->pivot);
+
+                    $dataAttendance[] = [
+                        // 'user' => $user,
+                        'date' => $date,
+                        'shift_type' => $shiftType,
+                        'shift' => $shift,
+                        'attendance' => $attendance
+                    ];
                 }
-
-                unset($shift->pivot);
-
-                $dataAttendance[] = [
-                    // 'user' => $user,
-                    'date' => $date,
-                    'shift_type' => $shiftType,
-                    'shift' => $shift,
-                    'attendance' => $attendance
-                ];
             }
             $dataAttendance = collect($dataAttendance);
 
