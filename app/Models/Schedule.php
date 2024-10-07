@@ -22,6 +22,7 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_include_late_in',
         'is_include_early_out',
         'is_flexible',
+        'is_generate_timeoff',
         'deleted_by',
     ];
 
@@ -32,6 +33,7 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_include_late_in' => 'boolean',
         'is_include_early_out' => 'boolean',
         'is_flexible' => 'boolean',
+        'is_generate_timeoff' => 'boolean',
     ];
 
     public function shifts(): BelongsToMany

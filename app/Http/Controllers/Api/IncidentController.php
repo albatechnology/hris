@@ -25,7 +25,7 @@ class IncidentController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Incident::tenanted()->with('media'))
+        $data = QueryBuilder::for(Incident::tenanted()->with(['user.company', 'incidentType', 'media']))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),

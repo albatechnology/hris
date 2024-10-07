@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('schedules', function (Blueprint $table) {
-            $table->boolean('is_flexible')->default(0)->after('is_include_early_out');
+            $table->boolean('is_generate_timeoff')->default(0)->after('is_flexible');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('schedules', function (Blueprint $table) {
-            $table->dropColumn('is_flexible');
+            $table->dropColumn('is_generate_timeoff');
         });
     }
 };
