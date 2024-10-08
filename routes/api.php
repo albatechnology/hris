@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
+use App\Http\Controllers\Api\RequestScheduleController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -72,6 +73,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);
+    Route::post('users/update-device', [UserController::class, 'updateDevice']);
     Route::get('users/tasks', [UserController::class, 'tasks']);
     Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
     Route::put('users/password', [UserController::class, 'updatePassword']);
@@ -138,6 +140,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('attendances/employees', [AttendanceController::class, 'employees']);
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
     Route::get('attendances/report/{export?}', [AttendanceController::class, 'report']);
+    Route::post('attendances/manual-attendances', [AttendanceController::class, 'manualAttendance']);
     Route::post('attendances/request', [AttendanceController::class, 'request']);
     Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
     Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
@@ -219,6 +222,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 
+    Route::apiResource('request-schedules', RequestScheduleController::class);
+    Route::put('request-schedules/{request_schedule}/approve', [RequestScheduleController::class, 'approve']);
+
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);
     Route::put('task-requests/{task_request}/approve', [TaskRequestController::class, 'approve']);
@@ -248,6 +254,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('incident-types', IncidentTypeController::class);
     Route::apiResource('incidents', IncidentController::class);
 
+    Route::get('clients/summaries', [ClientController::class, 'summary']);
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('client-locations', ClientLocationController::class);
 

@@ -35,6 +35,9 @@ class PatrolController extends BaseController
                 $q->whereHas('users', function($q2) use($user){
                     $q2->where('user_patrols.user_id', $user->id);
                 });
+
+                $q->whereDate('patrols.start_date', '<=', now());
+                $q->whereDate('patrols.end_date', '>=', now());
             }
         }))->allowedIncludes(['client'])
             ->allowedFilters([
