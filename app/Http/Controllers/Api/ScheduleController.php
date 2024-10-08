@@ -80,13 +80,13 @@ class ScheduleController extends BaseController
     {
         DB::beginTransaction();
         try {
+            $schedule->shifts()->sync([]);
             $schedule->update($request->validated());
 
-            $data = [];
+            $order = 1;
             foreach ($request->shifts ?? [] as $shift) {
-                $data[$shift['id']] = ['order' => $shift['order']];
+                $schedule->shifts()->attach($shift['id'], ['order' => $order++]);
             }
-            $schedule->shifts()->sync($data);
 
             DB::commit();
         } catch (Exception $th) {

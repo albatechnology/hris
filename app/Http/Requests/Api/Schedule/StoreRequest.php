@@ -62,7 +62,7 @@ class StoreRequest extends FormRequest
             'shifts.*.id' => [
                 'required',
                 function ($attribute, $value, $fail) {
-                    if (!Shift::tenanted()->where('id', $value)->exists()) {
+                    if (Shift::tenanted()->where('id', $value)->doesntExist()) {
                         if (Shift::whereNull('company_id')->where('id', $value)->first(['id'])) return;
                         $fail("Shift {$value} not found");
                     };
