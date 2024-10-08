@@ -34,11 +34,17 @@ class ScheduleController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
-                'name', 'type', 'effective_date',
+                'name',
+                'type',
+                'effective_date',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'effective_date', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'effective_date',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -47,7 +53,7 @@ class ScheduleController extends BaseController
 
     public function show(Schedule $schedule)
     {
-        return new ScheduleResource($schedule->load(['shifts' => fn ($q) => $q->orderBy('order')]));
+        return new ScheduleResource($schedule->load(['shifts' => fn($q) => $q->orderBy('order')]));
     }
 
     public function store(StoreRequest $request)
@@ -56,11 +62,10 @@ class ScheduleController extends BaseController
         try {
             $schedule = Schedule::create($request->validated());
 
-            $data = [];
+            $order = 1;
             foreach ($request->shifts ?? [] as $shift) {
-                $data[$shift['id']] = ['order' => $shift['order']];
+                $schedule->shifts()->attach($shift['id'], ['order' => $order++]);
             }
-            $schedule->shifts()->sync($data);
 
             DB::commit();
         } catch (Exception $th) {
