@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
+use App\Http\Controllers\Api\RequestScheduleController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -220,6 +221,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('request-change-datas/approvals/count-total', [RequestChangeDataController::class, 'countTotalApprovals']);
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
+
+    Route::apiResource('request-schedules', RequestScheduleController::class);
+    Route::put('request-schedules/{request_schedule}/approve', [RequestScheduleController::class, 'approve']);
 
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);

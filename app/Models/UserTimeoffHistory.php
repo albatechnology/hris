@@ -13,6 +13,7 @@ class UserTimeoffHistory extends BaseModel
         'PERIOD_EXPIRED' => 'Timeoff expired',
         'PERIOD_RENEWED' => 'Timeoff renewed in new period',
         'ADD_TOTAL_REMAINING_TIMEOFF' => 'Add remaining timeoff',
+        'DISCIPLINE_REWARD' => 'Discipline reward',
         'ADJUST' => 'Timeoff adjusted',
         'TIMEOFF' => 'Timeoff: %s',
         'ADVANCED_LEAVE' => 'Advanced leave',
