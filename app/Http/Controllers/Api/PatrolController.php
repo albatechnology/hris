@@ -11,6 +11,7 @@ use App\Models\UserPatrol;
 use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -31,8 +32,8 @@ class PatrolController extends BaseController
         $data = QueryBuilder::for(Patrol::tenanted()->where(function ($q) {
             $user = auth('sanctum')->user();
 
-            if($user->parent_id){
-                $q->whereHas('users', function($q2) use($user){
+            if ($user->parent_id) {
+                $q->whereHas('users', function ($q2) use ($user) {
                     $q2->where('user_patrols.user_id', $user->id);
                 });
 
@@ -214,11 +215,13 @@ class PatrolController extends BaseController
     public function destroy(Patrol $patrol)
     {
         try {
+            Schema::disableForeignKeyConstraints();
             $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
             $patrol->users()->delete();
             $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->delete());
             $patrol->patrolLocations()->delete();
             $patrol->delete();
+            Schema::enableForeignKeyConstraints();
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
