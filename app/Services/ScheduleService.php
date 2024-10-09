@@ -15,7 +15,7 @@ class ScheduleService
     /**
      * get user today schedule.
      */
-    public static function getTodaySchedule(?User $user = null, $date = null, array $scheduleColumn = [], array $shiftColumn = [], string $scheduleType = 'attendance')
+    public static function getTodaySchedule(?User $user = null, $date = null, array $scheduleColumn = [], array $shiftColumn = [], string $scheduleType = ScheduleType::ATTENDANCE->value)
     {
         if (!$user) {
             /** @var User $user */
@@ -41,7 +41,7 @@ class ScheduleService
         $order = $order > 0 ? $order : $schedule->shifts_count;
 
         unset($schedule->pivot);
-        return $schedule->load(['shift' => fn ($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
+        return $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
     }
 
     /**
