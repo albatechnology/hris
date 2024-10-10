@@ -341,7 +341,7 @@ class AttendanceController extends BaseController
         $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
-        $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
+        $schedule = ScheduleService::getTodaySchedule($user, $endDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
         if ($schedule) {
             $order = $schedule->shifts->where('id', $schedule->shift->id);
             $orderKey = array_keys($order->toArray())[0];
