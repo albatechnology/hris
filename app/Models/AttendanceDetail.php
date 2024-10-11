@@ -57,8 +57,10 @@ class AttendanceDetail extends BaseModel implements HasMedia
 
     public function scopeApproved(Builder $q)
     {
-        $q->where('type', AttendanceType::AUTOMATIC)
-            ->orWhere(fn ($q) => $q->whereNot('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED));
+        $q->where(
+            fn($q) => $q->where('type', AttendanceType::AUTOMATIC)->orWhere('approval_status', ApprovalStatus::APPROVED)
+            // ->orWhere(fn($q) => $q->whereNot('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED))
+        );
     }
 
     public function getImageAttribute()

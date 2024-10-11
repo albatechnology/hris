@@ -37,7 +37,7 @@ class AuthController extends BaseController
             'data' => ['token' => $user->createToken('default')->plainTextToken],
         ]);
     }
-    
+
     public function resendSetupPassword(ResendSetupPasswordRequest $request)
     {
         try {
@@ -51,13 +51,13 @@ class AuthController extends BaseController
 
             $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
             $user->notify(new ($notificationType->getNotificationClass())($notificationType));
-            
+
             return response()->json('success', 200);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
     }
-    
+
     public function setupPassword(SetupPasswordRequest $request)
     {
         try {
@@ -78,7 +78,7 @@ class AuthController extends BaseController
                 'email_verified_at' => now(),
                 'password' => $request->password,
             ]);
-            
+
             return response()->json('success', 200);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
