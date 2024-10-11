@@ -11,7 +11,7 @@ use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Requests\Api\User\FcmTokenRequest;
-use App\Http\Requests\Api\User\ResendSetupPasswordRequest;
+use App\Http\Requests\Api\User\SetSupervisorRequest;
 use App\Http\Requests\Api\User\UpdateDeviceRequest;
 use App\Http\Requests\Api\User\UpdatePasswordRequest;
 use App\Http\Resources\Branch\BranchResource;
@@ -77,38 +77,40 @@ class UserController extends BaseController
         $users = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
                 ->with(['roles' => fn($q) => $q->select('id', 'name'), 'patrols.client'])
-        )->allowedFilters([
-            AllowedFilter::exact('id'),
-            AllowedFilter::exact('branch_id'),
-            AllowedFilter::exact('parent_id'),
-            AllowedFilter::exact('approval_id'),
-            AllowedFilter::scope('has_schedule_id'),
-            AllowedFilter::scope('job_level'),
-            AllowedFilter::callback('has_active_patrol', function ($query, $value) {
-                $query->whereHas('patrols', function ($q) {
-                    $q->whereDate('patrols.start_date', '<=', now());
-                    $q->whereDate('patrols.end_date', '>=', now());
+        )
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+                AllowedFilter::exact('branch_id'),
+                AllowedFilter::exact('parent_id'),
+                AllowedFilter::exact('approval_id'),
+                AllowedFilter::scope('has_schedule_id'),
+                AllowedFilter::scope('job_level'),
+                AllowedFilter::callback('has_active_patrol', function ($query, $value) {
+                    $query->whereHas('patrols', function ($q) {
+                        $q->whereDate('patrols.start_date', '<=', now());
+                        $q->whereDate('patrols.end_date', '>=', now());
 
-                    $q->whereHas('client', fn($q2) => $q2->tenanted());
-                    // $q->whereDoesntHave('tasks', function($q2){
-                    //   $q2->where('status', PatrolTaskStatus::PENDING);
-                    // });
-                });
-            }),
-            AllowedFilter::callback('last_detected', function ($query, $value) {
-                $query->whereHas('detail', function ($q) use ($value) {
-                    $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
-                });
-            }),
-            AllowedFilter::callback('client_id', function ($query, $value) {
-                $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
-            }),
-            'name',
-            'email',
-            'type',
-            'nik',
-            'phone',
-        ])->allowedIncludes($this->getAllowedIncludes())
+                        $q->whereHas('client', fn($q2) => $q2->tenanted());
+                        // $q->whereDoesntHave('tasks', function($q2){
+                        //   $q2->where('status', PatrolTaskStatus::PENDING);
+                        // });
+                    });
+                }),
+                AllowedFilter::callback('last_detected', function ($query, $value) {
+                    $query->whereHas('detail', function ($q) use ($value) {
+                        $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
+                    });
+                }),
+                AllowedFilter::callback('client_id', function ($query, $value) {
+                    $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
+                }),
+                'name',
+                'email',
+                'type',
+                'nik',
+                'phone',
+            ])
+            ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
                 'branch_id',
@@ -448,9 +450,9 @@ class UserController extends BaseController
         $user->update([
             'fcm_token' => $request->fcm_token,
         ]);
-        $user = QueryBuilder::for(User::where('id', $user->id))
-            ->allowedIncludes($this->getAllowedIncludes())
-            ->firstOrFail();
+        // $user = QueryBuilder::for(User::where('id', $user->id))
+        //     ->allowedIncludes($this->getAllowedIncludes())
+        //     ->firstOrFail();
 
         return new UserResource($user);
     }
@@ -462,9 +464,9 @@ class UserController extends BaseController
         $user->update([
             'password' => Hash::make($request->new_password),
         ]);
-        $user = QueryBuilder::for(User::where('id', $user->id))
-            ->allowedIncludes($this->getAllowedIncludes())
-            ->firstOrFail();
+        // $user = QueryBuilder::for(User::where('id', $user->id))
+        //     ->allowedIncludes($this->getAllowedIncludes())
+        //     ->firstOrFail();
 
         return new UserResource($user);
     }
@@ -492,5 +494,41 @@ class UserController extends BaseController
         }
 
         return (new UserResource($user->load('detail')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+    }
+
+    // public function getAvailableSupervisor(int $positionId)
+    // {
+    //     $position = Position::findOrFail($positionId, ['id', 'order']);
+
+    //     $users = User::select('id', 'name')->tenanted()
+    //         ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $position->order)))
+    //         ->with('userPositions', fn($q) => $q->select('id', 'order')->orderByDesc('order'))
+    //         ->paginate();
+
+    //     $users->map(function ($user) {
+    //         $user->position_id = $user->userPositions[0]->id;
+    //     });
+
+    //     return UserResource::collection($users);
+    // }
+
+    public function getAvailableSupervisor(User $user)
+    {
+        $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
+
+        $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
+
+        $users = User::select('id','name')->tenanted()->where('id', '!=', $user->id)
+            ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)))
+            ->paginate();
+
+        return UserResource::collection($users);
+    }
+
+    public function setSupervisors(User $user, SetSupervisorRequest $request)
+    {
+        $user->supervisors()->createMany($request->data);
+
+        return $this->updatedResponse();
     }
 }

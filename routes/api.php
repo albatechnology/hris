@@ -91,6 +91,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::put('bpjs-configuration', [UserPayrollInfoController::class, 'bpjsConfiguration']);
         Route::put('payroll-component', [UserPayrollInfoController::class, 'payrollComponent']);
         Route::post('request-change-data', [UserController::class, 'requestChangeData']);
+        Route::get('get-available-supervisors', [UserController::class, 'getAvailableSupervisor']);
+        Route::post('set-supervisors', [UserController::class, 'setSupervisors']);
     });
 
     Route::apiResource('users', UserController::class);
@@ -128,6 +130,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('schedules/today', [ScheduleController::class, 'today']);
     Route::group(['prefix' => 'schedules/{schedule}'], function () {
         // Route::put('shifts', [ScheduleController::class, 'updateShifts']);
+        Route::get('download-template-import', [ScheduleController::class, 'downloadTemplateImport']);
+        Route::post('import-shifts', [ScheduleController::class, 'importShifts']);
         Route::get('users', [UserScheduleController::class, 'index']);
         Route::post('users', [UserScheduleController::class, 'store']);
         Route::put('restore', [ScheduleController::class, 'restore']);

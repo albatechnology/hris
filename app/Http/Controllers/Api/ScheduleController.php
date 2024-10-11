@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\ImportScheduleShiftsExport;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Requests\Api\Schedule\TodayScheduleRequest;
 use App\Http\Resources\Schedule\ScheduleResource;
 use App\Http\Resources\Schedule\TodayScheduleResource;
+use App\Imports\ImportShiftsImport;
 use App\Models\Schedule;
 use App\Services\ScheduleService;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -51,8 +55,9 @@ class ScheduleController extends BaseController
         return ScheduleResource::collection($data);
     }
 
-    public function show(Schedule $schedule)
+    public function show(int $id)
     {
+        $schedule = Schedule::tenanted()->where('id', $id)->firstOrFail();
         return new ScheduleResource($schedule->load(['shifts' => fn($q) => $q->orderBy('order')]));
     }
 
@@ -129,5 +134,24 @@ class ScheduleController extends BaseController
         }
 
         return new TodayScheduleResource($schedule);
+    }
+
+    public function downloadTemplateImport(int $id, Request $request)
+    {
+        $schedule = Schedule::tenanted()->where('id', $id)->firstOrFail();
+
+        return Excel::download(new ImportScheduleShiftsExport($schedule), 'import shifts - ' . $schedule->name . '.xlsx');
+    }
+
+    public function importShifts(int $id, Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,xls,xlsx',
+        ]);
+
+        $schedule = Schedule::tenanted()->where('id', $id)->firstOrFail();
+
+        Excel::import(new ImportShiftsImport($schedule), $request->file);
+        return $this->updatedResponse();
     }
 }

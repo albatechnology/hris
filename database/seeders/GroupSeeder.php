@@ -14,8 +14,8 @@ class GroupSeeder extends Seeder
     {
         $positions = [
             [
-                'name' => 'Direktur',
-                'order' => 1,
+                'name' => 'Staff',
+                'order' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -26,11 +26,11 @@ class GroupSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Staff',
-                'order' => 3,
+                'name' => 'Direktur',
+                'order' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         // $division = new Division([

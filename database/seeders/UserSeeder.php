@@ -151,7 +151,7 @@ class UserSeeder extends Seeder
                         [
                             'name' => 'Ibnul Mundzir',
                             'email' => 'ibnulmundzir97@gmail.com',
-                            'image' => public_path('img/ibnul.jpg')
+                            'image' => public_path('img/ibnul-patroli.jpeg')
                         ],
                         [
                             'name' => 'Masfud Difa Pratama',

@@ -378,6 +378,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         DB::table('model_has_roles')->where('model_type', get_class($this))->where('model_id', $this->id)->delete();
     }
 
+    public function supervisors()
+    {
+        return $this->hasMany(UserSupervisor::class);
+    }
+
     public function getTotalWorkingMonth(?string $cutoffDate = null, bool $returnAllData = false): int|array
     {
         if ($cutoffDate == null) {
