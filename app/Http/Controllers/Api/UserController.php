@@ -461,14 +461,16 @@ class UserController extends BaseController
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        $user->update([
-            'password' => Hash::make($request->new_password),
-        ]);
-        // $user = QueryBuilder::for(User::where('id', $user->id))
-        //     ->allowedIncludes($this->getAllowedIncludes())
-        //     ->firstOrFail();
 
-        return new UserResource($user);
+        if (Hash::check($request->old_password, $user->password)) {
+            $user->update([
+                'password' => Hash::make($request->new_password),
+            ]);
+
+            return $this->updatedResponse('Password updated successfully');
+        }
+
+        return $this->errorResponse(message: 'Failed to update password', code: Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function updateDevice(UpdateDeviceRequest $request)
@@ -518,7 +520,7 @@ class UserController extends BaseController
 
         $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
-        $users = User::select('id','name')->tenanted()->where('id', '!=', $user->id)
+        $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
             ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)))
             ->paginate();
 

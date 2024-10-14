@@ -19,9 +19,9 @@ class BaseController extends Controller
         return response()->json(['message' => 'Data created successfully']);
     }
 
-    public function updatedResponse()
+    public function updatedResponse(string $message = 'Data updated successfully')
     {
-        return response()->json(['message' => 'Data updated successfully'], 202);
+        return response()->json(['message' => $message], 202);
     }
 
     public function deletedResponse()
