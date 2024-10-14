@@ -8,12 +8,12 @@ enum SettingKey: string
 {
     use BaseEnum;
 
-    case PROFILE_PICTURE_APPROVER = 'profile_picture_approver';
+    case REQUEST_CHANGE_DATA_APPROVER = 'request_change_data_approver';
 
     public function getValueType(): mixed
     {
         return match ($this) {
-            self::PROFILE_PICTURE_APPROVER => SettingValueType::MODEL,
+            self::REQUEST_CHANGE_DATA_APPROVER => SettingValueType::MODEL,
             default => null,
         };
     }
@@ -21,7 +21,7 @@ enum SettingKey: string
     public function getSource(): mixed
     {
         return match ($this) {
-            self::PROFILE_PICTURE_APPROVER => route('users.index'),
+            self::REQUEST_CHANGE_DATA_APPROVER => route('users.index'),
             default => null,
         };
     }
@@ -36,7 +36,7 @@ enum SettingKey: string
     public function getValidationRules(): mixed
     {
         return match ($this) {
-            self::PROFILE_PICTURE_APPROVER => [
+            self::REQUEST_CHANGE_DATA_APPROVER => [
                 'nullable',
                 new CompanyTenantedRule(\App\Models\User::class, 'User not found')
             ],
@@ -47,7 +47,7 @@ enum SettingKey: string
     // public function getDescription(): string
     // {
     //     return match ($this) {
-    //         self::PROFILE_PICTURE_APPROVER => 'profile_picture_approver',
+    //         self::REQUEST_CHANGE_DATA_APPROVER => 'REQUEST_CHANGE_DATA_approver',
     //         default => '',
     //     };
     // }
