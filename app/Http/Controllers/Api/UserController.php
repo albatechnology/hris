@@ -464,7 +464,7 @@ class UserController extends BaseController
 
         if (Hash::check($request->old_password, $user->password)) {
             $user->update([
-                'password' => Hash::make($request->new_password),
+                'password' => $request->new_password,
             ]);
 
             return $this->updatedResponse('Password updated successfully');
