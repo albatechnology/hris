@@ -3,17 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\JobLevel;
-use App\Enums\NotificationType;
 use App\Http\Requests\Api\Announcement\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Jobs\Announcement\NotifyAnnouncement;
-use App\Mail\SetupPasswordMailer;
 use App\Models\Announcement;
 use App\Models\User;
-use App\Notifications\Announcement\AnnouncementNotification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 

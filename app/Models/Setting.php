@@ -4,12 +4,18 @@ namespace App\Models;
 
 use App\Enums\SettingKey;
 use App\Enums\SettingValueType;
-
-// use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Traits\Models\CompanyTenanted;
 
 class Setting extends BaseModel
 {
-    protected $guarded = [];
+    use CompanyTenanted;
+
+    protected $fillable = [
+        'company_id',
+        'key',
+        'value',
+        'value_type',
+    ];
 
     protected $casts = [
         'key' => SettingKey::class,

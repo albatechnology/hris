@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Enums\TimeoffRenewType;
 use App\Models\Company;
+use App\Services\SettingService;
 use App\Services\TimeoffRegulationService;
 
 class CompanyObserver
@@ -16,6 +17,8 @@ class CompanyObserver
         TimeoffRegulationService::create($company, TimeoffRenewType::PERIOD);
         $company->createPayrollSetting();
         \App\Models\RequestChangeDataAllowes::createForCompany($company);
+
+        SettingService::create($company);
     }
 
     /**

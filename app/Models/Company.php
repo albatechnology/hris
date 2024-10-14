@@ -127,6 +127,11 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(CustomField::class);
     }
 
+    public function settings(): HasMany
+    {
+        return $this->hasMany(Setting::class);
+    }
+
     public function createPayrollSetting(): void
     {
         $this->payrollSetting()->create([

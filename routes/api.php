@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\RequestScheduleController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
 use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\TaskController;
@@ -282,4 +283,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('user-patrols', UserPatrolController::class);
 
     Route::apiResource('npp', NppController::class);
+
+    Route::apiResource('settings', SettingController::class);
 });

@@ -274,6 +274,10 @@ class PermissionService
                 'patrol_edit',
                 'patrol_delete',
             ],
+            'setting_access' => [
+                'setting_read',
+                'setting_edit',
+            ],
         ];
     }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Company;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,10 +14,13 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique();
-            $table->text('value');
+            $table->foreignIdFor(Company::class)->constrained();
+            $table->string('key');
+            $table->text('value')->nullable();
             $table->string('value_type');
             $table->timestamps();
+
+            $table->unique(['company_id', 'key']);
         });
     }
 
