@@ -158,6 +158,12 @@ class PermissionService
                 'payroll_component_edit',
                 'payroll_component_delete',
             ],
+            'payroll_setting_access' => [
+                'payroll_setting_read',
+                // 'payroll_setting_create',
+                'payroll_setting_edit',
+                // 'payroll_setting_delete',
+            ],
             'run_payroll_access' => [
                 'run_payroll_read',
                 'run_payroll_create',
@@ -371,7 +377,7 @@ class PermissionService
             'payroll_setting_access' => [
                 'payroll_setting_read',
                 // 'payroll_setting_create',
-                // 'payroll_setting_edit',
+                'payroll_setting_edit',
                 // 'payroll_setting_delete',
             ],
             'run_payroll_access' => [
