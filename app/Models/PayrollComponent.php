@@ -31,6 +31,8 @@ class PayrollComponent extends BaseModel
         'is_one_time_bonus',
         'is_include_backpay',
         'is_default',
+        'is_hidden',
+        'is_calculateable',
     ];
 
     protected $casts = [
@@ -47,6 +49,8 @@ class PayrollComponent extends BaseModel
         'is_one_time_bonus' => 'boolean',
         'is_include_backpay' => 'boolean',
         'is_default' => 'boolean',
+        'is_hidden' => 'boolean',
+        'is_calculateable' => 'boolean',
     ];
 
     protected static function booted(): void

@@ -11,7 +11,7 @@ enum SettingValueType: string
     case ARRAY = 'array';
     case MODEL = 'model';
     // case JSON = 'json';
-    // case FLOAT = 'float';
+    case FLOAT = 'float';
     // case DATE = 'date';
     // case DATETIME = 'datetime';
 }

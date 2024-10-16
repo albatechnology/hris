@@ -2,9 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\CountrySettingKey;
+use App\Enums\PayrollComponentCategory;
+use App\Enums\PayrollComponentDailyMaximumAmountType;
+use App\Enums\PayrollComponentPeriodType;
+use App\Enums\PayrollComponentSetting;
+use App\Enums\PayrollComponentType;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
+use App\Models\Company;
+use App\Models\Country;
+use App\Models\CountrySetting;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
@@ -40,7 +49,11 @@ class RunPayrollController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'period', 'payment_schedule', 'created_at',
+                'id',
+                'company_id',
+                'period',
+                'payment_schedule',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -54,6 +67,18 @@ class RunPayrollController extends BaseController
 
     public function store(StoreRequest $request): RunPayrollResource|JsonResponse
     {
+        $company = Company::find($request->company_id);
+        if($company->countryTable?->id == 1){
+            foreach (CountrySettingKey::all() as $countrySettingKey => $countrySettingLabel) {
+                $countrySetting = CountrySetting::where([
+                    ['country_id', '=', $company->countryTable->id],
+                    ['key', '=', $countrySettingKey],
+                ])->first();
+    
+                if (!$countrySetting)  return response()->json(['message' => 'Please set Country Setting before submit Run Payroll: ' . $countrySettingKey], 400);
+            }
+        }
+
         $runPayroll = app(RunPayrollService::class)->execute($request->validated());
 
         if (!$runPayroll instanceof RunPayroll && !$runPayroll->getData()?->success) return response()->json($runPayroll->getData(), 400);

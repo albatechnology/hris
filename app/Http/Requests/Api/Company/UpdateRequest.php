@@ -24,6 +24,7 @@ class UpdateRequest extends FormRequest
         return [
             'group_id' => 'required|exists:groups,id',
             'name' => 'required|string',
+            'country_id' => 'nullable|integer',
             'country' => 'nullable|string',
             'province' => 'nullable|string',
             'city' => 'nullable|string',

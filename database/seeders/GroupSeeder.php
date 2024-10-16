@@ -68,6 +68,7 @@ class GroupSeeder extends Seeder
         $company = $group->companies()->create([
             'name' => 'SUN INDONESIA',
             'address' => 'Gedung SUN Plaza, Jl. Meruya Ilir Raya No.20, RT.4/RW.7, Meruya Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610',
+            'country_id' => 1,
             'country' => 'Indonesia',
             'province' => 'DKI Jakarta',
             'city' => 'Jakarta Barat',
@@ -76,7 +77,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'SUN Plaza',
@@ -104,6 +105,7 @@ class GroupSeeder extends Seeder
         $company = $group->companies()->create([
             'name' => 'SUN ASA EDUCATION',
             'address' => 'Sunway Geo Avenue, Sunway South Quay, Jalan Lagoon Selatan, Bandar Sunway, 47500 Subang Jaya, Selangor, Malaysia',
+            'country_id' => 1,
             'country' => 'Malaysia',
             'province' => 'Selangor',
             'city' => 'Subang Jaya',
@@ -112,7 +114,7 @@ class GroupSeeder extends Seeder
             'lng' => '101.5256048',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'SUNWAY Geo',
@@ -144,6 +146,7 @@ class GroupSeeder extends Seeder
         $company = $group->companies()->create([
             'name' => 'Alba Digital Technology',
             'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
+            'country_id' => 1,
             'country' => 'Indonesia',
             'province' => 'Banten',
             'city' => 'Kota Tangerang Selatan',
@@ -152,7 +155,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.6645009',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'Alba Alam Sutera',
@@ -186,6 +189,7 @@ class GroupSeeder extends Seeder
         $company = $group->companies()->create([
             'name' => 'PT. Patroli 86',
             'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
+            'country_id' => 1,
             'country' => 'Indonesia',
             'province' => 'DKI Jakarta',
             'city' => 'Jakarta Barat',
@@ -194,7 +198,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
         ]);
         $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional ('.$company->name.')']);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
             'name' => 'Branch Patroli 1',

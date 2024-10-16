@@ -358,6 +358,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(RequestSchedule::class);
     }
 
+    public function userBpjs(): HasOne
+    {
+        return $this->hasOne(UserBpjs::class);
+    }
+
     public function getIsSuperAdminAttribute(): bool
     {
         return $this->type->is(UserType::SUPER_ADMIN);

@@ -22,6 +22,7 @@ class Company extends BaseModel implements TenantedInterface
     protected $fillable = [
         'group_id',
         'name',
+        'country_id',
         'country',
         'province',
         'city',
@@ -117,6 +118,16 @@ class Company extends BaseModel implements TenantedInterface
         return $this->belongsTo(Group::class);
     }
 
+    public function countryTable(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    public function npp(): HasOne
+    {
+        return $this->hasOne(Npp::class);
+    }
+
     public function supervisorType(): BelongsTo
     {
         return $this->belongsTo(SupervisorType::class);
@@ -178,5 +189,201 @@ class Company extends BaseModel implements TenantedInterface
             'is_include_backpay' => false,
             'is_default' => true,
         ]);
+
+        if($this->countryTable?->id == 1){
+            $this->payrollComponents()->create([
+                'name' => 'BPJS Kesehatan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::BPJS_KESEHATAN,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_calculateable' => false,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_calculateable' => false,
+            ]);
+    
+    
+            $this->payrollComponents()->create([
+                'name' => 'Company - BPJS Kesehatan',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+                'is_calculateable' => false,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Employee - BPJS Kesehatan',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Company - BPJS Ketenagakerjaan (JKK)',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JKK,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+                'is_calculateable' => false,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Company - BPJS Ketenagakerjaan (JKM)',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JKM,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+                'is_calculateable' => false,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Company - BPJS Ketenagakerjaan (JHT)',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JHT,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+                'is_calculateable' => false,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Employee - BPJS Ketenagakerjaan (JHT)',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::EMPLOYEE_JHT,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Company - BPJS Ketenagakerjaan (JP)',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JP,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+                'is_calculateable' => false,
+            ]);
+    
+            $this->payrollComponents()->create([
+                'name' => 'Employee - BPJS Ketenagakerjaan (JP)',
+                'asdkiwasdkiw' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::EMPLOYEE_JP,
+                'setting' => PayrollComponentSetting::DEFAULT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_daily_default' => false,
+                'daily_maximum_amount_type' => PayrollComponentDailyMaximumAmountType::NOT_USE,
+                'daily_maximum_amount' => 0,
+                'is_one_time_bonus' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+        }
     }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PayrollComponentCategory;
 use App\Http\Requests\Api\UpdatePayrollComponent\StoreRequest;
 use App\Http\Requests\Api\UpdatePayrollComponent\UpdateRequest;
 use App\Http\Resources\UpdatePayrollComponent\UpdatePayrollComponentResource;
+use App\Models\PayrollComponent;
 use App\Models\UpdatePayrollComponent;
+use App\Models\User;
 use App\Services\FormulaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -63,6 +66,15 @@ class UpdatePayrollComponentController extends BaseController
             $updatePayrollComponent = UpdatePayrollComponent::create($request->validated());
             $updatePayrollComponent->details()->createMany($request->details);
 
+            foreach($request->details as $detail){
+                $user = User::find($detail->user_id);
+                $payrollComponent = PayrollComponent::find($detail->payroll_component_id);
+
+                if($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail->new_amount]);
+                if($payrollComponent->category->is(PayrollComponentCategory::BPJS_KESEHATAN)) $user->userBpjs()->update(['upah_bpjs_kesehatan' => $detail->new_amount]);
+                if($payrollComponent->category->is(PayrollComponentCategory::BPJS_KETENAGAKERJAAN)) $user->userBpjs()->update(['upah_bpjs_ketenagakerjaan' => $detail->new_amount]);
+            }
+
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -81,6 +93,15 @@ class UpdatePayrollComponentController extends BaseController
 
             $updatePayrollComponent->details()->delete();
             $updatePayrollComponent->details()->createMany($request->details);
+
+            foreach($request->details as $detail){
+                $user = User::find($detail->user_id);
+                $payrollComponent = PayrollComponent::find($detail->payroll_component_id);
+
+                if($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail->new_amount]);
+                if($payrollComponent->category->is(PayrollComponentCategory::BPJS_KESEHATAN)) $user->userBpjs()->update(['upah_bpjs_kesehatan' => $detail->new_amount]);
+                if($payrollComponent->category->is(PayrollComponentCategory::BPJS_KETENAGAKERJAAN)) $user->userBpjs()->update(['upah_bpjs_ketenagakerjaan' => $detail->new_amount]);
+            }
 
             DB::commit();
         } catch (\Exception $th) {
