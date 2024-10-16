@@ -707,10 +707,8 @@ class RunPayrollService
         }
 
         $taxNominal = $grossSalary * ($taxPercentage / 100);
-        
+
         $deduction = $deduction + $taxNominal;
-        
-        dd($taxNominal);
 
         $runPayrollUser->update([
             'basic_salary' => $basicSalary,
@@ -814,7 +812,7 @@ class RunPayrollService
 //  }else{
 //     $taxPercentage = 0;
 //  }
- 
+
 //  TABLE B
 //  if($grossSalary <= 6200000){
 //     $taxPercentage = 0;
@@ -899,7 +897,7 @@ class RunPayrollService
 //  }else{
 //     $taxPercentage = 0;
 //  }
- 
+
 //  TABLE C
 //  if($grossSalary <= 6600000){
 //     $taxPercentage = 0;
