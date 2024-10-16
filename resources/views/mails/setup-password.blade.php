@@ -229,10 +229,10 @@
                                       </tbody>
                                     </table>
                                     <p style="line-height: 24px; text-align:center; font-size: 18px; width: 100%; margin: 0;" align="center">
-                                      THANKS FOR SIGNING UP
+                                      HI THERE
                                     </p>
                                     <p style="line-height: 24px; text-align:center; font-size: 24px; font-weight: bold; width: 100%; margin: 0;" align="center">
-                                      Verify your Email Address
+                                      Setup your account
                                     </p>
                                   </div>
                                   <table class="card-body" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;">
@@ -246,7 +246,7 @@
                                                 <td style="line-height: 24px; font-size: 16px; padding-top: 20px; padding-bottom: 20px; margin: 0;" align="left">
                                                   <div class="">
                                                     <p style="line-height: 24px; text-align:center; font-size: 16px; width: 100%; margin: 0;" align="center">
-                                                      You're almost ready to get started. Please click on the button below to verify your email address and set your password
+                                                      Please click on the button below to set your password
                                                     </p>
                                                     <table class="s-10 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
                                                       <tbody>
@@ -262,7 +262,7 @@
                                                         <tr>
                                                           <td style="line-height: 24px; font-size: 16px; border-radius: 6px; margin: 0;" align="center">
                                                             <a href="{{ $url }}" target="_blank" style="background-color: #1D4076; color: #212121; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: bold; white-space: nowrap; padding: 13px 30px; border: 1px solid transparent;">
-                                                              Verify your Account
+                                                              Setup Password
                                                             </a>
                                                           </td>
                                                         </tr>

