@@ -153,10 +153,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query;
     }
 
-    // public function getParentIdName()
-    // {
-    //     return 'parent';
-    // }
+    public function getFullNameAttribute()
+    {
+        return sprintf('%s%s', $this->name, ' ' . $this->last_name);
+    }
 
     protected function serializeDate(\DateTimeInterface $date): string
     {

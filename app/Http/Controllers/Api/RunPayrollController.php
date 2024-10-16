@@ -3,21 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\CountrySettingKey;
-use App\Enums\PayrollComponentCategory;
-use App\Enums\PayrollComponentDailyMaximumAmountType;
-use App\Enums\PayrollComponentPeriodType;
-use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
+use App\Exports\RunPayrollExport;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
 use App\Models\Company;
-use App\Models\Country;
 use App\Models\CountrySetting;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
-use App\Services\FormulaService;
 use App\Services\RunPayrollService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -68,13 +63,13 @@ class RunPayrollController extends BaseController
     public function store(StoreRequest $request): RunPayrollResource|JsonResponse
     {
         $company = Company::find($request->company_id);
-        if($company->countryTable?->id == 1){
+        if ($company->countryTable?->id == 1) {
             foreach (CountrySettingKey::all() as $countrySettingKey => $countrySettingLabel) {
                 $countrySetting = CountrySetting::where([
                     ['country_id', '=', $company->countryTable->id],
                     ['key', '=', $countrySettingKey],
                 ])->first();
-    
+
                 if (!$countrySetting)  return response()->json(['message' => 'Please set Country Setting before submit Run Payroll: ' . $countrySettingKey], 400);
             }
         }
@@ -145,5 +140,17 @@ class RunPayrollController extends BaseController
         }
 
         return $this->deletedResponse();
+    }
+
+    public function export(RunPayroll $runPayroll)
+    {
+        $runPayroll->load([
+            'users.user' => fn($q) => $q->with('positions', fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name'))),
+            'users.components.payrollComponent',
+            'company' => fn($q) => $q->select('id', 'name')
+        ]);
+
+        // return $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::BENEFIT);
+        return (new RunPayrollExport($runPayroll))->download("payroll $runPayroll->period .xlsx");
     }
 }

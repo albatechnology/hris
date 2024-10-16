@@ -220,6 +220,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 
     Route::put('run-payrolls/user-components/{run_payroll_user}', [RunPayrollController::class, 'updateUserComponent']);
+    Route::get('run-payrolls/{run_payroll}/export', [RunPayrollController::class, 'export']);
     Route::apiResource('run-payrolls', RunPayrollController::class);
 
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
