@@ -31,18 +31,6 @@
     </thead>
     <tbody>
         @foreach ($runPayroll->users as $runPayrollUser)
-            @php
-                $totalAllowance = $runPayrollUser->components
-                    ->where('payrollComponent.type', $payrollComponentType::ALLOWANCE)
-                    ->sum('amount');
-                $totalDeduction = $runPayrollUser->components
-                    ->where('payrollComponent.type', $payrollComponentType::DEDUCTION)
-                    ->sum('amount');
-                $totalBenefit = $runPayrollUser->components
-                    ->where('payrollComponent.type', $payrollComponentType::BENEFIT)
-                    ->sum('amount');
-                $thp = $runPayrollUser->basic_salary + $totalAllowance + $totalBenefit - $totalDeduction;
-            @endphp
             <tr>
                 <td>{{ $runPayrollUser->user->nik }}</td>
                 <td>{{ $runPayrollUser->user->full_name }}</td>
@@ -54,22 +42,22 @@
                     <th>{{ $runPayrollUser->components->firstWhere('payroll_component_id', $allowance->id)?->amount }}
                     </th>
                 @endforeach
-                <td>{{ $totalAllowance }}</td>
+                <td>{{ $runPayrollUser->allowance }}</td>
 
                 @foreach ($deductions as $deduction)
                     <th>{{ $runPayrollUser->components->firstWhere('payroll_component_id', $deduction->id)?->amount }}
                     </th>
                 @endforeach
-                <td>{{ $totalDeduction }}</td>
+                <td>{{ $runPayrollUser->deduction }}</td>
 
-                <td>0</td>
-                <td>{{ $thp }}</td>
+                <td>{{ $runPayrollUser->tax }}</td>
+                <td>{{ $runPayrollUser->thp }}</td>
 
                 @foreach ($benefits as $benefit)
                     <th>{{ $runPayrollUser->components->firstWhere('payroll_component_id', $benefit->id)?->amount }}
                     </th>
                 @endforeach
-                <td>{{ $totalBenefit }}</td>
+                <td>{{ $runPayrollUser->benefit }}</td>
             </tr>
         @endforeach
     </tbody>

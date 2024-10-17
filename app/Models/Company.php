@@ -206,7 +206,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_one_time_bonus' => false,
                 'is_include_backpay' => false,
                 'is_default' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
@@ -224,7 +224,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_one_time_bonus' => false,
                 'is_include_backpay' => false,
                 'is_default' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
 
@@ -244,7 +244,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
@@ -281,7 +281,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
@@ -300,7 +300,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
@@ -319,7 +319,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
@@ -356,7 +356,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => false,
+                'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([

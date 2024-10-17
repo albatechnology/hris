@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('run_payroll_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->unsignedDouble('basic_salary', 13, 2)->nullable();
-            $table->unsignedDouble('allowance', 13, 2)->nullable();
-            $table->unsignedDouble('additional_earning', 13, 2)->nullable();
-            $table->unsignedDouble('deduction', 13, 2)->nullable();
-            $table->unsignedDouble('benefit', 13, 2)->nullable();
+            $table->unsignedDouble('basic_salary', 13, 2)->default(0);
+            $table->unsignedDouble('allowance', 13, 2)->default(0);
+            $table->unsignedDouble('additional_earning', 13, 2)->default(0);
+            $table->unsignedDouble('deduction', 13, 2)->default(0);
+            $table->unsignedDouble('benefit', 13, 2)->default(0);
+            $table->unsignedDouble('tax', 13, 2)->default(0);
             $table->timestamps();
         });
     }

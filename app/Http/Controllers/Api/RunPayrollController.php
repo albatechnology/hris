@@ -150,7 +150,6 @@ class RunPayrollController extends BaseController
             'company' => fn($q) => $q->select('id', 'name')
         ]);
 
-        // return $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::BENEFIT);
         return (new RunPayrollExport($runPayroll))->download("payroll $runPayroll->period .xlsx");
     }
 }

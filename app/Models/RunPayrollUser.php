@@ -15,6 +15,7 @@ class RunPayrollUser extends BaseModel
         'additional_earning',
         'deduction',
         'benefit',
+        'tax',
     ];
 
     protected $casts = [
@@ -25,7 +26,17 @@ class RunPayrollUser extends BaseModel
         'additional_earning' => 'double',
         'deduction' => 'double',
         'benefit' => 'double',
+        'tax' => 'double',
     ];
+
+    protected $appends = [
+        'thp'
+    ];
+
+    public function getThpAttribute()
+    {
+        return $this->basic_salary + $this->allowance + $this->additional_earning + $this->benefit - $this->deduction - $this->tax;
+    }
 
     public function runPayroll(): BelongsTo
     {

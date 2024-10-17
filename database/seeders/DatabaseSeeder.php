@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             CustomFieldSeeder::class,
             NationalHolidaySeeder::class,
             TaskSeeder::class,
-            PayrollComponentSeeder::class,
+            // PayrollComponentSeeder::class,
             ClientSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();

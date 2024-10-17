@@ -90,11 +90,11 @@ class RunPayrollService
         $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
         $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period'])->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
+        $company = Company::find($request['company_id']);
 
         // calculate for each user
         foreach (explode(',', $request['user_ids']) as $userId) {
             $runPayrollUser = self::assignUser($runPayroll, $userId);
-            $company = Company::find($request['company_id']);
 
             // updated payroll component
             $updatePayrollComponent = UpdatePayrollComponent::tenanted()->where(function ($q) use ($request, $userId) {
@@ -115,6 +115,8 @@ class RunPayrollService
             // default payroll component
             $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('is_default', true)->whereNotIn('category', [
                 PayrollComponentCategory::OVERTIME,
+                PayrollComponentCategory::BPJS_KESEHATAN,
+                PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
                 PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
                 PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
                 PayrollComponentCategory::COMPANY_JKK,
@@ -124,9 +126,11 @@ class RunPayrollService
                 PayrollComponentCategory::COMPANY_JP,
                 PayrollComponentCategory::EMPLOYEE_JP,
             ])->get();
+
             foreach ($defaultPayrollComponents as $defaultPayrollComponent) {
                 // check if payroll component is updated on UpdatePayrollComponent::class
                 $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->first();
+
                 if ($updatePayrollComponentDetail) {
                     $amount = $updatePayrollComponentDetail->new_amount;
 
@@ -233,7 +237,8 @@ class RunPayrollService
             }
 
             // overtime payroll component
-            $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
+            $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first(['id']);
+
             if ($overtimePayrollComponent) {
                 // get overtime setting
                 $overtime = $runPayrollUser->user->overtime;
@@ -431,12 +436,13 @@ class RunPayrollService
             $q->where('is_calculateable', true);
         })->sum('amount');
 
-        $grossSalary = $basicSalary + $allowance + $additionalEarning + $deduction;
+        $grossSalary = $basicSalary + $allowance + $additionalEarning + $benefit - $deduction;
+
         $taxPercentage = 0;
 
         if (in_array($runPayrollUser->user->payrollInfo->ptkp_status, [PtkpStatus::TK_0, PtkpStatus::TK_1, PtkpStatus::K_0])) {
             if ($grossSalary <= 5400000) {
-                $taxPercentage = 0;
+                $taxPercentage = 2;
             } else if ($grossSalary > 5400000 && $grossSalary < 5650000) {
                 $taxPercentage = 0.25;
             } else if ($grossSalary > 5650000 && $grossSalary < 5950000) {
@@ -704,7 +710,7 @@ class RunPayrollService
 
         $taxNominal = $grossSalary * ($taxPercentage / 100);
 
-        $deduction = $deduction + $taxNominal;
+        // $deduction = $deduction + $taxNominal;
 
         $runPayrollUser->update([
             'basic_salary' => $basicSalary,
@@ -712,6 +718,7 @@ class RunPayrollService
             'additional_earning' => $additionalEarning,
             'deduction' => $deduction,
             'benefit' => $benefit,
+            'tax' => $taxNominal,
         ]);
     }
 }

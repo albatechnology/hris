@@ -1,0 +1,4 @@
+1. setting payroll di setiap user, termasuk overtime. set overtime_id di table users
+2. cek payroll components(allowance, deduction, benefit), udah ada apa belum. siapa tau belum ada
+3. cek payroll setting udah ada apa belum
+4. country setting
