@@ -95,7 +95,7 @@ class UpdatePayrollComponentController extends BaseController
             $updatePayrollComponent->details()->createMany($request->details);
 
             foreach($request->details as $detail){
-                $user = User::find($detail->user_id);
+                $user = User::find($detail['user_id']);
                 $payrollComponent = PayrollComponent::find($detail['payroll_component_id']);
 
                 if($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail['new_amount']]);
