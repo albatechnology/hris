@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 abstract class RequestedBaseModel extends BaseModel implements Requested
 {
+    protected $appends = [
+        'approval_status'
+    ];
+
     protected static function booted(): void
     {
         static::created(function (self $model) {
