@@ -9,7 +9,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Builder;
 
-class AttendanceDetail extends BaseModel implements HasMedia
+class AttendanceDetail extends RequestedBaseModel implements HasMedia
 {
     use InteractsWithMedia;
 
@@ -18,9 +18,9 @@ class AttendanceDetail extends BaseModel implements HasMedia
         'is_clock_in',
         'time',
         'type',
-        'approval_status',
-        'approved_by',
-        'approved_at',
+        // 'approval_status',
+        // 'approved_by',
+        // 'approved_at',
         'lat',
         'lng',
         'note',
@@ -29,13 +29,15 @@ class AttendanceDetail extends BaseModel implements HasMedia
     protected $casts = [
         'is_clock_in' => 'boolean',
         'type' => AttendanceType::class,
-        'approval_status' => ApprovalStatus::class,
+        // 'approval_status' => ApprovalStatus::class,
     ];
 
-    protected $appends = ['image'];
+    protected $appends = ['approval_status', 'image'];
 
     protected static function booted(): void
     {
+        parent::booted();
+
         static::creating(function (self $model) {
             if ($model->type->is(AttendanceType::MANUAL)) {
                 $model->approved_by = $model->attendance->user->approval?->id ?? null;

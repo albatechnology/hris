@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Models\BelongsToUser;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserSupervisor extends BaseModel
 {
@@ -13,4 +14,9 @@ class UserSupervisor extends BaseModel
         'supervisor_id',
         'order',
     ];
+
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
+    }
 }

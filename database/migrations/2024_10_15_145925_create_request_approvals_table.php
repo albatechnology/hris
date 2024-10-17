@@ -13,13 +13,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('request_change_data', function (Blueprint $table) {
+        Schema::create('request_approvals', function (Blueprint $table) {
             $table->id();
+            $table->morphs('requestable');
             $table->foreignIdFor(User::class)->constrained();
+
+            $table->string('approval_status')->default(ApprovalStatus::PENDING);
+            $table->datetime('approved_at')->nullable();
             $table->text('description')->nullable();
-            // $table->string('approval_status')->default(ApprovalStatus::PENDING);
-            // $table->foreignId('approved_by')->nullable()->constrained('users');
-            // $table->datetime('approved_at')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('request_change_data');
+        Schema::dropIfExists('request_approvals');
     }
 };

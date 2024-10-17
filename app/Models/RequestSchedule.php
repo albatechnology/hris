@@ -2,21 +2,21 @@
 
 namespace App\Models;
 
-use App\Enums\ApprovalStatus;
 use App\Enums\ScheduleType;
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CustomSoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class RequestSchedule extends BaseModel implements TenantedInterface
+class RequestSchedule extends RequestedBaseModel implements TenantedInterface
 {
-    use CompanyTenanted, CustomSoftDeletes;
+    use BelongsToUser, CompanyTenanted, CustomSoftDeletes;
 
     protected $fillable = [
         'company_id',
+        'user_id',
         'type',
         'name',
         'effective_date',
@@ -27,9 +27,9 @@ class RequestSchedule extends BaseModel implements TenantedInterface
         'is_flexible',
         'is_generate_timeoff',
         'description',
-        'approval_status',
-        'approved_by',
-        'approved_at',
+        // 'approval_status',
+        // 'approved_by',
+        // 'approved_at',
     ];
 
     protected $casts = [
@@ -40,14 +40,15 @@ class RequestSchedule extends BaseModel implements TenantedInterface
         'is_include_early_out' => 'boolean',
         'is_flexible' => 'boolean',
         'is_generate_timeoff' => 'boolean',
-        'approval_status' => ApprovalStatus::class
+        // 'approval_status' => ApprovalStatus::class
     ];
 
     protected static function booted(): void
     {
-        static::creating(function (self $model) {
-            $model->approved_by = $model->user->approval?->id ?? null;
-        });
+        parent::booted();
+        // static::creating(function (self $model) {
+        //     $model->approved_by = $model->user->approval?->id ?? null;
+        // });
     }
 
     public function requestScheduleShifts(): HasMany
@@ -60,8 +61,8 @@ class RequestSchedule extends BaseModel implements TenantedInterface
         return $this->belongsToMany(Shift::class, RequestScheduleShift::class)->withPivot('order');
     }
 
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+    // public function approvedBy(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'approved_by');
+    // }
 }

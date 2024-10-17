@@ -228,8 +228,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
     Route::apiResource('request-change-datas', RequestChangeDataController::class)->only(['index', 'show']);
 
-    Route::apiResource('request-schedules', RequestScheduleController::class);
+    Route::get('request-schedules/approvals', [RequestScheduleController::class, 'approvals']);
+    Route::get('request-schedules/approvals/count-total', [RequestScheduleController::class, 'countTotalApprovals']);
     Route::put('request-schedules/{request_schedule}/approve', [RequestScheduleController::class, 'approve']);
+    Route::apiResource('request-schedules', RequestScheduleController::class);
 
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);

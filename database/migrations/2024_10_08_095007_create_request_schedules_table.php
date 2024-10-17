@@ -28,12 +28,12 @@ return new class extends Migration
             $table->boolean('is_include_early_out')->default(0);
             $table->boolean('is_flexible')->default(0);
             $table->boolean('is_generate_timeoff')->default(0);
-            
+
             $table->text('description')->nullable();
-            $table->string('approval_status')->default(ApprovalStatus::PENDING);
-            $table->foreignId('approved_by')->nullable()->constrained('users');
-            $table->datetime('approved_at')->nullable();
-            
+            // $table->string('approval_status')->default(ApprovalStatus::PENDING);
+            // $table->foreignId('approved_by')->nullable()->constrained('users');
+            // $table->datetime('approved_at')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
         });

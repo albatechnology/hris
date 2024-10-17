@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
-use App\Enums\RequestChangeDataType;
-use App\Http\Requests\Api\ApproveRequest;
+use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RequestChangeData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -43,35 +43,29 @@ class RequestChangeDataController extends BaseController
     {
         return new DefaultResource($requestChangeData->load([
             'details',
-            'user' => fn ($q) => $q->select('id', 'name'),
-            'approvedBy' => fn ($q) => $q->select('id', 'name'),
+            'user' => fn($q) => $q->select('id', 'name'),
+            'approvedBy' => fn($q) => $q->select('id', 'name'),
         ]));
     }
 
-    public function approve(ApproveRequest $request, RequestChangeData $requestChangeData): DefaultResource|JsonResponse
+    public function approve(NewApproveRequest $request, RequestChangeData $requestChangeData): DefaultResource|JsonResponse
     {
-        if (!$requestChangeData->approval_status->is(ApprovalStatus::PENDING)) {
-            return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
+        $requestApproval = $requestChangeData->approvals()->where('user_id', auth()->id())->first();
+
+        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+
+        if (!$requestChangeData->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if ($requestChangeData->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         DB::beginTransaction();
         try {
-            $requestChangeData->update($request->validated());
-            if ($requestChangeData->approval_status->is(ApprovalStatus::APPROVED)) {
-                $requestChangeData->load(['user' => fn ($q) => $q->select('id')]);
-                $user = $requestChangeData->user;
-
-                $requestChangeData->details->each(function (\App\Models\RequestChangeDataDetail $detail) use ($user) {
-                    if ($detail->type->is(RequestChangeDataType::PHOTO_PROFILE)) {
-                        $detail->getFirstMedia(\App\Enums\MediaCollection::REQUEST_CHANGE_DATA->value)->copy($user, \App\Enums\MediaCollection::USER->value);
-                    } else {
-                        RequestChangeDataType::updateData($detail->type, $user->id, $detail->value);
-                    }
-                });
-            }
+            $requestApproval->update($request->validated());
 
             $notificationType = NotificationType::REQUEST_CHANGE_DATA_APPROVED;
-            $requestChangeData->user->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->approvedBy, $requestChangeData->approval_status, $requestChangeData));
+            $requestChangeData->user->notify(new ($notificationType->getNotificationClass())($notificationType, auth()->user(), $requestApproval->approval_status, $requestChangeData));
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -81,29 +75,59 @@ class RequestChangeDataController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
+    public function countTotalApprovals(\Illuminate\Http\Request $request)
     {
-        $total = DB::table('request_change_data')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $request->validate([
+            'filter.approval_status' => ['required', \Illuminate\Validation\Rule::in([...ApprovalStatus::cases(), 'on_progress'])],
+        ]);
+
+        // $total = DB::table('request_change_data')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = RequestChangeData::myApprovals()
+            ->whereApprovalStatus($request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }
 
     public function approvals()
     {
-        $query = RequestChangeData::tenanted()->whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with('user', fn ($q) => $q->select('id', 'name'));
+        $query = RequestChangeData::myApprovals()
+            // ->whereHas('user', fn($q) => $q->where('approval_id', auth('sanctum')->id()))
+            ->with('user', fn($q) => $q->select('id', 'name'))
+            ->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')));
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                'approval_status'
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus')
             ])
             ->allowedIncludes('details')
             ->allowedSorts([
-                'id', 'user_id',
+                'id',
+                'user_id',
             ])
             ->paginate($this->per_page);
 
         return DefaultResource::collection($data);
     }
+
+    // public function approvals()
+    // {
+    //     $query = RequestChangeData::tenanted()
+    //         ->whereHas('user', fn($q) => $q->where('approval_id', auth('sanctum')->id()))
+    //         ->with('user', fn($q) => $q->select('id', 'name'));
+
+    //     $data = QueryBuilder::for($query)
+    //         ->allowedFilters([
+    //             AllowedFilter::exact('user_id'),
+    //             'approval_status'
+    //         ])
+    //         ->allowedIncludes('details')
+    //         ->allowedSorts([
+    //             'id',
+    //             'user_id',
+    //         ])
+    //         ->paginate($this->per_page);
+
+    //     return DefaultResource::collection($data);
+    // }
 }

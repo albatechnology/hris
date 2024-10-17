@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Notifications\RequestChangeData;
+namespace App\Notifications\RequestSchedule;
 
 use App\Enums\NotificationType;
-use App\Models\RequestChangeData as RequestChangeDataModel;
+use App\Models\RequestSchedule as RequestScheduleModel;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RequestChangeData extends Notification
+class RequestSchedule extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private RequestChangeDataModel $requestChangeData)
+    public function __construct(private NotificationType $notificationType, private User $user, private RequestScheduleModel $RequestSchedule)
     {
         //
     }
@@ -55,7 +55,7 @@ class RequestChangeData extends Notification
             'message' => sprintf($this->notificationType->getMessage()),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
-            'model_id' => $this->requestChangeData->id
+            'model_id' => $this->RequestSchedule->id
         ];
     }
 
@@ -74,7 +74,7 @@ class RequestChangeData extends Notification
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,
-                'notifiable_id' => $this->requestChangeData->id,
+                'notifiable_id' => $this->RequestSchedule->id,
             ],
         ];
     }

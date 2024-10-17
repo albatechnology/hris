@@ -411,8 +411,9 @@ class UserController extends BaseController
 
                 $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
 
-                $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
-                $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
+                // moved to RequestApprovalService
+                // $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
+                // $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
             }
 
             if (count($dataAllowedToUpdate) > 0) {

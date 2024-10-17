@@ -20,9 +20,9 @@ return new class extends Migration
             $table->string('type', 20);
             $table->string('lat')->nullable();
             $table->string('lng')->nullable();
-            $table->string('approval_status')->default(ApprovalStatus::PENDING);
-            $table->dateTime('approved_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users');
+            // $table->string('approval_status')->default(ApprovalStatus::PENDING);
+            // $table->dateTime('approved_at')->nullable();
+            // $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->text('note')->nullable();
             $table->timestamps();
         });

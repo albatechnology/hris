@@ -20,7 +20,6 @@ class AttendanceApproved extends Notification
      */
     public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private AttendanceDetail $attendanceDetail)
     {
-        //
     }
 
     /**

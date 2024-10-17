@@ -10,13 +10,13 @@ use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Exports\AttendanceReport;
-use App\Http\Requests\Api\Attendance\ApproveAttendanceRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
 use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
+use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Http\Resources\DefaultResource;
@@ -33,6 +33,7 @@ use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -74,8 +75,8 @@ class AttendanceController extends BaseController
     //             ->with([
     //                 'shift' => fn ($q) => $q->select('id', 'name'),
     //                 'timeoff.timeoffPolicy',
-    //                 'clockIn' => fn ($q) => $q->approved(),
-    //                 'clockOut' => fn ($q) => $q->approved(),
+    //                 'clockIn' => fn ($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+    //                 'clockOut' => fn ($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
     //             ])
     //             ->whereDateBetween($startDate, $endDate)
     //             ->limit($this->per_page)
@@ -198,8 +199,8 @@ class AttendanceController extends BaseController
                 ->with([
                     'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->approved(),
-                    'clockOut' => fn($q) => $q->approved(),
+                    'clockIn' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+                    'clockOut' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
@@ -349,13 +350,13 @@ class AttendanceController extends BaseController
 
             $attendances = Attendance::tenanted()
                 ->where('user_id', $user->id)
-                ->whereHas('details', fn($q) => $q->approved())
+                ->whereHas('details', fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED))
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->approved(),
-                    'clockOut' => fn($q) => $q->approved(),
-                    'details' => fn($q) => $q->approved()->orderBy('created_at')
+                    'clockIn' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+                    'clockOut' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+                    'details' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED)->orderBy('created_at')
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
@@ -676,12 +677,12 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->whereHas('details', fn($q) => $q->approved())
+                ->whereHas('details', fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED))
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->approved(),
-                    'clockOut' => fn($q) => $q->approved(),
+                    'clockIn' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+                    'clockOut' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
                     // 'details' => fn ($q) => $q->orderBy('created_at')
                 ])->first();
 
@@ -798,7 +799,8 @@ class AttendanceController extends BaseController
                 $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
 
-            AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
+            // moved to AttendanceDetail booted created
+            // AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -975,7 +977,7 @@ class AttendanceController extends BaseController
     public function approvals()
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
-            ->whereHas('attendance.user', fn($q) => $q->where('approval_id', auth('sanctum')->id()))
+            ->myApprovals()
             ->with('attendance', fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
                 'user' => fn($q) => $q->select('id', 'name'),
                 'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
@@ -984,12 +986,11 @@ class AttendanceController extends BaseController
 
         $attendances = QueryBuilder::for($query)
             ->allowedFilters([
-                'approval_status',
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'created_at',
             ])
             ->allowedSorts([
                 'id',
-                'approval_status',
                 'created_at',
             ])
             ->paginate($this->per_page);
@@ -1013,17 +1014,35 @@ class AttendanceController extends BaseController
         return new AttendanceDetailResource($attendanceDetail);
     }
 
-    public function approve(AttendanceDetail $attendanceDetail, ApproveAttendanceRequest $request)
+    public function approve(AttendanceDetail $attendanceDetail, NewApproveRequest $request)
     {
-        if (!$attendanceDetail->approval_status->is(ApprovalStatus::PENDING)) {
-            return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
+        // if (!$attendanceDetail->approval_status->is(ApprovalStatus::PENDING)) {
+        //     return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
+
+        $requestApproval = $attendanceDetail->approvals()->where('user_id', auth()->id())->first();
+
+        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+
+        if (!$attendanceDetail->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if ($attendanceDetail->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $attendanceDetail->update($request->validated());
+        DB::beginTransaction();
+        try {
+            $requestApproval->update($request->validated());
 
-        $notificationType = NotificationType::ATTENDANCE_APPROVED;
-        $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, $attendanceDetail->approvedBy, $attendanceDetail->approval_status, $attendanceDetail));
+            // $notificationType = NotificationType::ATTENDANCE_APPROVED;
+            // $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, auth()->user(), $requestApproval->approval_status, $attendanceDetail));
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
 
-        return new AttendanceDetailResource($attendanceDetail);
+        // return new AttendanceDetailResource($attendanceDetail);
+        return $this->updatedResponse();
     }
 }

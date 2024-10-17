@@ -26,6 +26,9 @@ enum NotificationType: string
     case REQUEST_CHANGE_DATA = 'request_change_data';
     case REQUEST_CHANGE_DATA_APPROVED = 'request_change_data_approved';
 
+    case REQUEST_SCHEDULE = 'request_schedule';
+    case REQUEST_SCHEDULE_APPROVED = 'request_schedule_approved';
+
     case SETUP_PASSWORD = 'setup_password';
 
     public function getNotificationClass(): string
@@ -44,6 +47,8 @@ enum NotificationType: string
             self::ADVANCED_LEAVE_APPROVED => \App\Notifications\AdvancedLeave\AdvancedLeaveApproved::class,
             self::REQUEST_CHANGE_DATA => \App\Notifications\RequestChangeData\RequestChangeData::class,
             self::REQUEST_CHANGE_DATA_APPROVED => \App\Notifications\RequestChangeData\RequestChangeDataApproved::class,
+            self::REQUEST_SCHEDULE => \App\Notifications\RequestSchedule\RequestSchedule::class,
+            self::REQUEST_SCHEDULE_APPROVED => \App\Notifications\RequestSchedule\RequestScheduleApproved::class,
             self::SETUP_PASSWORD => \App\Notifications\User\SetupPasswordNotification::class,
         };
     }
@@ -63,6 +68,8 @@ enum NotificationType: string
             self::ADVANCED_LEAVE_APPROVED => 'Your advanced leave request has been %s.', // approved/rejected
             self::REQUEST_CHANGE_DATA => 'Requesting change data',
             self::REQUEST_CHANGE_DATA_APPROVED => 'Your change data request has been %s.', // approved/rejected
+            self::REQUEST_SCHEDULE => 'Requesting schedule',
+            self::REQUEST_SCHEDULE_APPROVED => 'Your schedule request has been %s.', // approved/rejected
             default => null,
         };
     }

@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Notifications\RequestChangeData;
+namespace App\Notifications\RequestSchedule;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
-use App\Models\RequestChangeData as RequestChangeDataModel;
+use App\Models\RequestSchedule;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RequestChangeData extends Notification
+class RequestScheduleApproved extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private RequestChangeDataModel $requestChangeData)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private RequestSchedule $RequestSchedule)
     {
         //
     }
@@ -52,10 +53,10 @@ class RequestChangeData extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage()),
+            'message' => sprintf($this->notificationType->getMessage(), $this->approvalStatus->value),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
-            'model_id' => $this->requestChangeData->id
+            'model_id' => $this->RequestSchedule->id
         ];
     }
 
@@ -64,7 +65,7 @@ class RequestChangeData extends Notification
      */
     public function toFcm(object $notifiable): array
     {
-        $body = sprintf($this->notificationType->getMessage());
+        $body = sprintf($this->notificationType->getMessage(), $this->approvalStatus->value);
 
         return [
             'token' => $notifiable->fcm_token,
@@ -74,7 +75,7 @@ class RequestChangeData extends Notification
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,
-                'notifiable_id' => $this->requestChangeData->id,
+                'notifiable_id' => $this->RequestSchedule->id,
             ],
         ];
     }
