@@ -442,7 +442,7 @@ class RunPayrollService
 
         if (in_array($runPayrollUser->user->payrollInfo->ptkp_status, [PtkpStatus::TK_0, PtkpStatus::TK_1, PtkpStatus::K_0])) {
             if ($grossSalary <= 5400000) {
-                $taxPercentage = 2;
+                $taxPercentage = 0;
             } else if ($grossSalary > 5400000 && $grossSalary < 5650000) {
                 $taxPercentage = 0.25;
             } else if ($grossSalary > 5650000 && $grossSalary < 5950000) {
@@ -708,9 +708,9 @@ class RunPayrollService
             }
         }
 
-        $taxNominal = $grossSalary * ($taxPercentage / 100);
+        $tax = $grossSalary * ($taxPercentage / 100);
 
-        // $deduction = $deduction + $taxNominal;
+        // $deduction = $deduction + $tax;
 
         $runPayrollUser->update([
             'basic_salary' => $basicSalary,
@@ -718,7 +718,7 @@ class RunPayrollService
             'additional_earning' => $additionalEarning,
             'deduction' => $deduction,
             'benefit' => $benefit,
-            'tax' => $taxNominal,
+            'tax' => $tax,
         ]);
     }
 }
