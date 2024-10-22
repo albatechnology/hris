@@ -32,8 +32,12 @@ class UserPayrollInfoController extends BaseController
 
     public function bpjsConfiguration(User $user, BpjsConfigurationStoreRequest $request)
     {
-        $user->payrollInfo->update($request->validated());
-        return new UserResource($user->load('payrollInfo.components'));
+        $user->userBpjs()->updateOrCreate(
+            ['user_id' => $user->id],
+            $request->validated()
+        );
+
+        return new UserResource($user->load('userBpjs'));
     }
 
     public function payrollComponent(User $user, PayrollComponentStoreRequest $request)

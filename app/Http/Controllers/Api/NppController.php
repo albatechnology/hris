@@ -39,7 +39,7 @@ class NppController extends BaseController
         'company_id',
         'name',
         'number',
-        'jkk',
+        'jkk_tier',
         'created_at',
       ])
       ->paginate($this->per_page);

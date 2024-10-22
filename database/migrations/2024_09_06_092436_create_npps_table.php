@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\JkkTier;
 use App\Models\Company;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,7 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(Company::class)->constrained();
             $table->string('name');
             $table->integer('number');
-            $table->float('jkk');
+            $table->unsignedSmallInteger('jkk_tier')->default(JkkTier::VERY_LOW->value);
             $table->timestamps();
             $table->softDeletes();
         });

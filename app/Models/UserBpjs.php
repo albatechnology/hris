@@ -11,7 +11,7 @@ class UserBpjs extends BaseModel
         'upah_bpjs_kesehatan',
         'upah_bpjs_ketenagakerjaan',
         'bpjs_ketenagakerjaan_no',
-        'npp_id',
+        // 'npp_id',
         'bpjs_ketenagakerjaan_date',
         'bpjs_kesehatan_no',
         'bpjs_kesehatan_family_no',

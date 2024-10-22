@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\NppBpjsKetenagakerjaan;
 use App\Models\Npp;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -19,7 +20,8 @@ return new class extends Migration
             $table->integer('upah_bpjs_kesehatan')->default(0);
             $table->integer('upah_bpjs_ketenagakerjaan')->default(0);
             $table->string('bpjs_ketenagakerjaan_no');
-            $table->foreignIdFor(Npp::class)->constrained();
+            // $table->foreignIdFor(Npp::class)->constrained();
+            $table->string('npp_bpjs_ketenagakerjaan')->default(NppBpjsKetenagakerjaan::DEFAULT);
             $table->date('bpjs_ketenagakerjaan_date');
             $table->string('bpjs_kesehatan_no');
             $table->string('bpjs_kesehatan_family_no');

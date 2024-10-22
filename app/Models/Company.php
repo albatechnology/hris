@@ -206,7 +206,7 @@ class Company extends BaseModel implements TenantedInterface
                 'is_one_time_bonus' => false,
                 'is_include_backpay' => false,
                 'is_default' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
@@ -224,12 +224,12 @@ class Company extends BaseModel implements TenantedInterface
                 'is_one_time_bonus' => false,
                 'is_include_backpay' => false,
                 'is_default' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
 
             $this->payrollComponents()->create([
-                'name' => 'Company - BPJS Kesehatan',
+                'name' => 'BPJS Kesehatan',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -244,12 +244,12 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Employee - BPJS Kesehatan',
-                'type' => PayrollComponentType::BENEFIT,
+                'name' => 'BPJS Kesehatan',
+                'type' => PayrollComponentType::DEDUCTION,
                 'category' => PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
                 'setting' => PayrollComponentSetting::DEFAULT,
                 'amount' => 0,
@@ -266,7 +266,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Company - BPJS Ketenagakerjaan (JKK)',
+                'name' => 'BPJS Ketenagakerjaan (JKK)',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JKK,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -281,11 +281,11 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Company - BPJS Ketenagakerjaan (JKM)',
+                'name' => 'BPJS Ketenagakerjaan (JKM)',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JKM,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -300,11 +300,11 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Company - BPJS Ketenagakerjaan (JHT)',
+                'name' => 'BPJS Ketenagakerjaan (JHT)',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JHT,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -319,12 +319,12 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Employee - BPJS Ketenagakerjaan (JHT)',
-                'type' => PayrollComponentType::BENEFIT,
+                'name' => 'BPJS Ketenagakerjaan (JHT)',
+                'type' => PayrollComponentType::DEDUCTION,
                 'category' => PayrollComponentCategory::EMPLOYEE_JHT,
                 'setting' => PayrollComponentSetting::DEFAULT,
                 'amount' => 0,
@@ -341,7 +341,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Company - BPJS Ketenagakerjaan (JP)',
+                'name' => 'BPJS Ketenagakerjaan (JP)',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JP,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -356,12 +356,12 @@ class Company extends BaseModel implements TenantedInterface
                 'is_include_backpay' => false,
                 'is_default' => true,
                 'is_hidden' => true,
-                'is_calculateable' => true,
+                // 'is_calculateable' => true,
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'Employee - BPJS Ketenagakerjaan (JP)',
-                'type' => PayrollComponentType::BENEFIT,
+                'name' => 'BPJS Ketenagakerjaan (JP)',
+                'type' => PayrollComponentType::DEDUCTION,
                 'category' => PayrollComponentCategory::EMPLOYEE_JP,
                 'setting' => PayrollComponentSetting::DEFAULT,
                 'amount' => 0,

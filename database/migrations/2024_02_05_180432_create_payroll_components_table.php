@@ -31,7 +31,7 @@ return new class extends Migration
             $table->boolean('is_include_backpay')->default(0)->comment('Only for the data which had the "bpjs" value of category column');;
             $table->boolean('is_default')->default(0);
             $table->boolean('is_hidden')->default(0);
-            $table->boolean('is_calculateable')->default(1);
+            // $table->boolean('is_calculateable')->default(1);
             $table->timestamps();
         });
     }

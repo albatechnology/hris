@@ -9,6 +9,7 @@ use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\MorphManyFormulas;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollComponent extends BaseModel
@@ -32,7 +33,7 @@ class PayrollComponent extends BaseModel
         'is_include_backpay',
         'is_default',
         'is_hidden',
-        'is_calculateable',
+        // 'is_calculateable',
     ];
 
     protected $casts = [
@@ -50,7 +51,7 @@ class PayrollComponent extends BaseModel
         'is_include_backpay' => 'boolean',
         'is_default' => 'boolean',
         'is_hidden' => 'boolean',
-        'is_calculateable' => 'boolean',
+        // 'is_calculateable' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -65,5 +66,38 @@ class PayrollComponent extends BaseModel
     public function includes(): HasMany
     {
         return $this->hasMany(PayrollComponentInclude::class);
+    }
+
+    public function scopeWhereDefault(Builder $query): void
+    {
+        $query->where('is_default', true)->whereNotIn('category', [
+            PayrollComponentCategory::OVERTIME,
+            PayrollComponentCategory::BPJS_KESEHATAN,
+            PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
+            PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+            PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
+            PayrollComponentCategory::COMPANY_JKK,
+            PayrollComponentCategory::COMPANY_JKM,
+            PayrollComponentCategory::COMPANY_JHT,
+            PayrollComponentCategory::EMPLOYEE_JHT,
+            PayrollComponentCategory::COMPANY_JP,
+            PayrollComponentCategory::EMPLOYEE_JP,
+        ]);
+    }
+
+    public function scopeWhereBpjs(Builder $query): void
+    {
+        $query->where('is_default', true)->whereIn('category', [
+            // PayrollComponentCategory::BPJS_KESEHATAN,
+            // PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
+            PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+            PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
+            PayrollComponentCategory::COMPANY_JKK,
+            PayrollComponentCategory::COMPANY_JKM,
+            PayrollComponentCategory::COMPANY_JHT,
+            PayrollComponentCategory::EMPLOYEE_JHT,
+            PayrollComponentCategory::COMPANY_JP,
+            PayrollComponentCategory::EMPLOYEE_JP,
+        ]);
     }
 }

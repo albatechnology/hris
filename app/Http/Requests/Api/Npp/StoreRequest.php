@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Api\Npp;
 
+use App\Enums\JkkTier;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -29,7 +31,7 @@ class StoreRequest extends FormRequest
             'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
             'number' => 'required|numeric',
-            'jkk' => 'required|between:0,99.99',
+            'jkk_tier' => ['required', Rule::enum(JkkTier::class)],
         ];
     }
 }
