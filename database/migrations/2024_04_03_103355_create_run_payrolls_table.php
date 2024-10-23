@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->string('code')->unique();
             $table->string('period');
+            $table->date('cutoff_start_date')->nullable();
+            $table->date('cutoff_end_date')->nullable();
             $table->date('payment_schedule');
             $table->string('status', 50); // Enum from RunPayrollStatus::class
             $table->timestamps();

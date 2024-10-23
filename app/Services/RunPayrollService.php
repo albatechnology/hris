@@ -90,6 +90,7 @@ class RunPayrollService
         $cutoffAttendanceStartDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period']);
         $cutoffAttendanceEndDate = Carbon::parse($payrollSetting->cutoff_attendance_start_date . '-' . $request['period'])->addMonth(1);
         $cutoffDiffDay = $cutoffAttendanceStartDate->diff($cutoffAttendanceEndDate)->days - 1;
+
         $company = Company::find($request['company_id']);
 
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
@@ -305,6 +306,10 @@ class RunPayrollService
             // update total amount for each user
             self::refreshRunPayrollUser($runPayrollUser);
         }
+
+        $runPayroll->cutoff_start_date = $cutoffAttendanceStartDate;
+        $runPayroll->cutoff_end_date = $cutoffAttendanceEndDate;
+        $runPayroll->saveQuietly();
 
         return response()->json([
             'success' => true,
