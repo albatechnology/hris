@@ -25,7 +25,7 @@ class RunPayrollExport implements FromView
             'payrollComponentType' => PayrollComponentType::class,
             'allowances' => $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY),
             'deductions' => $payrollComponents->where('type', PayrollComponentType::DEDUCTION),
-            'benefits' => $payrollComponents->where('type', PayrollComponentType::BENEFIT),
+            'benefits' => $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]),
         ]);
     }
 }
