@@ -30,24 +30,12 @@ class RunPayrollUser extends BaseModel
     ];
 
     protected $appends = [
-        'thp',
-        'total_earning',
-        'total_deduction',
+        'thp'
     ];
 
     public function getThpAttribute()
     {
-        return $this->total_earning - $this->total_deduction;
-    }
-
-    public function getTotalEarningAttribute()
-    {
-        return $this->basic_salary + $this->allowance + $this->additional_earning;
-    }
-
-    public function getTotalDeductionAttribute()
-    {
-        return $this->deduction + $this->tax;
+        return $this->basic_salary + $this->allowance + $this->additional_earning + $this->benefit - $this->deduction - $this->tax;
     }
 
     public function runPayroll(): BelongsTo

@@ -79,7 +79,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
     Route::put('users/password', [UserController::class, 'updatePassword']);
     Route::group(['prefix' => 'users/{user}'], function () {
-        Route::get('payroll', [UserController::class, 'payroll']);
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
         Route::post('detail', [UserController::class, 'detail']);

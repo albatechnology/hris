@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\MediaCollection;
-use App\Enums\PayrollComponentType;
 use App\Enums\RequestChangeDataType;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
@@ -12,7 +11,6 @@ use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Requests\Api\User\FcmTokenRequest;
-use App\Http\Requests\Api\User\PayrollRequest;
 use App\Http\Requests\Api\User\SetSupervisorRequest;
 use App\Http\Requests\Api\User\UpdateDeviceRequest;
 use App\Http\Requests\Api\User\UpdatePasswordRequest;
@@ -25,7 +23,6 @@ use App\Models\Company;
 use App\Models\TaskHour;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -536,32 +533,5 @@ class UserController extends BaseController
         $user->supervisors()->createMany($request->data);
 
         return $this->updatedResponse();
-    }
-
-    public function payroll(User $user, PayrollRequest $request)
-    {
-        $user->load(['runPayrollUser' => fn($q) => $q->whereHas('runPayroll', fn($q) => $q->where('period', "$request->month-$request->year"))]);
-
-        if ($user->runPayrollUser->count() <= 0) return $this->errorResponse(message: "Data payroll not found", code: Response::HTTP_NOT_FOUND);
-
-        $user->load([
-            'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
-            'detail' => fn($q) => $q->select('user_id', 'job_level'),
-            'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp'),
-        ]);
-
-        $runPayrollUser = $user->runPayrollUser[0]->load([
-            'runPayroll.company',
-            'components.payrollComponent',
-        ]);
-
-        $cutoffDate = date('Y', strtotime($runPayrollUser->runPayroll->cutoff_start_date)) == date('Y', strtotime($runPayrollUser->runPayroll->cutoff_end_date)) ? date('d M', strtotime($runPayrollUser->runPayroll->cutoff_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cutoff_end_date)) : date('d M Y', strtotime($runPayrollUser->runPayroll->cutoff_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cutoff_end_date));
-
-        $earnings = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE);
-        $deductions = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION);
-        $benefits = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::BENEFIT);
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.payroll', ['user' => $user, 'runPayrollUser' => $runPayrollUser, 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits])->setPaper('a4');
-        return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
     }
 }
