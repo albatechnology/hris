@@ -68,6 +68,14 @@ class PayrollComponent extends BaseModel
         return $this->hasMany(PayrollComponentInclude::class);
     }
 
+    public function scopeWhereNotBpjs(Builder $query): void
+    {
+        $query->whereNotIn('category', [
+            PayrollComponentCategory::BPJS_KESEHATAN,
+            PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
+        ]);
+    }
+
     public function scopeWhereDefault(Builder $query): void
     {
         $query->where('is_default', true)->whereNotIn('category', [

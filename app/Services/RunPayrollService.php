@@ -290,7 +290,7 @@ class RunPayrollService
             });
 
             // other payroll component
-            PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->get()->map(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay, $cutoffAttendanceStartDate, $cutoffAttendanceEndDate) {
+            PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->whereNotBpjs()->get()->map(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay, $cutoffAttendanceStartDate, $cutoffAttendanceEndDate) {
                 if ($otherPayrollComponent->amount == 0 && count($otherPayrollComponent->formulas)) {
                     $amount = FormulaService::calculate(user: $runPayrollUser->user, model: $otherPayrollComponent, formulas: $otherPayrollComponent->formulas, startPeriod: $cutoffAttendanceStartDate, endPeriod: $cutoffAttendanceEndDate);
                 } else {

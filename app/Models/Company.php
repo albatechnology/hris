@@ -229,7 +229,7 @@ class Company extends BaseModel implements TenantedInterface
 
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Kesehatan',
+                'name' => 'BPJS Kesehatan Company',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -248,7 +248,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Kesehatan',
+                'name' => 'BPJS Kesehatan Employee',
                 'type' => PayrollComponentType::DEDUCTION,
                 'category' => PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -266,7 +266,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Ketenagakerjaan (JKK)',
+                'name' => 'JKK',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JKK,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -285,7 +285,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Ketenagakerjaan (JKM)',
+                'name' => 'JKM',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JKM,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -304,7 +304,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Ketenagakerjaan (JHT)',
+                'name' => 'JHT Company',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JHT,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -323,7 +323,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Ketenagakerjaan (JHT)',
+                'name' => 'JHT Employee',
                 'type' => PayrollComponentType::DEDUCTION,
                 'category' => PayrollComponentCategory::EMPLOYEE_JHT,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -341,7 +341,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Ketenagakerjaan (JP)',
+                'name' => 'JP Company',
                 'type' => PayrollComponentType::BENEFIT,
                 'category' => PayrollComponentCategory::COMPANY_JP,
                 'setting' => PayrollComponentSetting::DEFAULT,
@@ -360,7 +360,7 @@ class Company extends BaseModel implements TenantedInterface
             ]);
 
             $this->payrollComponents()->create([
-                'name' => 'BPJS Ketenagakerjaan (JP)',
+                'name' => 'JP Employee',
                 'type' => PayrollComponentType::DEDUCTION,
                 'category' => PayrollComponentCategory::EMPLOYEE_JP,
                 'setting' => PayrollComponentSetting::DEFAULT,
