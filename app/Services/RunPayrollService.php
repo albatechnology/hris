@@ -94,7 +94,6 @@ class RunPayrollService
 
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
-
         // calculate for each user
         foreach (explode(',', $request['user_ids']) as $userId) {
             $runPayrollUser = self::assignUser($runPayroll, $userId);
@@ -111,16 +110,14 @@ class RunPayrollService
                     $q2->where('user_id', $userId);
                 });
             })->first();
-
             // define user basic salary & bpjs
             $userBasicSalary = $runPayrollUser->user->payrollInfo?->basic_salary;
 
             // default payroll component
             $defaultPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereDefault()->get();
-
             foreach ($defaultPayrollComponents as $defaultPayrollComponent) {
                 // check if payroll component is updated on UpdatePayrollComponent::class
-                $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->first();
+                $updatePayrollComponentDetail = $updatePayrollComponent?->details()->where('payroll_component_id', $defaultPayrollComponent->id)->where('user_id', $userId)->first();
 
                 if ($updatePayrollComponentDetail) {
                     $amount = $updatePayrollComponentDetail->new_amount;
@@ -139,7 +136,6 @@ class RunPayrollService
                 }
 
                 $amount = self::calculatePayrollComponentPeriodType($defaultPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
-
                 self::createComponent($runPayrollUser, $defaultPayrollComponent->id, $amount);
             }
 
