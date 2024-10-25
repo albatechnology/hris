@@ -24,9 +24,7 @@ class CompanyTenantedRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $data = $this->model::tenanted()
-            ->when($this->query, $this->query)
-            ->firstWhere('id', $value);
+        $data = $this->model::tenanted()->when($this->query, $this->query)->where('id', $value)->exists();
 
         if (!$data) {
             $fail($this->message);

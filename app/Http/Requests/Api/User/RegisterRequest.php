@@ -37,6 +37,25 @@ class RegisterRequest extends FormRequest
     }
 
     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $data = [
+            'month' => $this->month ?? date('m'),
+            'year' => $this->year ?? date('Y'),
+        ];
+
+        if ($this->company_id) {
+            $data['overtime_id'] = \App\Models\Overtime::where('company_id', $this->company_id)->first(['id'])?->id;
+        }
+
+        $this->merge($data);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
