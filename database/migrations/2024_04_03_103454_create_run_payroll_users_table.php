@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TaxMethod;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->unsignedDouble('deduction', 13, 2)->default(0);
             $table->unsignedDouble('benefit', 13, 2)->default(0);
             $table->unsignedDouble('tax', 13, 2)->default(0);
+            $table->json('payroll_info')->nullable();
             $table->timestamps();
         });
     }

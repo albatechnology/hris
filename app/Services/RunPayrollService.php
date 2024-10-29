@@ -10,6 +10,7 @@ use App\Enums\PayrollComponentType;
 use App\Enums\PtkpStatus;
 use App\Enums\RateType;
 use App\Enums\RunPayrollStatus;
+use App\Enums\TaxMethod;
 use App\Models\Company;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
@@ -417,9 +418,19 @@ class RunPayrollService
 
         $grossSalary = $basicSalary + $allowance + $additionalEarning + $benefit - $deduction;
 
-        $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary);
+        $userPayrollInfo = $runPayrollUser->user->payrollInfo;
 
-        $tax = $grossSalary * ($taxPercentage / 100);
+        $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary);
+        if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
+            $grossUp1 = floatval(100 - $taxPercentage);
+            $grossSalary2 = ($grossSalary / $grossUp1) * 100;
+
+            $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary2);
+
+            $tax = $grossSalary2 * ($taxPercentage / 100);
+        } else {
+            $tax = $grossSalary * ($taxPercentage / 100);
+        }
 
         $runPayrollUser->update([
             'basic_salary' => $basicSalary,
@@ -428,6 +439,7 @@ class RunPayrollService
             'deduction' => $deduction,
             'benefit' => $benefit,
             'tax' => $tax,
+            'payroll_info' => $userPayrollInfo,
         ]);
     }
 

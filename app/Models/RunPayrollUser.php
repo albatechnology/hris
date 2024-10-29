@@ -16,6 +16,7 @@ class RunPayrollUser extends BaseModel
         'deduction',
         'benefit',
         'tax',
+        'payroll_info',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class RunPayrollUser extends BaseModel
         'deduction' => 'double',
         'benefit' => 'double',
         'tax' => 'double',
+        'payroll_info' => 'array',
     ];
 
     protected $appends = [
