@@ -66,6 +66,7 @@ enum RequestChangeDataType: string
             self::PHONE,
             self::GENDER => \App\Models\User::where('id', $userId)->update([$self->value => $value]),
 
+            self::KK_NO,
             self::NO_KTP,
             self::ADDRESS,
             self::ADDRESS_KTP,
@@ -105,6 +106,7 @@ enum RequestChangeDataType: string
             self::PHONE,
             self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value])->{$this->value},
 
+            self::KK_NO,
             self::NO_KTP,
             self::ADDRESS,
             self::ADDRESS_KTP,
