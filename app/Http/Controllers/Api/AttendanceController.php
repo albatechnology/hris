@@ -783,12 +783,11 @@ class AttendanceController extends BaseController
         DB::beginTransaction();
         try {
             if (!$attendance) {
-                $data = [
+                $attendance = Attendance::create([
                     'user_id' => $user->id,
                     'date' => date('Y-m-d', strtotime($request->time)),
                     ...$request->validated(),
-                ];
-                $attendance = Attendance::create($data);
+                ]);
             }
 
             /** @var AttendanceDetail $attendanceDetail */

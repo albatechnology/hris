@@ -39,6 +39,10 @@ class UserObserver
         if (empty($user->sign_date)) {
             $user->sign_date = $user->join_date;
         }
+
+        if ($user->company_id) {
+            $user->overtime_id = \App\Models\Overtime::where('company_id', $user->company_id)->first(['id'])?->id ?? null;
+        }
     }
 
     /**
@@ -59,7 +63,7 @@ class UserObserver
                     // 4. apabila join_date > min_working_month user tsb berhak mendapatkan jatah cuti
 
                     /** @var TimeoffPeriodRegulation $timeoffPeriodRegulation */
-                    $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn ($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->join_date, $timeoffPeriodRegulation->min_working_month));
+                    $timeoffPeriodRegulation = $timeoffRegulation->timeoffPeriodRegulations()->orderByDesc('min_working_month')->get()->first(fn($timeoffPeriodRegulation) => TimeoffRegulationService::isJoinDatePassed($user->join_date, $timeoffPeriodRegulation->min_working_month));
 
                     if ($timeoffPeriodRegulation) {
                         // 1. cek join_date user
