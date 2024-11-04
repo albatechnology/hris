@@ -38,13 +38,13 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
     {
         parent::booted();
 
-        static::creating(function (self $model) {
-            if ($model->type->is(AttendanceType::MANUAL)) {
-                $model->approved_by = $model->attendance->user->approval?->id ?? null;
-            } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
-                $model->approval_status = ApprovalStatus::APPROVED;
-            }
-        });
+        // static::creating(function (self $model) {
+        //     if ($model->type->is(AttendanceType::MANUAL)) {
+        //         $model->approved_by = $model->attendance->user->approval?->id ?? null;
+        //     } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
+        //         $model->approval_status = ApprovalStatus::APPROVED;
+        //     }
+        // });
     }
 
     public function attendance(): BelongsTo

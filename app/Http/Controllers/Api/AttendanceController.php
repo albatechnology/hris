@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
-use App\Enums\NotificationType;
 use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
