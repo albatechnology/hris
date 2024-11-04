@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ApprovalStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -25,9 +24,9 @@ return new class extends Migration
             // $table->timestamp('end_at');
             $table->time('duration');
             $table->text('note')->nullable();
-            $table->string('approval_status')->default(ApprovalStatus::PENDING->value);
-            $table->foreignId('approved_by')->nullable()->constrained('users');
-            $table->datetime('approved_at')->nullable();
+            // $table->string('approval_status')->default(ApprovalStatus::PENDING->value);
+            // $table->foreignId('approved_by')->nullable()->constrained('users');
+            // $table->datetime('approved_at')->nullable();
             $table->timestamps();
         });
     }

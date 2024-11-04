@@ -90,6 +90,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         } elseif ($this instanceof RequestSchedule) {
             if ($isApproved) return NotificationType::REQUEST_SCHEDULE_APPROVED;
             return NotificationType::REQUEST_SCHEDULE;
+        } elseif ($this instanceof OvertimeRequest) {
+            if ($isApproved) return NotificationType::OVERTIME_APPROVED;
+            return NotificationType::REQUEST_OVERTIME;
         }
     }
 

@@ -22,9 +22,9 @@ class AttendanceService
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
 
         $attendance = Attendance::where('schedule_id', $scheduleId)
-            ->when($user, fn ($q) => $q->where('user_id', $user->id))
+            ->when($user, fn($q) => $q->where('user_id', $user->id))
             ->where('shift_id', $shiftId)
-            ->whereHas('details', fn ($q) => $q->whereDate('time', $date))
+            ->whereHas('details', fn($q) => $q->whereDate('time', $date))
             ->first();
 
         if (!$attendance) {
@@ -42,12 +42,12 @@ class AttendanceService
         }
 
         $overtimeRequests = \App\Models\OvertimeRequest::tenanted()
-            ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
+            ->whereApprovalStatus(\App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)
             ->when(
                 is_null($endDate),
-                fn ($q) => $q->whereDate('date', $startDate),
-                fn ($q) => $q->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
+                fn($q) => $q->whereDate('date', $startDate),
+                fn($q) => $q->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
             )
             ->when($query, $query)
             ->get(['duration']);
