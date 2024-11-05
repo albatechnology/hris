@@ -17,6 +17,19 @@ class ApprovalStatusRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'filter' => [
+                'approval_status' => $this->filter['approval_status'] ?? ApprovalStatus::ON_PROGRESS->value
+            ]
+        ]);
+    }
+
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

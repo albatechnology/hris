@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use App\Enums\ApprovalStatus;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OvertimeRequest extends BaseModel implements TenantedInterface
+class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
 {
     use BelongsToUser;
 
@@ -24,30 +23,32 @@ class OvertimeRequest extends BaseModel implements TenantedInterface
         // 'start_at',
         // 'end_at',
         'note',
-        'approval_status',
-        'approved_by',
-        'approved_at',
+        // 'approval_status',
+        // 'approved_by',
+        // 'approved_at',
     ];
 
     protected $casts = [
         'is_after_shift' => 'boolean',
         // 'type' => OvertimeRequestType::class,
-        'approval_status' => ApprovalStatus::class,
+        // 'approval_status' => ApprovalStatus::class,
         // 'approved_at' => 'datetime',
     ];
 
     protected static function booted(): void
     {
+        parent::booted();
+
         static::saving(function (self $model) {
             $model->duration = date('H:i:s', strtotime($model->duration));
         });
 
-        static::creating(function (self $model) {
-            $model->approved_by = $model->user->approval?->id ?? null;
-        });
+        // static::creating(function (self $model) {
+        //     $model->approved_by = $model->user->approval?->id ?? null;
+        // });
     }
 
-    protected $appends = ['duration_text'];
+    protected $appends = ['duration_text', 'approval_status'];
     public function getDurationTextAttribute()
     {
         // $startAt = new \DateTime($this->start_at);
@@ -91,11 +92,11 @@ class OvertimeRequest extends BaseModel implements TenantedInterface
             return $query;
         }
         if ($user->is_administrator) {
-            return $query->whereHas('user', fn ($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
+            return $query->whereHas('user', fn($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
         }
 
         if ($user->descendants()->exists()) {
-            return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
+            return $query->whereHas('user', fn($q) => $q->whereDescendantOf($user));
         }
 
         return $query->where('user_id', $user->id);
@@ -118,8 +119,8 @@ class OvertimeRequest extends BaseModel implements TenantedInterface
         return $this->belongsTo(Shift::class);
     }
 
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+    // public function approvedBy(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'approved_by');
+    // }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\NewApproveRequest;
+use App\Http\Requests\ApprovalStatusRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RequestChangeData;
 use Illuminate\Http\JsonResponse;
@@ -27,10 +28,10 @@ class RequestChangeDataController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(RequestChangeData::tenanted())
+        $data = QueryBuilder::for(RequestChangeData::tenanted()->with('approvals'))
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                'approval_status'
+                // 'approval_status'
             ])
             ->allowedIncludes('details')
             ->allowedSorts('id')
@@ -75,13 +76,10 @@ class RequestChangeDataController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function countTotalApprovals(\Illuminate\Http\Request $request)
+    public function countTotalApprovals(ApprovalStatusRequest $request)
     {
-        $request->validate([
-            'filter.approval_status' => ['required', \Illuminate\Validation\Rule::in([...ApprovalStatus::cases(), 'on_progress'])],
-        ]);
-
         // $total = DB::table('request_change_data')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        dd($request->filter['approval_status']);
         $total = RequestChangeData::myApprovals()
             ->whereApprovalStatus($request->filter['approval_status'])->count();
 

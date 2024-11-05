@@ -22,9 +22,9 @@ class RequestChangeData extends RequestedBaseModel implements HasMedia
         // 'approved_at',
     ];
 
-    protected $appends = [
-        'approval_status'
-    ];
+    // protected $appends = [
+    //     'approval_status'
+    // ];
 
     // protected $casts = [
     // 'approval_status' => ApprovalStatus::class moved to approvals

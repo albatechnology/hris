@@ -736,7 +736,7 @@ class AttendanceController extends BaseController
         $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->tenanted()))
             ->allowedFilters([
                 'is_clock_in',
-                'approval_status',
+                // 'approval_status',
                 'approved_by',
                 'type',
                 AllowedFilter::callback('user_id', fn($query, $value) => $query->whereHas('attendance', fn($q) => $q->where('user_id', $value))),
@@ -748,7 +748,7 @@ class AttendanceController extends BaseController
                         ->with('shift', fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
                 }),
             ])
-            ->allowedSorts(['is_clock_in', 'approval_status', 'approved_by', 'created_at'])
+            ->allowedSorts(['is_clock_in', 'approved_by', 'created_at'])
             ->paginate($this->per_page);
 
         return DefaultResource::collection($attendance);

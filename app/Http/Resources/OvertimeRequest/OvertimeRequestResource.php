@@ -18,7 +18,6 @@ class OvertimeRequestResource extends JsonResource
             ...parent::toArray($request),
             'user' => $this->user,
             'shift' => $this->shift,
-            'approved_by' => $this->approvedBy,
         ];
     }
 }

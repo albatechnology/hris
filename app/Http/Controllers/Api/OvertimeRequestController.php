@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
-use App\Enums\NotificationType;
+use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
-use App\Http\Requests\Api\OvertimeRequest\ApproveRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
 use App\Models\OvertimeRequest;
 use App\Models\User;
@@ -13,7 +12,6 @@ use App\Services\AttendanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -30,15 +28,25 @@ class OvertimeRequestController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(OvertimeRequest::tenanted())
+        $data = QueryBuilder::for(
+            OvertimeRequest::tenanted()->with('approvals')
+                ->with([
+                    'user' => fn($q) => $q->select('id', 'name'),
+                    'shift' => fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),
+                ])
+        )
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('shift_id'),
-                'approval_status', 'date', 'is_after_shift'
+                'date',
+                'is_after_shift'
             ])
             ->allowedSorts([
-                'id', 'user_id', 'shift_id', 'approval_status', 'date',
+                'id',
+                'user_id',
+                'shift_id',
+                'date',
             ])
             ->paginate($this->per_page);
 
@@ -67,13 +75,12 @@ class OvertimeRequestController extends BaseController
         if ($attendance->clockOut()->doesntExist()) {
             return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        // }
 
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
 
-            $notificationType = NotificationType::REQUEST_OVERTIME;
-            $overtimeRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
+            // $notificationType = NotificationType::REQUEST_OVERTIME;
+            // $overtimeRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
         } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -90,13 +97,23 @@ class OvertimeRequestController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function approve(ApproveRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
+    public function approve(NewApproveRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
     {
-        try {
-            $overtimeRequest->update($request->validated());
+        $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
 
-            $notificationType = NotificationType::OVERTIME_APPROVED;
-            $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->approval_status, $overtimeRequest));
+        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+
+        if (!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if ($overtimeRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $requestApproval->update($request->validated());
+
+            // $notificationType = NotificationType::OVERTIME_APPROVED;
+            // $overtimeRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->approvedBy, $overtimeRequest->approval_status, $overtimeRequest));
         } catch (\Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
@@ -106,18 +123,20 @@ class OvertimeRequestController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = DB::table('overtime_requests')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = OvertimeRequest::myApprovals()
+            ->whereApprovalStatus($request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }
 
     public function approvals()
     {
-        $query = OvertimeRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
+        $query = OvertimeRequest::myApprovals()
             ->with([
-                'user' => fn ($q) => $q->select('id', 'name'),
-                'approvedBy' => fn ($q) => $q->select('id', 'name'),
-                'shift' => fn ($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),
+                'user' => fn($q) => $q->select('id', 'name'),
+                // 'approvedBy' => fn($q) => $q->select('id', 'name'),
+                'shift' => fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
             ]);
 
         $data = QueryBuilder::for($query)
@@ -125,10 +144,16 @@ class OvertimeRequestController extends BaseController
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('shift_id'),
-                'approval_status', 'date', 'is_after_shift'
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                'date',
+                'is_after_shift'
             ])
             ->allowedSorts([
-                'id', 'user_id', 'shift_id', 'approval_status', 'date',
+                'id',
+                'user_id',
+                'shift_id',
+                // 'approval_status',
+                'date',
             ])
             ->paginate($this->per_page);
 
