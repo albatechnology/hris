@@ -66,7 +66,7 @@ class GroupSeeder extends Seeder
         ]);
 
         $company = $group->companies()->create([
-            'name' => 'SUN INDONESIA',
+            'name' => 'SUN INTERNASIONAL EDUKASI',
             'address' => 'Gedung SUN Plaza, Jl. Meruya Ilir Raya No.20, RT.4/RW.7, Meruya Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610',
             'country_id' => 1,
             'country' => 'Indonesia',
