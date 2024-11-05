@@ -17,17 +17,16 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class RequestScheduleController extends BaseController
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->middleware('permission:user_access', ['only' => ['restore']]);
-        $this->middleware('permission:user_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:user_create', ['only' => 'store']);
-        $this->middleware('permission:user_edit', ['only' => 'update']);
-        $this->middleware('permission:user_delete', ['only' => ['destroy', 'forceDelete']]);
-        $this->middleware('permission:user_edit', ['only' => 'update']);
-        $this->middleware('permission:request_change_data_create', ['only' => 'approve']);
-    }
+    // public function __construct()
+    // {
+    //     parent::__construct();
+    //     $this->middleware('permission:user_access', ['only' => ['restore']]);
+    //     $this->middleware('permission:user_read', ['only' => ['index', 'show']]);
+    //     $this->middleware('permission:user_create', ['only' => 'store']);
+    //     $this->middleware('permission:user_delete', ['only' => ['destroy', 'forceDelete']]);
+    //     $this->middleware('permission:user_edit', ['only' => 'update']);
+    //     $this->middleware('permission:request_change_data_create', ['only' => 'approve']);
+    // }
 
     public function index()
     {
@@ -150,9 +149,11 @@ class RequestScheduleController extends BaseController
     public function approvals()
     {
         $query = RequestSchedule::myApprovals()
-            // ->whereHas('user', fn($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with('user', fn($q) => $q->select('id', 'name'))
-            ->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')));
+            ->with([
+                'shifts' => fn($q) => $q->select('id', 'name', 'type', 'clock_in', 'clock_out')->orderBy('order'),
+                'user' => fn($q) => $q->select('id', 'name'),
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
+            ]);
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
