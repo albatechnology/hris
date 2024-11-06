@@ -45,7 +45,7 @@ class RequestChangeDataController extends BaseController
         return new DefaultResource($requestChangeData->load([
             'details',
             'user' => fn($q) => $q->select('id', 'name'),
-            'approvedBy' => fn($q) => $q->select('id', 'name'),
+            // 'approvedBy' => fn($q) => $q->select('id', 'name'),
         ]));
     }
 
