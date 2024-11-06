@@ -50,9 +50,9 @@ class RequestChangeData extends RequestedBaseModel implements HasMedia
             return $query->whereHas('user', fn($q) => $q->where('group_id', $user->group_id));
         }
 
-        if ($user->descendants()->exists()) {
-            return $query->whereHas('user', fn($q) => $q->whereDescendantOf($user));
-        }
+        // if ($user->descendants()->exists()) {
+        //     return $query->whereHas('user', fn($q) => $q->whereDescendantOf($user));
+        // }
 
         return $query->where('user_id', $user->id);
         // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
