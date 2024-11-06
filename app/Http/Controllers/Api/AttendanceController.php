@@ -349,7 +349,7 @@ class AttendanceController extends BaseController
 
             $attendances = Attendance::tenanted()
                 ->where('user_id', $user->id)
-                ->approved()
+                ->whereHas('details', fn($q) => $q->approved())
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
