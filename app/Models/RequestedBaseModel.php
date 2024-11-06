@@ -31,6 +31,11 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         return $this->morphMany(RequestApproval::class, 'requestable');
     }
 
+    public function scopeApproved(Builder $query)
+    {
+        $query->whereHas('approvals', fn($q) => $q->where('status', ApprovalStatus::APPROVED)->whereNotIn('status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS]));
+    }
+
     public function scopeWhereApprovalStatus(Builder $query, string|ApprovalStatus $status = ApprovalStatus::PENDING->value): Builder
     {
         if ($status instanceof ApprovalStatus) $status = $status->value;
