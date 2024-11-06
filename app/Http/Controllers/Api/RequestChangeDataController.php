@@ -78,8 +78,6 @@ class RequestChangeDataController extends BaseController
 
     public function countTotalApprovals(ApprovalStatusRequest $request)
     {
-        // $total = DB::table('request_change_data')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
-        dd($request->filter['approval_status']);
         $total = RequestChangeData::myApprovals()
             ->whereApprovalStatus($request->filter['approval_status'])->count();
 

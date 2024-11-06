@@ -51,6 +51,12 @@ class RequestApproval extends BaseModel
                 });
             }
         });
+
+        static::updating(function (self $model) {
+            if ($model->isDirty('approval_status')) {
+               $model->approved_at = now();
+            }
+        });
     }
 
     public function requestable(): MorphTo

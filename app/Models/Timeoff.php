@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\ApprovalStatus;
 use App\Enums\TimeoffRequestType;
 use App\Enums\UserType;
 use App\Traits\Models\BelongsToUser;
@@ -10,7 +9,7 @@ use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Timeoff extends BaseModel
+class Timeoff extends RequestedBaseModel
 {
     use CustomSoftDeletes, BelongsToUser;
 
@@ -23,24 +22,26 @@ class Timeoff extends BaseModel
         'delegate_to',
         'reason',
         'is_advanced_leave',
-        'approval_status',
-        'approved_by',
-        'approved_at',
+        // 'approval_status',
+        // 'approved_by',
+        // 'approved_at',
     ];
 
     protected $casts = [
         'request_type' => TimeoffRequestType::class,
-        'approval_status' => ApprovalStatus::class,
+        // 'approval_status' => ApprovalStatus::class,
     ];
 
     protected static function booted(): void
     {
+        parent::booted();
+
         static::creating(function (self $model) {
             if (empty($model->user_id)) {
                 $model->user_id = auth('sanctum')->id();
             }
 
-            $model->approved_by = $model->user->approval?->id ?? null;
+            // $model->approved_by = $model->user->approval?->id ?? null;
         });
     }
 
@@ -75,10 +76,10 @@ class Timeoff extends BaseModel
         return $query->first();
     }
 
-    public function scopeApproved(Builder $query)
-    {
-        $query->where('approval_status', ApprovalStatus::APPROVED);
-    }
+    // public function scopeApproved(Builder $query)
+    // {
+    //     $query->where('approval_status', ApprovalStatus::APPROVED);
+    // }
 
     public function scopeStartAt(Builder $query, $date = null)
     {
@@ -106,10 +107,10 @@ class Timeoff extends BaseModel
         return $this->belongsTo(User::class, 'delegate_to');
     }
 
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+    // public function approvedBy(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'approved_by');
+    // }
 
     public function getTotalDaysAttribute(): int|null
     {
