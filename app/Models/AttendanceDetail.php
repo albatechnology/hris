@@ -59,7 +59,7 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
 
     public function scopeApproved(Builder $q)
     {
-        $q->where(fn($q) => $q->where('type', AttendanceType::AUTOMATIC)->orWhere(fn($q) => $q->where('type', AttendanceType::MANUAL)->whereHas('details', fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED))));
+        $q->where(fn($q) => $q->where('type', AttendanceType::AUTOMATIC)->orWhere(fn($q) => $q->where('type', AttendanceType::MANUAL)->whereApprovalStatus(ApprovalStatus::APPROVED)));
         // $q->where(
         //     fn($q) => $q->where('type', AttendanceType::AUTOMATIC)->orWhere('approval_status', ApprovalStatus::APPROVED)
         //     // ->orWhere(fn($q) => $q->whereNot('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED))
