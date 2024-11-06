@@ -349,13 +349,13 @@ class AttendanceController extends BaseController
 
             $attendances = Attendance::tenanted()
                 ->where('user_id', $user->id)
-                ->whereHas('details', fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED))
+                ->approved()
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
-                    'clockOut' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
-                    'details' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED)->orderBy('created_at')
+                    'clockIn' => fn($q) => $q->approved(),
+                    'clockOut' => fn($q) => $q->approved(),
+                    'details' => fn($q) => $q->approved()->orderBy('created_at')
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
