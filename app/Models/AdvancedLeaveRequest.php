@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ApprovalStatus;
+use App\Enums\UserType;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,11 +43,13 @@ class AdvancedLeaveRequest extends BaseModel
         }
 
         if ($user->is_administrator) {
-            return $query->whereHas('user', fn ($q) => $q->where('group_id', $user->group_id));
+            return $query->whereHas('user', fn($q) => $q->where('group_id', $user->group_id));
         }
 
-        if ($user->descendants()->exists()) {
-            return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
+        if ($user->is_admin) {
+            $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+
+            return $query->whereHas('user', fn($q) => $q->whereTypeUnder($user->type)->whereHas('companies', fn($q) => $q->where('company_id', $companyIds)));
         }
 
         return $query->where('user_id', $user->id);

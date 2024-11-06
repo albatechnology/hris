@@ -35,6 +35,9 @@ return new class extends Migration
             $table->string('bank_name')->nullable();
             $table->string('bank_account_no')->nullable();
             $table->string('bank_account_holder')->nullable();
+            $table->string('secondary_bank_name')->nullable();
+            $table->string('secondary_bank_account_no')->nullable();
+            $table->string('secondary_bank_account_holder')->nullable();
             $table->string('npwp')->nullable();
             $table->string('ptkp_status')->default(PtkpStatus::TK_0);
             $table->string('tax_method')->default(TaxMethod::GROSS);
@@ -43,16 +46,16 @@ return new class extends Migration
             $table->string('employee_tax_status')->nullable();
             $table->integer('beginning_netto')->nullable();
             $table->integer('pph21_paid')->nullable();
-            $table->string('bpjs_ketenagakerjaan_no')->nullable();
-            $table->string('npp_bpjs_ketenagakerjaan')->default(NppBpjsKetenagakerjaan::DEFAULT);
-            $table->date('bpjs_ketenagakerjaan_date')->nullable();
-            $table->string('bpjs_kesehatan_no')->nullable();
-            $table->string('bpjs_kesehatan_family_no')->nullable();
-            $table->date('bpjs_kesehatan_date')->nullable();
-            $table->string('bpjs_kesehatan_cost')->default(BpjsKesehatanCost::DEFAULT);
-            $table->string('jht_cost')->default(JhtCost::DEFAULT);
-            $table->string('jaminan_pensiun_cost')->default(JaminanPensiunCost::DEFAULT);
-            $table->date('jaminan_pensiun_date')->nullable();
+            // $table->string('bpjs_ketenagakerjaan_no')->nullable();
+            // $table->string('npp_bpjs_ketenagakerjaan')->default(NppBpjsKetenagakerjaan::DEFAULT);
+            // $table->date('bpjs_ketenagakerjaan_date')->nullable();
+            // $table->string('bpjs_kesehatan_no')->nullable();
+            // $table->string('bpjs_kesehatan_family_no')->nullable();
+            // $table->date('bpjs_kesehatan_date')->nullable();
+            // $table->string('bpjs_kesehatan_cost')->default(BpjsKesehatanCost::DEFAULT);
+            // $table->string('jht_cost')->default(JhtCost::DEFAULT);
+            // $table->string('jaminan_pensiun_cost')->default(JaminanPensiunCost::DEFAULT);
+            // $table->date('jaminan_pensiun_date')->nullable();
             $table->timestamps();
         });
     }

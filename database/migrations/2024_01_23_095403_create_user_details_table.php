@@ -28,6 +28,7 @@ return new class extends Migration
             $table->string('birthdate')->nullable();
             $table->string('marital_status')->nullable();
             $table->string('blood_type')->nullable();
+            $table->string('rhesus')->nullable();
             $table->string('religion')->nullable();
             $table->string('batik_size')->nullable();
             $table->string('tshirt_size')->nullable();

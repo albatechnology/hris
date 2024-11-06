@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\MediaCollection;
 use App\Enums\PayrollComponentType;
 use App\Enums\RequestChangeDataType;
@@ -391,24 +392,44 @@ class UserController extends BaseController
 
         DB::beginTransaction();
         try {
-            /** @var \App\Models\RequestChangeData $requestChangeData */
-            $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+            $userLoggedIn = auth()->user();
+            if (!$userLoggedIn->is_user) {
+                /** @var \App\Models\RequestChangeData $requestChangeData */
+                $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
+                $requestChangeData->approvals()->createQuietly([
+                    'user_id' => $userLoggedIn->id,
+                    'approval_status' => ApprovalStatus::APPROVED,
+                    'approved_at' => now(),
+                    'description' => sprintf('Updated by %s(%s)', $userLoggedIn->name, $userLoggedIn->type->value)
+                ]);
 
-            if (!auth()->user()->is_user) {
                 foreach (array_merge($dataRequested, $dataAllowedToUpdate) ?? [] as $data) {
-                    dump($data);
-                    dump($data['type'], $user->id, $data['value']);
                     RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
                 }
+
+                $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+                $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
+
+                if ($photoProfile && $photoProfile['value']?->isValid()) {
+                    $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);
+
+                    $photoUrl = $user->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
+                    $requestChangeDataDetail->update(['value' => $photoUrl->getFullUrl()]);
+                }
+
+                $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
             } else {
+                /** @var \App\Models\RequestChangeData $requestChangeData */
+                $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+
                 if (count($dataRequested) > 0) {
                     $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
                     $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
 
                     if ($photoProfile && $photoProfile['value']?->isValid()) {
                         $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);
-                        $hasil = $requestChangeDataDetail->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
-                        $requestChangeDataDetail->update(['value' => $hasil->getFullUrl()]);
+                        $photoUrl = $requestChangeDataDetail->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
+                        $requestChangeDataDetail->update(['value' => $photoUrl->getFullUrl()]);
                     }
 
                     if ($request->hasFile('file')) {

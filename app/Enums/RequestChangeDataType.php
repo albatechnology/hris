@@ -3,6 +3,7 @@
 namespace App\Enums;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 enum RequestChangeDataType: string
 {
@@ -43,19 +44,23 @@ enum RequestChangeDataType: string
     {
         return match ($this) {
             self::EMAIL => 'required|email|unique:users,email,' . $user->id,
-            self::BIRTHDATE => 'required|date',
-            self::GENDER => ['required', \Illuminate\Validation\Rule::enum(Gender::class)],
-            self::MARITAL_STATUS => ['required', \Illuminate\Validation\Rule::enum(MaritalStatus::class)],
-            self::BLOOD_TYPE => ['required', \Illuminate\Validation\Rule::enum(BloodType::class)],
-            self::RELIGION => ['required', \Illuminate\Validation\Rule::enum(Religion::class)],
-            self::PTKP_STATUS => ['required', \Illuminate\Validation\Rule::enum(PtkpStatus::class)],
+            self::NAME => 'required|string',
+            self::GENDER => ['nullable', \Illuminate\Validation\Rule::enum(Gender::class)],
+            self::MARITAL_STATUS => ['nullable', \Illuminate\Validation\Rule::enum(MaritalStatus::class)],
+            self::BLOOD_TYPE => ['nullable', \Illuminate\Validation\Rule::enum(BloodType::class)],
+            self::RELIGION => ['nullable', \Illuminate\Validation\Rule::enum(Religion::class)],
+            self::PTKP_STATUS => ['nullable', \Illuminate\Validation\Rule::enum(PtkpStatus::class)],
             self::PHOTO_PROFILE => 'required|mimes:' . config('app.file_mimes_types'),
-            default => 'required|string'
+            default => 'nullable|string'
         };
     }
 
-    public static function updateData(self $self, int $userId, mixed $value)
+    public static function updateData(self|string $self, int $userId, mixed $value)
     {
+        if (gettype($self) === 'string') {
+            $self = RequestChangeDataType::from($self);
+        }
+
         return match ($self) {
             // self::PHOTO_PROFILE, updated in controller
             self::NAME,
@@ -76,11 +81,8 @@ enum RequestChangeDataType: string
             self::MARITAL_STATUS,
             self::BLOOD_TYPE,
             self::RHESUS,
-            self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->update([$self->value => $value]),
+            self::RELIGION => self::update(\App\Models\UserDetail::class, $userId, $self->value, $value),
 
-            self::BPJS_KETENAGAKERJAAN_NO,
-            self::BPJS_KESEHATAN_NO,
-            self::BPJS_KESEHATAN_FAMILY_NO,
             self::NPWP,
             self::BANK_ACCOUNT_NO,
             self::BANK_NAME,
@@ -88,7 +90,11 @@ enum RequestChangeDataType: string
             self::SECONDARY_BANK_ACCOUNT_NO,
             self::SECONDARY_BANK_NAME,
             self::SECONDARY_BANK_ACCOUNT_HOLDER,
-            self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->update([$self->value => $value]),
+            self::PTKP_STATUS => self::update(\App\Models\UserPayrollInfo::class, $userId, $self->value, $value),
+
+            self::BPJS_KETENAGAKERJAAN_NO,
+            self::BPJS_KESEHATAN_NO,
+            self::BPJS_KESEHATAN_FAMILY_NO => self::update(\App\Models\UserBpjs::class, $userId, $self->value, $value),
         };
     }
 
@@ -118,9 +124,6 @@ enum RequestChangeDataType: string
             self::RHESUS,
             self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value])->{$this->value},
 
-            self::BPJS_KETENAGAKERJAAN_NO,
-            self::BPJS_KESEHATAN_NO,
-            self::BPJS_KESEHATAN_FAMILY_NO,
             self::NPWP,
             self::BANK_ACCOUNT_NO,
             self::BANK_NAME,
@@ -129,6 +132,10 @@ enum RequestChangeDataType: string
             self::SECONDARY_BANK_NAME,
             self::SECONDARY_BANK_ACCOUNT_HOLDER,
             self::PTKP_STATUS => \App\Models\UserPayrollInfo::where('user_id', $userId)->first([$this->value])->{$this->value},
+
+            self::BPJS_KETENAGAKERJAAN_NO,
+            self::BPJS_KESEHATAN_NO,
+            self::BPJS_KESEHATAN_FAMILY_NO => \App\Models\UserBpjs::where('user_id', $userId)->first([$this->value])->{$this->value},
         };
     }
 
@@ -164,5 +171,19 @@ enum RequestChangeDataType: string
             self::PTKP_STATUS => PtkpStatus::all(),
             default => ''
         };
+    }
+
+    private static function update(string $class, int $userId, string $key, mixed $value): void
+    {
+        $data = app($class)::firstWhere('user_id', $userId);
+
+        if ($data) {
+            $data->update([$key => $value]);
+        } else {
+            app($class)::create([
+                'user_id' => $userId,
+                $key => $value
+            ]);
+        }
     }
 }
