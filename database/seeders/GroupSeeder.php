@@ -88,7 +88,29 @@ class GroupSeeder extends Seeder
             'zip_code' => '11610',
             'lat' => '-6.1979899',
             'lng' => '106.742916',
-            'umk' => 5000000,
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Tanjung Duren',
+            'address' => 'Tanjung Duren',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Kebon Jeruk',
+            'address' => 'Kebon Jeruk',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
         ]);
         $company->branches()->create([
             'name' => 'SUN Alam Sutera',
@@ -99,7 +121,249 @@ class GroupSeeder extends Seeder
             'zip_code' => '15320',
             'lat' => '-6.2348656',
             'lng' => '106.5766001',
-            'umk' => 5000000,
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Kelapa Gading Timur',
+            'address' => 'Kelapa Gading Timur',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Kelapa Gading Barat',
+            'address' => 'Kelapa Gading Barat',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'STC Senayan',
+            'address' => 'STC Senayan',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Pluit',
+            'address' => 'Pluit',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Pondok Indah',
+            'address' => 'Pondok Indah',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Bali',
+            'address' => 'Bali',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Surabaya Timur',
+            'address' => 'Surabaya Timur',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Medan',
+            'address' => 'Medan',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Pekanbaru',
+            'address' => 'Pekanbaru',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Batam',
+            'address' => 'Batam',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Lampung',
+            'address' => 'Lampung',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Palembang',
+            'address' => 'Palembang',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Bandung',
+            'address' => 'Bandung',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Semarang',
+            'address' => 'Semarang',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Cirebon',
+            'address' => 'Cirebon',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Yogyakarta',
+            'address' => 'Yogyakarta',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Makassar',
+            'address' => 'Makassar',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Samarinda',
+            'address' => 'Samarinda',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Balikpapan',
+            'address' => 'Balikpapan',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Pontianak',
+            'address' => 'Pontianak',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Cibubur',
+            'address' => 'Cibubur',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Gading Serpong',
+            'address' => 'Gading Serpong',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
         ]);
 
         $company = $group->companies()->create([
@@ -117,26 +381,59 @@ class GroupSeeder extends Seeder
         $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
         $division->departments()->createMany($departments);
         $company->branches()->create([
-            'name' => 'SUNWAY Geo',
-            'address' => 'Sunway Geo Avenue, Sunway South Quay, Jalan Lagoon Selatan, Bandar Sunway, 47500 Subang Jaya, Selangor, Malaysia',
+            'name' => 'Penang',
+            'address' => 'Penang',
             'country' => 'Malaysia',
             'province' => 'Selangor',
             'city' => 'Subang Jaya',
             'zip_code' => '47500',
             'lat' => '3.0649282',
             'lng' => '101.5256048',
-            'umk' => 5000000,
+            'umk' => 5067381,
         ]);
         $company->branches()->create([
-            'name' => 'SUN KL',
-            'address' => 'Lebuh Bandar Utama Centre Point, Bandar Utama, 47800 Petaling Jaya, Selangor, Malaysia',
+            'name' => 'Kuala Lumpur',
+            'address' => 'Kuala Lumpur',
             'country' => 'Malaysia',
             'province' => 'Selangor',
-            'city' => 'Petaling Jaya',
-            'zip_code' => '47800',
-            'lat' => '3.1380439',
-            'lng' => '101.5275401',
-            'umk' => 5000000,
+            'city' => 'Subang Jaya',
+            'zip_code' => '47500',
+            'lat' => '3.0649282',
+            'lng' => '101.5256048',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Surabaya',
+            'address' => 'Surabaya',
+            'country' => 'Malaysia',
+            'province' => 'Selangor',
+            'city' => 'Subang Jaya',
+            'zip_code' => '47500',
+            'lat' => '3.0649282',
+            'lng' => '101.5256048',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Petaling Jaya',
+            'address' => 'Petaling Jaya',
+            'country' => 'Malaysia',
+            'province' => 'Selangor',
+            'city' => 'Subang Jaya',
+            'zip_code' => '47500',
+            'lat' => '3.0649282',
+            'lng' => '101.5256048',
+            'umk' => 5067381,
+        ]);
+        $company->branches()->create([
+            'name' => 'Sunway',
+            'address' => 'Sunway',
+            'country' => 'Malaysia',
+            'province' => 'Selangor',
+            'city' => 'Subang Jaya',
+            'zip_code' => '47500',
+            'lat' => '3.0649282',
+            'lng' => '101.5256048',
+            'umk' => 5067381,
         ]);
 
         $group = Group::create([
@@ -166,7 +463,7 @@ class GroupSeeder extends Seeder
             'zip_code' => '15320',
             'lat' => '-6.2348656',
             'lng' => '106.5766001',
-            'umk' => 5000000,
+            'umk' => 5067381,
         ]);
         // $company->branches()->create([
         //     'name' => 'Alba Eliafood',
@@ -177,39 +474,39 @@ class GroupSeeder extends Seeder
         //     'zip_code' => '15320',
         //     'lat' => '-6.2348656',
         //     'lng' => '106.5766001',
-        //     'umk' => 5000000,
+        //     'umk' => 5067381,
         // ]);
 
 
         // GROUP PATROL
-        $group = Group::create([
-            'name' => 'Group Patrol',
-        ]);
+        // $group = Group::create([
+        //     'name' => 'Group Patrol',
+        // ]);
 
-        $company = $group->companies()->create([
-            'name' => 'PT. Patroli 86',
-            'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
-            'country_id' => 1,
-            'country' => 'Indonesia',
-            'province' => 'DKI Jakarta',
-            'city' => 'Jakarta Barat',
-            'zip_code' => '11610',
-            'lat' => '-6.1979899',
-            'lng' => '106.742916',
-        ]);
-        $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
-        $division->departments()->createMany($departments);
-        $company->branches()->create([
-            'name' => 'Branch Patroli 1',
-            'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
-            'country' => 'Indonesia',
-            'province' => 'DKI Jakarta',
-            'city' => 'Jakarta Barat',
-            'zip_code' => '11610',
-            'lat' => '-6.1979899',
-            'lng' => '106.742916',
-            'umk' => 5000000,
-        ]);
+        // $company = $group->companies()->create([
+        //     'name' => 'PT. Patroli 86',
+        //     'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
+        //     'country_id' => 1,
+        //     'country' => 'Indonesia',
+        //     'province' => 'DKI Jakarta',
+        //     'city' => 'Jakarta Barat',
+        //     'zip_code' => '11610',
+        //     'lat' => '-6.1979899',
+        //     'lng' => '106.742916',
+        // ]);
+        // $company->positions()->createMany($positions);
+        // $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        // $division->departments()->createMany($departments);
+        // $company->branches()->create([
+        //     'name' => 'Branch Patroli 1',
+        //     'address' => 'Jl. Patroli 86, Kebon Pala, Kec. Gambir, Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10110',
+        //     'country' => 'Indonesia',
+        //     'province' => 'DKI Jakarta',
+        //     'city' => 'Jakarta Barat',
+        //     'zip_code' => '11610',
+        //     'lat' => '-6.1979899',
+        //     'lng' => '106.742916',
+        //     'umk' => 5067381,
+        // ]);
     }
 }

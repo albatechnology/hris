@@ -14,17 +14,13 @@ class CustomFieldSeeder extends Seeder
     {
         Company::all()->each(function ($company) {
             $company->customFields()->create([
-                'key' => 'Nama Kucing Peliharaan',
-                'type' => 'text',
+                'key' => 'Ukuran Batik SUN',
+                'type' => 'select',
+                'options' => ['S', 'M', 'L', 'XL', 'XXL'],
             ]);
 
             $company->customFields()->create([
-                'key' => 'Tgl Lahir Kucing Peliharaan',
-                'type' => 'date',
-            ]);
-
-            $company->customFields()->create([
-                'key' => 'Ukuran Jaket',
+                'key' => 'Ukuran Kaos DBMI',
                 'type' => 'select',
                 'options' => ['S', 'M', 'L', 'XL', 'XXL'],
             ]);

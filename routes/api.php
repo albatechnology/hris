@@ -71,6 +71,7 @@ Route::post('auth/setup-password/resend', [AuthController::class, 'resendSetupPa
 Route::post('auth/setup-password', [AuthController::class, 'setupPassword']);
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
+    Route::post('users/import', [UserController::class, 'import']);
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);
     Route::post('users/upload-photo', [UserController::class, 'uploadPhoto']);

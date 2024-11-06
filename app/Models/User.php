@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
-use Kalnoy\Nestedset\NodeTrait;
+// use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
@@ -27,7 +27,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
 {
-    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, NodeTrait;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.

@@ -18,7 +18,7 @@ return new class extends Migration
     {
         Schema::create('user_bpjs', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->constrained();
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->integer('upah_bpjs_kesehatan')->default(0);
             $table->integer('upah_bpjs_ketenagakerjaan')->default(0);
             $table->string('bpjs_ketenagakerjaan_no')->nullable();

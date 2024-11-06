@@ -21,11 +21,13 @@ use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
+use App\Imports\UserSunImport;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\TaskHour;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -595,5 +597,11 @@ class UserController extends BaseController
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.payroll', ['user' => $user, 'runPayrollUser' => $runPayrollUser, 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits])->setPaper('a4');
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
+    }
+
+    public function import(Request $request){
+        (new UserSunImport)->import($request->file);
+
+        return 'oke';
     }
 }

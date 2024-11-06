@@ -3,9 +3,12 @@
 namespace Database\Seeders;
 
 use App\Enums\UserType;
+use App\Imports\UserSunImport;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\Department;
 use App\Models\Group;
+use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\PermissionService;
@@ -76,25 +79,25 @@ class UserSeeder extends Seeder
             'group_id' => $group->id,
         ]);
 
-        $group = Group::findOrFail(3);
-        $administrator = User::create([
-            'group_id' => $group->id,
-            'company_id' => null,
-            'branch_id' => null,
-            'name' => 'Administrator Patroli' . $group->name,
-            'email' => 'administrator.patroli@gmail.com',
-            'email_verified_at' => now(),
-            'password' => self::PASSWORD,
-            'type' => UserType::ADMINISTRATOR,
-        ]);
-        $administrator->payrollInfo()->create([]);
-        $administrator->detail()->create([]);
-        DB::table('model_has_roles')->insert([
-            'role_id' => $administratorRole->id,
-            'model_type' => get_class($administrator),
-            'model_id' => $administrator->id,
-            'group_id' => $group->id,
-        ]);
+        // $group = Group::findOrFail(3);
+        // $administrator = User::create([
+        //     'group_id' => $group->id,
+        //     'company_id' => null,
+        //     'branch_id' => null,
+        //     'name' => 'Administrator Patroli' . $group->name,
+        //     'email' => 'administrator.patroli@gmail.com',
+        //     'email_verified_at' => now(),
+        //     'password' => self::PASSWORD,
+        //     'type' => UserType::ADMINISTRATOR,
+        // ]);
+        // $administrator->payrollInfo()->create([]);
+        // $administrator->detail()->create([]);
+        // DB::table('model_has_roles')->insert([
+        //     'role_id' => $administratorRole->id,
+        //     'model_type' => get_class($administrator),
+        //     'model_id' => $administrator->id,
+        //     'group_id' => $group->id,
+        // ]);
 
         /** ================================================================= */
         Company::all()->each(function (Company $company) {
@@ -104,7 +107,6 @@ class UserSeeder extends Seeder
             ]);
             $permissions = PermissionService::getPermissionsData(PermissionService::administratorPermissions());
             $adminRole->syncPermissions($permissions);
-
             $admin = User::create([
                 'group_id' => $company->group_id,
                 'company_id' => $company->id,
@@ -130,6 +132,12 @@ class UserSeeder extends Seeder
             ]);
             $admin->companies()->create(['company_id' => $admin->company_id]);
 
+            // set positions
+            $admin->positions()->create([
+                'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $admin->company_id))->where('name', 'HR')->firstOrFail(['id'])->id,
+                'position_id' => Position::where('company_id', $admin->company_id)->where('name', 'Manager')->firstOrFail(['id'])->id,
+            ]);
+
             /** ================================================================= */
             $userRole = Role::create([
                 'group_id' => $company->group_id,
@@ -137,6 +145,9 @@ class UserSeeder extends Seeder
             ]);
             $permissions = PermissionService::getPermissionsData(PermissionService::userPermissions());
             $userRole->syncPermissions($permissions);
+
+
+            // (new UserSunImport)->import(public_path('import_users.xlsx'));
 
             $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin) {
                 $admin->branches()->create(['branch_id' => $branch->id]);
@@ -188,7 +199,7 @@ class UserSeeder extends Seeder
                     foreach ($albaUsers as $i => $albaUser) {
                         $user = $branch->users()->create([
                             'approval_id' => $admin->id,
-                            'parent_id' => $admin->id,
+                            // 'parent_id' => $admin->id,
                             'name' => $albaUser['name'],
                             'email' => $albaUser['email'],
                             'email_verified_at' => now(),
@@ -215,36 +226,36 @@ class UserSeeder extends Seeder
                         $user->schedules()->sync($user->company->schedules->pluck('id'));
                     }
                 } else {
-                    for ($i = 1; $i < 4; $i++) {
-                        /** @var User $user */
-                        $user = $branch->users()->create([
-                            'approval_id' => $admin->id,
-                            'parent_id' => $admin->id,
-                            'name' => sprintf('User %s %s', $i, $branch->name),
-                            'email' => sprintf('user%s.%s@gmail.com', $i, $branch->id),
-                            'email_verified_at' => now(),
-                            'password' => self::PASSWORD,
-                            'type' => UserType::USER,
-                            'nik' => rand(16, 100),
-                            'phone' => "08569197717$i",
-                            'sign_date' => date('Y') . '-01-01',
-                            'join_date' => date('Y') . '-01-01',
-                        ]);
-                        $user->addMedia(public_path('img/difa.jpg'))->preservingOriginal()->toMediaCollection('user');
-                        $user->payrollInfo()->create([
-                            'basic_salary' => 1000000
-                        ]);
-                        $user->detail()->create([]);
-                        DB::table('model_has_roles')->insert([
-                            'role_id' => $userRole->id,
-                            'model_type' => get_class($user),
-                            'model_id' => $user->id,
-                            'group_id' => $company->group_id,
-                        ]);
-                        $user->branches()->create(['branch_id' => $user->branch_id]);
-                        $user->companies()->create(['company_id' => $user->company_id]);
-                        $user->schedules()->sync($user->company->schedules->pluck('id'));
-                    }
+                    // for ($i = 1; $i < 4; $i++) {
+                    //     /** @var User $user */
+                    //     $user = $branch->users()->create([
+                    //         'approval_id' => $admin->id,
+                    //         'parent_id' => $admin->id,
+                    //         'name' => sprintf('User %s %s', $i, $branch->name),
+                    //         'email' => sprintf('user%s.%s@gmail.com', $i, $branch->id),
+                    //         'email_verified_at' => now(),
+                    //         'password' => self::PASSWORD,
+                    //         'type' => UserType::USER,
+                    //         'nik' => rand(16, 100),
+                    //         'phone' => "08569197717$i",
+                    //         'sign_date' => date('Y') . '-01-01',
+                    //         'join_date' => date('Y') . '-01-01',
+                    //     ]);
+                    //     $user->addMedia(public_path('img/difa.jpg'))->preservingOriginal()->toMediaCollection('user');
+                    //     $user->payrollInfo()->create([
+                    //         'basic_salary' => 1000000
+                    //     ]);
+                    //     $user->detail()->create([]);
+                    //     DB::table('model_has_roles')->insert([
+                    //         'role_id' => $userRole->id,
+                    //         'model_type' => get_class($user),
+                    //         'model_id' => $user->id,
+                    //         'group_id' => $company->group_id,
+                    //     ]);
+                    //     $user->branches()->create(['branch_id' => $user->branch_id]);
+                    //     $user->companies()->create(['company_id' => $user->company_id]);
+                    //     $user->schedules()->sync($user->company->schedules->pluck('id'));
+                    // }
                 }
             });
         });
