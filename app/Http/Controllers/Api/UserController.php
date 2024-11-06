@@ -70,7 +70,8 @@ class UserController extends BaseController
             }),
             'detail',
             'payrollInfo',
-            'schedules'
+            'schedules',
+            'supervisors',
         ];
     }
 
@@ -382,7 +383,7 @@ class UserController extends BaseController
                 ];
             } elseif ($requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type.value', $type)) {
                 $dataAllowedToUpdate[] = [
-                    'type' => $requestChangeDataAllow->type,
+                    'type' => $requestChangeDataAllow->type->value,
                     'value' => $value,
                 ];
             }
@@ -393,35 +394,43 @@ class UserController extends BaseController
             /** @var \App\Models\RequestChangeData $requestChangeData */
             $requestChangeData = $user->requestChangeDatas()->create($request->validated());
 
-            if (count($dataRequested) > 0) {
-                $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
-                $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
-
-                if ($photoProfile && $photoProfile['value']?->isValid()) {
-                    $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);
-                    $hasil = $requestChangeDataDetail->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
-                    $requestChangeDataDetail->update(['value' => $hasil->getFullUrl()]);
+            if (!auth()->user()->is_user) {
+                foreach (array_merge($dataRequested, $dataAllowedToUpdate) ?? [] as $data) {
+                    dump($data);
+                    dump($data['type'], $user->id, $data['value']);
+                    RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
                 }
+            } else {
+                if (count($dataRequested) > 0) {
+                    $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+                    $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
 
-                if ($request->hasFile('file')) {
-                    foreach ($request->file('file') as $file) {
-                        if ($file->isValid()) {
-                            $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
+                    if ($photoProfile && $photoProfile['value']?->isValid()) {
+                        $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);
+                        $hasil = $requestChangeDataDetail->addMedia($photoProfile['value'])->toMediaCollection($mediaCollection);
+                        $requestChangeDataDetail->update(['value' => $hasil->getFullUrl()]);
+                    }
+
+                    if ($request->hasFile('file')) {
+                        foreach ($request->file('file') as $file) {
+                            if ($file->isValid()) {
+                                $requestChangeData->addMedia($file)->toMediaCollection($mediaCollection);
+                            }
                         }
                     }
+
+                    $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
+
+                    // moved to RequestApprovalService
+                    // $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
+                    // $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
                 }
 
-                $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
-
-                // moved to RequestApprovalService
-                // $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
-                // $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
-            }
-
-            if (count($dataAllowedToUpdate) > 0) {
-                // auto update, no need approval
-                foreach ($dataAllowedToUpdate as $data) {
-                    RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
+                if (count($dataAllowedToUpdate) > 0) {
+                    // auto update, no need approval
+                    foreach ($dataAllowedToUpdate as $data) {
+                        RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
+                    }
                 }
             }
 
@@ -520,12 +529,15 @@ class UserController extends BaseController
     public function getAvailableSupervisor(User $user)
     {
         $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
-
         $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
-        $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
-            ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)))
-            ->paginate();
+        if (!is_null($order)) {
+            $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
+                ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)))
+                ->paginate();
+        } else {
+            $users = User::where('id', '<', 0)->paginate();
+        }
 
         return UserResource::collection($users);
     }
