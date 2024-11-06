@@ -332,6 +332,7 @@ class AttendanceController extends BaseController
 
         $data = [];
 
+        $summaryPresentAbsent = 0;
         $summaryPresentOnTime = 0;
         $summaryPresentLateClockIn = 0;
         $summaryPresentEarlyClockOut = 0;
@@ -410,6 +411,10 @@ class AttendanceController extends BaseController
                         }
                     }
 
+                    if ($attendance->clockIn && $attendance->clockOut) {
+                        $summaryPresentAbsent += 1;
+                    }
+
                     // calculate timeoff
                     if ($attendance->timeoff) {
                         $summaryAwayTimeOff += 1;
@@ -468,6 +473,7 @@ class AttendanceController extends BaseController
         return response()->json([
             'summary' => [
                 'present' => [
+                    'absent' => $summaryPresentAbsent,
                     'on_time' => $summaryPresentOnTime,
                     'late_clock_in' => $summaryPresentLateClockIn,
                     'early_clock_out' => $summaryPresentEarlyClockOut,
