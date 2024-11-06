@@ -348,8 +348,7 @@ class AttendanceController extends BaseController
             $orderKey = array_keys($order->toArray())[0];
             $totalShifts = $schedule->shifts->count();
 
-            $attendances = Attendance::tenanted()
-                ->where('user_id', $user->id)
+            $attendances = Attendance::where('user_id', $user->id)
                 ->whereHas('details', fn($q) => $q->approved())
                 ->with([
                     'shift',
@@ -500,7 +499,7 @@ class AttendanceController extends BaseController
         if (!$user->is_super_admin) {
             $query->tenanted();
             if (!$user->type->is(UserType::ADMINISTRATOR)) {
-                $query->whereDescendantOf($user);
+                $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
             }
         }
 
@@ -656,7 +655,7 @@ class AttendanceController extends BaseController
         if (!$user->is_super_admin) {
             $query->tenanted();
             if (!$user->type->is(UserType::ADMINISTRATOR)) {
-                $query->whereDescendantOf($user);
+                $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
             }
         }
 
@@ -739,12 +738,12 @@ class AttendanceController extends BaseController
 
     public function logs()
     {
-        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->tenanted()))
+        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->whereHas('user', auth()->id())))
             ->allowedFilters([
                 'is_clock_in',
-                // 'approval_status',
-                'approved_by',
                 'type',
+                // 'approval_status',
+                // 'approved_by',
                 AllowedFilter::callback('user_id', fn($query, $value) => $query->whereHas('attendance', fn($q) => $q->where('user_id', $value))),
                 AllowedFilter::callback('shift_id', fn($query, $value) => $query->whereHas('attendance', fn($q) => $q->where('shift_id', $value))),
             ])
@@ -754,7 +753,7 @@ class AttendanceController extends BaseController
                         ->with('shift', fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
                 }),
             ])
-            ->allowedSorts(['is_clock_in', 'approved_by', 'created_at'])
+            ->allowedSorts(['id', 'is_clock_in', 'created_at'])
             ->paginate($this->per_page);
 
         return DefaultResource::collection($attendance);

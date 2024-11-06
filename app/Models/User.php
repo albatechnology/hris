@@ -89,26 +89,33 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        if ($user->is_super_admin) return $query;
+
         if ($user->is_administrator) {
-            return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::USER])
+            return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::ADMIN, UserType::USER])
                 ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
             // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
         if ($isDescendant) {
-            if ($user->descendants()->exists()) {
-                return $query->whereDescendantOf($user);
+            if (DB::table('user_supervisors')->where('supervisor_id', $user->id)->exists()) {
+                $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
             }
 
-            return $query->where('id', $user->id);
+            return $query;
+            // return $query->where('id', $user->id);
         }
 
+        // if ($user->is_admin) {
         $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
 
-        return $query->whereIn('users.company_id', $companyIds);
+        return $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
+        // }
+
+        // $query->where('id', $user->id);
+        // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+
+        // return $query->whereIn('users.company_id', $companyIds);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -146,6 +153,19 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             $q->whereNull('parent_id');
             $q->orWhereHas('detail', fn($q2) => $q2->whereIn('user_details.job_level', $value));
         });
+    }
+
+    public function scopeWhereTypeUnder(Builder $query, UserType $userType)
+    {
+        if ($userType->is(UserType::ADMINISTRATOR)) {
+            return $query->whereIn('type', [UserType::ADMINISTRATOR, UserType::ADMIN, UserType::USER]);
+        } elseif ($userType->is(UserType::ADMIN)) {
+            return $query->whereIn('type', [UserType::ADMIN, UserType::USER]);
+        } elseif ($userType->is(UserType::USER)) {
+            return $query->where('type', UserType::USER);
+        }
+
+        return $query;
     }
 
     public function scopeScheduleType(Builder $query)
@@ -376,6 +396,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function getIsAdministratorAttribute(): bool
     {
         return $this->type->is(UserType::ADMINISTRATOR);
+    }
+
+    public function getIsAdminAttribute(): bool
+    {
+        return $this->type->is(UserType::ADMIN);
     }
 
     public function getIsUserAttribute(): bool

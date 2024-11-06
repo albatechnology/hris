@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Enums\UserType;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
 class IndexRequest extends FormRequest
 {
@@ -49,9 +51,12 @@ class IndexRequest extends FormRequest
 
                         if ($user->id === $userLogin->id) return;
 
-                        if (!$user->isDescendantOf($userLogin)) {
+                        if ($user->type->is(UserType::USER) && DB::table('user_supervisors')->where('user_id', $value)->where('supervisor_id', $user->id)->doesntExist()) {
                             $fail("User is not your descendant.");
                         }
+                        // if (!$user->isDescendantOf($userLogin)) {
+                        //     $fail("User is not your descendant.");
+                        // }
                     }
                 }
             }],
