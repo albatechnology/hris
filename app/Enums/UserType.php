@@ -8,6 +8,7 @@ enum UserType: string
 
     case SUPER_ADMIN = 'super_admin';
     case ADMINISTRATOR = 'administrator';
+    case ADMIN = 'admin';
     case USER = 'user';
 
     public function hasPermission(string $access, string $permission): bool

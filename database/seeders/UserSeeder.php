@@ -113,7 +113,7 @@ class UserSeeder extends Seeder
                 'email' => $company->id == 3 ? 'admin.alba@gmail.com' : 'admin' . $company->id . '@gmail.com',
                 'email_verified_at' => now(),
                 'password' => self::PASSWORD,
-                'type' => UserType::USER,
+                'type' => UserType::ADMIN,
                 'nik' => rand(16, 100),
                 'sign_date' => date('Y') . '-01-01',
                 'join_date' => date('Y') . '-01-01',
