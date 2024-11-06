@@ -738,7 +738,7 @@ class AttendanceController extends BaseController
 
     public function logs()
     {
-        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->whereHas('user', auth()->id())))
+        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->where('user_id', auth()->id())))
             ->allowedFilters([
                 'is_clock_in',
                 'type',
