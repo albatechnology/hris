@@ -2,17 +2,15 @@
 
 namespace App\Models;
 
-use App\Enums\ApprovalStatus;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class TaskRequest extends Model implements TenantedInterface, HasMedia
+class TaskRequest extends RequestedBaseModel implements TenantedInterface, HasMedia
 {
     use BelongsToUser, InteractsWithMedia;
 
@@ -22,24 +20,22 @@ class TaskRequest extends Model implements TenantedInterface, HasMedia
         'start_at',
         'end_at',
         'note',
-        'approval_status',
-        'approved_by',
-        'approved_at',
-    ];
-
-    protected $casts = [
-        'approval_status' => ApprovalStatus::class,
+        // 'approval_status',
+        // 'approved_by',
+        // 'approved_at',
     ];
 
     protected $appends = [
+        'approval_status',
         'files'
     ];
 
     protected static function booted(): void
     {
-        static::creating(function (self $model) {
-            $model->approved_by = $model->user->approval?->id ?? null;
-        });
+        parent::booted();
+        // static::creating(function (self $model) {
+        //     $model->approved_by = $model->user->approval?->id ?? null;
+        // });
     }
 
     public function scopeTenanted(Builder $query): Builder
@@ -50,11 +46,11 @@ class TaskRequest extends Model implements TenantedInterface, HasMedia
             return $query;
         }
         if ($user->is_administrator) {
-            return $query->whereHas('user', fn ($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
+            return $query->whereHas('user', fn($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
         }
 
         if ($user->descendants()->exists()) {
-            return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
+            return $query->whereHas('user', fn($q) => $q->whereDescendantOf($user));
         }
 
         return $query->where('user_id', $user->id);
@@ -78,10 +74,10 @@ class TaskRequest extends Model implements TenantedInterface, HasMedia
         return $this->belongsTo(TaskHour::class);
     }
 
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+    // public function approvedBy(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'approved_by');
+    // }
 
     public function getFilesAttribute()
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\TaskRequest\StoreRequest;
@@ -10,6 +11,7 @@ use App\Http\Resources\DefaultResource;
 use App\Models\TaskRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
@@ -28,19 +30,20 @@ class TaskRequestController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(TaskRequest::tenanted())
+        $data = QueryBuilder::for(TaskRequest::tenanted()->with('approvals'))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('task_hour_id'),
-                AllowedFilter::callback('task_id', fn ($query, $value) => $query->whereHas('taskHour', fn ($q) => $q->where('task_id', $value))),
-                'approval_status'
+                AllowedFilter::callback('task_id', fn($query, $value) => $query->whereHas('taskHour', fn($q) => $q->where('task_id', $value))),
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
             ])
             ->allowedIncludes([
-                AllowedInclude::callback('taskHour', fn ($q) => $q->select('id', 'name', 'task_id')->with('task', fn ($q) => $q->select('id', 'name'))),
+                AllowedInclude::callback('taskHour', fn($q) => $q->select('id', 'name', 'task_id')->with('task', fn($q) => $q->select('id', 'name'))),
             ])
             ->allowedSorts([
-                'id', 'created_at',
+                'id',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -117,43 +120,60 @@ class TaskRequestController extends BaseController
 
     public function approve(ApproveRequest $request, TaskRequest $taskRequest): DefaultResource|JsonResponse
     {
+        $requestApproval = $taskRequest->approvals()->where('user_id', auth()->id())->first();
+
+        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+
+        if (!$taskRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if ($taskRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         DB::beginTransaction();
         try {
-            $taskRequest->update($request->validated());
+            $requestApproval->update($request->validated());
+            // $taskRequest->update($request->validated());
 
-            $notificationType = NotificationType::TASK_APPROVED;
-            $taskRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $taskRequest->approvedBy, $taskRequest->approval_status, $taskRequest));
+            // $notificationType = NotificationType::TASK_APPROVED;
+            // $taskRequest->user->notify(new ($notificationType->getNotificationClass())($notificationType, $taskRequest->approvedBy, $taskRequest->approval_status, $taskRequest));
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
             return $this->errorResponse($th->getMessage());
         }
 
-        return new DefaultResource($taskRequest);
+        return $this->updatedResponse();
     }
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = DB::table('task_requests')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = TaskRequest::myApprovals()
+            ->whereApprovalStatus($request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }
 
     public function approvals()
     {
-        $query = TaskRequest::whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()))
-            ->with('user', fn ($q) => $q->select('id', 'name'));
+        $query = TaskRequest::myApprovals()
+            ->with([
+                'user' => fn($q) => $q->select('id', 'name'),
+                // 'approvedBy' => fn($q) => $q->select('id', 'name'),
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
+            ]);
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('id'),
-                'approval_status'
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
             ])
             ->allowedIncludes([
-                AllowedInclude::callback('taskHour', fn ($q) => $q->select('id', 'name', 'task_id')->with('task', fn ($q) => $q->select('id', 'name'))),
+                AllowedInclude::callback('taskHour', fn($q) => $q->select('id', 'name', 'task_id')->with('task', fn($q) => $q->select('id', 'name'))),
             ])
             ->allowedSorts([
-                'id', 'date',
+                'id',
+                'date',
             ])
             ->paginate($this->per_page);
 

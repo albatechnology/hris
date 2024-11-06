@@ -105,6 +105,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         } elseif ($this instanceof AdvancedLeaveRequest) {
             if ($isApproved) return NotificationType::ADVANCED_LEAVE_APPROVED;
             return NotificationType::REQUEST_ADVANCED_LEAVE;
+        } elseif ($this instanceof TaskRequest) {
+            if ($isApproved) return NotificationType::TASK_APPROVED;
+            return NotificationType::REQUEST_TASK;
         }
     }
 
