@@ -70,25 +70,24 @@ class RequestApprovalService
         $user = self::getUser($requestedbaseModel);
         $approvers = [];
 
-        // check to settings table, if default request approver has been set, use it. else find from user_supervisors
-        $defaultApproverId = $user->company->settings()->where('key', SettingKey::REQUEST_APPROVER)->first(['value'])?->value;
+        // find user supervisors to be approvers. if default approver has been set, use it. else find from settings where key REQUEST_APPROVER
+        $user->load(['supervisors' => fn($q) => $q->orderBy('order')]);
+        if ($user->supervisors->count() > 0) {
+            $approvers = $user->supervisors?->map(fn(UserSupervisor $userSupervisor) => [
+                'user_id' => $userSupervisor->supervisor_id,
+            ])->all();
+            return $approvers;
+        }
 
+        // check to settings table
+        $defaultApproverId = $user->company->settings()->where('key', SettingKey::REQUEST_APPROVER)->first(['value'])?->value;
         /** @var User $defaultApprover */
         $defaultApprover = User::find($defaultApproverId, ['id']);
         if ($defaultApprover) {
             $approvers[] = [
                 'user_id' => $defaultApprover->id,
             ];
-
-            return $approvers;
         }
-
-
-        // find user supervisors to be approvers
-        $user->load(['supervisors' => fn($q) => $q->orderBy('order')]);
-        $approvers = $user->supervisors?->map(fn(UserSupervisor $userSupervisor) => [
-            'user_id' => $userSupervisor->supervisor_id,
-        ])->all();
 
         return $approvers;
     }
