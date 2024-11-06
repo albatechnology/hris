@@ -168,6 +168,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query;
     }
 
+    public function scopeWhereName(Builder $query, string $value)
+    {
+        $query->where(fn($q) => $q->where('name', 'like', '%' . $value . '%')->orWhere('last_name', 'like', '%' . $value . '%'));
+    }
+
     public function scopeScheduleType(Builder $query)
     {
         return $query;

@@ -106,7 +106,7 @@ class UserController extends BaseController
                 AllowedFilter::callback('client_id', function ($query, $value) {
                     $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
                 }),
-                'name',
+                AllowedFilter::scope('name', 'whereName'),
                 'email',
                 'type',
                 'nik',
