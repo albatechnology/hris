@@ -65,8 +65,8 @@ class RequestChangeDataController extends BaseController
         try {
             $requestApproval->update($request->validated());
 
-            $notificationType = NotificationType::REQUEST_CHANGE_DATA_APPROVED;
-            $requestChangeData->user->notify(new ($notificationType->getNotificationClass())($notificationType, auth()->user(), $requestApproval->approval_status, $requestChangeData));
+            // $notificationType = NotificationType::REQUEST_CHANGE_DATA_APPROVED;
+            // $requestChangeData->user->notify(new ($notificationType->getNotificationClass())($notificationType, auth()->user(), $requestApproval->approval_status, $requestChangeData));
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
