@@ -62,6 +62,7 @@ class Timeoff extends RequestedBaseModel
             return $query->whereHas('user', fn($q) => $q->whereTypeUnder($user->type)->whereHas('companies', fn($q) => $q->where('company_id', $companyIds)));
         } else {
             $userIds = \Illuminate\Support\Facades\DB::table('user_supervisors')->where('supervisor_id', $user->id)->get(['user_id'])?->pluck('user_id')->all() ?? [];
+
             return $query->whereIn('user_id', [...$userIds, $user->id]);
         }
 
