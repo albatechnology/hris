@@ -30,7 +30,7 @@ class TimeoffApproved extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm'];
+        return ['database'];
     }
 
     /**
@@ -68,7 +68,7 @@ class TimeoffApproved extends Notification
             'model_id' => $this->timeoff->id
         ];
     }
-    
+
     /**
      * Get the fcm representation of the notification.
      */

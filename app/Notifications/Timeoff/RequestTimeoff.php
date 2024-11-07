@@ -28,7 +28,7 @@ class RequestTimeoff extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm'];
+        return ['database'];
     }
 
     /**
@@ -69,7 +69,7 @@ class RequestTimeoff extends Notification
             'model_id' => $this->timeoff->id
         ];
     }
-    
+
     /**
      * Get the fcm representation of the notification.
      */
