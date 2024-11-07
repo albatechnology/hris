@@ -53,12 +53,17 @@ class Timeoff extends RequestedBaseModel
             return $query;
         }
         if ($user->is_administrator) {
-            return $query->whereHas('user', fn ($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
+            return $query->whereHas('user', fn($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
         }
 
-        // if ($user->descendants()->exists()) {
-        //     return $query->whereHas('user', fn ($q) => $q->whereDescendantOf($user));
-        // }
+        if ($user->is_admin) {
+            $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+
+            return $query->whereHas('user', fn($q) => $q->whereTypeUnder($user->type)->whereHas('companies', fn($q) => $q->where('company_id', $companyIds)));
+        } else {
+            $userIds = \Illuminate\Support\Facades\DB::table('user_supervisors')->where('supervisor_id', $user->id)->get(['user_id'])?->pluck('user_id')->all() ?? [];
+            return $query->whereIn('user_id', [...$userIds, $user->id]);
+        }
 
         return $query->where('user_id', $user->id);
         // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
@@ -118,9 +123,9 @@ class Timeoff extends RequestedBaseModel
         $realEnd = new \DateTime($this->end_at);
         $realEnd->add($interval);
         $period = new \DatePeriod(new \DateTime($this->start_at), $interval, $realEnd);
-        $this->load(['user' => fn ($q) => $q->select('id')]);
+        $this->load(['user' => fn($q) => $q->select('id')]);
 
-        $schedule = \App\Services\ScheduleService::getTodaySchedule($this->user, $this->start_at)?->load(['shifts' => fn ($q) => $q->orderBy('order')]);
+        $schedule = \App\Services\ScheduleService::getTodaySchedule($this->user, $this->start_at)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
         if ($schedule) {
             $order = $schedule->shifts->where('id', $schedule->shift->id);
             $orderKey = array_keys($order->toArray())[0];
