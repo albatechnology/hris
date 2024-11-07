@@ -87,7 +87,6 @@ class RequestChangeDataController extends BaseController
     public function approvals()
     {
         $query = RequestChangeData::myApprovals()
-            // ->whereHas('user', fn($q) => $q->where('approval_id', auth('sanctum')->id()))
             ->with('user', fn($q) => $q->select('id', 'name'))
             ->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')));
 

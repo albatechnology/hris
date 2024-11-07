@@ -976,7 +976,8 @@ class AttendanceController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = DB::table('attendance_details')->where('approved_by', auth('sanctum')->id())->where('type', AttendanceType::MANUAL)->where('approval_status', $request->filter['approval_status'])->count();
+        $total = AttendanceDetail::myApprovals()
+            ->whereApprovalStatus($request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }
@@ -985,7 +986,7 @@ class AttendanceController extends BaseController
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
             ->myApprovals()
-            ->with('attendance', fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')->with([
+            ->with('attendance', fn($q) => $q->with([
                 'user' => fn($q) => $q->select('id', 'name'),
                 'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                 'schedule' => fn($q) => $q->select('id', 'name')
@@ -1009,7 +1010,8 @@ class AttendanceController extends BaseController
     {
         $attendanceDetail->load(
             [
-                'attendance' => fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
+                // 'attendance' => fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
+                'attendance' => fn($q) => $q
                     ->with([
                         'user' => fn($q) => $q->select('id', 'name'),
                         'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
