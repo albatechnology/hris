@@ -51,6 +51,10 @@ class IndexRequest extends FormRequest
 
                         if ($user->id === $userLogin->id) return;
 
+                        if ($userLogin->is_admin) {
+                            return;
+                        }
+
                         if ($user->type->is(UserType::USER) && DB::table('user_supervisors')->where('user_id', $value)->where('supervisor_id', $user->id)->doesntExist()) {
                             $fail("User is not your descendant.");
                         }
