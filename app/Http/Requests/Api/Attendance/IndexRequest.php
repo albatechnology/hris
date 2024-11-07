@@ -47,7 +47,7 @@ class IndexRequest extends FormRequest
                     $userLogin = auth('sanctum')->user();
 
                     if (!$userLogin->is_super_admin) {
-                        $user = User::where('id', $value)->firstOrFail(['id', 'parent_id', '_lft', '_rgt']);
+                        $user = User::where('id', $value)->firstOrFail();
 
                         if ($user->id === $userLogin->id) return;
 
