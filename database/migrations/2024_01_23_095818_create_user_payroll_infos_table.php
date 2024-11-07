@@ -1,10 +1,6 @@
 <?php
 
-use App\Enums\BpjsKesehatanCost;
 use App\Enums\CurrencyCode;
-use App\Enums\JaminanPensiunCost;
-use App\Enums\JhtCost;
-use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\OvertimeSetting;
 use App\Enums\PaymentSchedule;
 use App\Enums\PtkpStatus;

@@ -74,8 +74,8 @@ class AttendanceController extends BaseController
     //             ->with([
     //                 'shift' => fn ($q) => $q->select('id', 'name'),
     //                 'timeoff.timeoffPolicy',
-    //                 'clockIn' => fn ($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
-    //                 'clockOut' => fn ($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+    //                 'clockIn' => fn ($q) => $q->approved(),
+    //                 'clockOut' => fn ($q) => $q->approved(),
     //             ])
     //             ->whereDateBetween($startDate, $endDate)
     //             ->limit($this->per_page)
@@ -198,8 +198,8 @@ class AttendanceController extends BaseController
                 ->with([
                     'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
-                    'clockOut' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+                    'clockIn' => fn($q) => $q->approved(),
+                    'clockOut' => fn($q) => $q->approved(),
                 ])
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
@@ -681,12 +681,12 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->whereHas('details', fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED))
+                ->whereHas('details', fn($q) => $q->approved())
                 ->with([
                     'shift',
                     'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
-                    'clockOut' => fn($q) => $q->whereApprovalStatus(ApprovalStatus::APPROVED),
+                    'clockIn' => fn($q) => $q->approved(),
+                    'clockOut' => fn($q) => $q->approved(),
                     // 'details' => fn ($q) => $q->orderBy('created_at')
                 ])->first();
 
@@ -738,7 +738,10 @@ class AttendanceController extends BaseController
 
     public function logs()
     {
-        $attendance = QueryBuilder::for(AttendanceDetail::whereHas('attendance', fn($q) => $q->where('user_id', auth()->id())))
+        $attendance = QueryBuilder::for(
+            AttendanceDetail::whereHas('attendance', fn($q) => $q->where('user_id', auth()->id()))
+                ->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')))
+        )
             ->allowedFilters([
                 'is_clock_in',
                 'type',
@@ -836,18 +839,18 @@ class AttendanceController extends BaseController
                 'is_clock_in' => true,
                 'time' => $request->date . ' ' . $request->clock_in,
                 'type' => AttendanceType::MANUAL,
-                'approval_status' => ApprovalStatus::APPROVED,
-                'approved_at' => now(),
-                'approved_by' => auth('sanctum')->id(),
+                // 'approval_status' => ApprovalStatus::APPROVED,
+                // 'approved_at' => now(),
+                // 'approved_by' => auth('sanctum')->id(),
             ]);
             // clock out
             $attendance->details()->create([
                 'is_clock_in' => false,
                 'time' => $request->date . ' ' . $request->clock_out,
                 'type' => AttendanceType::MANUAL,
-                'approval_status' => ApprovalStatus::APPROVED,
-                'approved_at' => now(),
-                'approved_by' => auth('sanctum')->id(),
+                // 'approval_status' => ApprovalStatus::APPROVED,
+                // 'approved_at' => now(),
+                // 'approved_by' => auth('sanctum')->id(),
             ]);
 
             DB::commit();
