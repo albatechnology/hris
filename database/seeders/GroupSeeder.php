@@ -65,7 +65,7 @@ class GroupSeeder extends Seeder
             'name' => 'SUN EDUCATION GROUP',
         ]);
 
-        $company = $group->companies()->create([
+        $company1 = $group->companies()->create([
             'name' => 'SUN INTERNASIONAL EDUKASI',
             'address' => 'Gedung SUN Plaza, Jl. Meruya Ilir Raya No.20, RT.4/RW.7, Meruya Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610',
             'country_id' => 1,
@@ -76,10 +76,10 @@ class GroupSeeder extends Seeder
             'lat' => '-6.1979899',
             'lng' => '106.742916',
         ]);
-        $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $company1->positions()->createMany($positions);
+        $division = $company1->divisions()->create(['name' => 'Operasional (' . $company1->name . ')']);
         $division->departments()->createMany($departments);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'SUN Plaza',
             'address' => 'Gedung SUN Plaza, Jl. Meruya Ilir Raya No.20, RT.4/RW.7, Meruya Sel., Kec. Kembangan, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11610',
             'country' => 'Indonesia',
@@ -90,7 +90,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Tanjung Duren',
             'address' => 'Tanjung Duren',
             'country' => 'Indonesia',
@@ -101,7 +101,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Kebon Jeruk',
             'address' => 'Kebon Jeruk',
             'country' => 'Indonesia',
@@ -112,7 +112,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'SUN Alam Sutera',
             'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
             'country' => 'Indonesia',
@@ -123,7 +123,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.5766001',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Kelapa Gading Timur',
             'address' => 'Kelapa Gading Timur',
             'country' => 'Indonesia',
@@ -134,7 +134,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Kelapa Gading Barat',
             'address' => 'Kelapa Gading Barat',
             'country' => 'Indonesia',
@@ -145,7 +145,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'STC Senayan',
             'address' => 'STC Senayan',
             'country' => 'Indonesia',
@@ -156,7 +156,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Pluit',
             'address' => 'Pluit',
             'country' => 'Indonesia',
@@ -167,7 +167,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Pondok Indah',
             'address' => 'Pondok Indah',
             'country' => 'Indonesia',
@@ -178,7 +178,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Bali',
             'address' => 'Bali',
             'country' => 'Indonesia',
@@ -189,7 +189,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Surabaya Timur',
             'address' => 'Surabaya Timur',
             'country' => 'Indonesia',
@@ -200,7 +200,18 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
+            'name' => 'Surabaya Barat',
+            'address' => 'Surabaya Barat',
+            'country' => 'Indonesia',
+            'province' => 'DKI Jakarta',
+            'city' => 'Jakarta Barat',
+            'zip_code' => '11610',
+            'lat' => '-6.1979899',
+            'lng' => '106.742916',
+            'umk' => 5067381,
+        ]);
+        $company1->branches()->create([
             'name' => 'Medan',
             'address' => 'Medan',
             'country' => 'Indonesia',
@@ -211,7 +222,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Pekanbaru',
             'address' => 'Pekanbaru',
             'country' => 'Indonesia',
@@ -222,7 +233,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Batam',
             'address' => 'Batam',
             'country' => 'Indonesia',
@@ -233,7 +244,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Lampung',
             'address' => 'Lampung',
             'country' => 'Indonesia',
@@ -244,7 +255,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Palembang',
             'address' => 'Palembang',
             'country' => 'Indonesia',
@@ -255,7 +266,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Bandung',
             'address' => 'Bandung',
             'country' => 'Indonesia',
@@ -266,7 +277,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Semarang',
             'address' => 'Semarang',
             'country' => 'Indonesia',
@@ -277,7 +288,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Cirebon',
             'address' => 'Cirebon',
             'country' => 'Indonesia',
@@ -288,7 +299,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Yogyakarta',
             'address' => 'Yogyakarta',
             'country' => 'Indonesia',
@@ -299,7 +310,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Makassar',
             'address' => 'Makassar',
             'country' => 'Indonesia',
@@ -310,7 +321,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Samarinda',
             'address' => 'Samarinda',
             'country' => 'Indonesia',
@@ -321,7 +332,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Balikpapan',
             'address' => 'Balikpapan',
             'country' => 'Indonesia',
@@ -332,7 +343,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Pontianak',
             'address' => 'Pontianak',
             'country' => 'Indonesia',
@@ -343,7 +354,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Cibubur',
             'address' => 'Cibubur',
             'country' => 'Indonesia',
@@ -354,7 +365,7 @@ class GroupSeeder extends Seeder
             'lng' => '106.742916',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Gading Serpong',
             'address' => 'Gading Serpong',
             'country' => 'Indonesia',
@@ -402,7 +413,7 @@ class GroupSeeder extends Seeder
             'lng' => '101.5256048',
             'umk' => 5067381,
         ]);
-        $company->branches()->create([
+        $company1->branches()->create([
             'name' => 'Surabaya',
             'address' => 'Surabaya',
             'country' => 'Malaysia',
