@@ -314,7 +314,7 @@ class AttendanceController extends BaseController
             $user = auth('sanctum')->user();
         }
 
-        $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
+        $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
         $month = date('m');
 
