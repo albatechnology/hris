@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SettingKey;
 use App\Enums\UserType;
 use App\Imports\UserSunImport;
 use App\Models\Branch;
@@ -10,6 +11,7 @@ use App\Models\Department;
 use App\Models\Group;
 use App\Models\Position;
 use App\Models\Role;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\PermissionService;
 use Illuminate\Database\Seeder;
@@ -137,6 +139,8 @@ class UserSeeder extends Seeder
                 'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $admin->company_id))->where('name', 'HR')->firstOrFail(['id'])->id,
                 'position_id' => Position::where('company_id', $admin->company_id)->where('name', 'Manager')->firstOrFail(['id'])->id,
             ]);
+
+            Setting::where('key', SettingKey::REQUEST_APPROVER)->where('company_id', $admin->company_id)->update(['value' => $admin->id]);
 
             /** ================================================================= */
             $userRole = Role::create([
