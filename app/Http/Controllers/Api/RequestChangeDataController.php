@@ -28,7 +28,7 @@ class RequestChangeDataController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(RequestChangeData::tenanted()->with('approvals'))
+        $data = QueryBuilder::for(RequestChangeData::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))))
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
                 // 'approval_status'

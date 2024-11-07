@@ -3,16 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
-use App\Enums\NotificationType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
-use App\Models\Attendance;
 use App\Models\Timeoff;
-use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
-use DateTime;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -32,7 +28,7 @@ class TimeoffController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Timeoff::tenanted()->with('approvals'))
+        $data = QueryBuilder::for(Timeoff::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
@@ -61,7 +57,7 @@ class TimeoffController extends BaseController
 
     public function show(Timeoff $timeoff)
     {
-        $timeoff->load(['user', 'timeoffPolicy', 'delegateTo', 'approvals']);
+        $timeoff->load(['user', 'timeoffPolicy', 'delegateTo', 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))]);
 
         return new TimeoffResource($timeoff);
     }

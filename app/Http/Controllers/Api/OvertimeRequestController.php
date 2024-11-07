@@ -29,7 +29,7 @@ class OvertimeRequestController extends BaseController
     public function index(): ResourceCollection
     {
         $data = QueryBuilder::for(
-            OvertimeRequest::tenanted()->with('approvals')
+            OvertimeRequest::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')))
                 ->with([
                     'user' => fn($q) => $q->select('id', 'name'),
                     'shift' => fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),

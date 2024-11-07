@@ -30,7 +30,7 @@ class TaskRequestController extends BaseController
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(TaskRequest::tenanted()->with('approvals'))
+        $data = QueryBuilder::for(TaskRequest::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))))
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
