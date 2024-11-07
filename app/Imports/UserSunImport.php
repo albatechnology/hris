@@ -27,12 +27,13 @@ class UserSunImport implements ToCollection, WithHeadingRow
         foreach ($collection as $data) {
             // if ($count == 1) {
             $data = $data->toArray();
-            $data['gender'] = strtolower($data['gender']);
+            // $data['gender'] = strtolower($data['gender']);
             $data['password'] = '12345678';
             $data['email_verified_at'] = now();
 
             $data['marital_status'] = MaritalStatus::SINGLE;
             $user = User::create($data);
+            unset($data['id']);
 
             // create branches
             $user->branches()->create([
