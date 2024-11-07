@@ -24,6 +24,7 @@ class PayrollRequest extends FormRequest
         $this->merge([
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
+            'is_json' => $this->is_json ?? false,
         ]);
     }
 
@@ -37,6 +38,7 @@ class PayrollRequest extends FormRequest
         return [
             'month' => 'required|date_format:m',
             'year' => 'required|date_format:Y',
+            'is_json' => 'nullable|boolean',
         ];
     }
 }

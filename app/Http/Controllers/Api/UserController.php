@@ -595,11 +595,18 @@ class UserController extends BaseController
         $deductions = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION);
         $benefits = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::BENEFIT);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.payroll', ['user' => $user, 'runPayrollUser' => $runPayrollUser, 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits])->setPaper('a4');
+        $data = ['user' => $user, 'runPayrollUser' => $runPayrollUser, 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
+
+        if ($request->is_json == true) {
+            return response()->json($data);
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.payroll', $data)->setPaper('a4');
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
     }
 
-    public function import(Request $request){
+    public function import(Request $request)
+    {
         (new UserSunImport)->import($request->file);
 
         return 'oke';

@@ -745,6 +745,7 @@ class AttendanceController extends BaseController
             ->allowedFilters([
                 'is_clock_in',
                 'type',
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 // 'approval_status',
                 // 'approved_by',
                 AllowedFilter::callback('user_id', fn($query, $value) => $query->whereHas('attendance', fn($q) => $q->where('user_id', $value))),
