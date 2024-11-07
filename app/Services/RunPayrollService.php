@@ -257,7 +257,7 @@ class RunPayrollService
                 // logic compensation_rate_per_day (currently we don't use that logic)
 
                 // get overtime request
-                $overtimeRequests = $runPayrollUser->user->overtimeRequests()->where('date', [$cutoffAttendanceStartDate, $cutoffAttendanceEndDate])->where('approval_status', ApprovalStatus::APPROVED)->get();
+                $overtimeRequests = $runPayrollUser->user->overtimeRequests()->where('date', [$cutoffAttendanceStartDate, $cutoffAttendanceEndDate])->approved()->get();
 
                 foreach ($overtimeRequests as $overtimeRequest) {
                     // overtimme rounding
