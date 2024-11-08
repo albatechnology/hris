@@ -25,12 +25,24 @@ class ScheduleService
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
 
         /** @var Schedule $schedule */
-        $schedule = $user->schedules()
-            ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-            ->where('type', $scheduleType)
-            ->whereDate('effective_date', '<=', $date)
-            ->withCount('shifts')
-            ->orderByDesc('effective_date')->first();
+        if ($scheduleType == ScheduleType::ATTENDANCE->value) {
+            $schedule = $user->schedules()
+                ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+                ->where('type', $scheduleType)
+                ->whereDate('effective_date', '<=', $date)
+                ->withCount('shifts')
+                ->orderByDesc('effective_date')->first();
+        } else {
+            $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
+                $q->where('type', $scheduleType);
+                $q->whereDate('effective_date', '<=', $date);
+            })->first()?->schedule()
+                ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+                ->where('type', $scheduleType)
+                ->whereDate('effective_date', '<=', $date)
+                ->withCount('shifts')
+                ->orderByDesc('effective_date')->first();
+        }
 
         if (!$schedule || $schedule->shifts_count === 0) return null;
 

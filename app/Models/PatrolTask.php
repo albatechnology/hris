@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PatrolTask extends BaseModel
 {
+    // currently, 'status' columns is not used
+
     protected $fillable = [
         'patrol_location_id',
         'name',
@@ -39,7 +41,7 @@ class PatrolTask extends BaseModel
 
             // Generate 2-hour intervals within the shift time
             while ($start->lt($end)) {
-                $nextPeriod = $start->copy()->addHours(2);
+                $nextPeriod = $start->copy()->addMinutes(30);
 
                 // Check if the current time falls within this period
                 if ($currentTime->between($start, $nextPeriod)) {
@@ -48,10 +50,10 @@ class PatrolTask extends BaseModel
                 }
 
                 // Move to the next period
-                $start->addHours(2);
+                $start->addMinutes(30);
             }
 
-            return $this->userPatrolTasks()->where('user_id', auth('sanctum')->id())
+            return $this->userPatrolTasks()
                 ->where('schedule_id', $schedule->id)
                 ->where('shift_id', $schedule->shift->id)
                 ->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()])
