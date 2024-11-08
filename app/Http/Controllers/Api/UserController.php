@@ -550,15 +550,20 @@ class UserController extends BaseController
     //     return UserResource::collection($users);
     // }
 
-    public function getAvailableSupervisor(User $user)
+    public function getAvailableSupervisor(User $user, Request $request)
     {
         $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
         $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
         if (!is_null($order)) {
             $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
-                ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)))
-                ->paginate();
+                ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
+
+            if ($request->name) {
+                $users = $users->whereLike('name', $request->name);
+            }
+
+            $users = $users->paginate();
         } else {
             $users = User::where('id', '<', 0)->paginate();
         }
