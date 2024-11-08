@@ -185,7 +185,8 @@ class PatrolLocationController extends BaseController
         $userPatrolLocation = $user->userPatrolLocations()->firstWhere('patrol_location_id', $patrolLocation->id ?? null);
 
         if ($userPatrolLocation) {
-            return $this->errorResponse('You have already attend at', ['date' => $userPatrolLocation->created_at]);
+            return new DefaultResource($userPatrolLocation);
+            // return $this->errorResponse('You have already attend at', ['date' => $userPatrolLocation->created_at]);
         }
 
         $userPatrolLocation = $user->userPatrolLocations()->create([

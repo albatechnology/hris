@@ -78,13 +78,13 @@ class Patrol extends BaseModel implements TenantedInterface
                 $start->addMinutes(5);
             }
 
-            return $this->tasks()->whereHas('userPatrolTasks', function ($q) use ($schedule, $currentPeriod) {
+            return $this->tasks()->whereDoesntHave('userPatrolTasks', function ($q) use ($schedule, $currentPeriod) {
                 $q->where('schedule_id', $schedule->id);
                 $q->where('shift_id', $schedule->shift->id);
                 $q->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()]);
                 // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
                 $q->orderBy('id', 'DESC');
-            })->first() ? 'complete' : null;
+            })->first() ? null : 'complete';
         }
 
         return null;
