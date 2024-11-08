@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\PatrolTask;
+use App\Models\Schedule;
+use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,8 +17,10 @@ return new class extends Migration
     {
         Schema::create('user_patrol_tasks', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->constrained();
-            $table->foreignIdFor(PatrolTask::class)->constrained();
+            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(PatrolTask::class);
+            $table->foreignIdFor(Schedule::class);
+            $table->foreignIdFor(Shift::class);
             $table->text('description')->nullable();
             $table->timestamps();
         });

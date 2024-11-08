@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\MediaCollection;
 use App\Enums\PatrolTaskStatus;
+use App\Enums\ScheduleType;
 use App\Http\Requests\Api\UserPatrolTask\StoreRequest;
 use App\Http\Requests\Api\UserPatrolTask\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\PatrolTask;
 use App\Models\UserPatrolTask;
+use App\Services\ScheduleService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -57,6 +60,34 @@ class UserPatrolTaskController extends BaseController
     public function store(StoreRequest $request)
     {
         try {
+            // Get current schedule
+            $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
+
+            // Define start and end times based on shift clock_in and clock_out
+            $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
+            $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);
+
+            $currentTime = Carbon::now(); // Current time
+            $currentPeriod = null;
+
+            // Generate 2-hour intervals within the shift time
+            while ($start->lt($end)) {
+                $nextPeriod = $start->copy()->addHours(2);
+
+                // Check if the current time falls within this period
+                if ($currentTime->between($start, $nextPeriod)) {
+                    $currentPeriod = [$start, $nextPeriod];
+                    break;
+                }
+
+                // Move to the next period
+                $start->addHours(2);
+            }
+
+            if (!$schedule) {
+                return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
+            }
+
             $checkPatrol = auth('sanctum')->user()->patrols()
                 ->whereDate('patrols.start_date', '<=', now())
                 ->whereDate('patrols.end_date', '>=', now())
@@ -69,18 +100,26 @@ class UserPatrolTaskController extends BaseController
                 return $this->errorResponse('Invalid patrol task');
             }
 
-            $checkUserPatrolTask = auth('sanctum')->user()->userPatrolTasks()
-                ->where('patrol_task_id', $request->patrol_task_id)
-                // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
-                ->first();
+            if ($currentPeriod) {
+                $checkUserPatrolTask = auth('sanctum')->user()->userPatrolTasks()
+                    ->where('patrol_task_id', $request->patrol_task_id)
+                    ->where('schedule_id', $schedule->id)
+                    ->where('shift_id', $schedule->shift->id)
+                    ->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()])
+                    // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
+                    ->orderBy('id', 'DESC')
+                    ->first();
+            }
 
             if ($checkUserPatrolTask) {
-                return $this->errorResponse('Cannot submit multiply task report');
+                return $this->errorResponse('Task have been submitted in this period');
             }
 
             $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->create([
                 'patrol_task_id' => $request->patrol_task_id,
                 'description' => $request->description,
+                'schedule_id' => $schedule->id,
+                'shift_id' => $schedule->shift->id,
                 'lat' => $request->lat,
                 'lng' => $request->lng,
             ]);
@@ -93,9 +132,9 @@ class UserPatrolTaskController extends BaseController
                 }
             }
 
-            PatrolTask::where('id', $request->patrol_task_id)->update([
-                'status' => PatrolTaskStatus::COMPLETE,
-            ]);
+            // PatrolTask::where('id', $request->patrol_task_id)->update([
+            //     'status' => PatrolTaskStatus::COMPLETE,
+            // ]);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }

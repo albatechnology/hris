@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ScheduleType;
 use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Patrol;
 use App\Models\UserPatrol;
+use App\Services\ScheduleService;
+use DateTime;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -31,10 +35,18 @@ class PatrolController extends BaseController
     {
         $data = QueryBuilder::for(Patrol::tenanted()->where(function ($q) {
             $user = auth('sanctum')->user();
+            $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
             if ($user->parent_id) {
-                $q->whereHas('users', function ($q2) use ($user) {
-                    $q2->where('user_patrols.user_id', $user->id);
+                $q->whereHas('users.user', function ($q2) use ($user, $schedule) {
+                    $q2->where('users.id', $user->id);
+                    $q2->whereHas('schedules', function ($q3) use ($schedule) {
+                        $q3->where('schedules.type', ScheduleType::PATROL->value);
+                        $q3->whereDate('schedules.effective_date', '<=', date('Y-m-d'));
+                        $q3->whereHas('shifts', function ($q4) use ($schedule) {
+                            $q4->where('id', $schedule?->shift?->id);
+                        });
+                    });
                 });
 
                 $q->whereDate('patrols.start_date', '<=', now());

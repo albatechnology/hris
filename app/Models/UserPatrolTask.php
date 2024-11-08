@@ -16,6 +16,8 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
     protected $fillable = [
         'user_id',
         'patrol_task_id',
+        'schedule_id',
+        'shift_id',
         'description',
         'lat',
         'lng',
@@ -62,5 +64,15 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
     public function patrolTask(): BelongsTo
     {
         return $this->belongsTo(PatrolTask::class);
+    }
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
     }
 }

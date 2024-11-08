@@ -104,4 +104,9 @@ class Patrol extends BaseModel implements TenantedInterface
     {
         return $this->hasMany(UserPatrol::class);
     }
+
+    public function usersTable(): HasMany
+    {
+        return $this->hasMany(User::class, UserPatrol::class);
+    }
 }

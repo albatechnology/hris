@@ -41,7 +41,13 @@ class ScheduleService
         $order = $order > 0 ? $order : $schedule->shifts_count;
 
         unset($schedule->pivot);
-        return $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
+
+        $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
+        if ($scheduleType == ScheduleType::PATROL->value) {
+            $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)->where('clock_in', '<=', date('H:i:s'))->where('clock_out', '>=', date('H:i:s'))]);
+        }
+
+        return $result;
     }
 
     /**
