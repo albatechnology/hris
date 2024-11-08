@@ -41,7 +41,7 @@ class PatrolTask extends BaseModel
 
             // Generate 2-hour intervals within the shift time
             while ($start->lt($end)) {
-                $nextPeriod = $start->copy()->addMinutes(30);
+                $nextPeriod = $start->copy()->addMinutes(5);
 
                 // Check if the current time falls within this period
                 if ($currentTime->between($start, $nextPeriod)) {
@@ -50,7 +50,7 @@ class PatrolTask extends BaseModel
                 }
 
                 // Move to the next period
-                $start->addMinutes(30);
+                $start->addMinutes(5);
             }
 
             return $this->userPatrolTasks()
