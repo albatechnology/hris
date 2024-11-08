@@ -26,6 +26,19 @@ class PatrolLocation extends BaseModel
 
     public function getStatusAttribute()
     {
+        // if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
+        //     return null;
+        // }
+        // if($this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && ($this->tasks()->where('status', PatrolTaskStatus::COMPLETE || $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first()))->first()){
+        //     return 'progress';
+        // }
+        // if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && $this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
+        //     return 'complete';
+        // }
+        // if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
+        //     return 'cancel';
+        // }
+
         // Get current schedule
         $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
