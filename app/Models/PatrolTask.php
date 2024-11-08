@@ -29,34 +29,38 @@ class PatrolTask extends BaseModel
         // Get current schedule
         $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
-        // Define start and end times based on shift clock_in and clock_out
-        $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
-        $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);
+        if ($schedule) {
+            // Define start and end times based on shift clock_in and clock_out
+            $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
+            $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);
 
-        $currentTime = Carbon::now(); // Current time
-        $currentPeriod = null;
+            $currentTime = Carbon::now(); // Current time
+            $currentPeriod = null;
 
-        // Generate 2-hour intervals within the shift time
-        while ($start->lt($end)) {
-            $nextPeriod = $start->copy()->addHours(2);
+            // Generate 2-hour intervals within the shift time
+            while ($start->lt($end)) {
+                $nextPeriod = $start->copy()->addHours(2);
 
-            // Check if the current time falls within this period
-            if ($currentTime->between($start, $nextPeriod)) {
-                $currentPeriod = [$start, $nextPeriod];
-                break;
+                // Check if the current time falls within this period
+                if ($currentTime->between($start, $nextPeriod)) {
+                    $currentPeriod = [$start, $nextPeriod];
+                    break;
+                }
+
+                // Move to the next period
+                $start->addHours(2);
             }
 
-            // Move to the next period
-            $start->addHours(2);
+            return $this->userPatrolTasks()->where('user_id', auth('sanctum')->id())
+                ->where('schedule_id', $schedule->id)
+                ->where('shift_id', $schedule->shift->id)
+                ->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()])
+                // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
+                ->orderBy('id', 'DESC')
+                ->first();
         }
-        
-        return $this->userPatrolTasks()->where('user_id', auth('sanctum')->id())
-            ->where('schedule_id', $schedule->id)
-            ->where('shift_id', $schedule->shift->id)
-            ->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()])
-            // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
-            ->orderBy('id', 'DESC')
-            ->first();
+
+        return null;
     }
 
     public function patrolLocation(): BelongsTo
