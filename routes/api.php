@@ -70,6 +70,7 @@ Route::group(['prefix' => 'auth', 'controller' => AuthController::class], functi
 Route::post('auth/setup-password/resend', [AuthController::class, 'resendSetupPassword']);
 Route::post('auth/setup-password', [AuthController::class, 'setupPassword']);
 
+Route::get('users/backupPhoto', [UserController::class, 'backupPhoto']);
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::post('users/import', [UserController::class, 'import']);
     Route::get('users/me', [UserController::class, 'me']);

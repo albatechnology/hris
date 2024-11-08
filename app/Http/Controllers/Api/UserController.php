@@ -31,6 +31,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -610,5 +611,51 @@ class UserController extends BaseController
         (new UserSunImport)->import($request->file);
 
         return 'oke';
+    }
+
+    public function backupPhoto()
+    {
+
+        $users = User::where('company_id', 1)
+            // ->whereHas('media')
+            // ->whereNotIn('id', [6])
+            ->get([
+                'id',
+                'name',
+                'email',
+                'work_email',
+            ]);
+
+        foreach ($users as $user) {
+            $file = public_path('users/' . $user->email . '.jpg');
+            $fileExist = file_exists($file);
+            if ($fileExist) {
+                $user
+                    ->addMedia($file)
+                    ->preservingOriginal()
+                    ->toMediaCollection();
+            }
+        }
+
+        // foreach ($users as $user) {
+        //     // dump($user->image['extension']);
+        //     $image = $user->image['url'];
+        //     // $extension = pathinfo($image, PATHINFO_EXTENSION);
+        //     $extension = 'jpg';
+        //     $image = file_get_contents($image);
+        //     $filename = 'users/' . $user->email . '.' . $extension;
+        //     Storage::disk('public')->put($filename, $image);
+        // }
+        // die;
+        return $users;
+        return $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'work_email' => $user->work_email,
+                'image' => $user->image['url'],
+            ];
+        });
     }
 }
