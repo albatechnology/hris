@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Enums\PatrolTaskStatus;
+use App\Enums\ScheduleType;
+use App\Services\ScheduleService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -23,20 +26,38 @@ class PatrolLocation extends BaseModel
 
     public function getStatusAttribute()
     {
-        if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
-            return null;
-        }
+        // Get current schedule
+        $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
-        if($this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && ($this->tasks()->where('status', PatrolTaskStatus::COMPLETE || $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first()))->first()){
-            return 'progress';
-        }
+        if ($schedule) {
+            // Define start and end times based on shift clock_in and clock_out
+            $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
+            $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);
 
-        if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && $this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
-            return 'complete';
-        }
+            $currentTime = Carbon::now(); // Current time
+            $currentPeriod = null;
 
-        if(!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()){
-            return 'cancel';
+            // Generate 2-hour intervals within the shift time
+            while ($start->lt($end)) {
+                $nextPeriod = $start->copy()->addMinutes(5);
+
+                // Check if the current time falls within this period
+                if ($currentTime->between($start, $nextPeriod)) {
+                    $currentPeriod = [$start, $nextPeriod];
+                    break;
+                }
+
+                // Move to the next period
+                $start->addMinutes(5);
+            }
+
+            return $this->tasks()->whereHas('userPatrolTasks', function ($q) use ($schedule, $currentPeriod) {
+                $q->where('schedule_id', $schedule->id);
+                $q->where('shift_id', $schedule->shift->id);
+                $q->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()]);
+                // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
+                $q->orderBy('id', 'DESC');
+            })->first() ? 'complete' : null;
         }
 
         return null;
