@@ -31,17 +31,29 @@ class UserPatrolTaskController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(UserPatrolTask::tenanted()->with('media'))
-            ->allowedIncludes(['patrolTask', 'user'])
+        $data = QueryBuilder::for(UserPatrolTask::tenanted())
+            ->allowedIncludes(['patrolTask', 'schedule', 'shift', 'user', 'media'])
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('patrol_task_id'),
+                AllowedFilter::exact('schedule_id'),
+                AllowedFilter::exact('shift_id'),
+                AllowedFilter::callback('patrol_location_id', function ($query, $value) {
+                    $query->whereHas('patrolTask', fn($q) => $q->where('patrol_location_id', $value));
+                }),
+                AllowedFilter::callback('search', function ($query, $value) {
+                    $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
+                }),
+                AllowedFilter::callback('date', function ($query, $value) {
+                    $query->whereDate('created_at', $value);
+                }),
             ])
             ->allowedSorts([
                 'id',
                 'user_id',
                 'patrol_task_id',
+                'schedule_id',
                 'created_at',
             ])
             ->paginate($this->per_page);
@@ -52,7 +64,7 @@ class UserPatrolTaskController extends BaseController
     public function show(int $id)
     {
         $userPatrolTask = UserPatrolTask::findTenanted($id);
-        $userPatrolTask->load(['patrolTask', 'user', 'media']);
+        $userPatrolTask->load(['patrolTask', 'schedule', 'shift', 'user', 'media']);
 
         return new DefaultResource($userPatrolTask);
     }

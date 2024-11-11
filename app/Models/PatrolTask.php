@@ -31,7 +31,7 @@ class PatrolTask extends BaseModel
         // Get current schedule
         $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
-        if ($schedule) {
+        if ($schedule?->shift) {
             // Define start and end times based on shift clock_in and clock_out
             $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
             $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);

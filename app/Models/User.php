@@ -188,6 +188,16 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $date->format('Y-m-d H:i');
     }
 
+    public function scopeWhereLike(Builder $query, $column, $value)
+    {
+        $query->where($column, 'LIKE', '%'.$value.'%');
+    }
+
+    public function scopeOrWhereLike(Builder $query, $column, $value)
+    {
+        $query->orWhere($column, 'LIKE', '%'.$value.'%');
+    }
+
     protected function password(): Attribute
     {
         return Attribute::make(
