@@ -556,11 +556,12 @@ class UserController extends BaseController
         $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
         if (!is_null($order)) {
+            $name = $request->filter['name'] ?? null;
             $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
                 ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
 
-            if ($request->name) {
-                $users = $users->whereLike('name', $request->name);
+            if ($name) {
+                $users = $users->whereLike('name', $name);
             }
 
             $users = $users->paginate();
