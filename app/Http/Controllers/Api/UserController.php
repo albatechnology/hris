@@ -611,12 +611,12 @@ class UserController extends BaseController
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
     }
 
-    // public function import(Request $request)
-    // {
-    //     (new UserSunImport)->import($request->file);
+    public function import(Request $request)
+    {
+        (new UserSunImport)->import($request->file);
 
-    //     return 'oke';
-    // }
+        return 'oke';
+    }
 
     // public function backupPhoto()
     // {
