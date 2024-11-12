@@ -94,16 +94,16 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         if ($user->is_administrator) {
             return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::ADMIN, UserType::USER])
                 ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
-            // ->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
         }
 
         if ($isDescendant) {
-            if (DB::table('user_supervisors')->where('supervisor_id', $user->id)->exists()) {
+            if ($user->is_admin) {
+                $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+                $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
+            } else {
                 $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
             }
-
-            return $query;
-            // return $query->where('id', $user->id);
+            return $query->where('id', '!=', $user->id);
         }
 
         // if ($user->is_admin) {
@@ -190,12 +190,12 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function scopeWhereLike(Builder $query, $column, $value)
     {
-        $query->where($column, 'LIKE', '%'.$value.'%');
+        $query->where($column, 'LIKE', '%' . $value . '%');
     }
 
     public function scopeOrWhereLike(Builder $query, $column, $value)
     {
-        $query->orWhere($column, 'LIKE', '%'.$value.'%');
+        $query->orWhere($column, 'LIKE', '%' . $value . '%');
     }
 
     protected function password(): Attribute

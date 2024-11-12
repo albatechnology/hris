@@ -495,12 +495,13 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
-        $query = User::select('id', 'name', 'nik');
+        $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
+            ->with([
+                'branch' => fn($q) => $q->select('id', 'name')
+            ]);
+
         if (!$user->is_super_admin) {
-            $query->tenanted();
-            if (!$user->type->is(UserType::ADMINISTRATOR)) {
-                $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
-            }
+            $query->tenanted(true);
         }
 
         // $users = QueryBuilder::for($query)
@@ -651,12 +652,13 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
-        $query = User::select('id', 'name', 'nik');
+        $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
+            ->with([
+                'branch' => fn($q) => $q->select('id', 'name')
+            ]);
+
         if (!$user->is_super_admin) {
-            $query->tenanted();
-            if (!$user->type->is(UserType::ADMINISTRATOR)) {
-                $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
-            }
+            $query->tenanted(true);
         }
 
         $users = QueryBuilder::for($query)
