@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CurrencyCode;
+use App\Enums\JkkTier;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('group_id')->constrained();
             $table->string('name', 100);
+            $table->unsignedSmallInteger('jkk_tier')->default(JkkTier::VERY_LOW->value);
             $table->foreignId('country_id')->nullable();
             $table->string('country')->nullable();
             $table->string('province')->nullable();

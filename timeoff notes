@@ -1,0 +1,75 @@
+timeoff memiliki beberapa type
+    case TIME_OFF = 'time_off';
+    case FREE_LEAVE = 'free_leave';
+    case DAY_OFF = 'day_off';
+    case PREGNANCY_LEAVE = 'PREGNANCY_LEAVE';
+
+
+
+
+=== DAY OFF ===
+
+# DAY OFF (day_off)
+    - is_have_quota == true
+    - Bekerja 14 hari berturut-turut (DO 1 hari)
+    - Bekerja ke luar kota, pulang dan pergi pada hari yang sama (DO 1 hari)
+    - Menurkar allowance expo
+    - Masa berlaku Day Off adalah 1 bulan setelah acara berlangsung.
+
+
+
+
+=== DAY OFF ===
+
+# FREE LEAVE (free_leave)
+    - is_have_quota == false
+    - Free leave adalah cuti khusus yang tidak memotong cuti tahunan.
+    - Cuti khusus sesuai dengan peraturan perundang-undangan:
+        • Kematian suami/isteri, orangtua/mertua, anak/menantu (2 hari kerja)
+        • Kematian anggota keluarga dalam satu rumah (1 hari kerja)
+        • Pernikahan karyawan (3 hari kerja)
+        • Pernikahan anak karyawan (2 hari kerja)
+        • Khitanan/pembaptisan anak (2 hari kerja)
+        • Istri melahirkan/keguguran kandungan (2 hari kerja)
+        *dapat dibuktikan dengan dokumen yang dapat dipertanggungjawabkan
+    - Jika terjadi diluar kota, maka mendapatkan 1 hari tambahan.
+
+
+
+
+=== PREGNANCY_LEAVE ===
+
+# CUTI HAMIL DAN KEGUGURAN
+    - is_have_quota == false
+    - Karyawan wanita berhak atas cuti hamil dalam jangka waktu 1,5 bulan sebelum dan 1,5 bulan setelah melahirkan sesuai surat keterangan dokter kandungan atau bidan, dengan mendapatkan gaji penuh.
+    - Apabila terjadi keguguran maka Karyawan wanita tersebut berhak untuk cuti selama 1,5 bulan setelah kejadian tersebut dengan mendapat gaji penuh.
+    - total hari ditentukan aja nanti sama admin
+
+
+
+
+=== TIME OFF ===
+
+# ANNUAL LEAVE (time_off)
+    - is_have_quota == true
+    - Cuti merupakan istirahat kerja yang diberikan kepada karyawan setelah masa kerja tertentu dengan mendapat gaji penuh.
+    - Pola mendapatkan jatah cuti ada di pdf
+    - Masa cuti tahunan adalah 1 Jan sd 31 Des tahun berjalan
+    - Maksimal pengajuan cuti tahunan adalah 5 hari berturut-turut
+    - Cuti ½ hari adalah 4 jam
+    - Cuti ½ hari tidak berlaku di hari Sabtu
+    - Hak cuti yang tidak diambil dalam tahun yg bersangkutan dianggap hangus / gugur.
+    - baca pdf
+
+# SWC (Sick Without Certificate) (time_off)
+    - is_have_quota == true
+    - Adalah tidak hadir bekerja karena sakit tetapi tidak dapat melampirkan surat keterangan istirahat dari dokter.
+    - Karyawan memiliki hak SWC sebanyak 2 hari / tahun.
+    - Jika melebihi 2 hari, maka akan memotong cuti tahunan.
+    - Jika karyawan bergabung < 1 April, maka akan mendapatkan hak SWC sebesar 2 hari dan berlaku sampai dengan 31 Dec tahun berjalan.
+    - Jika karyawan bergabung >= 1 April, maka hak SWC sebesar 1 hari dan berlaku sampai dengan 31 Dec tahun berjalan.
+
+# SDC (Sick with Doctor Certificate)
+    - is_have_quota == false
+    - Adalah tidak hadir bekerja karena sakit dan dapat melampirkan surat keterangan istirahat dari dokter.
+    - SDC tidak akan memotong benefit apapun.

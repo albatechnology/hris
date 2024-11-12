@@ -55,6 +55,7 @@ class ScheduleService
         unset($schedule->pivot);
 
         $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
+
         if ($scheduleType == ScheduleType::PATROL->value) {
             $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)->where('clock_in', '<=', date('H:i:s'))->where('clock_out', '>=', date('H:i:s'))]);
         }

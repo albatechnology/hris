@@ -3,9 +3,13 @@
         <tr>
             <th style="text-align: center; font-weight: bold" rowspan="2">Employee ID</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Full Name</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">Job Position</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Organization</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Branch</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Join Date</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Resign Date</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Job Position</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Basic Salary</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Gross Salary</th>
             <th style="text-align: center; font-weight: bold" colspan="{{ $allowances->count() }}">Allowance</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total Allowance</th>
             <th style="text-align: center; font-weight: bold" colspan="{{ $deductions->count() }}">Deduction</th>
@@ -34,9 +38,13 @@
             <tr>
                 <td>{{ $runPayrollUser->user->nik }}</td>
                 <td>{{ $runPayrollUser->user->full_name }}</td>
-                <td>{{ $runPayrollUser->user->positions?->implode(', ') }}</td>
                 <td>{{ $runPayroll->company?->name }}</td>
+                <td>{{ $runPayrollUser->user->branch?->name }}</td>
+                <td>{{ $runPayrollUser->user->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}</td>
+                <td>{{ $runPayrollUser->user->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}</td>
+                <td>{{ $runPayrollUser->user->positions?->implode(', ') }}</td>
                 <td>{{ $runPayrollUser->basic_salary }}</td>
+                <td>{{ $runPayrollUser->gross_salary }}</td>
 
                 @foreach ($allowances as $allowance)
                     <th>{{ $runPayrollUser->components->firstWhere('payroll_component_id', $allowance->id)?->amount }}

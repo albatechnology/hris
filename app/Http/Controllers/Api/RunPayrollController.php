@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\CountrySettingKey;
-use App\Enums\PayrollComponentType;
 use App\Exports\RunPayrollExport;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
@@ -145,7 +144,12 @@ class RunPayrollController extends BaseController
     public function export(RunPayroll $runPayroll)
     {
         $runPayroll->load([
-            'users.user' => fn($q) => $q->with('positions', fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name'))),
+            'users.user' => function ($q) {
+                $q->select('id', 'nik', 'name', 'last_name', 'company_id', 'branch_id', 'join_date', 'resign_date')
+                    ->with('branch', fn($q) => $q->select('id', 'name'))
+                    ->with('positions', fn($q) => $q->select('user_id', 'position_id')
+                        ->with('position', fn($q) => $q->select('id', 'name')));
+            },
             'users.components.payrollComponent',
             'company' => fn($q) => $q->select('id', 'name')
         ]);

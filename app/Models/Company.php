@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CurrencyCode;
+use App\Enums\JkkTier;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
@@ -31,10 +32,12 @@ class Company extends BaseModel implements TenantedInterface
         'lng',
         'address',
         'currency_code',
+        'jkk_tier',
     ];
 
     protected $casts = [
         'currency_code' => CurrencyCode::class,
+        'jkk_tier' => JkkTier::class,
     ];
 
     public function scopeTenanted(Builder $query): Builder

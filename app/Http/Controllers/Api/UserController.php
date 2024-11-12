@@ -27,11 +27,11 @@ use App\Models\Company;
 use App\Models\TaskHour;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -72,10 +72,12 @@ class UserController extends BaseController
             AllowedInclude::callback('roles', function ($query) {
                 $query->select('id', 'name');
             }),
+            AllowedInclude::callback('supervisors', function ($query) {
+                $query->orderByDesc('order')->with('user', fn($q) => $q->select('id', 'name', 'last_name'));
+            }),
             'detail',
             'payrollInfo',
             'schedules',
-            'supervisors',
         ];
     }
 
@@ -189,7 +191,7 @@ class UserController extends BaseController
             $user->notify(new ($notificationType->getNotificationClass())($notificationType));
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -229,7 +231,7 @@ class UserController extends BaseController
             $user->notify(new ($notificationType->getNotificationClass())($notificationType));
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -272,7 +274,7 @@ class UserController extends BaseController
             $user->branches()->delete();
             $user->branches()->createMany($branchIds);
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -365,7 +367,7 @@ class UserController extends BaseController
                 $user->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
@@ -459,7 +461,7 @@ class UserController extends BaseController
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
@@ -525,7 +527,7 @@ class UserController extends BaseController
             ]);
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -574,7 +576,15 @@ class UserController extends BaseController
 
     public function setSupervisors(User $user, SetSupervisorRequest $request)
     {
-        $user->supervisors()->createMany($request->data);
+        DB::beginTransaction();
+        try {
+            $user->supervisors()->delete();
+            $user->supervisors()->createMany($request->data);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
 
         return $this->updatedResponse();
     }
