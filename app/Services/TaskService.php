@@ -13,7 +13,8 @@ class TaskService
         }
 
         $taskRequests = \App\Models\TaskRequest::tenanted()
-            ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
+            ->approved()
+            // ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)
             ->whereDate('start_at', $date)
             ->get(['start_at', 'end_at']);
