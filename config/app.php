@@ -187,6 +187,7 @@ return [
         // 'Example' => App\Facades\Example::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
     ])->toArray(),
-    'file_mimes_types' => 'jpg,jpeg,png,pdf,doc,docx,xls,xlsx',
+    'file_mimes_types' => 'jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx',
+    'image_mimes_types' => 'jpg,jpeg,png,webp',
     'enable_face_rekognition' => env('ENABLE_FACE_REKOGNITION', true),
 ];

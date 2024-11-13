@@ -27,7 +27,7 @@ class ClientLocation extends BaseModel implements HasMedia
     protected static function booted()
     {
         static::creating(function ($model) {
-            $model->uuid = Str::uuid();
+            $model->uuid = Str::ulid();
         });
     }
 

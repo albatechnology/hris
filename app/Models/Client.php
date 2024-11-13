@@ -30,4 +30,9 @@ class Client extends BaseModel implements TenantedInterface
     {
         return $this->hasMany(Patrol::class);
     }
+
+    public function guestBooks(): HasMany
+    {
+        return $this->hasMany(GuestBook::class);
+    }
 }

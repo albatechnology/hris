@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\GuestBookController;
 use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\LiveAttendanceController;
@@ -268,6 +269,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('clients/summaries', [ClientController::class, 'summary']);
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('client-locations', ClientLocationController::class);
+    Route::apiResource('guest-books', GuestBookController::class);
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
     Route::group(['prefix' => 'patrols/{patrol}'], function () {
