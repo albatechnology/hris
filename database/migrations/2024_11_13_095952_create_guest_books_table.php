@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('guest_books', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Client::class);
-            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(Client::class)->constrained();
+            $table->foreignIdFor(User::class)->constrained();
             $table->boolean('is_check_out')->default(0);
             $table->string('name', 100);
             $table->string('address')->nullable();
@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('vehicle_number', 50)->nullable();
             $table->string('description')->nullable();
             $table->timestamp('check_out_at')->nullable();
+            $table->foreignId('check_out_by')->nullable()->constrained('users');
             $table->timestamps();
 
             // softDeletes must implement deleted_by

@@ -24,6 +24,7 @@ class GuestBook extends BaseModel implements HasMedia
         'vehicle_number',
         'description',
         'check_out_at',
+        'check_out_by',
     ];
 
     protected $casts = [
@@ -105,5 +106,10 @@ class GuestBook extends BaseModel implements HasMedia
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function checkOutBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'check_out_by');
     }
 }

@@ -52,38 +52,22 @@ class ScheduleSeeder extends Seeder
 
         Company::all()->each(function ($company) use ($dataShifts) {
             $shifts = $company->shifts()->createMany($dataShifts);
-            $shiftIds = collect($shifts)->pluck('id');
 
             $schedule = $company->schedules()->create([
                 'name' => 'Schedule 1 ' . $company->name,
                 'effective_date' => date('Y') . '-01-01` ',
             ]);
             // $schedule->shifts()->attach([...$shiftIds, 1, 1]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 2,
-                'order' => 1
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 3,
-                'order' => 2
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 4,
-                'order' => 3
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 5,
-                'order' => 4
-            ]);
-            ScheduleShift::create([
-                'schedule_id' => $schedule->id,
-                'shift_id' => 6,
-                'order' => 5
-            ]);
+
+            $order = 1;
+            foreach ($shifts as $shift) {
+                ScheduleShift::create([
+                    'schedule_id' => $schedule->id,
+                    'shift_id' => $shift->id,
+                    'order' => $order++
+                ]);
+            }
+
             ScheduleShift::create([
                 'schedule_id' => $schedule->id,
                 'shift_id' => 1,

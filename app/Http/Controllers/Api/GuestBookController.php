@@ -8,9 +8,9 @@ use App\Http\Requests\Api\GuestBook\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\GuestBook;
 use Exception;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class GuestBookController extends BaseController
@@ -28,7 +28,17 @@ class GuestBookController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(GuestBook::tenanted())
-            ->allowedIncludes(['client'])
+            ->allowedIncludes([
+                AllowedInclude::callback('client', function ($query) {
+                    $query->select('id', 'name');
+                }),
+                AllowedInclude::callback('user', function ($query) {
+                    $query->select('id', 'name', 'last_name');
+                }),
+                AllowedInclude::callback('checkOutBy', function ($query) {
+                    $query->select('id', 'name', 'last_name');
+                })
+            ])
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('client_id'),
@@ -62,7 +72,11 @@ class GuestBookController extends BaseController
 
     public function show(GuestBook $guestBook)
     {
-        return new DefaultResource($guestBook->load('client'));
+        return new DefaultResource($guestBook->load([
+            'client' => fn($q) => $q->select('id', 'name'),
+            'user' => fn($q) => $q->select('id', 'name', 'last_name'),
+            'checkOutBy' => fn($q) => $q->select('id', 'name', 'last_name'),
+        ]));
     }
 
     public function store(StoreRequest $request)
@@ -84,7 +98,7 @@ class GuestBookController extends BaseController
             DB::rollBack();
         }
 
-        return new DefaultResource($guestBook->load('client'));
+        return $this->createdResponse();
     }
 
     public function update(GuestBook $guestBook, UpdateRequest $request)
@@ -94,6 +108,7 @@ class GuestBookController extends BaseController
             $guestBook->update([
                 'is_check_out' => true,
                 'check_out_at' => now(),
+                'check_out_by' => auth()->id(),
             ]);
 
             if ($request->hasFile('files')) {
@@ -110,7 +125,7 @@ class GuestBookController extends BaseController
             DB::rollBack();
         }
 
-        return (new DefaultResource($guestBook->load('client')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(GuestBook $guestBook)
