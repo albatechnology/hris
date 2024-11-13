@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('location_destination')->nullable();
             $table->string('room')->nullable();
             $table->string('person_destination')->nullable();
-            $table->string('description')->nullable();
             $table->string('vehicle_number', 50)->nullable();
+            $table->string('description')->nullable();
             $table->timestamps();
 
             // softDeletes must implement deleted_by

@@ -21,6 +21,7 @@ class GuestBook extends BaseModel implements HasMedia
         'location_destination',
         'room',
         'person_destination',
+        'vehicle_number',
         'description',
     ];
 

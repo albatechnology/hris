@@ -30,9 +30,9 @@ class StoreRequest extends FormRequest
             'address' => 'required|string|min:2|max:200',
             'location_destination' => 'required|string|min:2|max:200',
             'room' => 'required|string|min:2|max:200',
-            'name_destination' => 'required|string|min:2|max:200',
-            'description' => 'required|string|min:2|max:200',
+            'person_destination' => 'required|string|min:2|max:200',
             'vehicle_number' => 'nullable|string|min:2|max:50',
+            'description' => 'required|string|min:2|max:200',
             'files' => 'required|array',
             'files.*' => 'required|mimes:' . config('app.image_mimes_types'),
         ];
