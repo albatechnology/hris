@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('person_destination')->nullable();
             $table->string('vehicle_number', 50)->nullable();
             $table->string('description')->nullable();
+            $table->timestamp('check_out_at')->nullable();
             $table->timestamps();
 
             // softDeletes must implement deleted_by

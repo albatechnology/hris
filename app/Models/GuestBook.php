@@ -23,6 +23,7 @@ class GuestBook extends BaseModel implements HasMedia
         'person_destination',
         'vehicle_number',
         'description',
+        'check_out_at',
     ];
 
     protected $casts = [

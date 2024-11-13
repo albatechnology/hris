@@ -93,6 +93,7 @@ class GuestBookController extends BaseController
         try {
             $guestBook->update([
                 'is_check_out' => true,
+                'check_out_at' => now(),
             ]);
 
             if ($request->hasFile('files')) {
