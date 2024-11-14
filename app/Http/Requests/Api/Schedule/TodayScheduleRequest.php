@@ -14,6 +14,20 @@ class TodayScheduleRequest extends FormRequest
         return true;
     }
 
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $date = new \DateTime(str_replace(' ', '+', $this->date));
+        $this->merge([
+            'date' => $date->format('Y-m-d H:i:s'),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,7 +36,7 @@ class TodayScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => 'nullable|date_format:Y-m-d',
+            'date' => 'nullable|date_format:Y-m-d H:i:s',
         ];
     }
 }

@@ -127,7 +127,7 @@ class ScheduleController extends BaseController
 
     public function today(TodayScheduleRequest $request)
     {
-        $schedule = ScheduleService::getTodaySchedule(date: $request->date);
+        $schedule = ScheduleService::getTodaySchedule(datetime: $request->date, shiftColumn: ['id', 'name', 'is_dayoff', 'type', 'clock_in', 'clock_out']);
 
         if (!$schedule) {
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);

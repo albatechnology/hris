@@ -190,4 +190,5 @@ return [
     'file_mimes_types' => 'jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx',
     'image_mimes_types' => 'jpg,jpeg,png,webp',
     'enable_face_rekognition' => env('ENABLE_FACE_REKOGNITION', true),
+    'clock_out_tolerance' => env('CLOCK_OUT_TOLERANCE', 2),
 ];

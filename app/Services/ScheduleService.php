@@ -15,14 +15,15 @@ class ScheduleService
     /**
      * get user today schedule.
      */
-    public static function getTodaySchedule(?User $user = null, $date = null, array $scheduleColumn = [], array $shiftColumn = [], string $scheduleType = ScheduleType::ATTENDANCE->value)
+    public static function getTodaySchedule(?User $user = null, $datetime = null, array $scheduleColumn = [], array $shiftColumn = [], string $scheduleType = ScheduleType::ATTENDANCE->value)
     {
         if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
         }
 
-        $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
+        $datetime = is_null($datetime) ? date('Y-m-d H:i:00') : date('Y-m-d H:i:00', strtotime($datetime));
+        list($date, $time) = explode(' ', $datetime);
 
         /** @var Schedule $schedule */
         if ($scheduleType == ScheduleType::ATTENDANCE->value) {
@@ -51,13 +52,39 @@ class ScheduleService
         $interval = $startDate->diff($endDate)->days + 1;
         $order = $interval % $schedule->shifts_count;
         $order = $order > 0 ? $order : $schedule->shifts_count;
+        $previousOrder = ($order - 1) == 0 ? $schedule->shifts_count : ($order - 1);
 
         unset($schedule->pivot);
 
-        $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)]);
-
         if ($scheduleType == ScheduleType::PATROL->value) {
             $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)->where('clock_in', '<=', date('H:i:s'))->where('clock_out', '>=', date('H:i:s'))]);
+        } else {
+            // check if shift accross the day
+            $result = $schedule->load([
+                'shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])
+                    ->where('order', $previousOrder)
+                    ->whereTime('clock_out', '<', 'clock_in')
+            ]);
+
+            // if shift accross the day not found. use today shift
+            if ($result->shift) {
+                $clockInStrtotime = strtotime(date('Y-m-d ' . $result->shift->clock_in, strtotime('-1 day')));
+                $clockOutStrtotime = strtotime($result->shift->clock_out);
+
+                // toleransi clockout based on config, default 2 hours
+                $clockOutToleransiStrtotime = strtotime(date('Y-m-d H:i:s', strtotime(date('Y-m-d ' . $result->shift->clock_out) . sprintf('+%s hours', config('app.clock_out_tolerance')))));
+
+                // cek apakah jam saat clockout masih di range shift atau kurang dari 2 jam dari clockout shift nya
+                // kalo iya berarti clockout di shift tersebut. else pake shift hari ini (shift berdasarkan tgl)
+                $timeStrtotime = strtotime($time);
+                if (($timeStrtotime <= $clockOutStrtotime && $timeStrtotime >= $clockInStrtotime) || $timeStrtotime <= $clockOutToleransiStrtotime) {
+                    return $result;
+                }
+            }
+
+            $result = $schedule->load([
+                'shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)
+            ]);
         }
 
         return $result;
