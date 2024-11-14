@@ -68,7 +68,7 @@ class OvertimeApproved extends Notification
         $body = sprintf($this->notificationType->getMessage(), $this->approvalStatus->value);
 
         return [
-            'token' => $this->user->fcm_token,
+            'token' => $notifiable->fcm_token,
             'notification' => [
                 'title' => $this->notificationType->getLabel(),
                 'body' => $body,
