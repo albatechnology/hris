@@ -67,8 +67,7 @@ class ScheduleService
             ]);
 
             // if shift accross the day not found. use today shift
-            $clockOutStrtotime = strtotime($result->shift->clock_out);
-            if ($result->shift && ($clockOutStrtotime < strtotime($result->shift->clock_in))) {
+            if ($result->shift && (strtotime($result->shift->clock_out) < strtotime($result->shift->clock_in))) {
                 $clockInStrtotime = strtotime(date('Y-m-d ' . $result->shift->clock_in, strtotime('-1 day')));
                 $clockOutStrtotime = strtotime($result->shift->clock_out);
 
