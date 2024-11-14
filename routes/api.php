@@ -68,6 +68,8 @@ Route::group(['prefix' => 'auth', 'controller' => AuthController::class], functi
     Route::post('token', 'login');
 });
 
+Route::post('notifications/test', [NotificationController::class, 'test']);
+
 Route::post('auth/setup-password/resend', [AuthController::class, 'resendSetupPassword']);
 Route::post('auth/setup-password', [AuthController::class, 'setupPassword']);
 

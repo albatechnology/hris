@@ -1,25 +1,26 @@
 <?php
 
-namespace App\Notifications\Task;
+namespace App\Notifications;
 
 use App\Enums\NotificationType;
-use App\Models\TaskRequest;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RequestTask extends Notification
+class TestNotification extends Notification
 {
     use Queueable;
+    private string $title;
+    private string $body;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private TaskRequest $taskRequest)
+    public function __construct(?string $title, ?string $body)
     {
-        //
+        $this->title = $title ?? "Test Notification";
+        $this->body = $body ?? "This is a test notification";
     }
 
     /**
@@ -29,7 +30,7 @@ class RequestTask extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm'];
+        return ['fcm'];
     }
 
     /**
@@ -51,30 +52,21 @@ class RequestTask extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->taskRequest->taskHour?->task?->name ?? ""),
-            'url_path' => $this->notificationType->getUrlPath(),
-            'user_id' => $this->user->id,
-            'model_id' => $this->taskRequest->id
+            //
         ];
     }
 
-    /**
-     * Get the fcm representation of the notification.
-     */
     public function toFcm(object $notifiable): array
     {
-        $body = sprintf($this->notificationType->getMessage(), $this->taskRequest->taskHour?->task?->name ?? "");
-
         return [
-            'token' => $this->user->fcm_token,
+            'token' => $notifiable->fcm_token,
             'notification' => [
-                'title' => $this->notificationType->getLabel(),
-                'body' => $body,
+                'title' => $this->title,
+                'body' => $this->body,
             ],
             'data' => [
-                'notifiable_type' => $this->notificationType->value,
-                'notifiable_id' => $this->taskRequest->id,
+                'notifiable_type' => 'notifiable_type',
+                'notifiable_id' => 'notifiable_id',
             ],
         ];
     }
