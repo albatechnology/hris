@@ -52,10 +52,10 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
         return $this->belongsTo(Attendance::class);
     }
 
-    public function approvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
+    // public function approvedBy(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'approved_by');
+    // }
 
     public function scopeApproved(Builder $q)
     {

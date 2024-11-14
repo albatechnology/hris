@@ -37,7 +37,7 @@ class StoreRequest extends FormRequest
 
             'locations' => 'required|array',
             // 'locations.*.client_location_id' => 'required|exists:client_locations,id',
-            'locations.*.client_location_id' => 'required|integer',
+            'locations.*.client_location_id' => 'required|exists:client_locations,id',
             'locations.*.tasks' => 'required|array',
             'locations.*.tasks.*.name' => 'required|string',
             'locations.*.tasks.*.description' => 'required|string',
