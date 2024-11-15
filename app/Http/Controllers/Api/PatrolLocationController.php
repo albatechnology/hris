@@ -52,7 +52,7 @@ class PatrolLocationController extends BaseController
 
     public function show(int $patrolId, int $id)
     {
-        $patrolLocation = $this->patrol->locations()->findOrFail($id);
+        $patrolLocation = $this->patrol->patrolLocations()->findOrFail($id);
         $patrolLocation->load(['patrol', 'clientLocation']);
 
         return new DefaultResource($patrolLocation);
@@ -61,7 +61,7 @@ class PatrolLocationController extends BaseController
     public function store(int $patrolId, StoreRequest $request)
     {
         try {
-            $patrolLocation = $this->patrol->locations()->create($request->validated());
+            $patrolLocation = $this->patrol->patrolLocations()->create($request->validated());
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -71,7 +71,7 @@ class PatrolLocationController extends BaseController
 
     public function update(int $patrolId, int $id, StoreRequest $request)
     {
-        $patrolLocation = $this->patrol->locations()->findOrFail($id);
+        $patrolLocation = $this->patrol->patrolLocations()->findOrFail($id);
 
         try {
             $patrolLocation->update($request->validated());
@@ -84,7 +84,7 @@ class PatrolLocationController extends BaseController
 
     public function destroy(int $patrolId, int $id)
     {
-        $patrolLocation = $this->patrol->locations()->findOrFail($id);
+        $patrolLocation = $this->patrol->patrolLocations()->findOrFail($id);
 
         try {
             $patrolLocation->delete();
@@ -97,7 +97,7 @@ class PatrolLocationController extends BaseController
 
     public function forceDelete(int $patrolId, $id)
     {
-        $patrolLocation = $this->patrol->locations()->withTrashed()->findOrFail($id);
+        $patrolLocation = $this->patrol->patrolLocations()->withTrashed()->findOrFail($id);
 
         try {
             $patrolLocation->forceDelete();
@@ -110,7 +110,7 @@ class PatrolLocationController extends BaseController
 
     public function restore(int $patrolId, $id)
     {
-        $patrolLocation = $this->patrol->locations()->withTrashed()->findOrFail($id);
+        $patrolLocation = $this->patrol->patrolLocations()->withTrashed()->findOrFail($id);
 
         try {
             $patrolLocation->restore();

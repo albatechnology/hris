@@ -90,7 +90,6 @@ class UserController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::exact('parent_id'),
                 AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
@@ -123,7 +122,6 @@ class UserController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
-                'parent_id',
                 'approval_id',
                 'name',
                 'email',

@@ -202,7 +202,7 @@ class UserSeeder extends Seeder
 
                     foreach ($albaUsers as $i => $albaUser) {
                         $user = $branch->users()->create([
-                            'approval_id' => $admin->id,
+                            // 'approval_id' => $admin->id,
                             // 'parent_id' => $admin->id,
                             'name' => $albaUser['name'],
                             'email' => $albaUser['email'],

@@ -30,14 +30,14 @@ class UserTransferController extends BaseController
     {
         return [
             AllowedInclude::callback('user', function ($q) {
-                $q->select('id', 'name', 'nik', 'approval_id', 'parent_id');
+                $q->select('id', 'name', 'last_name', 'nik', 'approval_id');
             }),
             AllowedInclude::callback('approval', function ($q) {
-                $q->select('id', 'name');
+                $q->select('id', 'name', 'last_name');
             }),
-            AllowedInclude::callback('manager', function ($q) {
-                $q->select('id', 'name');
-            }),
+            // AllowedInclude::callback('manager', function ($q) {
+            //     $q->select('id', 'name', 'last_name');
+            // }),
         ];
     }
 
@@ -65,7 +65,7 @@ class UserTransferController extends BaseController
         $userTransfer = UserTransfer::with([
             'user' => fn ($q) => $q->select('id', 'name', 'nik'),
             'approval' => fn ($q) => $q->select('id', 'name'),
-            'manager' => fn ($q) => $q->select('id', 'name'),
+            // 'manager' => fn ($q) => $q->select('id', 'name'),
         ])->findTenanted($id);
 
         return new DefaultResource($userTransfer);

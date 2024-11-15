@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\MediaCollection;
-use App\Enums\PatrolTaskStatus;
 use App\Enums\ScheduleType;
 use App\Http\Requests\Api\UserPatrolTask\StoreRequest;
 use App\Http\Requests\Api\UserPatrolTask\UpdateRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\PatrolTask;
 use App\Models\UserPatrolTask;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
@@ -34,7 +32,6 @@ class UserPatrolTaskController extends BaseController
         $data = QueryBuilder::for(UserPatrolTask::tenanted())
             ->allowedIncludes(['patrolTask', 'schedule', 'shift', 'user', 'media'])
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('patrol_task_id'),
                 AllowedFilter::exact('schedule_id'),
@@ -47,6 +44,9 @@ class UserPatrolTaskController extends BaseController
                 }),
                 AllowedFilter::callback('date', function ($query, $value) {
                     $query->whereDate('created_at', $value);
+                }),
+                AllowedFilter::callback('patrol_id', function ($query, $value) {
+                    $query->whereHas('patrolTask', fn($q) => $q->whereHas('patrolLocation', fn($q) => $q->where('patrol_id', $value)));
                 }),
             ])
             ->allowedSorts([

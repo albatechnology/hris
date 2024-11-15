@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\PatrolTaskStatus;
 use App\Enums\ScheduleType;
 use App\Services\ScheduleService;
 use Carbon\Carbon;

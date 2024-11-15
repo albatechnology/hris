@@ -41,7 +41,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'live_attendance_id',
         'overtime_id',
         'approval_id',
-        'parent_id',
+        // 'parent_id',
         'name',
         'last_name',
         'email',
@@ -150,7 +150,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function scopeJobLevel(Builder $query, ...$value)
     {
         $query->where(function ($q) use ($value) {
-            $q->whereNull('parent_id');
+            // $q->whereNull('parent_id');
             $q->orWhereHas('detail', fn($q2) => $q2->whereIn('user_details.job_level', $value));
         });
     }
@@ -220,10 +220,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsTo(Company::class);
     }
 
-    public function manager(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'parent_id');
-    }
+    // public function manager(): BelongsTo
+    // {
+    //     return $this->belongsTo(self::class, 'parent_id');
+    // }
 
     public function branch(): BelongsTo
     {

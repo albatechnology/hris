@@ -100,13 +100,26 @@ class Patrol extends BaseModel implements TenantedInterface
         if ($user->is_super_admin) {
             return $query;
         }
+
         if ($user->is_administrator) {
             return $query->whereHas('client', fn($q) => $q->whereHas('company', fn($q) => $q->where('group_id', $user->group_id)));
         }
 
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        if ($user->is_admin) {
+            $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+            return $query->whereHas('client', fn($q) => $q->whereIn('company_id', $companyIds));
+        }
 
-        return $query->whereHas('client', fn($q) => $q->whereIn('company_id', $companyIds));
+        $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleType: ScheduleType::PATROL->value);
+        $query->whereHas(
+            'users',
+            fn($q) => $q->where('user_id', $user->id)
+                ->whereHas('userPatrolSchedules.schedule', function ($q2) use ($schedule) {
+                    $q2->where('schedules.type', ScheduleType::PATROL->value);
+                    $q2->whereDate('schedules.effective_date', '<=', date('Y-m-d'));
+                    $q2->whereHas('shifts', fn($q3) => $q3->where('id', $schedule?->shift?->id));
+                })
+        );
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -137,10 +150,5 @@ class Patrol extends BaseModel implements TenantedInterface
     public function users(): HasMany
     {
         return $this->hasMany(UserPatrol::class);
-    }
-
-    public function usersTable(): HasMany
-    {
-        return $this->hasMany(User::class, UserPatrol::class);
     }
 }

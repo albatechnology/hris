@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('branch_id')->nullable()->constrained();
             $table->foreignId('live_attendance_id')->nullable()->constrained();
             $table->foreignId('overtime_id')->nullable();
-            $table->foreignId('approval_id')->nullable();
+            // $table->foreignId('approval_id')->nullable();
             // $table->nestedSet(); // parent_id as manager_id
             // $table->foreignId('manager_id')->nullableid()->constrained('users');
             $table->string('name');
