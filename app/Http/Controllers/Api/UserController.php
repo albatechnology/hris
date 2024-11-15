@@ -531,7 +531,8 @@ class UserController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new UserResource($user->load('detail')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
+        // return (new UserResource($user->load('detail')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     // public function getAvailableSupervisor(int $positionId)
