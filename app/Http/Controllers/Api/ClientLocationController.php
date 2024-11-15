@@ -37,11 +37,11 @@ class ClientLocationController extends BaseController
         $data = QueryBuilder::for(ClientLocation::whereHas('client', function ($q) {
             $q->tenanted();
         })->with('client'))->allowedFilters([
-                AllowedFilter::exact('id'),
-                AllowedFilter::exact('client_id'),
-                'name',
-                'address'
-            ])
+            AllowedFilter::exact('id'),
+            AllowedFilter::exact('client_id'),
+            'name',
+            'address'
+        ])
             ->allowedSorts([
                 'id',
                 'client_id',
@@ -105,5 +105,30 @@ class ClientLocationController extends BaseController
         }
 
         return $this->deletedResponse();
+    }
+
+    public function generateQrCode()
+    {
+        $clientLocations = ClientLocation::all();
+        foreach ($clientLocations as $clientLocation) {
+            $clientLocation->clearMediaCollection(MediaCollection::QR_CODE->value);
+
+            $mediaCollections = [MediaCollection::QR_CODE->value];
+            $tempDirectory = 'client_location_qr_codes';
+            if (! File::exists(public_path($tempDirectory))) {
+                File::makeDirectory(public_path($tempDirectory));
+            }
+            foreach ($mediaCollections as $mediaCollection) {
+                $qrCode = 'data:image/png;base64,' . base64_encode(QrCode::size(500)->format('png')->margin(1)->generate(implode(';', ['client_location', $clientLocation->uuid])));
+                $base64_str = substr($qrCode, strpos($qrCode, ',') + 1);
+                $image = base64_decode($base64_str);
+                $path = public_path() . '/' . $tempDirectory . '/' . now()->timestamp . '.png';
+                file_put_contents($path, $image);
+
+                $clientLocation->addMedia($path)->toMediaCollection($mediaCollection);
+            }
+        }
+
+        return $clientLocations;
     }
 }

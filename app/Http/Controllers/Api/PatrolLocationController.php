@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\PatrolLocation\AttendRequest;
-use App\Http\Requests\Api\PatrolLocation\ScanPatrolLocationRequest;
 use App\Http\Requests\Api\PatrolLocation\ScanQrCodeRequest;
 use App\Http\Requests\Api\PatrolLocation\StoreRequest;
 use App\Http\Resources\DefaultResource;
