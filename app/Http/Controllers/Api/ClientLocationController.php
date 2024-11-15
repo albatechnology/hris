@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\ClientLocation;
 use BadMethodCallException;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -107,9 +108,14 @@ class ClientLocationController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function generateQrCode()
+    public function generateQrCode(Request $request)
     {
-        $clientLocations = ClientLocation::all();
+        if ($request->id) {
+            $clientLocations = ClientLocation::where('id', $request->id)->get();
+        } else {
+            $clientLocations = ClientLocation::all();
+        }
+
         foreach ($clientLocations as $clientLocation) {
             $clientLocation->clearMediaCollection(MediaCollection::QR_CODE->value);
 

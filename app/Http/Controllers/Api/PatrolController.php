@@ -102,8 +102,9 @@ class PatrolController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(Patrol $patrol)
+    public function show(int $id)
     {
+        $patrol = Patrol::findTenanted($id);
         return new DefaultResource($patrol->load([
             'users' => [
                 'user',
