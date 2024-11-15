@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\PatrolTaskExport;
 use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
@@ -352,8 +353,23 @@ class PatrolController extends BaseController
     {
         $patrol = Patrol::findTenanted($id);
         $patrol->load([
-            'patrolLocations' => fn($q) => $q->with('tasks')
+            'patrolLocations' => function ($q) {
+                $q
+                    // ->select('id', 'patrol_id', 'client_location_id', 'description')
+                    ->with('clientLocation', fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'))
+                    ->with('tasks', function ($q) {
+                        $q
+                            // ->select('id', 'name', 'description')
+                            ->with('userPatrolTasks', function ($q) {
+                                $q->with('user', fn($q) => $q->select('id', 'name', 'last_name'));
+                                $q->with('schedule', fn($q) => $q->select('id', 'name'));
+                                $q->with('shift', fn($q) => $q->select('id', 'name'));
+                            });
+                    });
+            }
         ]);
+
+        return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
 
         return $patrol;
     }
