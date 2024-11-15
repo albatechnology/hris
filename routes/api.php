@@ -270,6 +270,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::get('clients/summaries', [ClientController::class, 'summary']);
     Route::apiResource('clients', ClientController::class);
+    Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
     Route::apiResource('client-locations', ClientLocationController::class);
     Route::apiResource('guest-books', GuestBookController::class);
 
