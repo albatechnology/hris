@@ -10,6 +10,7 @@ use App\Http\Resources\DefaultResource;
 use App\Models\Patrol;
 use App\Models\UserPatrol;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -349,27 +350,29 @@ class PatrolController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function export(int $id)
+    public function export(Request $request, int $id)
     {
+        $date = $request->filter['date'] ?? date('Y-m-d');
         $patrol = Patrol::findTenanted($id);
         $patrol->load([
-            'patrolLocations' => function ($q) {
+            'patrolLocations' => function ($q) use ($date) {
                 $q
-                    // ->select('id', 'patrol_id', 'client_location_id', 'description')
+                    ->select('id', 'patrol_id', 'client_location_id', 'description')
                     ->with('clientLocation', fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'))
-                    ->with('tasks', function ($q) {
+                    ->with('tasks', function ($q) use ($date) {
                         $q
-                            // ->select('id', 'name', 'description')
-                            ->with('userPatrolTasks', function ($q) {
-                                $q->with('user', fn($q) => $q->select('id', 'name', 'last_name'));
-                                $q->with('schedule', fn($q) => $q->select('id', 'name'));
-                                $q->with('shift', fn($q) => $q->select('id', 'name'));
+                            ->select('id', 'patrol_location_id', 'name', 'description')
+                            ->with('userPatrolTasks', function ($q) use ($date) {
+                                $q->whereDate('created_at', $date)
+                                    ->with('user', fn($q) => $q->select('id', 'name', 'last_name'))
+                                    ->with('schedule', fn($q) => $q->select('id', 'name'))
+                                    ->with('shift', fn($q) => $q->select('id', 'name'));
                             });
                     });
             }
         ]);
 
-        return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
+        // return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
 
         return $patrol;
     }
