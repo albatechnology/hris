@@ -2,9 +2,6 @@
 
 namespace App\Http\Requests\Api\UserPayrollInfo;
 
-use App\Enums\BpjsKesehatanCost;
-use App\Enums\JaminanPensiunCost;
-use App\Enums\JhtCost;
 use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\PaidBy;
 use Illuminate\Foundation\Http\FormRequest;

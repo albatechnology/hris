@@ -59,7 +59,7 @@ class RunPayrollController extends BaseController
         return new RunPayrollResource($runPayroll->load(['users.user', 'users.components.payrollComponent']));
     }
 
-    public function store(StoreRequest $request): RunPayrollResource|JsonResponse
+    public function store(StoreRequest $request)
     {
         $company = Company::find($request->company_id);
         if ($company->countryTable?->id == 1) {

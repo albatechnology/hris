@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('payroll_component_id')->constrained();
             $table->unsignedDouble('amount', 13, 2)->nullable();
             $table->boolean('is_editable')->default(0);
+            $table->json('payroll_component');
             $table->timestamps();
         });
     }

@@ -139,87 +139,88 @@ class RunPayrollService
                 }
 
                 $amount = self::calculatePayrollComponentPeriodType($defaultPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
-                self::createComponent($runPayrollUser, $defaultPayrollComponent->id, $amount);
+                self::createComponent($runPayrollUser, $defaultPayrollComponent, $amount);
             }
 
             // bpjs payroll component
-            if ($company->countryTable?->id == 1 && $runPayrollUser->user->userBpjs)
+            if ($company->countryTable?->id == 1 && $runPayrollUser->user->userBpjs) {
                 $bpjsPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
 
-            // calculate bpjs
-            // init bpjs variable
-            $current_upahBpjsKesehatan = $runPayrollUser->user->userBpjs->upah_bpjs_kesehatan;
-            if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
+                // calculate bpjs
+                // init bpjs variable
+                $current_upahBpjsKesehatan = $runPayrollUser->user->userBpjs->upah_bpjs_kesehatan;
+                if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
 
-            $current_upahBpjsKetenagakerjaan = $runPayrollUser->user->userBpjs->upah_bpjs_ketenagakerjaan;
-            if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
+                $current_upahBpjsKetenagakerjaan = $runPayrollUser->user->userBpjs->upah_bpjs_ketenagakerjaan;
+                if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
 
-            // bpjs kesehatan
-            $company_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
+                // bpjs kesehatan
+                $company_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
 
-            $employee_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
+                $employee_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
 
-            $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
+                $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
 
-            $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
+                $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
 
-            // jkk
-            $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
-            $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
+                // jkk
+                $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
+                $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
 
-            // jkm
-            $company_percentageJkm = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
-            $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
+                // jkm
+                $company_percentageJkm = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
+                $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
 
-            // jht
-            $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
+                // jht
+                $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
 
-            $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
+                $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
 
-            $employee_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
-            $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
+                $employee_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
+                $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
 
-            // jp
-            $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
+                // jp
+                $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
 
-            $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+                $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
 
-            $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
+                $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
 
-            $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+                $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
 
-            // company = benefit (tidak perlu kalkulasi, hanya catat)
-            // employee = deduction (kalkulasi)
-            // dd([
-            //     'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
-            //     'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
-            //     'company_totalJkk' => $company_totalJkk,
-            //     'company_totalJkm' => $company_totalJkm,
-            //     'company_totalJht' => $company_totalJht,
-            //     'employee_totalJht' => $employee_totalJht,
-            //     'company_totalJp' => $company_totalJp,
-            //     'employee_totalJp' => $employee_totalJp,
-            // ]);
-            // end calculate bpjs
+                // company = benefit (tidak perlu kalkulasi, hanya catat)
+                // employee = deduction (kalkulasi)
+                // dd([
+                //     'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
+                //     'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
+                //     'company_totalJkk' => $company_totalJkk,
+                //     'company_totalJkm' => $company_totalJkm,
+                //     'company_totalJht' => $company_totalJht,
+                //     'employee_totalJht' => $employee_totalJht,
+                //     'company_totalJp' => $company_totalJp,
+                //     'employee_totalJp' => $employee_totalJp,
+                // ]);
+                // end calculate bpjs
 
-            foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
-                if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+                foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
+                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
 
-                $amount = self::calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
+                    $amount = self::calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
 
-                self::createComponent($runPayrollUser, $bpjsPayrollComponent->id, $amount);
+                    self::createComponent($runPayrollUser, $bpjsPayrollComponent, $amount);
+                }
             }
 
 
             // overtime payroll component
-            $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first(['id']);
+            $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
 
             if ($overtimePayrollComponent) {
                 // get overtime setting
@@ -289,13 +290,13 @@ class RunPayrollService
                     }
                 }
 
-                self::createComponent($runPayrollUser, $overtimePayrollComponent->id, $amount);
+                self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
             }
 
             // insert other updated payroll component
-            $updatePayrollComponent?->details()->where('user_id', $userId)->whereNotIn('payroll_component_id', $defaultPayrollComponents->pluck('id')->toArray())->get()
+            $updatePayrollComponent?->details()->where('user_id', $userId)->whereNotIn('payroll_component_id', $defaultPayrollComponents->pluck('id')->toArray())->get(['id', 'update_payroll_component_id', 'payroll_component_id', 'new_amount'])
                 ->map(function ($updatePayrollComponentDetail) use ($runPayrollUser) {
-                    self::createComponent($runPayrollUser, $updatePayrollComponentDetail->payroll_component_id, $updatePayrollComponentDetail->new_amount);
+                    self::createComponent($runPayrollUser, $updatePayrollComponentDetail->payrollComponent, $updatePayrollComponentDetail->new_amount);
                 });
 
             // other payroll component
@@ -309,7 +310,7 @@ class RunPayrollService
 
                     $amount = self::calculatePayrollComponentPeriodType($otherPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
 
-                    self::createComponent($runPayrollUser, $otherPayrollComponent->id, $amount);
+                    self::createComponent($runPayrollUser, $otherPayrollComponent, $amount);
                 });
 
             // update total amount for each user
@@ -347,12 +348,13 @@ class RunPayrollService
      * @param  bool             $isEditable
      * @return RunPayrollUserComponent
      */
-    public static function createComponent(RunPayrollUser $runPayrollUser, int $payrollComponentId, int|float $amount = 0, ?bool $isEditable = true): RunPayrollUserComponent
+    public static function createComponent(RunPayrollUser $runPayrollUser, PayrollComponent $payrollComponent, int|float $amount = 0, ?bool $isEditable = true): RunPayrollUserComponent
     {
         return $runPayrollUser->components()->create([
-            'payroll_component_id' => $payrollComponentId,
+            'payroll_component_id' => $payrollComponent->id,
             'amount' => $amount,
             'is_editable' => $isEditable,
+            'payroll_component' => $payrollComponent,
         ]);
     }
 

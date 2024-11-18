@@ -8,13 +8,15 @@ use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CreatedUpdatedInfo;
+use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\MorphManyFormulas;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollComponent extends BaseModel
 {
-    use CompanyTenanted, MorphManyFormulas;
+    use CompanyTenanted, MorphManyFormulas, CustomSoftDeletes, CreatedUpdatedInfo;
 
     protected $fillable = [
         'company_id',

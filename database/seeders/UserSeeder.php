@@ -125,6 +125,10 @@ class UserSeeder extends Seeder
             $admin->payrollInfo()->create([
                 'basic_salary' => 1000000
             ]);
+            $admin->userBpjs()->create([
+                'upah_bpjs_kesehatan' => 1000000,
+                'upah_bpjs_ketenagakerjaan' => 1000000,
+            ]);
             $admin->detail()->create([]);
             DB::table('model_has_roles')->insert([
                 'role_id' => $adminRole->id,
@@ -217,6 +221,10 @@ class UserSeeder extends Seeder
                         $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
                         $user->payrollInfo()->create([
                             'basic_salary' => 1000000
+                        ]);
+                        $user->userBpjs()->create([
+                            'upah_bpjs_kesehatan' => 1000000,
+                            'upah_bpjs_ketenagakerjaan' => 1000000,
                         ]);
                         $user->detail()->create([]);
                         DB::table('model_has_roles')->insert([
