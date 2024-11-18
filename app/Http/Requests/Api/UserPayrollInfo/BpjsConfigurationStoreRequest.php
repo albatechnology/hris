@@ -28,11 +28,11 @@ class BpjsConfigurationStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'upah_bpjs_kesehatan' => 'required|numeric',
-            'upah_bpjs_ketenagakerjaan' => 'required|numeric',
-            'bpjs_ketenagakerjaan_no' => 'required|string',
+            'upah_bpjs_kesehatan' => 'nullable|numeric',
+            'upah_bpjs_ketenagakerjaan' => 'nullable|numeric',
+            'bpjs_ketenagakerjaan_no' => 'nullable|string',
             'bpjs_ketenagakerjaan_date' => 'required|date_format:Y-m-d',
-            'bpjs_kesehatan_no' => 'required|string',
+            'bpjs_kesehatan_no' => 'nullable|string',
             'bpjs_kesehatan_family_no' => 'nullable|string',
             'bpjs_kesehatan_date' => 'required|date_format:Y-m-d',
             'bpjs_kesehatan_cost' => ['required', Rule::enum(PaidBy::class)],
@@ -43,15 +43,15 @@ class BpjsConfigurationStoreRequest extends FormRequest
         ];
         // return [
         //     'bpjs_ketenagakerjaan_no' => 'nullable|string',
-        //     'npp_bpjs_ketenagakerjaan' => ['required', Rule::enum(NppBpjsKetenagakerjaan::class)],
-        //     'bpjs_ketenagakerjaan_date' => 'required|date_format:Y-m-d',
+        //     'npp_bpjs_ketenagakerjaan' => ['nullable', Rule::enum(NppBpjsKetenagakerjaan::class)],
+        //     'bpjs_ketenagakerjaan_date' => 'nullable|date_format:Y-m-d',
         //     'bpjs_kesehatan_no' => 'nullable|string',
         //     'bpjs_kesehatan_family_no' => 'nullable|string',
-        //     'bpjs_kesehatan_date' => 'required|date_format:Y-m-d',
-        //     'bpjs_kesehatan_cost' => ['required', Rule::enum(BpjsKesehatanCost::class)],
-        //     'jht_cost' => ['required', Rule::enum(JhtCost::class)],
-        //     'jaminan_pensiun_cost' => ['required', Rule::enum(JaminanPensiunCost::class)],
-        //     'jaminan_pensiun_date' => 'required|date_format:Y-m-d',
+        //     'bpjs_kesehatan_date' => 'nullable|date_format:Y-m-d',
+        //     'bpjs_kesehatan_cost' => ['nullable', Rule::enum(BpjsKesehatanCost::class)],
+        //     'jht_cost' => ['nullable', Rule::enum(JhtCost::class)],
+        //     'jaminan_pensiun_cost' => ['nullable', Rule::enum(JaminanPensiunCost::class)],
+        //     'jaminan_pensiun_date' => 'nullable|date_format:Y-m-d',
 
         // ];
     }
