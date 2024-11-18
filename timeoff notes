@@ -1,3 +1,13 @@
+TIMEOFF WORKFLOW
+1. siapkan table untuk timeoff_policies
+2. setiap timeoff memiliki type(TIME_OFF|FREE_LEAVE|DAY_OFF|PREGNANCY_LEAVE) nya masing-masing
+3. setiap timeoff memiliki policy nya masing-masing. ada yang mempunyai quota dan ada yang tidak.
+4. quota adalah jatah cuti karyawan dalam 1 periode
+
+-- 5. untuk timeoff yang memiliki quota
+
+
+
 timeoff memiliki beberapa type
     case TIME_OFF = 'time_off';
     case FREE_LEAVE = 'free_leave';
