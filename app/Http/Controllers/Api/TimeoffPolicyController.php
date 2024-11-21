@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\TimeoffPolicy\StoreRequest;
 use App\Http\Resources\TimeoffPolicy\TimeoffPolicyResource;
 use App\Models\TimeoffPolicy;
+use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -39,7 +40,18 @@ class TimeoffPolicyController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'effective_date', 'expired_date', 'type', 'name', 'code', 'is_allow_halfday', 'is_for_all_user', 'is_enable_block_leave', 'is_unlimited_day', 'created_at',
+                'id',
+                'company_id',
+                'effective_date',
+                'expired_date',
+                'type',
+                'name',
+                'code',
+                'is_allow_halfday',
+                'is_for_all_user',
+                'is_enable_block_leave',
+                'is_unlimited_day',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
@@ -63,8 +75,8 @@ class TimeoffPolicyController extends BaseController
             if ($request->user_ids && count($request->user_ids) > 0) {
                 $timeoffPolicy->users()->sync($request->user_ids);
             }
-        } catch (\Throwable $th) {
-            return $this->errorResponse($th->getMessage());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
         }
 
         return new TimeoffPolicyResource($timeoffPolicy);
@@ -78,8 +90,8 @@ class TimeoffPolicyController extends BaseController
             if ($request->user_ids && count($request->user_ids) > 0) {
                 $timeoffPolicy->users()->sync($request->user_ids);
             }
-        } catch (\Throwable $th) {
-            return $this->errorResponse($th->getMessage());
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage());
         }
 
         return (new TimeoffPolicyResource($timeoffPolicy))->response()->setStatusCode(Response::HTTP_ACCEPTED);

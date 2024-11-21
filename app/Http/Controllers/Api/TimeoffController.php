@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
+use App\Enums\MediaCollection;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
 use App\Models\Timeoff;
 use App\Services\ScheduleService;
+use App\Services\TimeoffService;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -28,9 +31,8 @@ class TimeoffController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Timeoff::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))))
+        $data = QueryBuilder::for(Timeoff::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')))->with('media'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('timeoff_policy_id'),
                 AllowedFilter::exact('delegate_to'),
@@ -64,30 +66,30 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
-            return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        // if ($request->is_advanced_leave) {
-        //     1, cek min_advanced_leave_working_month di timeoff_regulations
-        //     2. cek history advanced leave user, apakah sudah melebihi max_advanced_leave_request
-        //     3.
-        // }
-        // dd($request->validated());
+        TimeoffService::requestTimeoffValidation($request);
 
         DB::beginTransaction();
         try {
             $timeoff = Timeoff::create($request->validated());
 
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    if ($file->isValid()) {
+                        $timeoff->addMedia($file)->toMediaCollection(MediaCollection::TIMEOFF->value);
+                    }
+                }
+            }
+
             // $notificationType = NotificationType::REQUEST_TIMEOFF;
             // $timeoff->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user, $timeoff));
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse(message: $e->getMessage());
         }
 
-        return new TimeoffResource($timeoff);
+        return $this->createdResponse();
+        // return new TimeoffResource($timeoff);
     }
 
     public function update(Timeoff $timeoff, StoreRequest $request)
@@ -181,7 +183,7 @@ class TimeoffController extends BaseController
             //     $timeoff->user?->notify(new ($notificationType->getNotificationClass())($notificationType, $timeoff->user->approval, $timeoff->approval_status, $timeoff));
             // }
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());

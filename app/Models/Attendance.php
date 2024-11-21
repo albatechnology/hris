@@ -47,7 +47,7 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
         }
 
         if ($user->is_administrator) {
-            return $query->whereHas('user', fn ($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
+            return $query->whereHas('user', fn($q) => $q->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])->where('group_id', $user->group_id));
         }
 
         // if ($user->descendants()->exists()) {
@@ -72,12 +72,12 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
 
     public function scopeWhereCompanyId(Builder $query, int $companyId)
     {
-        $query->whereHas('user', fn ($q) => $q->where('company_id', $companyId));
+        $query->whereHas('user', fn($q) => $q->where('company_id', $companyId));
     }
 
     public function scopeWhereShiftId(Builder $query, int $shiftId)
     {
-        $query->whereHas('schedule', fn ($q) => $q->whereHas('shifts', fn ($q) => $q->where('shift_id', $shiftId)));
+        $query->whereHas('schedule', fn($q) => $q->whereHas('shifts', fn($q) => $q->where('shift_id', $shiftId)));
     }
 
     public function scopeValid(Builder $query)
@@ -115,6 +115,14 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
         return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', false)->orderByDesc('attendance_details.id');
     }
 
+    /**
+     * Scope a query to only include records where the date is between the specified start and end dates.
+     *
+     * @param Builder $query The query builder instance.
+     * @param string $startDate The start date for filtering records.
+     * @param string $endDate The end date for filtering records.
+     * @return void
+     */
     public function scopeWhereDateBetween(Builder $query, string $startDate, string $endDate)
     {
         $query->whereDate('date', '>=', date('Y-m-d', strtotime($startDate)))->whereDate('date', '<=', date('Y-m-d', strtotime($endDate)));

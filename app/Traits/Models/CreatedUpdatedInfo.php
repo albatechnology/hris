@@ -4,12 +4,9 @@ namespace App\Traits\Models;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 trait CreatedUpdatedInfo
 {
-    use SoftDeletes;
-
     public static function bootCreatedUpdatedInfo()
     {
         static::creating(function (self $model) {

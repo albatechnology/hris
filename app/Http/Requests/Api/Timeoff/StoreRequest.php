@@ -27,7 +27,8 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'is_advanced_leave' => $this->toBoolean($this->is_advanced_leave),
+            'user_id' => $this->user_id ?? auth()->id(),
+            // 'is_advanced_leave' => $this->toBoolean($this->is_advanced_leave),
         ]);
     }
 
@@ -39,14 +40,17 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => 'required|exists:users,id',
             'timeoff_policy_id' => 'required|exists:timeoff_policies,id',
             'request_type' => ['required', Rule::enum(TimeoffRequestType::class)],
             'start_at' => 'required|date_format:Y-m-d H:i',
             'end_at' => 'required|date_format:Y-m-d H:i',
             'reason' => 'nullable|string',
             'delegate_to' => 'nullable|exists:users,id',
-            'is_advanced_leave' => 'nullable|boolean',
+
+            'files' => 'nullable|array',
+            'files.*' => 'required|mimes:' . config('app.image_mimes_types'),
+            // 'is_advanced_leave' => 'nullable|boolean',
         ];
     }
 }

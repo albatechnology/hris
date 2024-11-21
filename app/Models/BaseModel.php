@@ -25,11 +25,11 @@ abstract class BaseModel extends Model
 
     public function scopeWhereLike(Builder $query, $column, $value)
     {
-        $query->where($column, 'LIKE', '%'.$value.'%');
+        $query->where($column, 'LIKE', '%' . $value . '%');
     }
 
     public function scopeOrWhereLike(Builder $query, $column, $value)
     {
-        $query->orWhere($column, 'LIKE', '%'.$value.'%');
+        $query->orWhere($column, 'LIKE', '%' . $value . '%');
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Jobs\Timeoff;
 
-use App\Enums\TimeoffRenewType;
 use App\Enums\UserType;
 use App\Jobs\Timeoff\CleanRemainingTimeoff;
 use App\Models\Company;

@@ -8,10 +8,12 @@ use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Timeoff extends RequestedBaseModel
+class Timeoff extends RequestedBaseModel implements HasMedia
 {
-    use CustomSoftDeletes, BelongsToUser;
+    use CustomSoftDeletes, BelongsToUser, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
@@ -32,18 +34,18 @@ class Timeoff extends RequestedBaseModel
         // 'approval_status' => ApprovalStatus::class,
     ];
 
-    protected static function booted(): void
-    {
-        parent::booted();
+    // protected static function booted(): void
+    // {
+    //     parent::booted();
 
-        static::creating(function (self $model) {
-            if (empty($model->user_id)) {
-                $model->user_id = auth('sanctum')->id();
-            }
+    //     static::creating(function (self $model) {
+    //         if (empty($model->user_id)) {
+    //             $model->user_id = auth('sanctum')->id();
+    //         }
 
-            // $model->approved_by = $model->user->approval?->id ?? null;
-        });
-    }
+    //         // $model->approved_by = $model->user->approval?->id ?? null;
+    //     });
+    // }
 
     public function scopeTenanted(Builder $query): Builder
     {
@@ -60,9 +62,11 @@ class Timeoff extends RequestedBaseModel
             $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
 
             return $query->whereHas('user', fn($q) => $q->whereTypeUnder($user->type)->whereHas('companies', fn($q) => $q->where('company_id', $companyIds)));
-        } else {
-            $userIds = \Illuminate\Support\Facades\DB::table('user_supervisors')->where('supervisor_id', $user->id)->get(['user_id'])?->pluck('user_id')->all() ?? [];
+        }
 
+        $userIds = \Illuminate\Support\Facades\DB::table('user_supervisors')->select('user_id')->where('supervisor_id', $user->id)->get()?->pluck('user_id')->all() ?? [];
+
+        if (count($userIds) > 0) {
             return $query->whereIn('user_id', [...$userIds, $user->id]);
         }
 
@@ -87,20 +91,25 @@ class Timeoff extends RequestedBaseModel
     //     $query->where('approval_status', ApprovalStatus::APPROVED);
     // }
 
-    public function scopeStartAt(Builder $query, $date = null)
-    {
-        if (is_null($date)) {
-            return $query;
-        }
-        $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($date)));
-    }
+    // public function scopeStartAt(Builder $query, $date = null)
+    // {
+    //     if (is_null($date)) {
+    //         return $query;
+    //     }
+    //     $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($date)));
+    // }
 
-    public function scopeEndAt(Builder $query, $date = null)
+    // public function scopeEndAt(Builder $query, $date = null)
+    // {
+    //     if (is_null($date)) {
+    //         return $query;
+    //     }
+    //     $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
+    // }
+
+    public function scopeWhereBetweenStartEnd(Builder $query, string $startDate, string $endDate)
     {
-        if (is_null($date)) {
-            return $query;
-        }
-        $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
+        $query->whereDate('start_at', '<=', date('Y-m-d', strtotime($startDate)))->whereDate('end_at', '>=', date('Y-m-d', strtotime($endDate)));
     }
 
     public function timeoffPolicy(): BelongsTo

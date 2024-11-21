@@ -343,10 +343,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(UserCustomField::class);
     }
 
-    public function timeoffRegulationMonths(): HasMany
-    {
-        return $this->hasMany(UserTimeoffRegulationMonth::class);
-    }
+    // public function timeoffRegulationMonths(): HasMany
+    // {
+    //     return $this->hasMany(UserTimeoffRegulationMonth::class);
+    // }
 
     public function announcements(): HasMany
     {
@@ -391,6 +391,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function panics(): HasMany
     {
         return $this->hasMany(Panic::class);
+    }
+
+    public function timeoffQuotas(): HasMany
+    {
+        return $this->hasMany(TimeoffQuota::class);
     }
 
     public function timeoffHistories(): HasMany
@@ -441,9 +446,12 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function getTotalWorkingMonth(?string $cutoffDate = null, bool $returnAllData = false): int|array
     {
         if ($cutoffDate == null) {
-            $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $this->company_id)->first(['cut_off_date']);
 
-            $cutoffDate = $timeoffRegulation->cut_off_date;
+            // $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $this->company_id)->first(['cut_off_date']);
+            // $cutoffDate = $timeoffRegulation->cut_off_date;
+
+            $payrollSetting = PayrollSetting::where('company_id', $this->company_id)->first(['id', 'cutoff_attendance_start_date']);
+            $cutoffDate = $payrollSetting->cutoff_attendance_start_date;
         }
 
         $joinDate = date_create($this->join_date);

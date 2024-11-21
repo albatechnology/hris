@@ -6,7 +6,6 @@ use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
 use App\Enums\ScheduleType;
-use App\Enums\UserType;
 use App\Events\Attendance\AttendanceRequested;
 use App\Exports\AttendanceReport;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
@@ -23,7 +22,7 @@ use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
 use App\Models\NationalHoliday;
-use App\Models\TimeoffRegulation;
+use App\Models\PayrollSetting;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
@@ -314,17 +313,18 @@ class AttendanceController extends BaseController
             $user = auth('sanctum')->user();
         }
 
-        $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
+        // $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
+        $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['id', 'cutoff_attendance_start_date']);
 
         $month = date('m');
 
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
-        if (date('d') <= $timeoffRegulation->cut_off_date) {
+        if (date('d') <= $payrollSetting->cutoff_attendance_start_date) {
             $month -= 1;
         }
 
-        $startDate = date(sprintf('%s-%s-%s', $year, $month, $timeoffRegulation->cut_off_date));
+        $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cutoff_attendance_start_date));
         $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
@@ -496,25 +496,10 @@ class AttendanceController extends BaseController
         $user = auth('sanctum')->user();
 
         $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
+            ->tenanted(true)
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
-
-        if (!$user->is_super_admin) {
-            $query->tenanted(true);
-        }
-
-        // $users = QueryBuilder::for($query)
-        //     ->allowedFilters([
-        //         AllowedFilter::exact('id'),
-        //         'nik',
-        //         'name',
-        //     ])
-        //     ->allowedSorts([
-        //         'nik',
-        //         'name',
-        //     ])
-        //     ->get();
 
         $date = $request->filter['date'];
 
@@ -653,13 +638,10 @@ class AttendanceController extends BaseController
         $user = auth('sanctum')->user();
 
         $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
+            ->tenanted(true)
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
-
-        if (!$user->is_super_admin) {
-            $query->tenanted(true);
-        }
 
         $users = QueryBuilder::for($query)
             ->allowedFilters([

@@ -7,14 +7,11 @@ TIMEOFF WORKFLOW
 -- 5. untuk timeoff yang memiliki quota
 
 
-
 timeoff memiliki beberapa type
     case TIME_OFF = 'time_off';
     case FREE_LEAVE = 'free_leave';
     case DAY_OFF = 'day_off';
     case PREGNANCY_LEAVE = 'PREGNANCY_LEAVE';
-
-
 
 
 === DAY OFF ===
@@ -83,3 +80,23 @@ timeoff memiliki beberapa type
     - is_have_quota == false
     - Adalah tidak hadir bekerja karena sakit dan dapat melampirkan surat keterangan istirahat dari dokter.
     - SDC tidak akan memotong benefit apapun.
+
+
+
+DAYOFF
+1.
+
+
+// REMOVE TIMEOFF REGULATION
+FIXED 1. cut_off_date masih ada di table timeoff_regulations, pindahin ke ? . cut_off_date dipake di attendance untuk menentukan tgl start bekerja
+ada di AttendanceController::index()
+FIXED 2. renew_type di App\Http\Requests\Api\Company\StoreRequest buat apa dah ?
+FIXED 3. relasi timeoffRegulation ada di model Company
+FIXED 4. relasi timeoffRegulationMonths ada di model User
+FIXED 5. getTotalWorkingMonth di model User masih ambil cut_off_date dari table timeoff_regulations
+FIXED 6. di UserObserver masih ada generate timeoffRegulation
+FIXED 7. Hapus TimeoffRegulationObserver di EventServiceProvider
+8. AdvancedLeaveService masih pake timeoffregulation
+9. Jobs timeoff matiin dulu
+
+10. remove column total_timeoff & total_remaining_timeoff di table users

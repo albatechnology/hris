@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\TaskRequestController;
 use App\Http\Controllers\Api\TimeoffController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\TimeoffPolicyController;
+use App\Http\Controllers\Api\TimeoffQuotaController;
 use App\Http\Controllers\Api\TimeoffRegulationController;
 use App\Http\Controllers\Api\TimeoffRegulationMonthController;
 use App\Http\Controllers\Api\UpdatePayrollComponentController;
@@ -159,11 +160,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
     Route::apiResource('attendances', AttendanceController::class);
 
-    Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
-        Route::post('users', [UserTimeoffPolicyController::class, 'store']);
-        Route::delete('users/{user}', [UserTimeoffPolicyController::class, 'destroy']);
-    });
+    // Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
+    //     Route::post('users', [UserTimeoffPolicyController::class, 'store']);
+    //     Route::delete('users/{user}', [UserTimeoffPolicyController::class, 'destroy']);
+    // });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
+
+    Route::get('timeoff-quotas/me', [TimeoffQuotaController::class, 'me']);
+    Route::apiResource('timeoff-quotas', TimeoffQuotaController::class);
 
     Route::get('timeoffs/approvals', [TimeoffController::class, 'approvals']);
     Route::get('timeoffs/approvals/count-total', [TimeoffController::class, 'countTotalapprovals']);
@@ -171,6 +175,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::put('approve', [TimeoffController::class, 'approve']);
     });
     Route::apiResource('timeoffs', TimeoffController::class);
+
 
     Route::apiResource('overtimes', OvertimeController::class);
     Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);

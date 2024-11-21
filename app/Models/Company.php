@@ -106,10 +106,10 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(PayrollComponent::class);
     }
 
-    public function timeoffRegulation(): HasOne
-    {
-        return $this->hasOne(TimeoffRegulation::class);
-    }
+    // public function timeoffRegulation(): HasOne
+    // {
+    //     return $this->hasOne(TimeoffRegulation::class);
+    // }
 
     public function payrollSetting(): HasOne
     {

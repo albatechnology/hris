@@ -36,7 +36,7 @@ class StoreRequest extends FormRequest
             'address' => 'nullable|string',
 
             // timeoff_regulations
-            'renew_type' => ['required', Rule::enum(TimeoffRenewType::class)],
+            // 'renew_type' => ['required', Rule::enum(TimeoffRenewType::class)],
         ];
     }
 }
