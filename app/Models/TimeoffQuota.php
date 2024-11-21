@@ -83,6 +83,17 @@ class TimeoffQuota extends BaseModel implements TenantedInterface
         return $this->hasMany(TimeoffQuotaHistory::class);
     }
 
+    public function scopeWhereExpired(Builder $query, $date = null)
+    {
+        if (!$date) {
+            $date = date('Y-m-d');
+        } else {
+            $date = date('Y-m-d', strtotime($date));
+        }
+
+        $query->where(fn($q) => $q->whereNotNull('effective_end_date')->whereDate('effective_end_date', '<=', $date));
+    }
+
     public function scopeEffectiveStartDate(Builder $query, $date = null)
     {
         if (is_null($date)) {

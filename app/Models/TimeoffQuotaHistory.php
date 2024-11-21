@@ -28,6 +28,13 @@ class TimeoffQuotaHistory extends BaseModel
         'new_balance' => 'float',
     ];
 
+    protected $appends = ['balance'];
+
+    public function getBalanceAttribute(): float
+    {
+        return $this->is_increment ? ($this->new_balance - $this->old_balance) : ($this->old_balance - $this->new_balance);
+    }
+
     public function scopeTenanted(Builder $query): Builder
     {
         /** @var User $user */

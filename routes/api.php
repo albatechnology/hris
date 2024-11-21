@@ -88,6 +88,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('payroll', [UserController::class, 'payroll']);
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
+
+        Route::get('timeoff-quotas', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuota']);
+        Route::get('timeoff-quotas/{timeoff_policy}', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuotaHistories']);
         Route::post('detail', [UserController::class, 'detail']);
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
@@ -166,7 +169,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     // });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
 
-    Route::get('timeoff-quotas/me', [TimeoffQuotaController::class, 'me']);
+    Route::get('timeoff-quotas/me/{timeoff_policy}', [TimeoffQuotaController::class, 'meDetails']);
     Route::apiResource('timeoff-quotas', TimeoffQuotaController::class);
 
     Route::get('timeoffs/approvals', [TimeoffController::class, 'approvals']);

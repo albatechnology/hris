@@ -5,7 +5,7 @@ namespace App\Http\Resources\TimeoffQuota;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TimeoffQuotaMe extends JsonResource
+class UserTimeoffPolicyQuotaHistories extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -15,8 +15,8 @@ class TimeoffQuotaMe extends JsonResource
     public function toArray(Request $request)
     {
         return [
-            'remaining_balance' => $this->remaining_balance,
-            'timeoff_policy' => $this->timeoffPolicy,
+            ...parent::toArray($request),
+            'balance' => $this->balance,
         ];
     }
 }

@@ -6,8 +6,12 @@ use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffQuota\StoreRequest;
 use App\Http\Requests\Api\TimeoffQuota\UpdateRequest;
 use App\Http\Resources\DefaultResource;
-use App\Http\Resources\TimeoffQuota\TimeoffQuotaMe;
+use App\Http\Resources\TimeoffQuota\UserTimeoffPolicyQuota;
+use App\Http\Resources\TimeoffQuota\UserTimeoffPolicyQuotaHistories;
+use App\Models\Timeoff;
 use App\Models\TimeoffQuota;
+use App\Models\TimeoffQuotaHistory;
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -25,16 +29,69 @@ class TimeoffQuotaController extends BaseController
     //     $this->middleware('permission:timeoff_policy_delete', ['only' => ['destroy', 'forceDelete']]);
     // }
 
-    public function me()
+    public function getUserTimeoffPolicyQuota(int $userId)
     {
+        if ($userId != auth()->id()) {
+            User::select('id')->tenanted()->where('id', $userId)->firstOrFail();
+        }
+
         $data = TimeoffQuota::select('timeoff_policy_id', DB::raw('SUM(quota - used_quota) as remaining_balance'))
             ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
-            ->where('user_id', auth()->id())
+            ->where('user_id', $userId)
             ->whereHas('timeoffPolicy', fn($q) => $q->whereIn('type', TimeoffPolicyType::hasQuotas()))
             ->groupBy('timeoff_policy_id')
             ->paginate();
 
-        return TimeoffQuotaMe::collection($data);
+        return UserTimeoffPolicyQuota::collection($data);
+    }
+
+    public function getUserTimeoffPolicyQuotaHistories(int $userId, int $timeoffPolicyId)
+    {
+        if ($userId != auth()->id()) {
+            User::select('id')->tenanted()->where('id', $userId)->firstOrFail();
+        }
+
+        $adjustments = TimeoffQuotaHistory::where('user_id', $userId)
+            ->whereHas('timeoffQuota', fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId))
+            ->orderByDesc('id')
+            ->get();
+
+        $expired = TimeoffQuota::where('user_id', $userId)
+            ->where('timeoff_policy_id', $timeoffPolicyId)
+            ->whereExpired()
+            ->orderByDesc('id')
+            ->get();
+
+        $timeoffTaken = Timeoff::where('user_id', $userId)
+            ->where('timeoff_policy_id', $timeoffPolicyId)
+            ->approved()
+            ->orderByDesc('id')
+            ->get();
+
+        $data = [
+            'adjustments' => $adjustments,
+            'expired' => $expired,
+            'timeoff_taken' => $timeoffTaken,
+        ];
+
+        return DefaultResource::collection($data);
+
+        // $query = TimeoffQuotaHistory::where('user_id', $userId)
+        //     ->whereHas('timeoffQuota', fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId));
+
+        // $data = QueryBuilder::for($query)
+        //     ->allowedFilters([
+        //         AllowedFilter::callback('created_year', fn($query, string $value) => $query->whereYear('created', $value)),
+        //     ])
+        //     ->allowedSorts([
+        //         'id',
+        //         'is_increment',
+        //         'old_balance',
+        //         'new_balance',
+        //         'created_at',
+        //     ])
+        //     ->paginate($this->per_page);
+        // return UserTimeoffPolicyQuotaHistories::collection($data);
     }
 
     public function index()
