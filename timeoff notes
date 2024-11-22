@@ -101,3 +101,11 @@ FIXED 7. Hapus TimeoffRegulationObserver di EventServiceProvider
 
 10. remove column total_timeoff & total_remaining_timeoff di table users
 11. kalo user udah berhasil request timeoff, terus quotanya habis/expired, pas di approved message nya approved, di table request_approvals jadi approved juga. harusnya ada validasi lagi pas di approved atasan, kalo quotanya habis/expired gabisa di approved
+
+
+// UPDATE new timeoff ke prod
+- bikin seeder untuk update db
+- hapus table timeoff_policies
+- create table timeoff_policies yg baru
+- hapus kolom total_timeoff & total_remaining_timeoff di table users
+-
