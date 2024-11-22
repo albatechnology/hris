@@ -69,12 +69,6 @@ class TimeoffPolicySeeder extends Seeder
                     'is_allow_halfday' => true,
                     'max_consecutively_day' => 5,
                 ],
-                // [
-                //     'name' => 'Pregnancy Leave',
-                //     'code' => 'PL',
-                //     'type' => TimeoffPolicyType::PREGNANCY_LEAVE,
-                //     'effective_date' => date('Y-m-d'),
-                // ],
                 [
                     'name' => 'Kematian suami/isteri, orangtua/mertua, anak/menantu (2 hari kerja)',
                     'code' => 'FL',
@@ -116,6 +110,12 @@ class TimeoffPolicySeeder extends Seeder
                     'type' => TimeoffPolicyType::FREE_LEAVE,
                     'effective_date' => date('Y-m-d'),
                     'block_leave_take_days' => 2
+                ],
+                [
+                    'name' => 'Pregnancy Leave',
+                    'code' => 'PL',
+                    'type' => TimeoffPolicyType::MATERNITY_LEAVE,
+                    'effective_date' => date('Y-m-d'),
                 ],
                 // [
                 //     'name' => 'Free Leave',

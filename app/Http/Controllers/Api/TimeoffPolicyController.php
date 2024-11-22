@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffPolicy\StoreRequest;
 use App\Http\Resources\TimeoffPolicy\TimeoffPolicyResource;
 use App\Models\TimeoffPolicy;
@@ -30,6 +31,12 @@ class TimeoffPolicyController extends BaseController
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::scope('start_effective_date'),
                 AllowedFilter::scope('end_effective_date'),
+                AllowedFilter::callback('has_quota', function ($query, bool $value) {
+                    if ($value == true) {
+                        $query->whereNotIn('type', TimeoffPolicyType::hasQuotas())
+                            ->orWhereHas('timeoffQuotas', fn($q) => $q->where('user_id', auth()->id())->whereActive());
+                    }
+                }),
                 'type',
                 'name',
                 'code',

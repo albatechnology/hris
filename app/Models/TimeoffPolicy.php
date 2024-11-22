@@ -8,6 +8,7 @@ use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TimeoffPolicy extends BaseModel implements TenantedInterface
 {
@@ -52,6 +53,11 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_timeoff_policies');
+    }
+
+    public function timeoffQuotas(): HasMany
+    {
+        return $this->hasMany(TimeoffQuota::class);
     }
 
     public function scopeStartEffectiveDate(Builder $query, $date = null)

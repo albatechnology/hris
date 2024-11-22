@@ -12,7 +12,7 @@ enum TimeoffPolicyType: string
     case TIME_OFF = 'time_off';
     case FREE_LEAVE = 'free_leave';
     case UNPAID_LEAVE = 'unpaid_leave';
-    case PREGNANCY_LEAVE = 'pregnancy_leave';
+    case MATERNITY_LEAVE = 'maternity_leave';
 
     public static function hasQuotas(): array
     {
