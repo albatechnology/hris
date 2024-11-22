@@ -152,25 +152,30 @@ class TimeoffController extends BaseController
             return $this->errorResponse(message: sprintf('There is a schedule that cannot be found between %s and %s', $timeoff->start_at, $timeoff->end_at), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // if ($this->approval_status->in([ApprovalStatus::PENDING, ApprovalStatus::REJECTED])) {
         if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
-            // untuk history timeoff
-            $value = 0.5;
-            if ($timeoff->request_type->is(TimeoffRequestType::FULL_DAY)) {
-                $startDate = new \DateTime($timeoff->start_at);
-                $endDate = new \DateTime($timeoff->end_at);
-                if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')) {
-                    $value = 1;
-                } else {
-                    $interval = $startDate->diff($endDate);
-                    $value = $interval->days;
-                }
-            }
-
-            if ($value > $timeoff->user->total_timeoff) {
-                return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
+            if ($remainingBalance <= 0) {
+                return $this->errorResponse(message: 'User Leave balance is not enough', code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         }
+        // if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
+        //     // untuk history timeoff
+        //     $value = 0.5;
+        //     if ($timeoff->request_type->is(TimeoffRequestType::FULL_DAY)) {
+        //         $startDate = new \DateTime($timeoff->start_at);
+        //         $endDate = new \DateTime($timeoff->end_at);
+        //         if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')) {
+        //             $value = 1;
+        //         } else {
+        //             $interval = $startDate->diff($endDate);
+        //             $value = $interval->days;
+        //         }
+        //     }
+
+        //     if ($value > $timeoff->user->total_timeoff) {
+        //         return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        //     }
+        // }
 
         DB::beginTransaction();
         try {
