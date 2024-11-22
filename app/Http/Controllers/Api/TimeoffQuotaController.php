@@ -6,9 +6,8 @@ use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffQuota\StoreRequest;
 use App\Http\Requests\Api\TimeoffQuota\UpdateRequest;
 use App\Http\Resources\DefaultResource;
-use App\Http\Resources\TimeoffQuota\UserTimeoffPolicyQuota;
-use App\Http\Resources\TimeoffQuota\UserTimeoffPolicyQuotaHistories;
 use App\Models\Timeoff;
+use App\Models\TimeoffPolicy;
 use App\Models\TimeoffQuota;
 use App\Models\TimeoffQuotaHistory;
 use App\Models\User;
@@ -35,14 +34,27 @@ class TimeoffQuotaController extends BaseController
             User::select('id')->tenanted()->where('id', $userId)->firstOrFail();
         }
 
-        $data = TimeoffQuota::select('timeoff_policy_id', DB::raw('SUM(quota - used_quota) as remaining_balance'))
-            ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
-            ->where('user_id', $userId)
-            ->whereHas('timeoffPolicy', fn($q) => $q->whereIn('type', TimeoffPolicyType::hasQuotas()))
-            ->groupBy('timeoff_policy_id')
-            ->paginate();
+        // $data = TimeoffQuota::select('timeoff_policy_id', DB::raw('SUM(quota - used_quota) as remaining_balance'))
+        //     ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
+        //     ->where('user_id', $userId)
+        //     ->whereHas('timeoffPolicy', fn($q) => $q->whereIn('type', TimeoffPolicyType::hasQuotas()))
+        //     ->groupBy('timeoff_policy_id')
+        //     ->paginate();
 
-        return UserTimeoffPolicyQuota::collection($data);
+        $data = TimeoffPolicy::select('id', 'name', 'code')
+            ->tenanted()
+            ->whereIn('type', TimeoffPolicyType::hasQuotas())
+            ->paginate()
+            ->through(function ($timeoffPolicy) use ($userId) {
+                $remainingBalance = TimeoffQuota::select(DB::raw('SUM(quota - used_quota) as remaining_balance'))
+                    ->where('user_id', $userId)
+                    ->where('timeoff_policy_id', $timeoffPolicy->id)
+                    ->first();
+                $timeoffPolicy->remaining_balance = (float) $remainingBalance?->remaining_balance ?? 0;
+                return $timeoffPolicy;
+            });
+
+        return DefaultResource::collection($data);
     }
 
     public function getUserTimeoffPolicyQuotaHistories(int $userId, int $timeoffPolicyId)
