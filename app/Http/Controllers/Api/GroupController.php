@@ -25,7 +25,6 @@ class GroupController extends BaseController
     {
         $data = QueryBuilder::for(Group::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 'name',
             ])
             ->allowedSorts([

@@ -38,7 +38,6 @@ class ClientLocationController extends BaseController
         $data = QueryBuilder::for(ClientLocation::whereHas('client', function ($q) {
             $q->tenanted();
         })->with('client'))->allowedFilters([
-            AllowedFilter::exact('id'),
             AllowedFilter::exact('client_id'),
             'name',
             'address'

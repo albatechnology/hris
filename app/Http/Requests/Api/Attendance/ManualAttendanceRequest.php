@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\Shift;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
@@ -29,7 +30,7 @@ class ManualAttendanceRequest extends FormRequest
         return [
             'user_id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
             'date' => 'required|date',
-            'shift_id' => 'required|exists:shifts,id',
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
             'clock_in' => 'required|date_format:H:i',
             'clock_out' => 'required|date_format:H:i',
         ];

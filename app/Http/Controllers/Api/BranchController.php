@@ -26,7 +26,6 @@ class BranchController extends BaseController
     {
         $data = QueryBuilder::for(Branch::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name', 'country', 'province', 'city', 'zip_code', 'address',
             ])

@@ -45,7 +45,6 @@ class UserTransferController extends BaseController
     {
         $data = QueryBuilder::for(UserTransfer::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('approval_id'),
                 AllowedFilter::exact('parent_id'),
@@ -163,7 +162,6 @@ class UserTransferController extends BaseController
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('shift_id'),
                 'approval_status', 'date', 'is_after_shift'

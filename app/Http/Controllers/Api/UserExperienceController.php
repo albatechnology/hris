@@ -15,7 +15,6 @@ class UserExperienceController extends BaseController
     {
         $data = QueryBuilder::for(UserExperience::where('user_id', $user->id))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 'company', 'department', 'position', 'start_date', 'end_date',
             ])

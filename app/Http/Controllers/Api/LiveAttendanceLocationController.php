@@ -27,7 +27,6 @@ class LiveAttendanceLocationController extends BaseController
     {
         $data = QueryBuilder::for(LiveAttendanceLocation::where('live_attendance_id', $liveAttendance->id))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 'radius',
                 'lat',
                 'lng',

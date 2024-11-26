@@ -36,7 +36,6 @@ class OvertimeRequestController extends BaseController
                 ])
         )
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('shift_id'),
                 'date',
@@ -140,7 +139,6 @@ class OvertimeRequestController extends BaseController
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('shift_id'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),

@@ -25,7 +25,6 @@ class DepartmentController extends BaseController
     {
         $data = QueryBuilder::for(Department::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('division_id'),
                 AllowedFilter::scope('company_id'),
                 'name',

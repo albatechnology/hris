@@ -25,9 +25,6 @@ class NationalHolidayController extends BaseController
     public function index()
     {
         $nationalHoliday = QueryBuilder::for(NationalHoliday::class)
-            ->allowedFilters([
-                AllowedFilter::exact('id'),
-            ])
             ->allowedSorts([
                 'id', 'name', 'date', 'created_at',
             ])

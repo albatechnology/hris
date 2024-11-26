@@ -26,7 +26,6 @@ class TaskController extends BaseController
     {
         $data = QueryBuilder::for(Task::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name', 'working_period',
             ])

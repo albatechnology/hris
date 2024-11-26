@@ -89,7 +89,6 @@ class UserController extends BaseController
                 ->with(['roles' => fn($q) => $q->select('id', 'name'), 'patrols.client'])
         )
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
                 // AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
@@ -138,10 +137,10 @@ class UserController extends BaseController
 
     public function me()
     {
-        Log::shareContext([
-            'silit' => auth('sanctum')->user(),
-        ]);
-        Log::emergency('test emergency');
+        // Log::shareContext([
+        //     'silit' => auth('sanctum')->user(),
+        // ]);
+        // Log::emergency('test emergency');
         // Log::alert('test alert');
         // Log::critical('test critical');
         // Log::error('test error');
@@ -149,7 +148,7 @@ class UserController extends BaseController
         // Log::notice('test notice');
         // Log::info('test info');
         // Log::debug('test debug');
-        dd('oke');
+        // dd('oke');
         /** @var User $user */
         $user = auth('sanctum')->user();
         $user = QueryBuilder::for(User::where('id', $user->id))

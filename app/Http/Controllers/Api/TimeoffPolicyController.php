@@ -27,7 +27,6 @@ class TimeoffPolicyController extends BaseController
     {
         $data = QueryBuilder::for(TimeoffPolicy::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::scope('start_effective_date'),
                 AllowedFilter::scope('end_effective_date'),

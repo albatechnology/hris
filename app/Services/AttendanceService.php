@@ -4,11 +4,8 @@ namespace App\Services;
 
 use App\Enums\DailyAttendance;
 use App\Models\Attendance;
-use App\Models\Event;
-use App\Models\NationalHoliday;
 use App\Models\Shift;
 use App\Models\User;
-use Carbon\Carbon;
 
 class AttendanceService
 {

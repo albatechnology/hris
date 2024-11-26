@@ -32,7 +32,6 @@ class TaskRequestController extends BaseController
     {
         $data = QueryBuilder::for(TaskRequest::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('task_hour_id'),
                 AllowedFilter::callback('task_id', fn($query, $value) => $query->whereHas('taskHour', fn($q) => $q->where('task_id', $value))),
@@ -165,7 +164,6 @@ class TaskRequestController extends BaseController
 
         $data = QueryBuilder::for($query)
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
             ])
             ->allowedIncludes([

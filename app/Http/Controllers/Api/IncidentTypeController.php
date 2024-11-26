@@ -26,7 +26,6 @@ class IncidentTypeController extends BaseController
     {
         $data = QueryBuilder::for(IncidentType::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name'
             ])

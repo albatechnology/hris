@@ -25,7 +25,6 @@ class ShiftController extends BaseController
     {
         $data = QueryBuilder::for(Shift::tenanted()->orWhereNull('company_id'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name', 'type', 'clock_in', 'clock_out',
             ])

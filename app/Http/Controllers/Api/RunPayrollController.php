@@ -37,7 +37,6 @@ class RunPayrollController extends BaseController
     {
         $data = QueryBuilder::for(RunPayroll::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('period'),
             ])

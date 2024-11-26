@@ -26,7 +26,6 @@ class SupervisorTypeController extends BaseController
     {
         $data = QueryBuilder::for(SupervisorType::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
             ])
             ->allowedIncludes(['company'])

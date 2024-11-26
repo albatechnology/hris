@@ -34,7 +34,6 @@ class OvertimeController extends BaseController
     {
         $data = QueryBuilder::for(Overtime::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
             ])
             ->allowedIncludes(['company'])

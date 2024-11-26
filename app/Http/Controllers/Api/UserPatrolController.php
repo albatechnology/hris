@@ -41,7 +41,6 @@ class UserPatrolController extends BaseController
       })
       // ->has('user.userPatrolLocations')
     )->allowedFilters([
-      AllowedFilter::exact('id'),
       AllowedFilter::exact('user_id'),
       AllowedFilter::exact('patrol_id'),
       AllowedFilter::callback('last_detected', function ($query, $value) {

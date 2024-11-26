@@ -15,7 +15,6 @@ class UserScheduleController extends BaseController
     {
         $data = QueryBuilder::for(User::tenanted()->whereHas('schedules', fn ($q) => $q->where('schedule_id', $schedule->id)))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name'
             ])

@@ -25,7 +25,6 @@ class PositionController extends BaseController
     {
         $data = QueryBuilder::for(Position::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name',
             ])

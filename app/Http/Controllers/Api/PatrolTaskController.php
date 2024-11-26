@@ -33,7 +33,6 @@ class PatrolTaskController extends BaseController
     {
         $data = QueryBuilder::for(PatrolTask::where('patrol_location_id', $this->patrolLocation->id))->with('patrolLocation.clientLocation')
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('patrol_location_id'),
                 'name'
             ])

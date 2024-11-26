@@ -32,7 +32,6 @@ class RequestScheduleController extends BaseController
     {
         $data = QueryBuilder::for(RequestSchedule::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name',
                 'type',

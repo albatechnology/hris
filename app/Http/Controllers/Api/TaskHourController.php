@@ -31,7 +31,6 @@ class TaskHourController extends BaseController
     {
         $data = QueryBuilder::for(TaskHour::whereHas('task', fn ($q) => $q->tenanted())->withCount('users'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('task_id'),
                 'name',
             ])

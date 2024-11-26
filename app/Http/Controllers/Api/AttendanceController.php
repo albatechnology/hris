@@ -645,7 +645,6 @@ class AttendanceController extends BaseController
 
         $users = QueryBuilder::for($query)
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::scope('schedule_type'),
                 'nik',
                 'name',
@@ -912,7 +911,7 @@ class AttendanceController extends BaseController
                     'type' => $request->type,
                     'note' => $request->note,
                 ]);
-                AttendanceRequested::dispatchIf($attendanceDetailClockIn->type->is(AttendanceType::MANUAL), $attendanceDetailClockIn);
+                // AttendanceRequested::dispatchIf($attendanceDetailClockIn->type->is(AttendanceType::MANUAL), $attendanceDetailClockIn);
             }
 
             if ($request->is_clock_out) {
@@ -922,7 +921,7 @@ class AttendanceController extends BaseController
                     'type' => $request->type,
                     'note' => $request->note,
                 ]);
-                AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
+                // AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
             DB::commit();
         } catch (Exception $e) {

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\AttendanceType;
 use App\Models\Schedule;
+use App\Models\Shift;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
@@ -46,7 +47,7 @@ class RequestAttendanceRequest extends FormRequest
         return [
             'user_id' => 'nullable|exists:users,id',
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
-            'shift_id' => 'required|exists:shifts,id',
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
             'is_clock_in' => ['boolean', function (string $attribute, mixed $value, Closure $fail) {
                 if (!$value && !$this->is_clock_out) $fail("The {$attribute} field is required.");
             },],

@@ -26,7 +26,6 @@ class TaskHourControllerBackup extends BaseController
     {
         $data = QueryBuilder::for(TaskHour::where('task_id', $task->id)->withCount('users'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('task_id'),
                 'name',
             ])

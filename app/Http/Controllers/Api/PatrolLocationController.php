@@ -34,7 +34,6 @@ class PatrolLocationController extends BaseController
     {
         $data = QueryBuilder::for(PatrolLocation::where('patrol_id', $this->patrol->id)->with('clientLocation'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('patrol_id'),
                 AllowedFilter::exact('client_location_id'),
             ])

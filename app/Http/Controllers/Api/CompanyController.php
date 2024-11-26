@@ -27,7 +27,6 @@ class CompanyController extends BaseController
     {
         $data = QueryBuilder::for(Company::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('group_id'),
                 'name', 'country', 'province', 'city', 'zip_code', 'address',
             ])

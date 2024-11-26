@@ -30,7 +30,6 @@ class NppController extends BaseController
   {
     $data = QueryBuilder::for(Npp::tenanted())
       ->allowedFilters([
-        AllowedFilter::exact('id'),
         AllowedFilter::exact('company_id'),
       ])
       ->allowedIncludes(['company'])

@@ -28,7 +28,6 @@ class EventController extends BaseController
     {
         $event = QueryBuilder::for(Event::tenanted()->orWhere(fn ($q) => $q->whereNationalHoliday()))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
             ])
             ->allowedIncludes(['company'])

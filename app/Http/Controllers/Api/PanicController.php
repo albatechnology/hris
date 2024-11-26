@@ -28,7 +28,6 @@ class PanicController extends BaseController
     {
         $data = QueryBuilder::for(Panic::tenanted()->with('user'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('status'),

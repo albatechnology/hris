@@ -39,7 +39,6 @@ class AnnouncementController extends BaseController
       'jobLevels',
     ]))
       ->allowedFilters([
-        AllowedFilter::exact('id'),
         AllowedFilter::exact('company_id'),
       ])->allowedIncludes(['user', 'branches', 'positions'])
       ->allowedSorts([

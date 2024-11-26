@@ -38,7 +38,6 @@ class UpdatePayrollComponentController extends BaseController
                 $q->selectRaw('update_payroll_component_id')->groupByRaw('update_payroll_component_id, payroll_component_id');
             }
         ]))->allowedFilters([
-            AllowedFilter::exact('id'),
             AllowedFilter::exact('company_id'),
             AllowedFilter::exact('transaction_id'),
             AllowedFilter::exact('description'),

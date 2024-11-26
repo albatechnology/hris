@@ -36,7 +36,6 @@ class TimeoffRegulationMonthController extends BaseController
     {
         $data = QueryBuilder::for($this->timeoffPeriodRegulation->timeoffRegulationMonths())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 'month',
             ])
             ->allowedIncludes(['timeoffPeriodRegulation'])

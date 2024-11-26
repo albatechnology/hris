@@ -34,18 +34,18 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
 
     protected $appends = ['approval_status', 'image'];
 
-    protected static function booted(): void
-    {
-        parent::booted();
+    // protected static function booted(): void
+    // {
+    //     parent::booted();
 
-        // static::creating(function (self $model) {
-        //     if ($model->type->is(AttendanceType::MANUAL)) {
-        //         $model->approved_by = $model->attendance->user->approval?->id ?? null;
-        //     } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
-        //         $model->approval_status = ApprovalStatus::APPROVED;
-        //     }
-        // });
-    }
+    //     // static::creating(function (self $model) {
+    //     //     if ($model->type->is(AttendanceType::MANUAL)) {
+    //     //         $model->approved_by = $model->attendance->user->approval?->id ?? null;
+    //     //     } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
+    //     //         $model->approval_status = ApprovalStatus::APPROVED;
+    //     //     }
+    //     // });
+    // }
 
     public function attendance(): BelongsTo
     {
@@ -59,7 +59,10 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
 
     public function scopeApproved(Builder $q)
     {
-        $q->where(fn($q) => $q->where('type', AttendanceType::AUTOMATIC)->orWhere(fn($q) => $q->where('type', AttendanceType::MANUAL)->whereApprovalStatus(ApprovalStatus::APPROVED)));
+        $q->where(
+            fn($q) => $q->where('type', AttendanceType::AUTOMATIC)
+                ->orWhere(fn($q) => $q->where('type', AttendanceType::MANUAL)->whereApprovalStatus(ApprovalStatus::APPROVED))
+        );
         // $q->where(
         //     fn($q) => $q->where('type', AttendanceType::AUTOMATIC)->orWhere('approval_status', ApprovalStatus::APPROVED)
         //     // ->orWhere(fn($q) => $q->whereNot('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED))

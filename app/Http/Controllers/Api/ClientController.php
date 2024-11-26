@@ -29,7 +29,6 @@ class ClientController extends BaseController
     {
         $data = QueryBuilder::for(Client::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name',
                 'phone',

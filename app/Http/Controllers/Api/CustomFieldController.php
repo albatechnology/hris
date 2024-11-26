@@ -25,7 +25,6 @@ class CustomFieldController extends BaseController
     {
         $data = QueryBuilder::for(CustomField::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
             ])
             ->allowedIncludes(['company'])

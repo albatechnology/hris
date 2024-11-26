@@ -54,7 +54,6 @@ class PatrolController extends BaseController
     //             AllowedFilter::callback('has_user_id', function ($query, $value) {
     //                 $query->whereHas('users', fn($q) => $q->where('user_id', $value));
     //             }),
-    //             AllowedFilter::exact('id'),
     //             AllowedFilter::exact('client_id'),
     //             'name',
     //             'start_date',
@@ -271,7 +270,6 @@ class PatrolController extends BaseController
     {
         $data = QueryBuilder::for(UserPatrol::where('patrol_id', $patrolId)->with('user'))
             ->allowedFilters([
-                AllowedFilter::exact('id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('patrol_id'),
                 'start_time',
