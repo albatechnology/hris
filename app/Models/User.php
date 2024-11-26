@@ -42,7 +42,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'branch_id',
         'live_attendance_id',
         'overtime_id',
-        'approval_id',
+        // 'approval_id',
         // 'parent_id',
         'name',
         'last_name',

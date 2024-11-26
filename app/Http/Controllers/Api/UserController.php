@@ -32,6 +32,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -90,7 +91,7 @@ class UserController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::exact('approval_id'),
+                // AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
@@ -122,7 +123,7 @@ class UserController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
-                'approval_id',
+                // 'approval_id',
                 'name',
                 'email',
                 'type',
@@ -137,6 +138,18 @@ class UserController extends BaseController
 
     public function me()
     {
+        Log::shareContext([
+            'silit' => auth('sanctum')->user(),
+        ]);
+        Log::emergency('test emergency');
+        // Log::alert('test alert');
+        // Log::critical('test critical');
+        // Log::error('test error');
+        // Log::warning('test warning');
+        // Log::notice('test notice');
+        // Log::info('test info');
+        // Log::debug('test debug');
+        dd('oke');
         /** @var User $user */
         $user = auth('sanctum')->user();
         $user = QueryBuilder::for(User::where('id', $user->id))

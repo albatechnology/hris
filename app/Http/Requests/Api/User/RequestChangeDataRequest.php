@@ -43,7 +43,6 @@ class RequestChangeDataRequest extends FormRequest
     public function rules(): array
     {
         $validations = [];
-
         foreach ($this->all() as $type => $value) {
             $requestChangeDataType = RequestChangeDataType::tryFrom($type);
             if ($requestChangeDataType) {

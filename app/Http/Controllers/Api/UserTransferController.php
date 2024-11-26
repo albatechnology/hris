@@ -30,7 +30,7 @@ class UserTransferController extends BaseController
     {
         return [
             AllowedInclude::callback('user', function ($q) {
-                $q->select('id', 'name', 'last_name', 'nik', 'approval_id');
+                $q->select('id', 'name', 'last_name', 'nik');
             }),
             AllowedInclude::callback('approval', function ($q) {
                 $q->select('id', 'name', 'last_name');
