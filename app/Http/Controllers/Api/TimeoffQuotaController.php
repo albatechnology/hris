@@ -68,9 +68,12 @@ class TimeoffQuotaController extends BaseController
             ->orderByDesc('id')
             ->get();
 
+        $totalAdjusment = $adjustments->sum('balance');
+
         $expired = TimeoffQuota::where('user_id', $userId)
             ->where('timeoff_policy_id', $timeoffPolicyId)
             ->whereExpired()
+            ->whereRaw('quota > used_quota')
             ->orderByDesc('id')
             ->get();
 
@@ -81,9 +84,18 @@ class TimeoffQuotaController extends BaseController
             ->get();
 
         $data = [
-            'adjustments' => $adjustments,
-            'expired' => $expired,
-            'timeoff_taken' => $timeoffTaken,
+            'adjustments' => [
+                'total' => $totalAdjusment,
+                'data' => $adjustments
+            ],
+            'expired' => [
+                'total' => $expired->sum('balance'),
+                'data' => $expired
+            ],
+            'timeoff_taken' => [
+                'total' => $timeoffTaken->sum('total_days'),
+                'data' => $timeoffTaken
+            ],
         ];
 
         return DefaultResource::collection($data);
