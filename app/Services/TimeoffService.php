@@ -10,6 +10,8 @@ use App\Models\Timeoff;
 use App\Models\TimeoffPolicy;
 use App\Models\TimeoffQuota;
 use App\Models\User;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use DateTime;
 use Exception;
 use Illuminate\Http\Response;
@@ -27,27 +29,40 @@ class TimeoffService
         return floatval($timeoffQuota->total_quota - $timeoffQuota->total_used_quota);
     }
 
-    public static function getTotalRequestDay(string $startDate, string $endDate, TimeoffRequestType|string $timeoffRequestType): float
+    public static function getTotalRequestDay(User $user, string $startDate, string $endDate, TimeoffRequestType|string $timeoffRequestType): float
     {
         $value = 0.5;
         if (!($timeoffRequestType instanceof TimeoffRequestType)) {
             $timeoffRequestType = TimeoffRequestType::from($timeoffRequestType);
         }
 
-        if ($timeoffRequestType->is(TimeoffRequestType::FULL_DAY)) {
-            $startDate = new DateTime(date('Y-m-d', strtotime($startDate)));
-            $endDate = new DateTime(date('Y-m-d', strtotime($endDate)));
-            if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')) {
-                $value = 1;
-            } else {
-                $interval = $startDate->diff($endDate);
-                $value = $interval->days + 1;
+        if ($timeoffRequestType->is(TimeoffRequestType::HALF_DAY)) return $value;
+
+        $startDate = date('Y-m-d', strtotime($startDate));
+        $endDate = date('Y-m-d', strtotime($endDate));
+
+        if ($startDate === $endDate) {
+            return 1;
+        }
+
+        // $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cutoff_attendance_start_date));
+        // $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
+        $startDate = Carbon::createFromFormat('Y-m-d', $startDate);
+        $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        $value = 0;
+        foreach ($dateRange as $date) {
+            $todaySchedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id'], ['id', 'is_dayoff']);
+            if (($todaySchedule || $todaySchedule->shift) && $todaySchedule->shift->is_dayoff === false) {
+                $value++;
             }
         }
+
         return $value;
     }
 
-    public static function requestTimeoffValidation(StoreRequest $request): void
+    public static function requestTimeoffValidation(StoreRequest $request): StoreRequest
     {
         // PR
         // 1. ketika timeoff approved tapi quotanya ga ada, Attendance nya ga kebuat, tapi statusnya approved
@@ -73,10 +88,13 @@ class TimeoffService
             if ($todaySchedule->shift->is_dayoff === true) {
                 throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Cannot request timeoff in dayoff schedule');
             }
+
+            $totalRequestDay = 1;
+        } else {
+            $totalRequestDay = self::getTotalRequestDay($user, $request->start_at, $request->end_at, $request->request_type);
         }
 
         $timeoffPolicy = TimeoffPolicy::findOrFail($request->timeoff_policy_id);
-        $totalRequestDay = self::getTotalRequestDay($request->start_at, $request->end_at, $request->request_type);
         if ($timeoffPolicy->block_leave_take_days > 1 && $timeoffPolicy->block_leave_take_days != $totalRequestDay) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Timeoff must be taken for ' . $timeoffPolicy->block_leave_take_days . ' days');
         }
@@ -104,65 +122,41 @@ class TimeoffService
         if ($user->attendances()->whereDateBetween($request->start_at, $request->end_at)->exists()) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'You have taken leave between the dates you requested');
         }
+
+        if ($totalRequestDay <= 0) {
+            throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Total request day must be greather than 0');
+        }
+        $request->merge([
+            'total_days' => $totalRequestDay
+        ]);
+
+        return $request;
     }
 
     public static function approved(Timeoff $timeoff)
     {
-        // $intervalDays = date_diff(new DateTime($timeoff->start_at), new DateTime($timeoff->end_at))->days;
-        // if ($intervalDays > 1) {
-        //     $dateRange = new \DatePeriod(date_create($timeoff->start_at), new \DateInterval('P1D'), date_create($timeoff->end_at));
-
-        //     foreach ($dateRange as $date) {
-        //         $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'));
-        //         Attendance::create([
-        //             'user_id' => $timeoff->user_id,
-        //             'schedule_id' => $schedule->id,
-        //             'shift_id' => $schedule->shift->id,
-        //             'timeoff_id' => $timeoff->id,
-        //             'code' => $timeoff->timeoffPolicy->code,
-        //             'date' => $date->format('Y-m-d'),
-        //         ]);
-        //     }
-        // } else {
-        //     $schedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->start_at);
-        //     Attendance::create([
-        //         'user_id' => $timeoff->user_id,
-        //         'schedule_id' => $schedule->id,
-        //         'shift_id' => $schedule->shift->id,
-        //         'timeoff_id' => $timeoff->id,
-        //         'code' => $timeoff->timeoffPolicy->code,
-        //         'date' => $timeoff->start_at,
-        //     ]);
-        // }
-
         // kurangi quota yang ada di table timeoff_quotas berdasarkan timeoff_policy_id nya, order by id asc
         // record di table user_timeoff_histories
         DB::beginTransaction();
         try {
-            $intervalDays = date_diff(new DateTime(date('Y-m-d', strtotime($timeoff->start_at))), new DateTime(date('Y-m-d', strtotime($timeoff->end_at))))->days + 1;
-            $addDay = 0;
-            $i = 0;
-            while ($i < $intervalDays) {
-                $date = date('Y-m-d', strtotime($timeoff->start_at . ' + ' . $addDay++ . ' days'));
-                $schedule = ScheduleService::getTodaySchedule($timeoff->user, $date);
-                if (!$schedule || $schedule->shift->is_dayoff == true) {
-                    continue;
+            $startDate = Carbon::createFromFormat('Y-m-d', date('Y-m-d', strtotime($timeoff->start_at)));
+            $endDate = Carbon::createFromFormat('Y-m-d', date('Y-m-d', strtotime($timeoff->end_at)));
+            $dateRange = CarbonPeriod::create($startDate, $endDate);
+            foreach ($dateRange as $date) {
+                $todaySchedule = ScheduleService::getTodaySchedule($timeoff->user, $date->format('Y-m-d'), ['id'], ['id', 'is_dayoff']);
+                if (($todaySchedule || $todaySchedule->shift) && $todaySchedule->shift->is_dayoff === false) {
+                    Attendance::create([
+                        'user_id' => $timeoff->user_id,
+                        'schedule_id' => $todaySchedule->id,
+                        'shift_id' => $todaySchedule->shift->id,
+                        'timeoff_id' => $timeoff->id,
+                        'code' => $timeoff->timeoffPolicy->code,
+                        'date' => $date,
+                    ]);
                 }
-
-                if ($timeoff->user->attendances()->where('date', $date)->exists()) continue;
-
-                Attendance::create([
-                    'user_id' => $timeoff->user_id,
-                    'schedule_id' => $schedule->id,
-                    'shift_id' => $schedule->shift->id,
-                    'timeoff_id' => $timeoff->id,
-                    'code' => $timeoff->timeoffPolicy->code,
-                    'date' => $date,
-                ]);
-                $i++;
             }
 
-            $totalRequestDay = TimeoffService::getTotalRequestDay($timeoff->start_at, $timeoff->end_at, $timeoff->request_type);
+            $totalRequestDay = self::getTotalRequestDay($timeoff->user, $timeoff->start_at, $timeoff->end_at, $timeoff->request_type);
 
             self::applyTimeoffQuota($timeoff, $totalRequestDay);
             DB::commit();

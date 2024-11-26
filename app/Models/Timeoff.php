@@ -18,6 +18,7 @@ class Timeoff extends RequestedBaseModel implements HasMedia
     protected $fillable = [
         'user_id',
         'timeoff_policy_id',
+        'total_days',
         'request_type',
         'start_at',
         'end_at',
@@ -30,6 +31,7 @@ class Timeoff extends RequestedBaseModel implements HasMedia
     ];
 
     protected $casts = [
+        'total_days' => 'float',
         'request_type' => TimeoffRequestType::class,
         // 'approval_status' => ApprovalStatus::class,
     ];

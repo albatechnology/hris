@@ -28,6 +28,7 @@ class StoreRequest extends FormRequest
     {
         $this->merge([
             'user_id' => $this->user_id ?? auth()->id(),
+            'total_days' => 0
             // 'is_advanced_leave' => $this->toBoolean($this->is_advanced_leave),
         ]);
     }
@@ -47,6 +48,7 @@ class StoreRequest extends FormRequest
             'end_at' => 'required|date_format:Y-m-d H:i',
             'reason' => 'nullable|string',
             'delegate_to' => 'nullable|exists:users,id',
+            'total_days' => 'required|numeric|multiple_of:0.5',
 
             'files' => 'nullable|array',
             'files.*' => 'required|mimes:' . config('app.image_mimes_types'),

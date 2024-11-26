@@ -65,11 +65,11 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        TimeoffService::requestTimeoffValidation($request);
+        $request = TimeoffService::requestTimeoffValidation($request);
 
         DB::beginTransaction();
         try {
-            $timeoff = Timeoff::create($request->validated());
+            $timeoff = Timeoff::create($request->all());
 
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
@@ -147,16 +147,18 @@ class TimeoffController extends BaseController
 
         $startSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->start_at);
         $endSchedule = ScheduleService::getTodaySchedule($timeoff->user, $timeoff->end_at);
+
         if (!$startSchedule && !$endSchedule) {
             return $this->errorResponse(message: sprintf('There is a schedule that cannot be found between %s and %s', $timeoff->start_at, $timeoff->end_at), code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
             $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
-            if ($remainingBalance <= 0) {
+            if ($remainingBalance <= 0 || $remainingBalance < $timeoff->total_days) {
                 return $this->errorResponse(message: 'User Leave balance is not enough', code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         }
+
         // if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
         //     // untuk history timeoff
         //     $value = 0.5;
