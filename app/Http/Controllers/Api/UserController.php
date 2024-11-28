@@ -159,9 +159,15 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
-    public function show(User $user)
+    public function show(int $id)
     {
-        $user = QueryBuilder::for(User::tenanted()->where('id', $user->id))
+        if (auth()->id() == $id) {
+            $query = User::where('id', $id);
+        } else {
+            $query = User::tenanted(true)->where('id', $id);
+        }
+
+        $user = QueryBuilder::for($query)
             ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 
@@ -326,6 +332,10 @@ class UserController extends BaseController
     public function detail(int $id, DetailStoreRequest $request)
     {
         $user = User::findTenanted($id);
+
+        if ($user->is_user) {
+            return $this->errorResponse(message: 'Permission denied', code: 403);
+        }
 
         DB::beginTransaction();
         try {
