@@ -6,7 +6,6 @@ use App\Http\Requests\Api\UserEvent\StoreRequest;
 use App\Http\Resources\Event\EventResource;
 use App\Models\Event;
 use App\Models\User;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserEventController extends BaseController

@@ -3,7 +3,6 @@
 namespace App\Enums;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 
 enum RequestChangeDataType: string
 {
@@ -15,6 +14,8 @@ enum RequestChangeDataType: string
     case WORK_EMAIL = 'work_email';
     case NIK = 'nik';
     case PHONE = 'phone';
+    case JOIN_DATE = 'join_date';
+    case GENDER = 'gender';
     case POSTAL_CODE = 'postal_code';
     case NO_KTP = 'no_ktp';
     case KK_NO = 'kk_no';
@@ -22,11 +23,11 @@ enum RequestChangeDataType: string
     case ADDRESS_KTP = 'address_ktp';
     case BIRTH_PLACE = 'birth_place';
     case BIRTHDATE = 'birthdate';
-    case GENDER = 'gender';
     case MARITAL_STATUS = 'marital_status';
     case BLOOD_TYPE = 'blood_type';
     case RHESUS = 'rhesus';
     case RELIGION = 'religion';
+    case EMPLOYMENT_STATUS = 'employment_status';
     case BPJS_KETENAGAKERJAAN_NO = 'bpjs_ketenagakerjaan_no';
     case BPJS_KESEHATAN_NO = 'bpjs_kesehatan_no';
     case BPJS_KESEHATAN_FAMILY_NO = 'bpjs_kesehatan_family_no';
@@ -50,6 +51,7 @@ enum RequestChangeDataType: string
             self::BLOOD_TYPE => ['nullable', \Illuminate\Validation\Rule::enum(BloodType::class)],
             self::RELIGION => ['nullable', \Illuminate\Validation\Rule::enum(Religion::class)],
             self::PTKP_STATUS => ['nullable', \Illuminate\Validation\Rule::enum(PtkpStatus::class)],
+            self::EMPLOYMENT_STATUS => ['nullable', \Illuminate\Validation\Rule::enum(EmploymentStatus::class)],
             self::PHOTO_PROFILE => 'required|mimes:' . config('app.file_mimes_types'),
             default => 'nullable|string'
         };
@@ -69,6 +71,7 @@ enum RequestChangeDataType: string
             self::WORK_EMAIL,
             self::NIK,
             self::PHONE,
+            self::JOIN_DATE,
             self::GENDER => \App\Models\User::where('id', $userId)->update([$self->value => $value]),
 
             self::KK_NO,
@@ -81,6 +84,7 @@ enum RequestChangeDataType: string
             self::MARITAL_STATUS,
             self::BLOOD_TYPE,
             self::RHESUS,
+            self::EMPLOYMENT_STATUS,
             self::RELIGION => self::update(\App\Models\UserDetail::class, $userId, $self->value, $value),
 
             self::NPWP,
@@ -104,12 +108,14 @@ enum RequestChangeDataType: string
 
         return match ($this) {
             self::PHOTO_PROFILE => \App\Models\User::where('id', $userId)->first(['id'])->getFirstMediaUrl(MediaCollection::USER->value),
+
             self::NAME,
             self::LAST_NAME,
             self::EMAIL,
             self::WORK_EMAIL,
             self::NIK,
             self::PHONE,
+            self::JOIN_DATE,
             self::GENDER => \App\Models\User::where('id', $userId)->first([$this->value])->{$this->value},
 
             self::KK_NO,
@@ -122,6 +128,7 @@ enum RequestChangeDataType: string
             self::MARITAL_STATUS,
             self::BLOOD_TYPE,
             self::RHESUS,
+            self::EMPLOYMENT_STATUS,
             self::RELIGION => \App\Models\UserDetail::where('user_id', $userId)->first([$this->value])->{$this->value},
 
             self::NPWP,
@@ -143,15 +150,17 @@ enum RequestChangeDataType: string
     {
         return match ($this) {
             self::PHOTO_PROFILE => 'file',
+
+            self::JOIN_DATE,
             self::BIRTHDATE => 'date',
 
             self::GENDER,
-
             self::MARITAL_STATUS,
             self::BLOOD_TYPE,
             self::RELIGION,
-
+            self::EMPLOYMENT_STATUS,
             self::PTKP_STATUS => 'select',
+
             default => 'text'
         };
     }
@@ -167,6 +176,7 @@ enum RequestChangeDataType: string
             self::MARITAL_STATUS => MaritalStatus::all(),
             self::BLOOD_TYPE => BloodType::all(),
             self::RELIGION => Religion::all(),
+            self::EMPLOYMENT_STATUS => EmploymentStatus::all(),
 
             self::PTKP_STATUS => PtkpStatus::all(),
             default => ''

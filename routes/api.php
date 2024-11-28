@@ -60,7 +60,6 @@ use App\Http\Controllers\Api\UserExperienceController;
 use App\Http\Controllers\Api\UserPatrolController;
 use App\Http\Controllers\Api\UserPatrolTaskController;
 use App\Http\Controllers\Api\UserScheduleController;
-use App\Http\Controllers\Api\UserTimeoffPolicyController;
 use App\Http\Controllers\Api\UserPayrollInfoController;
 use App\Http\Controllers\Api\UserTransferController;
 use Illuminate\Support\Facades\Route;
@@ -91,7 +90,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
         Route::get('timeoff-quotas', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuota']);
         Route::get('timeoff-quotas/{timeoff_policy}', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuotaHistories']);
-        Route::post('detail', [UserController::class, 'detail']);
+        Route::put('detail', [UserController::class, 'detail']);
         Route::apiResource('experiences', UserExperienceController::class);
         Route::apiResource('educations', UserEducationController::class);
         Route::apiResource('contacts', UserContactController::class);

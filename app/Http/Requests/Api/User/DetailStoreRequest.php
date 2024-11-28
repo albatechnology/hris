@@ -8,6 +8,10 @@ use App\Enums\EmploymentStatus;
 use App\Enums\JobLevel;
 use App\Enums\MaritalStatus;
 use App\Enums\Religion;
+use App\Models\Branch;
+use App\Models\Department;
+use App\Models\Position;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,24 +33,15 @@ class DetailStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'no_ktp' => 'required|string',
-            'kk_no' => 'nullable|string',
-            'postal_code' => 'required|string',
-            'address' => 'nullable|string',
-            'address_ktp' => 'required|string',
-            'job_position' => 'required|string',
-            'job_level' => ['nullable', Rule::enum(JobLevel::class)],
+            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'nik' => 'nullable|string|unique:users,nik,' . $this->user,
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
-            'passport_no' => 'nullable|string',
-            'passport_expired' => 'nullable|date_format:Y-m-d',
-            'birth_place' => 'required',
-            'birthdate' => 'required|date_format:Y-m-d',
-            'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
-            'blood_type' => ['required', Rule::enum(BloodType::class)],
-            'rhesus' => ['nullable', 'string'],
-            'religion' => ['nullable', Rule::enum(Religion::class)],
-            'batik_size' => ['nullable', Rule::enum(ClothesSize::class)],
-            'tshirt_size' => ['nullable', Rule::enum(ClothesSize::class)],
+            'join_date' => 'nullable|date',
+
+            'positions' => 'nullable|array',
+            'positions.*.position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            'positions.*.department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
         ];
     }
 }

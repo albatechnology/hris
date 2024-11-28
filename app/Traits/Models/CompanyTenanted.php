@@ -24,6 +24,7 @@ trait CompanyTenanted
         if ($user->is_super_admin) {
             return $query;
         }
+
         if ($user->is_administrator) {
             return $query->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id));
         }

@@ -24,7 +24,7 @@ class Department extends BaseModel implements TenantedInterface
             return $query;
         }
 
-        return $query->whereHas('division', fn ($q) => $q->whereHas('company', fn ($q) => $q->where('group_id', $user->group_id)));
+        return $query->whereHas('division', fn($q) => $q->tenanted());
 
         // $branchIds = $user->branches()->get(['id'])?->pluck('id') ?? [];
         // return $query->whereIn('id', $branchIds);
@@ -42,7 +42,7 @@ class Department extends BaseModel implements TenantedInterface
 
     public function scopeCompanyId(Builder $query, int $value)
     {
-        $query->whereHas('division', fn ($q) => $q->where('divisions.company_id', $value));
+        $query->whereHas('division', fn($q) => $q->where('divisions.company_id', $value));
     }
 
     public function division(): BelongsTo

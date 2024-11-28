@@ -26,6 +26,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\TaskHour;
 use App\Models\User;
+use App\Models\UserDetail;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -322,15 +323,42 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
-    public function detail(User $user, DetailStoreRequest $request)
+    public function detail(int $id, DetailStoreRequest $request)
     {
-        if ($user->detail) {
-            $user->detail->update($request->validated());
-        } else {
-            $user->detail()->create($request->validated());
+        $user = User::findTenanted($id);
+
+        DB::beginTransaction();
+        try {
+            $user->update($request->validated());
+
+            if ($user->company_id) {
+                $user->companies()->delete();
+                $user->companies()->create(['company_id' => $user->company_id]);
+            }
+
+            if ($user->branch_id) {
+                $user->branches()->delete();
+                $user->branches()->create(['branch_id' => $user->branch_id]);
+            }
+
+            if ($user->detail) {
+                $user->detail->update($request->validated());
+            } else {
+                $user->detail()->create($request->validated());
+            }
+
+            if (count($request->positions) > 0) {
+                $user->positions()->delete();
+                $user->positions()->createMany($request->positions ?? []);
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
         }
 
-        return new UserResource($user->load('detail'));
+        return $this->updatedResponse();
     }
 
     public function companies(User $user)
