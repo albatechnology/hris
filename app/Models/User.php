@@ -105,7 +105,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             } else {
                 $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
             }
-            return $query->where('id', '!=', $user->id);
+            return $query->where('users.id', '!=', $user->id);
         }
 
         // if ($user->is_admin) {

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
-use App\Enums\NotificationType;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\ApprovalStatusRequest;
 use App\Http\Resources\DefaultResource;

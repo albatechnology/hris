@@ -6,12 +6,14 @@ use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffQuota\StoreRequest;
 use App\Http\Requests\Api\TimeoffQuota\UpdateRequest;
 use App\Http\Resources\DefaultResource;
+use App\Imports\ImportTimeoffQuotaImport;
 use App\Models\Timeoff;
 use App\Models\TimeoffPolicy;
 use App\Models\TimeoffQuota;
 use App\Models\TimeoffQuotaHistory;
 use App\Models\User;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -31,7 +33,7 @@ class TimeoffQuotaController extends BaseController
     public function getUserTimeoffPolicyQuota(int $userId)
     {
         if ($userId != auth()->id()) {
-            User::select('id')->tenanted()->where('id', $userId)->firstOrFail();
+            User::select('id')->tenanted(true)->where('id', $userId)->firstOrFail();
         }
 
         // $data = TimeoffQuota::select('timeoff_policy_id', DB::raw('SUM(quota - used_quota) as remaining_balance'))
@@ -213,6 +215,17 @@ class TimeoffQuotaController extends BaseController
         $timeoffQuota->delete();
 
         return $this->deletedResponse();
+    }
+
+    public function importTimeoffQuota(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->is_super_admin) {
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(400, "Jangan macam macam!!!");
+        }
+
+        (new ImportTimeoffQuotaImport)->import($request->file);
+        return "DONE BANG";
     }
 
     // public function forceDelete($id)
