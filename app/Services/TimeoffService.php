@@ -12,7 +12,6 @@ use App\Models\TimeoffQuota;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use DateTime;
 use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -64,21 +63,22 @@ class TimeoffService
 
     public static function requestTimeoffValidation(StoreRequest $request): StoreRequest
     {
-        // PR
-        // 1. ketika timeoff approved tapi quotanya ga ada, Attendance nya ga kebuat, tapi statusnya approved
-
-        // VALIDATION
-        // 1. cek apakah ditanggal request, user tsb punya schedule
-        // 2. cek type timeoff nya
-        // 3. untuk timeoff type (SICK_WITH_CERTIFICATE, FREE_LEAVE, UNPAID_LEAVE, PREGNANCY_LEAVE) tidak perlu cek quota, tergantung approvalnya aja nanti
-        // 4. kalo punya quota, cek ke table timeoff_quotas
-        // 5. cek apakah di range tanggal request terdapat cuti. kalo ada gabisa request
-
         $user = User::findOrFail($request->user_id);
+
+        // check what is on the request date, the user has a schedule or not
         if (!ScheduleService::checkAvailableSchedule(user: $user, startDate: $request->start_at, endDate: $request->end_at)) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Schedule is not available');
         }
 
+        $timeoffPolicy = TimeoffPolicy::findOrFail($request->timeoff_policy_id);
+
+        // check if request is half day, and half day is not allowed
+        if ($request->request_type === TimeoffRequestType::HALF_DAY->value && !$timeoffPolicy->is_allow_halfday) {
+            throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Half day is not allowed');
+        }
+
+        // if request start_at and end_at is the same day, basicly total request day is 1. but before, we need to check if the schedule is available and is dayoff or not
+        // else, we need to calculate the total request day based on the start_at and end_at
         if (date('Y-m-d', strtotime($request->start_at)) === date('Y-m-d', strtotime($request->end_at))) {
             $todaySchedule = ScheduleService::getTodaySchedule($user, $request->start_at);
             if (!$todaySchedule || !$todaySchedule->shift) {
@@ -94,38 +94,48 @@ class TimeoffService
             $totalRequestDay = self::getTotalRequestDay($user, $request->start_at, $request->end_at, $request->request_type);
         }
 
-        $timeoffPolicy = TimeoffPolicy::findOrFail($request->timeoff_policy_id);
+        // check if total request day is greater than block_leave_take_days
         if ($timeoffPolicy->block_leave_take_days > 1 && $timeoffPolicy->block_leave_take_days != $totalRequestDay) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Timeoff must be taken for ' . $timeoffPolicy->block_leave_take_days . ' days');
         }
 
+        // check if total request day is greater than max_consecutively_day
         if ($timeoffPolicy->max_consecutively_day && ($totalRequestDay > $timeoffPolicy->max_consecutively_day)) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Maximum consecutive day is ' . $timeoffPolicy->max_consecutively_day . ' days');
         }
 
+        // check if the user has enough quota
         if ($timeoffPolicy->type->hasQuota()) {
             $quota = self::getTotalBalanceQuota($user->id, $request->timeoff_policy_id, $request->start_at, $request->end_at);
 
+            // check if total request day is greater than quota
             if ($totalRequestDay > $quota) {
                 throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Quota exceeded');
             }
         }
 
+        // get timeoffs request that is still in progress
         $timeoffs = Timeoff::where('user_id', $user->id)
             ->whereApprovalStatus(ApprovalStatus::ON_PROGRESS->value)
             ->whereBetweenStartEnd($request->start_at, $request->end_at)
             ->exists();
+
+        // if there is a timeoffs request is still in progress
         if ($timeoffs) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'There is a timeoff request that is still in progress status in the date range you requested');
         }
 
+        // check if the user has taken leave in the date range
         if ($user->attendances()->whereDateBetween($request->start_at, $request->end_at)->exists()) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'You have taken leave between the dates you requested');
         }
 
+        // check if total request day is less than 0
         if ($totalRequestDay <= 0) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Total request day must be greather than 0');
         }
+
+        // merge total request days
         $request->merge([
             'total_days' => $totalRequestDay
         ]);

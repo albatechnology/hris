@@ -13,7 +13,8 @@ class ClientSeeder extends Seeder
      */
     public function run(): void
     {
-        $company = Company::where('name', 'like', '%patroli%')->firstOrFail();
+        // $company = Company::where('name', 'like', '%patroli%')->firstOrFail();
+        $company = Company::findOrFail(3);
 
         for ($i = 1; $i < 4; $i++) {
             $client = Client::create([
