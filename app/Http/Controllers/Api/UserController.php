@@ -333,7 +333,7 @@ class UserController extends BaseController
     {
         $user = User::findTenanted($id);
 
-        if ($user->is_user) {
+        if (auth()->user()->is_user) {
             return $this->errorResponse(message: 'Permission denied', code: 403);
         }
 
