@@ -26,14 +26,12 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\TaskHour;
 use App\Models\User;
-use App\Models\UserDetail;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -259,6 +257,7 @@ class UserController extends BaseController
 
     public function update(User $user, UpdateRequest $request)
     {
+        // dd($request->validated());
         DB::beginTransaction();
         try {
             $user->update($request->validated());
