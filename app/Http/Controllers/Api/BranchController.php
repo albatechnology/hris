@@ -27,6 +27,7 @@ class BranchController extends BaseController
         $data = QueryBuilder::for(Branch::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::callback('company_ids', fn ($q, $value) => $q->whereIn('company_id', $value)),
                 'name', 'country', 'province', 'city', 'zip_code', 'address',
             ])
             ->allowedSorts([
