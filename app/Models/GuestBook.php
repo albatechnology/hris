@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class GuestBook extends BaseModel implements HasMedia
+class GuestBook extends BaseModel implements HasMedia, TenantedInterface
 {
     use BelongsToUser, InteractsWithMedia;
 
@@ -45,18 +46,7 @@ class GuestBook extends BaseModel implements HasMedia
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
-        if (!$user) {
-            /** @var User $user */
-            $user = auth('sanctum')->user();
-        }
-
-        if ($user->is_super_admin) {
-            return $query;
-        }
-
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-
-        return $query->whereHas('client', fn($q) => $q->whereIn('company_id', $companyIds));
+        return $query->whereHas('client', fn($q) => $q->tenanted());
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

@@ -8,6 +8,7 @@ use App\Enums\Gender;
 use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
+use App\Services\UserService;
 use App\Traits\Models\CreatedUpdatedInfo;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -93,31 +94,40 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         $user = auth('sanctum')->user();
         if ($user->is_super_admin) return $query;
 
-        if ($user->is_administrator) {
-            return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::ADMIN, UserType::USER])
-                ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
+        // if ($user->is_administrator) {
+        //     return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::ADMIN, UserType::USER])
+        //         ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
+        // }
+
+        if ($user->is_admin) {
+            return $query->where('group_id', $user->group_id);
         }
 
+        // if ($isDescendant) {
+        //     if ($user->is_admin) {
+        //         $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        //         $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
+        //     } else {
+        //         $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
+        //     }
+        //     return $query->where('users.id', '!=', $user->id);
+        // }
         if ($isDescendant) {
-            if ($user->is_admin) {
-                $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-                $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
-            } else {
-                $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
-            }
+            $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
             return $query->where('users.id', '!=', $user->id);
         }
 
-        // if ($user->is_admin) {
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        if (UserService::hasDescendants($user)) {
+            return $query->where(function ($q) use ($user) {
+                $q->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id))->orWhere('id', $user->id);
+            });
+        }
 
-        return $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
-        // }
-
-        // $query->where('id', $user->id);
         // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
 
-        // return $query->whereIn('users.company_id', $companyIds);
+        // return $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
+
+        return $query->where('id', $user->id);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

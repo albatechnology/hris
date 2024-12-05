@@ -49,8 +49,9 @@ class TaskRequestController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(TaskRequest $taskRequest): DefaultResource
+    public function show(int $id): DefaultResource
     {
+        $taskRequest = TaskRequest::findTenanted($id);
         return new DefaultResource($taskRequest->load(['taskHour.task', 'media']));
     }
 
@@ -117,8 +118,9 @@ class TaskRequestController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function approve(ApproveRequest $request, TaskRequest $taskRequest): DefaultResource|JsonResponse
+    public function approve(ApproveRequest $request, int $id): DefaultResource|JsonResponse
     {
+        $taskRequest = TaskRequest::findTenanted($id);
         $requestApproval = $taskRequest->approvals()->where('user_id', auth()->id())->first();
 
         if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);

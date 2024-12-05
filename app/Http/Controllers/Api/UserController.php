@@ -160,7 +160,7 @@ class UserController extends BaseController
     public function show(int $id)
     {
         if (auth()->id() == $id) {
-            $query = User::where('id', $id);
+            $query = User::tenanted()->where('id', $id);
         } else {
             $query = User::tenanted(true)->where('id', $id);
         }
@@ -255,9 +255,9 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
-    public function update(User $user, UpdateRequest $request)
+    public function update(int $id, UpdateRequest $request)
     {
-        // dd($request->validated());
+        $user = User::findTenanted($id);
         DB::beginTransaction();
         try {
             $user->update($request->validated());
@@ -299,8 +299,9 @@ class UserController extends BaseController
         return (new UserResource($user))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(User $user)
+    public function destroy(int $id)
     {
+        $user = User::findTenanted($id);
         if ($user->id == 1) {
             return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
         }
@@ -309,20 +310,20 @@ class UserController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
         if ($id == 1) {
             return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
         }
-        $user = User::withTrashed()->findOrFail($id);
+        $user = User::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $user->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $user = User::withTrashed()->findOrFail($id);
+        $user = User::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $user->restore();
 
         return new UserResource($user);
@@ -370,8 +371,9 @@ class UserController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function companies(User $user)
+    public function companies(int $id)
     {
+        $user = User::findTenanted($id);
         if ($user->type->is(UserType::SUPER_ADMIN)) {
             $companies = Company::all();
         } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
@@ -386,8 +388,9 @@ class UserController extends BaseController
         return CompanyResource::collection($companies);
     }
 
-    public function branches(User $user)
+    public function branches(int $id)
     {
+        $user = User::findTenanted($id);
         if ($user->type->is(UserType::SUPER_ADMIN)) {
             $branches = Branch::all();
         } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
@@ -584,24 +587,9 @@ class UserController extends BaseController
         // return (new UserResource($user->load('detail')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    // public function getAvailableSupervisor(int $positionId)
-    // {
-    //     $position = Position::findOrFail($positionId, ['id', 'order']);
-
-    //     $users = User::select('id', 'name')->tenanted()
-    //         ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $position->order)))
-    //         ->with('userPositions', fn($q) => $q->select('id', 'order')->orderByDesc('order'))
-    //         ->paginate();
-
-    //     $users->map(function ($user) {
-    //         $user->position_id = $user->userPositions[0]->id;
-    //     });
-
-    //     return UserResource::collection($users);
-    // }
-
-    public function getAvailableSupervisor(User $user, Request $request)
+    public function getAvailableSupervisor(int $id, Request $request)
     {
+        $user = User::findTenanted($id);
         $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
         $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
@@ -622,8 +610,9 @@ class UserController extends BaseController
         return UserResource::collection($users);
     }
 
-    public function setSupervisors(User $user, SetSupervisorRequest $request)
+    public function setSupervisors(int $id, SetSupervisorRequest $request)
     {
+        $user = User::findTenanted($id);
         DB::beginTransaction();
         try {
             $user->supervisors()->delete();
@@ -637,8 +626,9 @@ class UserController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function payroll(User $user, PayrollRequest $request)
+    public function payroll(int $id, PayrollRequest $request)
     {
+        $user = User::findTenanted($id);
         $user->load(['runPayrollUser' => fn($q) => $q->whereHas('runPayroll', fn($q) => $q->where('period', "$request->month-$request->year"))]);
 
         if ($user->runPayrollUser->count() <= 0) return $this->errorResponse(message: "Data payroll not found", code: Response::HTTP_NOT_FOUND);

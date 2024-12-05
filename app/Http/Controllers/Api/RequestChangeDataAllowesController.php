@@ -18,7 +18,7 @@ class RequestChangeDataAllowesController extends BaseController
 
     public function index(int $companyId)
     {
-        $requestChangeDataAllowes = RequestChangeDataAllowes::where('company_id', $companyId)->whereIn('type', RequestChangeDataType::getValues())->get();
+        $requestChangeDataAllowes = RequestChangeDataAllowes::tenanted()->where('company_id', $companyId)->whereIn('type', RequestChangeDataType::getValues())->get();
         $requestChangeDataTypes = RequestChangeDataType::cases();
 
         $data = [];
@@ -37,7 +37,7 @@ class RequestChangeDataAllowesController extends BaseController
 
     public function store(StoreRequest $request, int $companyId)
     {
-        $requestChangeDataAllowes = RequestChangeDataAllowes::where('company_id', $companyId)->where('type', $request->type)->get();
+        $requestChangeDataAllowes = RequestChangeDataAllowes::tenanted()->where('company_id', $companyId)->where('type', $request->type)->get();
 
         $requestChangeDataAllow = null;
         if ($requestChangeDataAllowes->count() > 0) {

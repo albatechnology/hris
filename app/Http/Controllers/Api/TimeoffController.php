@@ -56,8 +56,9 @@ class TimeoffController extends BaseController
         return TimeoffResource::collection($data);
     }
 
-    public function show(Timeoff $timeoff)
+    public function show(int $id)
     {
+        $timeoff = Timeoff::findTenanted($id);
         $timeoff->load(['user', 'timeoffPolicy', 'delegateTo', 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))]);
 
         return new TimeoffResource($timeoff);
@@ -91,8 +92,9 @@ class TimeoffController extends BaseController
         // return new TimeoffResource($timeoff);
     }
 
-    public function update(Timeoff $timeoff, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $timeoff = Timeoff::findTenanted($id);
         if (!ScheduleService::checkAvailableSchedule(startDate: $request->start_at, endDate: $request->end_at)) {
             return $this->errorResponse(message: 'Schedule is not available', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -102,24 +104,25 @@ class TimeoffController extends BaseController
         return (new TimeoffResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Timeoff $timeoff)
+    public function destroy(int $id)
     {
+        $timeoff = Timeoff::findTenanted($id);
         $timeoff->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $timeoff = Timeoff::withTrashed()->findOrFail($id);
+        $timeoff = Timeoff::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $timeoff->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $timeoff = Timeoff::withTrashed()->findOrFail($id);
+        $timeoff = Timeoff::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $timeoff->restore();
 
         return new TimeoffResource($timeoff);

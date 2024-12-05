@@ -28,18 +28,32 @@ class CompanyController extends BaseController
         $data = QueryBuilder::for(Company::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('group_id'),
-                'name', 'country', 'province', 'city', 'zip_code', 'address',
+                'name',
+                'country',
+                'province',
+                'city',
+                'zip_code',
+                'address',
             ])
             ->allowedSorts([
-                'id', 'group_id', 'name', 'country', 'province', 'city', 'zip_code', 'address', 'created_at',
+                'id',
+                'group_id',
+                'name',
+                'country',
+                'province',
+                'city',
+                'zip_code',
+                'address',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return CompanyResource::collection($data);
     }
 
-    public function show(Company $company)
+    public function show(int $id)
     {
+        $company = Company::findTenanted($id);
         return new CompanyResource($company);
     }
 
@@ -58,15 +72,17 @@ class CompanyController extends BaseController
         return new CompanyResource($company);
     }
 
-    public function update(Company $company, UpdateRequest $request)
+    public function update(int $id, UpdateRequest $request)
     {
+        $company = Company::findTenanted($id);
         $company->update($request->validated());
 
         return (new CompanyResource($company))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Company $company)
+    public function destroy(int $id)
     {
+        $company = Company::findTenanted($id);
         $company->delete();
 
         return $this->deletedResponse();
@@ -74,7 +90,7 @@ class CompanyController extends BaseController
 
     public function forceDelete($id)
     {
-        $company = Company::withTrashed()->findOrFail($id);
+        $company = Company::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $company->forceDelete();
 
         return $this->deletedResponse();
@@ -82,7 +98,7 @@ class CompanyController extends BaseController
 
     public function restore($id)
     {
-        $company = Company::withTrashed()->findOrFail($id);
+        $company = Company::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $company->restore();
 
         return new CompanyResource($company);

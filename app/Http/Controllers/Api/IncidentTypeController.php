@@ -40,8 +40,9 @@ class IncidentTypeController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(IncidentType $incidentType)
+    public function show(int $id)
     {
+        $incidentType = IncidentType::findTenanted($id);
         $incidentType->load('company');
         return new DefaultResource($incidentType);
     }
@@ -57,8 +58,9 @@ class IncidentTypeController extends BaseController
         return new DefaultResource($incidentType);
     }
 
-    public function update(IncidentType $incidentType, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $incidentType = IncidentType::findTenanted($id);
         try {
             $incidentType->update($request->validated());
         } catch (Exception $e) {
@@ -68,8 +70,9 @@ class IncidentTypeController extends BaseController
         return (new DefaultResource($incidentType))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(IncidentType $incidentType)
+    public function destroy(int $id)
     {
+        $incidentType = IncidentType::findTenanted($id);
         try {
             $incidentType->delete();
         } catch (Exception $e) {
@@ -79,9 +82,9 @@ class IncidentTypeController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $incidentType = IncidentType::withTrashed()->findOrFail($id);
+        $incidentType = IncidentType::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $incidentType->forceDelete();
@@ -92,9 +95,9 @@ class IncidentTypeController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $incidentType = IncidentType::withTrashed()->findOrFail($id);
+        $incidentType = IncidentType::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $incidentType->restore();

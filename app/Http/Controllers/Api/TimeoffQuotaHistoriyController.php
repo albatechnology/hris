@@ -104,8 +104,9 @@ class TimeoffQuotaHistoryController extends BaseController
         return new DefaultResource($timeoffQuotaHistory);
     }
 
-    public function destroy(TimeoffQuotaHistory $timeoffQuotaHistory)
+    public function destroy(int $id)
     {
+        $timeoffQuotaHistory = TimeoffQuotaHistory::findTenanted($id);
         $timeoffQuotaHistory->delete();
 
         return $this->deletedResponse();

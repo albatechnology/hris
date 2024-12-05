@@ -53,8 +53,9 @@ class RunPayrollController extends BaseController
         return RunPayrollResource::collection($data);
     }
 
-    public function show(RunPayroll $runPayroll): RunPayrollResource
+    public function show(int $id): RunPayrollResource
     {
+        $runPayroll = RunPayroll::findTenanted($id);
         return new RunPayrollResource($runPayroll->load(['users.user', 'users.components.payrollComponent']));
     }
 
@@ -78,8 +79,9 @@ class RunPayrollController extends BaseController
         return new RunPayrollResource($runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent'));
     }
 
-    // public function update(RunPayroll $runPayroll, UpdateRequest $request): RunPayrollResource|JsonResponse
+    // public function update(int $id, UpdateRequest $request): RunPayrollResource|JsonResponse
     // {
+        $runPayroll = RunPayroll::findTenanted($id);
     //     DB::beginTransaction();
     //     try {
     //         $runPayroll->update($request->validated());
@@ -119,8 +121,9 @@ class RunPayrollController extends BaseController
         return (new RunPayrollResource($runPayrollUser->runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(RunPayroll $runPayroll): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
+        $runPayroll = RunPayroll::findTenanted($id);
         DB::beginTransaction();
         try {
             foreach ($runPayroll->users as $runPayrollUser) {
@@ -140,8 +143,9 @@ class RunPayrollController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function export(RunPayroll $runPayroll)
+    public function export(int $id)
     {
+        $runPayroll = RunPayroll::findTenanted($id);
         $runPayroll->load([
             'users.user' => function ($q) {
                 $q->select('id', 'nik', 'name', 'last_name', 'company_id', 'branch_id', 'join_date', 'resign_date')

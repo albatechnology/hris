@@ -30,15 +30,20 @@ class PositionController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'order', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'order',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return PositionResource::collection($data);
     }
 
-    public function show(Position $position)
+    public function show(int $id)
     {
+        $position = Position::findTenanted($id);
         return new PositionResource($position);
     }
 
@@ -49,31 +54,33 @@ class PositionController extends BaseController
         return new PositionResource($position);
     }
 
-    public function update(Position $position, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $position = Position::findTenanted($id);
         $position->update($request->validated());
 
         return (new PositionResource($position))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Position $position)
+    public function destroy(int $id)
     {
+        $position = Position::findTenanted($id);
         $position->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $position = Position::withTrashed()->findOrFail($id);
+        $position = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $position->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $position = Position::withTrashed()->findOrFail($id);
+        $position = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $position->restore();
 
         return new PositionResource($position);

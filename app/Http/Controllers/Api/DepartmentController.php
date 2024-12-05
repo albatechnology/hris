@@ -31,52 +31,58 @@ class DepartmentController extends BaseController
             ])
             ->allowedIncludes(['division'])
             ->allowedSorts([
-                'id', 'division_id', 'name', 'created_at',
+                'id',
+                'division_id',
+                'name',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return DepartmentResource::collection($data);
     }
 
-    public function show(Department $Department)
+    public function show(int $id)
     {
-        return new DepartmentResource($Department);
+        $department = Department::findTenanted($id);
+        return new DepartmentResource($department);
     }
 
     public function store(StoreRequest $request)
     {
-        $Department = Department::create($request->validated());
+        $department = Department::create($request->validated());
 
-        return new DepartmentResource($Department);
+        return new DepartmentResource($department);
     }
 
-    public function update(Department $Department, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
-        $Department->update($request->validated());
+        $department = Department::findTenanted($id);
+        $department->update($request->validated());
 
-        return (new DepartmentResource($Department))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DepartmentResource($department))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Department $Department)
+    public function destroy(int $id)
     {
-        $Department->delete();
+        $department = Department::findTenanted($id);
+        $department->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $Department = Department::withTrashed()->findOrFail($id);
-        $Department->forceDelete();
+        $department = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $department->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $Department = Department::withTrashed()->findOrFail($id);
-        $Department->restore();
+        $department = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $department->restore();
 
-        return new DepartmentResource($Department);
+        return new DepartmentResource($department);
     }
 }

@@ -43,8 +43,9 @@ class IncidentController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(Incident $incident)
+    public function show(int $id)
     {
+        $incident = Incident::findTenanted($id);
         $incident->load(['user', 'incidentType', 'media']);
         return new DefaultResource($incident);
     }
@@ -72,8 +73,9 @@ class IncidentController extends BaseController
         return new DefaultResource($incident);
     }
 
-    public function update(Incident $incident, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $incident = Incident::findTenanted($id);
         try {
             $incident->update([
                 'company_id' => $request->company_id,
@@ -87,8 +89,9 @@ class IncidentController extends BaseController
         return (new DefaultResource($incident))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Incident $incident)
+    public function destroy(int $id)
     {
+        $incident = Incident::findTenanted($id);
         try {
             $incident->delete();
         } catch (Exception $e) {
@@ -98,9 +101,9 @@ class IncidentController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $incident = Incident::withTrashed()->findOrFail($id);
+        $incident = Incident::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $incident->forceDelete();
@@ -111,9 +114,9 @@ class IncidentController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $incident = Incident::withTrashed()->findOrFail($id);
+        $incident = Incident::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $incident->restore();

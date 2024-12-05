@@ -28,13 +28,15 @@ class SettingController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(Setting $setting)
+    public function show(int $id)
     {
+        $setting = Setting::findTenanted($id);
         return new DefaultResource($setting);
     }
 
-    public function update(Setting $setting, UpdateRequest $request)
+    public function update(int $id, UpdateRequest $request)
     {
+        $setting = Setting::findTenanted($id);
         $setting->update($request->validated());
 
         return (new DefaultResource($setting))->response()->setStatusCode(Response::HTTP_ACCEPTED);

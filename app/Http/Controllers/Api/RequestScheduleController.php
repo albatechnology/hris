@@ -7,7 +7,6 @@ use App\Http\Requests\Api\RequestSchedule\ApproveRequest;
 use App\Http\Requests\Api\RequestSchedule\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RequestSchedule;
-use App\Models\Schedule;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -50,8 +49,9 @@ class RequestScheduleController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(RequestSchedule $requestSchedule)
+    public function show(int $id)
     {
+        $requestSchedule = RequestSchedule::findTenanted($id);
         return new DefaultResource($requestSchedule->load(['shifts' => fn($q) => $q->orderBy('order')]));
     }
 
@@ -76,8 +76,9 @@ class RequestScheduleController extends BaseController
         return new DefaultResource($requestSchedule->refresh()->load(['shifts' => fn($q) => $q->orderBy('order')]));
     }
 
-    public function update(RequestSchedule $requestSchedule, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $requestSchedule = RequestSchedule::findTenanted($id);
         DB::beginTransaction();
         try {
             $requestSchedule->update($request->validated());
@@ -97,15 +98,17 @@ class RequestScheduleController extends BaseController
         return new DefaultResource($requestSchedule->refresh()->load(['shifts' => fn($q) => $q->orderBy('order')]));
     }
 
-    public function destroy(Schedule $requestSchedule)
+    public function destroy(int $id)
     {
+        $requestSchedule = RequestSchedule::findTenanted($id);
         $requestSchedule->delete();
 
         return $this->deletedResponse();
     }
 
-    public function approve(ApproveRequest $approveRequest, RequestSchedule $requestSchedule): DefaultResource|JsonResponse
+    public function approve(ApproveRequest $approveRequest, int $id): DefaultResource|JsonResponse
     {
+        $requestSchedule = RequestSchedule::findTenanted($id);
         // if (!$requestSchedule->approval_status->is(ApprovalStatus::PENDING)) {
         //     return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
         // }

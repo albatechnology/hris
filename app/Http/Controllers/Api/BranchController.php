@@ -27,19 +27,33 @@ class BranchController extends BaseController
         $data = QueryBuilder::for(Branch::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::callback('company_ids', fn ($q, $value) => $q->whereIn('company_id', $value)),
-                'name', 'country', 'province', 'city', 'zip_code', 'address',
+                AllowedFilter::callback('company_ids', fn($q, $value) => $q->whereIn('company_id', $value)),
+                'name',
+                'country',
+                'province',
+                'city',
+                'zip_code',
+                'address',
             ])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'country', 'province', 'city', 'zip_code', 'address', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'country',
+                'province',
+                'city',
+                'zip_code',
+                'address',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return BranchResource::collection($data);
     }
 
-    public function show(Branch $branch)
+    public function show(int $id)
     {
+        $branch = Branch::findTenanted($id);
         return new BranchResource($branch);
     }
 
@@ -50,31 +64,33 @@ class BranchController extends BaseController
         return new BranchResource($branch);
     }
 
-    public function update(Branch $branch, UpdateRequest $request)
+    public function update(int $id, UpdateRequest $request)
     {
+        $branch = Branch::findTenanted($id);
         $branch->update($request->validated());
 
         return (new BranchResource($branch))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Branch $branch)
+    public function destroy(int $id)
     {
+        $branch = Branch::findTenanted($id);
         $branch->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $branch = Branch::withTrashed()->findOrFail($id);
+        $branch = Branch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $branch->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $branch = Branch::withTrashed()->findOrFail($id);
+        $branch = Branch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $branch->restore();
 
         return new BranchResource($branch);

@@ -44,8 +44,9 @@ class PanicController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(Panic $panic)
+    public function show(int $id)
     {
+        $panic = Panic::findTenanted($id);
         return new DefaultResource($panic->load('user'));
     }
 
@@ -65,8 +66,9 @@ class PanicController extends BaseController
         return new DefaultResource($panic->load('user'));
     }
 
-    public function update(Panic $panic, UpdateRequest $request)
+    public function update(int $id, UpdateRequest $request)
     {
+        $panic = Panic::findTenanted($id);
         try {
             $panic->update($request->validated());
         } catch (Exception $e) {
@@ -76,8 +78,9 @@ class PanicController extends BaseController
         return (new DefaultResource($panic))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Panic $panic)
+    public function destroy(int $id)
     {
+        $panic = Panic::findTenanted($id);
         try {
             $panic->delete();
         } catch (Exception $e) {
@@ -87,9 +90,9 @@ class PanicController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $panic = Panic::withTrashed()->findOrFail($id);
+        $panic = Panic::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $panic->forceDelete();
@@ -100,9 +103,9 @@ class PanicController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $panic = Panic::withTrashed()->findOrFail($id);
+        $panic = Panic::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $panic->restore();

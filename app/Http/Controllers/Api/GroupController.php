@@ -6,7 +6,6 @@ use App\Http\Requests\Api\Group\StoreRequest;
 use App\Http\Resources\Group\GroupResource;
 use App\Models\Group;
 use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class GroupController extends BaseController
@@ -28,15 +27,18 @@ class GroupController extends BaseController
                 'name',
             ])
             ->allowedSorts([
-                'id', 'name', 'created_at',
+                'id',
+                'name',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return GroupResource::collection($data);
     }
 
-    public function show(Group $group)
+    public function show(int $id)
     {
+        $group = Group::findTenanted($id);
         return new GroupResource($group);
     }
 
@@ -47,31 +49,33 @@ class GroupController extends BaseController
         return new GroupResource($group);
     }
 
-    public function update(Group $group, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $group = Group::findTenanted($id);
         $group->update($request->validated());
 
         return (new GroupResource($group))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Group $group)
+    public function destroy(int $id)
     {
+        $group = Group::findTenanted($id);
         $group->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $group = Group::withTrashed()->findOrFail($id);
+        $group = Group::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $group->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $group = Group::withTrashed()->findOrFail($id);
+        $group = Group::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $group->restore();
 
         return new GroupResource($group);

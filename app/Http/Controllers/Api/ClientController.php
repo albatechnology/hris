@@ -47,8 +47,9 @@ class ClientController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(Client $client)
+    public function show(int $id)
     {
+        $client = Client::findTenanted($id);
         $client->load('company');
         return new DefaultResource($client);
     }
@@ -64,8 +65,10 @@ class ClientController extends BaseController
         return new DefaultResource($client);
     }
 
-    public function update(Client $client, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $client = Client::findTenanted($id);
+
         try {
             $client->update($request->validated());
         } catch (Exception $e) {
@@ -75,8 +78,10 @@ class ClientController extends BaseController
         return (new DefaultResource($client))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Client $client)
+    public function destroy(int $id)
     {
+        $client = Client::findTenanted($id);
+
         try {
             $client->delete();
         } catch (Exception $e) {
@@ -86,9 +91,9 @@ class ClientController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $client = Client::withTrashed()->findOrFail($id);
+        $client = Client::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $client->forceDelete();
@@ -99,9 +104,9 @@ class ClientController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $client = Client::withTrashed()->findOrFail($id);
+        $client = Client::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
         try {
             $client->restore();

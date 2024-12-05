@@ -64,8 +64,9 @@ class TimeoffPolicyController extends BaseController
         return TimeoffPolicyResource::collection($data);
     }
 
-    public function show(TimeoffPolicy $timeoffPolicy)
+    public function show(int $id)
     {
+        $timeoffPolicy = TimeoffPolicy::findTenanted($id);
         $data = QueryBuilder::for(TimeoffPolicy::findTenanted($timeoffPolicy->id))
             ->allowedIncludes(['company'])
             ->firstOrFail();
@@ -88,8 +89,9 @@ class TimeoffPolicyController extends BaseController
         return new TimeoffPolicyResource($timeoffPolicy);
     }
 
-    public function update(TimeoffPolicy $timeoffPolicy, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $timeoffPolicy = TimeoffPolicy::findTenanted($id);
         try {
             $timeoffPolicy->update($request->validated());
 
@@ -103,24 +105,25 @@ class TimeoffPolicyController extends BaseController
         return (new TimeoffPolicyResource($timeoffPolicy))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(TimeoffPolicy $timeoffPolicy)
+    public function destroy(int $id)
     {
+        $timeoffPolicy = TimeoffPolicy::findTenanted($id);
         $timeoffPolicy->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $timeoffPolicy = TimeoffPolicy::withTrashed()->findOrFail($id);
+        $timeoffPolicy = TimeoffPolicy::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $timeoffPolicy->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $timeoffPolicy = TimeoffPolicy::withTrashed()->findOrFail($id);
+        $timeoffPolicy = TimeoffPolicy::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $timeoffPolicy->restore();
 
         return new TimeoffPolicyResource($timeoffPolicy);

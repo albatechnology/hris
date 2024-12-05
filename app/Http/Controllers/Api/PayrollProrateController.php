@@ -30,7 +30,7 @@ class PayrollProrateController extends BaseController
 
     public function update(UpdateRequest $request)
     {
-        $payrollSetting = PayrollSetting::where('company_id', $request->company_id)->firstOrFail();
+        $payrollSetting = PayrollSetting::tenanted()->where('company_id', $request->company_id)->firstOrFail();
         $payrollSetting->update($request->validated());
 
         return (new PayrollProrateResource($payrollSetting))->response()->setStatusCode(Response::HTTP_ACCEPTED);

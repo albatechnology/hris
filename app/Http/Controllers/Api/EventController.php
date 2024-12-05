@@ -26,21 +26,30 @@ class EventController extends BaseController
 
     public function index()
     {
-        $event = QueryBuilder::for(Event::tenanted()->orWhere(fn ($q) => $q->whereNationalHoliday()))
+        $event = QueryBuilder::for(Event::tenanted()->orWhere(fn($q) => $q->whereNationalHoliday()))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'name', 'type', 'start_at', 'end_at', 'is_public', 'is_send_email', 'description', 'created_at',
+                'id',
+                'name',
+                'type',
+                'start_at',
+                'end_at',
+                'is_public',
+                'is_send_email',
+                'description',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return EventResource::collection($event);
     }
 
-    public function show(Event $event)
+    public function show(int $id)
     {
+        $event = Event::findTenanted($id);
         return new EventResource($event);
     }
 
@@ -53,31 +62,31 @@ class EventController extends BaseController
 
     public function update(int $id, StoreRequest $request)
     {
-        $event = Event::tenanted()->where('id', $id)->firstOrFail();
+        $event = Event::findTenanted($id);
         $event->update($request->validated());
 
         return (new EventResource($event))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
-        $event = Event::tenanted()->where('id', $id)->firstOrFail(['id']);
+        $event = Event::findTenanted($id);
         $event->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $event = Event::withTrashed()->findOrFail($id);
+        $event = Event::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $event->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $event = Event::withTrashed()->findOrFail($id);
+        $event = Event::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $event->restore();
 
         return new EventResource($event);
@@ -90,8 +99,8 @@ class EventController extends BaseController
             $fullDate = sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $request->filter['date']);
         }
 
-        $events = Event::tenanted()->orWhere(fn ($q) => $q->whereNationalHoliday())
-            ->when($fullDate, fn ($q) => $q->whereDate('start_at', '<=', $fullDate)->whereDate('end_at', '>=', $fullDate), fn ($q) => $q->whereYear('start_at', $request->filter['year'])->where(fn ($q) => $q->whereMonth('start_at', $request->filter['month'])->orWhereMonth('end_at', $request->filter['month'])))
+        $events = Event::tenanted()->orWhere(fn($q) => $q->whereNationalHoliday())
+            ->when($fullDate, fn($q) => $q->whereDate('start_at', '<=', $fullDate)->whereDate('end_at', '>=', $fullDate), fn($q) => $q->whereYear('start_at', $request->filter['year'])->where(fn($q) => $q->whereMonth('start_at', $request->filter['month'])->orWhereMonth('end_at', $request->filter['month'])))
             ->get(['id', 'type', 'name', 'start_at', 'end_at', 'description']);
 
         $data = [];
@@ -124,7 +133,7 @@ class EventController extends BaseController
             }
         }
 
-        $birthdays = User::tenanted()->whereHas('detail', fn ($q) => $q->whereMonth('birthdate', $request->filter['month']))->with('detail', fn ($q) => $q->select('user_id', 'birthdate'))->get(['id', 'name']);
+        $birthdays = User::tenanted()->whereHas('detail', fn($q) => $q->whereMonth('birthdate', $request->filter['month']))->with('detail', fn($q) => $q->select('user_id', 'birthdate'))->get(['id', 'name']);
         foreach ($birthdays as $user) {
             $data[] = [
                 'type' => 'birthday',
@@ -136,8 +145,8 @@ class EventController extends BaseController
 
         $timeoffs = Timeoff::tenanted()->approved()
             ->with([
-                'timeoffPolicy' => fn ($q) => $q->select('id', 'name'),
-                'user' => fn ($q) => $q->select('id', 'name'),
+                'timeoffPolicy' => fn($q) => $q->select('id', 'name'),
+                'user' => fn($q) => $q->select('id', 'name'),
 
             ])
             ->get(['user_id', 'timeoff_policy_id', 'start_at', 'end_at', 'reason']);

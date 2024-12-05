@@ -3,25 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\MediaCollection;
-use App\Http\Requests\Api\ClientLocation\ScanClientLocationRequest;
 use App\Http\Requests\Api\ClientLocation\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Client;
 use App\Models\ClientLocation;
-use BadMethodCallException;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Support\Facades\File;
-use Illuminate\Validation\ValidationException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ClientLocationController extends BaseController
 {
-    private ?Client $client;
-
     public function __construct()
     {
         parent::__construct();
@@ -35,9 +30,9 @@ class ClientLocationController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(ClientLocation::whereHas('client', function ($q) {
-            $q->tenanted();
-        })->with('client'))->allowedFilters([
+        $data = QueryBuilder::for(
+            ClientLocation::tenanted()->with('client')
+        )->allowedFilters([
             AllowedFilter::exact('client_id'),
             'name',
             'address'
@@ -54,8 +49,9 @@ class ClientLocationController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(ClientLocation $clientLocation)
+    public function show(int $id)
     {
+        $clientLocation = ClientLocation::findTenanted($id);
         return new DefaultResource($clientLocation->load('client'));
     }
 
@@ -85,8 +81,10 @@ class ClientLocationController extends BaseController
         return new DefaultResource($clientLocation->load('client'));
     }
 
-    public function update(ClientLocation $clientLocation, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $clientLocation = ClientLocation::findTenanted($id);
+
         try {
             $clientLocation->update($request->validated());
         } catch (Exception $e) {
@@ -96,8 +94,10 @@ class ClientLocationController extends BaseController
         return (new DefaultResource($clientLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(ClientLocation $clientLocation)
+    public function destroy(int $id)
     {
+        $clientLocation = ClientLocation::findTenanted($id);
+
         try {
             $clientLocation->delete();
         } catch (Exception $e) {
@@ -110,9 +110,9 @@ class ClientLocationController extends BaseController
     public function generateQrCode(Request $request)
     {
         if ($request->id) {
-            $clientLocations = ClientLocation::where('id', $request->id)->get();
+            $clientLocations = ClientLocation::tenanted()->where('id', $request->id)->get();
         } else {
-            $clientLocations = ClientLocation::all();
+            $clientLocations = ClientLocation::tenanted()->get();
         }
 
         foreach ($clientLocations as $clientLocation) {

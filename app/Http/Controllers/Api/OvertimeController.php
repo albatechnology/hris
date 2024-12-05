@@ -38,20 +38,28 @@ class OvertimeController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'is_rounding', 'compensation_rate_per_day', 'rate_type', 'rate_amount', 'created_at',
+                'id',
+                'company_id',
+                'is_rounding',
+                'compensation_rate_per_day',
+                'rate_type',
+                'rate_amount',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return OvertimeResource::collection($data);
     }
 
-    public function show(Overtime $overtime): OvertimeResource
+    public function show(int $id): OvertimeResource
     {
+        $overtime = Overtime::findTenanted($id);
         return new OvertimeResource($overtime);
     }
 
-    public static function saveRelationship(Overtime $overtime, Request $request)
+    public static function saveRelationship(int $id, Request $request)
     {
+        $overtime = Overtime::findTenanted($id);
         $overtime->overtimeRoundings()->delete();
         $overtime->overtimeMultipliers()->delete();
         $overtime->overtimeAllowances()->delete();
@@ -86,8 +94,9 @@ class OvertimeController extends BaseController
         return new OvertimeResource($overtime->refresh());
     }
 
-    public function update(Overtime $overtime, UpdateRequest $request): OvertimeResource|JsonResponse
+    public function update(int $id, UpdateRequest $request): OvertimeResource|JsonResponse
     {
+        $overtime = Overtime::findTenanted($id);
         DB::beginTransaction();
         try {
             $overtime->update($request->validated());
@@ -106,8 +115,9 @@ class OvertimeController extends BaseController
         return (new OvertimeResource($overtime->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Overtime $overtime): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
+        $overtime = Overtime::findTenanted($id);
         DB::beginTransaction();
         try {
             // sync formula with empty data []

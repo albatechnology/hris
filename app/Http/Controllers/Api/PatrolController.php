@@ -181,8 +181,9 @@ class PatrolController extends BaseController
         ]));
     }
 
-    public function update(Patrol $patrol, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $patrol = Patrol::findTenanted($id);
         DB::beginTransaction();
         try {
             // patrol
@@ -249,8 +250,9 @@ class PatrolController extends BaseController
         ])))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Patrol $patrol)
+    public function destroy(int $id)
     {
+        $patrol = Patrol::findTenanted($id);
         try {
             Schema::disableForeignKeyConstraints();
             $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());

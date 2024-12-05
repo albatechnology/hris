@@ -29,7 +29,7 @@ class ScheduleController extends BaseController
         $this->middleware('permission:schedule_edit', ['only' => 'update']);
         $this->middleware('permission:schedule_delete', ['only' => ['destroy', 'forceDelete']]);
 
-        $this->middleware('permission:attendance_create', ['only' => 'today']);
+        // $this->middleware('permission:attendance_create', ['only' => 'today']);
     }
 
     public function index()
@@ -56,7 +56,7 @@ class ScheduleController extends BaseController
 
     public function show(int $id)
     {
-        $schedule = Schedule::tenanted()->where('id', $id)->firstOrFail();
+        $schedule = Schedule::findTenanted($id);
         return new ScheduleResource($schedule->load(['shifts' => fn($q) => $q->orderBy('order')]));
     }
 
@@ -80,8 +80,9 @@ class ScheduleController extends BaseController
         return new ScheduleResource($schedule);
     }
 
-    public function update(Schedule $schedule, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $schedule = Schedule::findTenanted($id);
         DB::beginTransaction();
         try {
             $schedule->shifts()->sync([]);
@@ -101,8 +102,9 @@ class ScheduleController extends BaseController
         return (new ScheduleResource($schedule))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Schedule $schedule)
+    public function destroy(int $id)
     {
+        $schedule = Schedule::findTenanted($id);
         $schedule->delete();
 
         return $this->deletedResponse();
@@ -110,7 +112,7 @@ class ScheduleController extends BaseController
 
     public function forceDelete(int $id)
     {
-        $schedule = Schedule::withTrashed()->findOrFail($id);
+        $schedule = Schedule::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $schedule->forceDelete();
 
         return $this->deletedResponse();
@@ -118,7 +120,7 @@ class ScheduleController extends BaseController
 
     public function restore(int $id)
     {
-        $schedule = Schedule::withTrashed()->findOrFail($id);
+        $schedule = Schedule::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $schedule->restore();
 
         return new ScheduleResource($schedule);
@@ -137,7 +139,7 @@ class ScheduleController extends BaseController
 
     public function downloadTemplateImport(int $id, Request $request)
     {
-        $schedule = Schedule::tenanted()->where('id', $id)->firstOrFail();
+        $schedule = Schedule::findTenanted($id);
 
         return Excel::download(new ImportScheduleShiftsExport($schedule), 'import shifts - ' . $schedule->name . '.xlsx');
     }
@@ -148,7 +150,7 @@ class ScheduleController extends BaseController
             'file' => 'required|file|mimes:csv,xls,xlsx',
         ]);
 
-        $schedule = Schedule::tenanted()->where('id', $id)->firstOrFail();
+        $schedule = Schedule::findTenanted($id);
 
         Excel::import(new ImportShiftsImport($schedule), $request->file);
         return $this->updatedResponse();

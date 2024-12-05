@@ -44,12 +44,9 @@ class Company extends BaseModel implements TenantedInterface
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        if ($user->is_super_admin) {
-            return $query;
-        }
-        if ($user->is_administrator) {
-            return $query->where('group_id', $user->group_id);
-        }
+        if ($user->is_super_admin) return $query;
+
+        if ($user->is_admin) return $query->where('group_id', $user->group_id);
 
         $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
 
@@ -193,7 +190,7 @@ class Company extends BaseModel implements TenantedInterface
             'is_default' => true,
         ]);
 
-        if($this->countryTable?->id == 1){
+        if ($this->countryTable?->id == 1) {
             $this->payrollComponents()->create([
                 'name' => 'BPJS Kesehatan',
                 'type' => PayrollComponentType::BENEFIT,

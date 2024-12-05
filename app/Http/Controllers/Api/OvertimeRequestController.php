@@ -52,8 +52,9 @@ class OvertimeRequestController extends BaseController
         return OvertimeRequestResource::collection($data);
     }
 
-    public function show(OvertimeRequest $overtimeRequest): OvertimeRequestResource
+    public function show(int $id): OvertimeRequestResource
     {
+        $overtimeRequest = OvertimeRequest::findTenanted($id);
         return new OvertimeRequestResource($overtimeRequest);
     }
 
@@ -95,8 +96,9 @@ class OvertimeRequestController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function approve(NewApproveRequest $request, OvertimeRequest $overtimeRequest): OvertimeRequestResource|JsonResponse
+    public function approve(NewApproveRequest $request, int $id): OvertimeRequestResource|JsonResponse
     {
+        $overtimeRequest = OvertimeRequest::findTenanted($id);
         $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
 
         if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);

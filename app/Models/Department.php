@@ -18,16 +18,7 @@ class Department extends BaseModel implements TenantedInterface
 
     public function scopeTenanted(Builder $query): Builder
     {
-        /** @var User $user */
-        $user = auth('sanctum')->user();
-        if ($user->is_super_admin) {
-            return $query;
-        }
-
         return $query->whereHas('division', fn($q) => $q->tenanted());
-
-        // $branchIds = $user->branches()->get(['id'])?->pluck('id') ?? [];
-        // return $query->whereIn('id', $branchIds);
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

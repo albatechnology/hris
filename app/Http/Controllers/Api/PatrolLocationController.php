@@ -159,7 +159,7 @@ class PatrolLocationController extends BaseController
         $type = $splittedToken[0] ?? null;
         $uuid = $splittedToken[1] ?? null;
 
-        $clientLocation = ClientLocation::firstWhere('uuid', $uuid);
+        $clientLocation = ClientLocation::tenanted()->firstWhere('uuid', $uuid);
 
         if (!$clientLocation) {
             return $this->errorResponse('Invalid token');

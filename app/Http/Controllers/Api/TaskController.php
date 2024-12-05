@@ -27,11 +27,15 @@ class TaskController extends BaseController
         $data = QueryBuilder::for(Task::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                'name', 'working_period',
+                'name',
+                'working_period',
             ])
-            ->allowedIncludes(['company','hours'])
+            ->allowedIncludes(['company', 'hours'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'working_period'
+                'id',
+                'company_id',
+                'name',
+                'working_period'
             ])
             ->paginate($this->per_page);
 
@@ -41,7 +45,7 @@ class TaskController extends BaseController
     public function show(int $id)
     {
         $task = QueryBuilder::for(Task::tenanted()->where('id', $id))
-            ->allowedIncludes(['company','hours'])
+            ->allowedIncludes(['company', 'hours'])
             ->firstOrFail();
 
         return new DefaultResource($task);
@@ -64,15 +68,16 @@ class TaskController extends BaseController
         return new DefaultResource($task);
     }
 
-    public function update(Task $task, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $task = Task::findTenanted($id);
         DB::beginTransaction();
         try {
             $task->update($request->validated());
             if ($request->hours) {
                 $hours = collect($request->hours);
                 $task->hours()->whereNotIn('id', $hours->pluck('id'))->delete();
-                $hours->unique('id')->each(fn ($hour) => $task->hours()->updateOrCreate(['id' => $hour['id']], $hour));
+                $hours->unique('id')->each(fn($hour) => $task->hours()->updateOrCreate(['id' => $hour['id']], $hour));
             }
             DB::commit();
         } catch (\Exception $e) {
@@ -83,24 +88,25 @@ class TaskController extends BaseController
         return (new DefaultResource($task))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Task $task)
+    public function destroy(int $id)
     {
+        $task = Task::findTenanted($id);
         $task->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $task = Task::withTrashed()->findOrFail($id);
+        $task = Task::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $task->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $task = Task::withTrashed()->findOrFail($id);
+        $task = Task::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $task->restore();
 
         return new DefaultResource($task);

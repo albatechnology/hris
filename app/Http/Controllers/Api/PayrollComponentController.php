@@ -44,8 +44,9 @@ class PayrollComponentController extends BaseController
         return PayrollComponentResource::collection($data);
     }
 
-    public function show(PayrollComponent $payrollComponent): PayrollComponentResource
+    public function show(int $id): PayrollComponentResource
     {
+        $payrollComponent = PayrollComponent::findTenanted($id);
         return new PayrollComponentResource($payrollComponent);
     }
 
@@ -76,8 +77,9 @@ class PayrollComponentController extends BaseController
         return new PayrollComponentResource($payrollComponent->refresh());
     }
 
-    public function update(PayrollComponent $payrollComponent, UpdateRequest $request): PayrollComponentResource|JsonResponse
+    public function update(int $id, UpdateRequest $request): PayrollComponentResource|JsonResponse
     {
+        $payrollComponent = PayrollComponent::findTenanted($id);
         DB::beginTransaction();
         try {
             $payrollComponent->update($request->validated());
@@ -104,8 +106,9 @@ class PayrollComponentController extends BaseController
         return (new PayrollComponentResource($payrollComponent->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(PayrollComponent $payrollComponent): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
+        $payrollComponent = PayrollComponent::findTenanted($id);
         try {
             // sync with empty data []
             $payrollComponent->includes()->delete();

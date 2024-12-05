@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Enums\JobLevel;
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
-class Announcement extends BaseModel
+class Announcement extends BaseModel implements TenantedInterface
 {
     use BelongsToUser, CompanyTenanted;
 

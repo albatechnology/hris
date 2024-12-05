@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Overtime;
 use App\Enums\RateType;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -51,7 +52,7 @@ class UpdateRequest extends FormRequest
             'overtime_roundings.*.start_minute' => [
                 'required_with:overtime_roundings',
                 'integer',
-                function ($attribute, int $value, \Closure $fail) {
+                function ($attribute, int $value, Closure $fail) {
                     $index = explode('.', $attribute)[1];
                     if ($index > 0 && $value <= (int)$this->overtime_roundings[$index - 1]['end_minute']) {
                         $fail($attribute . ' must be greater than ' . $this->overtime_roundings[$index - 1]['end_minute']);
@@ -66,7 +67,7 @@ class UpdateRequest extends FormRequest
             'overtime_multipliers.*.start_hour' => [
                 'required_with:overtime_multipliers',
                 'integer',
-                function ($attribute, int $value, \Closure $fail) {
+                function ($attribute, int $value, Closure $fail) {
                     $index = explode('.', $attribute)[1];
                     if ($index > 0 && $value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) {
                         $fail($attribute . ' must be greater than ' . $this->overtime_multipliers[$index - 1]['end_hour']);

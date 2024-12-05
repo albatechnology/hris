@@ -65,8 +65,9 @@ class RoleController extends BaseController
      *
      * @return RoleResource
      */
-    public function show(Role $role)
+    public function show(int $id)
     {
+        $role = Role::findTenanted($id);
         return new RoleResource($role->load('permissions'));
     }
 
@@ -75,8 +76,9 @@ class RoleController extends BaseController
      *
      * @return RoleResource
      */
-    public function update(Role $role, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $role = Role::findTenanted($id);
         if ($role->id == 1) {
             return response()->json(['message' => 'Role administrator tidak dapat diupdate!']);
         }
@@ -104,8 +106,9 @@ class RoleController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Role $role)
+    public function destroy(int $id)
     {
+        $role = Role::findTenanted($id);
         if ($role->id == 1) {
             return response()->json(['message' => 'Role administrator tidak dapat dihapus!']);
         }

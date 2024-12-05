@@ -12,7 +12,7 @@ class UserContactController extends BaseController
 {
     public function index(User $user)
     {
-        $data = QueryBuilder::for(UserContact::where('user_id', $user->id))
+        $data = QueryBuilder::for(UserContact::tenanted()->where('user_id', $user->id))
             ->allowedFilters([
                 'type', 'name', 'id_number', 'email', 'phone',
             ])
@@ -24,8 +24,9 @@ class UserContactController extends BaseController
         return UserContactResource::collection($data);
     }
 
-    public function show(User $user, UserContact $contact)
+    public function show(User $user, int $id)
     {
+        $contact = UserContact::findTenanted($id);
         return new UserContactResource($contact);
     }
 
@@ -36,15 +37,17 @@ class UserContactController extends BaseController
         return new UserContactResource($contact);
     }
 
-    public function update(User $user, StoreRequest $request, UserContact $contact)
+    public function update(User $user, StoreRequest $request, int $id)
     {
+        $contact = UserContact::findTenanted($id);
         $contact->update($request->validated());
 
         return new UserContactResource($contact);
     }
 
-    public function destroy(User $user, UserContact $contact)
+    public function destroy(User $user, int $id)
     {
+        $contact = UserContact::findTenanted($id);
         $contact->delete();
 
         return $this->deletedResponse();

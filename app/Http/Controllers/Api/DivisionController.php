@@ -30,15 +30,19 @@ class DivisionController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return DivisionResource::collection($data);
     }
 
-    public function show(Division $division)
+    public function show(int $id)
     {
+        $division = Division::findTenanted($id);
         return new DivisionResource($division);
     }
 
@@ -49,31 +53,33 @@ class DivisionController extends BaseController
         return new DivisionResource($division);
     }
 
-    public function update(Division $division, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $division = Division::findTenanted($id);
         $division->update($request->validated());
 
         return (new DivisionResource($division))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Division $division)
+    public function destroy(int $id)
     {
+        $division = Division::findTenanted($id);
         $division->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $division = Division::withTrashed()->findOrFail($id);
+        $division = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $division->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $division = Division::withTrashed()->findOrFail($id);
+        $division = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $division->restore();
 
         return new DivisionResource($division);

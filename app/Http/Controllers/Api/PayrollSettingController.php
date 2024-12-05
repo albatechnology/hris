@@ -30,7 +30,7 @@ class PayrollSettingController extends BaseController
 
     public function update(PayrollSetting $payrollSetting, UpdateRequest $request)
     {
-        $payrollSetting = PayrollSetting::where('company_id', $request->company_id)->firstOrFail();
+        $payrollSetting = PayrollSetting::tenanted()->where('company_id', $request->company_id)->firstOrFail();
         $payrollSetting->update($request->validated());
 
         return (new DefaultResource($payrollSetting))->response()->setStatusCode(Response::HTTP_ACCEPTED);

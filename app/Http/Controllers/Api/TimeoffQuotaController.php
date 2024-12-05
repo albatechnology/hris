@@ -210,8 +210,9 @@ class TimeoffQuotaController extends BaseController
         return new DefaultResource($timeoffQuota);
     }
 
-    public function destroy(TimeoffQuota $timeoffQuota)
+    public function destroy(int $id)
     {
+        $timeoffQuota = TimeoffQuota::findTenanted($id);
         $timeoffQuota->delete();
 
         return $this->deletedResponse();

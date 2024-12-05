@@ -26,19 +26,28 @@ class ShiftController extends BaseController
         $data = QueryBuilder::for(Shift::tenanted()->orWhereNull('company_id'))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                'name', 'type', 'clock_in', 'clock_out',
+                'name',
+                'type',
+                'clock_in',
+                'clock_out',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'clock_in', 'clock_out', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'clock_in',
+                'clock_out',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return ShiftResource::collection($data);
     }
 
-    public function show(Shift $shift)
+    public function show(int $id)
     {
+        $shift = Shift::findTenanted($id);
         return new ShiftResource($shift);
     }
 
@@ -49,31 +58,33 @@ class ShiftController extends BaseController
         return new ShiftResource($shift);
     }
 
-    public function update(Shift $shift, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $shift = Shift::findTenanted($id);
         $shift->update($request->validated());
 
         return (new ShiftResource($shift))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(Shift $shift)
+    public function destroy(int $id)
     {
+        $shift = Shift::findTenanted($id);
         $shift->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $shift = Shift::withTrashed()->findOrFail($id);
+        $shift = Shift::withTrashed()->tenanted()->where('id', $id)->fisrtOrFail();
         $shift->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $shift = Shift::withTrashed()->findOrFail($id);
+        $shift = Shift::withTrashed()->tenanted()->where('id', $id)->fisrtOrFail();
         $shift->restore();
 
         return new ShiftResource($shift);

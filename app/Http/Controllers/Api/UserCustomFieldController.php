@@ -12,8 +12,9 @@ use Illuminate\Http\Response;
 
 class UserCustomFieldController extends BaseController
 {
-    public function index(User $user)
+    public function index(int $id)
     {
+        $user = User::findTenanted($id);
         $customFields = CustomField::tenanted()->get();
 
         $customFields = $customFields->map(function ($customField) use ($user) {
@@ -33,15 +34,17 @@ class UserCustomFieldController extends BaseController
         return UserCustomFieldResource::collection($customFields);
     }
 
-    public function show(User $user, UserCustomField $customField)
+    public function show(int $id, UserCustomField $customField)
     {
+        $user = User::findTenanted($id);
         $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
 
         return new UserCustomFieldResource($userCustomField);
     }
 
-    public function store(User $user, StoreRequest $request)
+    public function store(int $id, StoreRequest $request)
     {
+        $user = User::findTenanted($id);
         $userCustomField = $user->customFields()->where('custom_field_id', $request->custom_field_id)->exists();
         if ($userCustomField) {
             return $this->errorResponse('Custom field already exists', code: Response::HTTP_BAD_REQUEST);
@@ -52,8 +55,9 @@ class UserCustomFieldController extends BaseController
         return new UserCustomFieldResource($userCustomField);
     }
 
-    public function update(User $user, UserCustomField $customField, UpdateRequest $request)
+    public function update(int $id, UserCustomField $customField, UpdateRequest $request)
     {
+        $user = User::findTenanted($id);
         $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
         $userCustomField->update($request->validated());
 

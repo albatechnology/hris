@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Enums\EventType;
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Event extends Model
+class Event extends Model implements TenantedInterface
 {
     use CompanyTenanted;
 

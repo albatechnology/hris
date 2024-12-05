@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\User;
 use App\Enums\Gender;
 use App\Enums\UserType;
 use App\Models\Branch;
+use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -26,6 +27,8 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = User::select('id')->tenanted()->where('id', $this->user)->firstOrFail();
+
         return [
             'group_id' => 'required|exists:groups,id',
             'company_id' => ['required', new CompanyTenantedRule()],
@@ -33,10 +36,10 @@ class UpdateRequest extends FormRequest
             // 'approval_id' => 'nullable|exists:users,id',
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
-            'email' => 'required|email|unique:users,email,' . $this->user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
-            'nik' => 'nullable|unique:users,nik,' . $this->user->id,
+            'nik' => 'nullable|unique:users,nik,' . $user->id,
             'phone' => 'nullable',
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',

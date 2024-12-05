@@ -6,7 +6,6 @@ use App\Http\Requests\Api\NationalHoliday\StoreRequest;
 use App\Http\Resources\NationalHoliday\NationalHolidayResource;
 use App\Models\NationalHoliday;
 use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class NationalHolidayController extends BaseController

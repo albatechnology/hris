@@ -97,17 +97,21 @@ class Patrol extends BaseModel implements TenantedInterface
             $user = auth('sanctum')->user();
         }
 
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        // if ($user->is_super_admin) {
+        //     return $query;
+        // }
 
-        if ($user->is_administrator) {
-            return $query->whereHas('client', fn($q) => $q->whereHas('company', fn($q) => $q->where('group_id', $user->group_id)));
-        }
+        // if ($user->is_administrator) {
+        //     return $query->whereHas('client', fn($q) => $q->whereHas('company', fn($q) => $q->where('group_id', $user->group_id)));
+        // }
 
-        if ($user->is_admin) {
-            $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-            return $query->whereHas('client', fn($q) => $q->whereIn('company_id', $companyIds));
+        // if ($user->is_admin) {
+        //     $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        //     return $query->whereHas('client', fn($q) => $q->whereIn('company_id', $companyIds));
+        // }
+
+        if (!$user->is_user) {
+            return $query->whereHas('client', fn($q) => $q->tenanted());
         }
 
         $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleType: ScheduleType::PATROL->value);

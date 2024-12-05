@@ -24,19 +24,20 @@ class TaskHourController extends BaseController
 
     private function getTaskHour(int $id)
     {
-        return TaskHour::where('id', $id)->whereHas('task', fn ($q) => $q->tenanted())->firstOrFail();
+        return TaskHour::findTenanted($id);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(TaskHour::whereHas('task', fn ($q) => $q->tenanted())->withCount('users'))
+        $data = QueryBuilder::for(TaskHour::tenanted()->withCount('users'))
             ->allowedFilters([
                 AllowedFilter::exact('task_id'),
                 'name',
             ])
             ->allowedIncludes(['task'])
             ->allowedSorts([
-                'id', 'name'
+                'id',
+                'name'
             ])
             ->paginate($this->per_page);
 
@@ -93,10 +94,11 @@ class TaskHourController extends BaseController
     public function users(int $id)
     {
         $query = \App\Models\User::select('id', 'name', 'nik', 'branch_id', 'company_id')
-            ->whereHas('tasks', fn ($q) => $q->where('task_hour_id', $id))
+            ->tenanted()
+            ->whereHas('tasks', fn($q) => $q->where('task_hour_id', $id))
             ->with([
-                'company' => fn ($q) => $q->select('id', 'name'),
-                'branch' => fn ($q) => $q->select('id', 'name'),
+                'company' => fn($q) => $q->select('id', 'name'),
+                'branch' => fn($q) => $q->select('id', 'name'),
             ]);
 
         $data = QueryBuilder::for($query)
@@ -104,7 +106,8 @@ class TaskHourController extends BaseController
                 'name'
             ])
             ->allowedSorts([
-                'id', 'name'
+                'id',
+                'name'
             ])
             ->paginate($this->per_page);
 

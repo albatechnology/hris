@@ -8,7 +8,6 @@ use App\Http\Resources\LiveAttendance\LiveAttendanceLocationResource;
 use App\Models\LiveAttendance;
 use App\Models\LiveAttendanceLocation;
 use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class LiveAttendanceLocationController extends BaseController
@@ -23,8 +22,9 @@ class LiveAttendanceLocationController extends BaseController
         $this->middleware('permission:live_attendance_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    public function index(LiveAttendance $liveAttendance)
+    public function index(int $id)
     {
+        $liveAttendance = LiveAttendance::findTenanted($id);
         $data = QueryBuilder::for(LiveAttendanceLocation::where('live_attendance_id', $liveAttendance->id))
             ->allowedFilters([
                 'radius',
@@ -33,35 +33,43 @@ class LiveAttendanceLocationController extends BaseController
             ])
             ->allowedIncludes(['liveAttendance'])
             ->allowedSorts([
-                'id', 'radius', 'lat', 'lng', 'created_at',
+                'id',
+                'radius',
+                'lat',
+                'lng',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return LiveAttendanceLocationResource::collection($data);
     }
 
-    public function show(LiveAttendance $liveAttendance, LiveAttendanceLocation $location)
+    public function show(int $liveAttendanceId, int $id)
     {
-        return new LiveAttendanceLocationResource($location);
+        $liveAttendanceLocation = LiveAttendanceLocation::findTenanted($id);
+        return new LiveAttendanceLocationResource($liveAttendanceLocation);
     }
 
-    public function store(LiveAttendance $liveAttendance, StoreRequest $request)
+    public function store(int $id, StoreRequest $request)
     {
+        $liveAttendance = LiveAttendance::findTenanted($id);
         $liveAttendance->locations()->createMany($request->locations);
 
         return $this->createdResponse();
     }
 
-    public function update(LiveAttendance $liveAttendance, LiveAttendanceLocation $location, UpdateRequest $request)
+    public function update(int $liveAttendanceId, int $id, UpdateRequest $request)
     {
-        $location->update($request->validated());
+        $liveAttendanceLocation = LiveAttendanceLocation::findTenanted($id);
+        $liveAttendanceLocation->update($request->validated());
 
-        return (new LiveAttendanceLocationResource($location))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new LiveAttendanceLocationResource($liveAttendanceLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(LiveAttendance $liveAttendance, LiveAttendanceLocation $location)
+    public function destroy(int $liveAttendanceId, int $id)
     {
-        $liveAttendance->locations()->findOrFail($location->id)->delete();
+        $liveAttendance = LiveAttendance::findTenanted($liveAttendanceId);
+        $liveAttendance->locations()->findOrFail($id)->delete();
 
         return $this->deletedResponse();
     }

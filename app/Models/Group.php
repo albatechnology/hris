@@ -13,9 +13,7 @@ class Group extends BaseModel implements TenantedInterface
     public function scopeTenanted(Builder $query): Builder
     {
         $user = auth('sanctum')->user();
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        if ($user->is_super_admin) return $query;
 
         return $query->where('id', $user->group_id);
     }

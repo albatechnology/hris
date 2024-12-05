@@ -12,27 +12,48 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserEducationController extends BaseController
 {
-    public function index(User $user)
+    public function index(int $id)
     {
+        $user = User::findTenanted($id);
         $data = QueryBuilder::for(UserEducation::where('user_id', $user->id))
             ->allowedFilters([
-                'type', 'level', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee',
+                'type',
+                'level',
+                'name',
+                'institution_name',
+                'majors',
+                'start_date',
+                'end_date',
+                'expired_date',
+                'score',
+                'fee',
             ])
             ->allowedSorts([
-                'id', 'name', 'institution_name', 'majors', 'start_date', 'end_date', 'expired_date', 'score', 'fee', 'created_at',
+                'id',
+                'name',
+                'institution_name',
+                'majors',
+                'start_date',
+                'end_date',
+                'expired_date',
+                'score',
+                'fee',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return UserEducationResource::collection($data);
     }
 
-    public function show(User $user, UserEducation $education)
+    public function show(int $id, UserEducation $education)
     {
+        $user = User::findTenanted($id);
         return new UserEducationResource($education);
     }
 
-    public function store(User $user, StoreRequest $request)
+    public function store(int $id, StoreRequest $request)
     {
+        $user = User::findTenanted($id);
         try {
             $education = $user->educations()->create($request->validated());
 
@@ -47,8 +68,9 @@ class UserEducationController extends BaseController
         return new UserEducationResource($education);
     }
 
-    public function update(User $user, StoreRequest $request, UserEducation $education)
+    public function update(int $id, StoreRequest $request, UserEducation $education)
     {
+        $user = User::findTenanted($id);
         try {
             $education->update($request->validated());
 
@@ -64,8 +86,9 @@ class UserEducationController extends BaseController
         return new UserEducationResource($education);
     }
 
-    public function destroy(User $user, UserEducation $education)
+    public function destroy(int $id, UserEducation $education)
     {
+        $user = User::findTenanted($id);
         $education->delete();
 
         return $this->deletedResponse();

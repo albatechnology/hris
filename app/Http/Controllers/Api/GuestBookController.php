@@ -70,8 +70,10 @@ class GuestBookController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function show(GuestBook $guestBook)
+    public function show(int $id)
     {
+        $guestBook = GuestBook::findTenanted($id);
+
         return new DefaultResource($guestBook->load([
             'client' => fn($q) => $q->select('id', 'name'),
             'user' => fn($q) => $q->select('id', 'name', 'last_name'),
@@ -101,8 +103,10 @@ class GuestBookController extends BaseController
         return $this->createdResponse();
     }
 
-    public function update(GuestBook $guestBook, UpdateRequest $request)
+    public function update(int $id, UpdateRequest $request)
     {
+        $guestBook = GuestBook::findTenanted($id);
+
         DB::beginTransaction();
         try {
             $guestBook->update([
@@ -128,24 +132,25 @@ class GuestBookController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function destroy(GuestBook $guestBook)
+    public function destroy(int $id)
     {
+        $guestBook = GuestBook::findTenanted($id);
         $guestBook->delete();
 
         return $this->deletedResponse();
     }
 
-    // public function forceDelete($id)
+    // public function forceDelete(int $id)
     // {
-    //     $guestBook = GuestBook::withTrashed()->findOrFail($id);
+    //     $guestBook = GuestBook::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
     //     $guestBook->forceDelete();
 
     //     return $this->deletedResponse();
     // }
 
-    // public function restore($id)
+    // public function restore(int $id)
     // {
-    //     $guestBook = GuestBook::withTrashed()->findOrFail($id);
+    //     $guestBook = GuestBook::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
     //     $guestBook->restore();
 
     //     return new DefaultResource($guestBook);

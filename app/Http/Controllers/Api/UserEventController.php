@@ -10,19 +10,24 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserEventController extends BaseController
 {
-    public function index(Event $event)
+    public function index(int $id)
     {
-        $data = QueryBuilder::for(User::tenanted()->whereHas('events', fn ($q) => $q->where('Event_id', $event->id)))
+        $event = Event::findTenanted($id);
+        $data = QueryBuilder::for(User::tenanted()->whereHas('events', fn($q) => $q->where('Event_id', $event->id)))
             ->allowedSorts([
-                'id', 'event_id', 'user_id', 'created_at',
+                'id',
+                'event_id',
+                'user_id',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return EventResource::collection($data);
     }
 
-    public function store(Event $event, StoreRequest $request)
+    public function store(int $id, StoreRequest $request)
     {
+        $event = Event::findTenanted($id);
         try {
             if ($request->user_ids && count($request->user_ids) > 0) {
                 $event->users()->syncWithoutDetaching($request->user_ids);
@@ -34,8 +39,10 @@ class UserEventController extends BaseController
         return new EventResource($event);
     }
 
-    public function destroy(Event $event, User $user)
+    public function destroy(int $id, int $userId)
     {
+        $event = Event::findTenanted($id);
+        $user = User::select('id')->tenanted()->where('id', $userId)->firstOrFail();
         try {
             $event->users()->detach($user->id);
         } catch (\Throwable $th) {

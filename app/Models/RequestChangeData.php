@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
-use Illuminate\Database\Eloquent\Builder;
+use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class RequestChangeData extends RequestedBaseModel implements HasMedia
+class RequestChangeData extends RequestedBaseModel implements HasMedia, TenantedInterface
 {
-    use BelongsToUser, InteractsWithMedia;
+    use BelongsToUser, InteractsWithMedia, TenantedThroughUser;
 
     protected $table = 'request_change_data';
 
@@ -37,27 +38,6 @@ class RequestChangeData extends RequestedBaseModel implements HasMedia
         // static::creating(function (self $model) {
         // $model->approved_by = $model->user->approval?->id ?? null;
         // });
-    }
-
-    public function scopeTenanted(Builder $query): Builder
-    {
-        /** @var User $user */
-        $user = auth('sanctum')->user();
-        if ($user->is_super_admin) {
-            return $query;
-        }
-        if ($user->is_administrator) {
-            return $query->whereHas('user', fn($q) => $q->where('group_id', $user->group_id));
-        }
-
-        // if ($user->descendants()->exists()) {
-        //     return $query->whereHas('user', fn($q) => $q->whereDescendantOf($user));
-        // }
-
-        return $query->where('user_id', $user->id);
-        // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-
-        // return $query->whereHas('user', fn ($q) => $q->whereIn('company_id', $companyIds));
     }
 
     public function details(): HasMany

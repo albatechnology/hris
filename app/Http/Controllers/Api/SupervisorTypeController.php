@@ -37,8 +37,9 @@ class SupervisorTypeController extends BaseController
         return SupervisorTypeResource::collection($data);
     }
 
-    public function show(SupervisorType $supervisorType)
+    public function show(int $id)
     {
+        $supervisorType = SupervisorType::findTenanted($id);
         $data = QueryBuilder::for(SupervisorType::findTenanted($supervisorType->id))
             ->allowedIncludes(['company'])
             ->firstOrFail();
@@ -53,15 +54,17 @@ class SupervisorTypeController extends BaseController
         return new SupervisorTypeResource($supervisorType);
     }
 
-    public function update(SupervisorType $supervisorType, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $supervisorType = SupervisorType::findTenanted($id);
         $supervisorType->update($request->validated());
 
         return (new SupervisorTypeResource($supervisorType))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    // public function destroy(SupervisorType $supervisorType)
+    // public function destroy(int $id)
     // {
+        // $supervisorType = SupervisorType::findTenanted($id);
     //     $supervisorType->delete();
 
     //     return $this->deletedResponse();

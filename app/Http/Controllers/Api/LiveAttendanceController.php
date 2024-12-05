@@ -33,15 +33,19 @@ class LiveAttendanceController extends BaseController
             ])
             ->allowedIncludes(['company', 'locations', 'users'])
             ->allowedSorts([
-                'id', 'name', 'is_flexible', 'created_at',
+                'id',
+                'name',
+                'is_flexible',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return LiveAttendanceResource::collection($data);
     }
 
-    public function show(LiveAttendance $liveAttendance)
+    public function show(int $id)
     {
+        $liveAttendance = LiveAttendance::findTenanted($id);
         return new LiveAttendanceResource($liveAttendance->load(['company', 'locations']));
     }
 
@@ -68,8 +72,9 @@ class LiveAttendanceController extends BaseController
         return new LiveAttendanceResource($liveAttendance);
     }
 
-    public function update(LiveAttendance $liveAttendance, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $liveAttendance = LiveAttendance::findTenanted($id);
         DB::beginTransaction();
         try {
             $liveAttendance->update($request->validated());
@@ -92,8 +97,9 @@ class LiveAttendanceController extends BaseController
         return (new LiveAttendanceResource($liveAttendance))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(LiveAttendance $liveAttendance)
+    public function destroy(int $id)
     {
+        $liveAttendance = LiveAttendance::findTenanted($id);
         DB::beginTransaction();
         try {
             $liveAttendance->locations()->delete();
@@ -108,17 +114,17 @@ class LiveAttendanceController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $liveAttendance = LiveAttendance::withTrashed()->findOrFail($id);
+        $liveAttendance = LiveAttendance::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $liveAttendance->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $liveAttendance = LiveAttendance::withTrashed()->findOrFail($id);
+        $liveAttendance = LiveAttendance::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $liveAttendance->restore();
 
         return new LiveAttendanceResource($liveAttendance);
@@ -129,9 +135,9 @@ class LiveAttendanceController extends BaseController
         $query = User::select('id', 'name', 'nik', 'branch_id', 'company_id', 'live_attendance_id')
             ->tenanted()
             ->with([
-                'company' => fn ($q) => $q->select('id', 'name'),
-                'branch' => fn ($q) => $q->select('id', 'name'),
-                'detail' => fn ($q) => $q->select('id', 'job_position'),
+                'company' => fn($q) => $q->select('id', 'name'),
+                'branch' => fn($q) => $q->select('id', 'name'),
+                'detail' => fn($q) => $q->select('id', 'job_position'),
             ]);
 
         $users = QueryBuilder::for($query)
@@ -139,13 +145,22 @@ class LiveAttendanceController extends BaseController
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('live_attendance_id'),
-                'name', 'email', 'nik',
+                'name',
+                'email',
+                'nik',
             ])
             ->allowedIncludes([
-                \Spatie\QueryBuilder\AllowedInclude::callback('liveAttendance', fn ($q) => $q->select('id', 'name')),
+                \Spatie\QueryBuilder\AllowedInclude::callback('liveAttendance', fn($q) => $q->select('id', 'name')),
             ])
             ->allowedSorts([
-                'id', 'company_id', 'branch_id', 'live_attendance_id', 'name', 'email', 'nik', 'created_at',
+                'id',
+                'company_id',
+                'branch_id',
+                'live_attendance_id',
+                'name',
+                'email',
+                'nik',
+                'created_at',
             ])
             ->paginate($this->per_page);
 

@@ -7,6 +7,7 @@ use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
+use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
@@ -14,7 +15,7 @@ use App\Traits\Models\MorphManyFormulas;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class PayrollComponent extends BaseModel
+class PayrollComponent extends BaseModel implements TenantedInterface
 {
     use CompanyTenanted, MorphManyFormulas, CustomSoftDeletes, CreatedUpdatedInfo;
 

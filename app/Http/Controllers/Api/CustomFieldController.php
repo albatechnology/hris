@@ -29,15 +29,21 @@ class CustomFieldController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'key', 'type', 'options', 'created_at',
+                'id',
+                'company_id',
+                'key',
+                'type',
+                'options',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
         return CustomFieldResource::collection($data);
     }
 
-    public function show(CustomField $customField)
+    public function show(int $id)
     {
+        $customField = CustomField::findTenanted($id);
         return new CustomFieldResource($customField);
     }
 
@@ -48,31 +54,33 @@ class CustomFieldController extends BaseController
         return new CustomFieldResource($customField);
     }
 
-    public function update(CustomField $customField, StoreRequest $request)
+    public function update(int $id, StoreRequest $request)
     {
+        $customField = CustomField::findTenanted($id);
         $customField->update($request->validated());
 
         return (new CustomFieldResource($customField))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
-    public function destroy(CustomField $customField)
+    public function destroy(int $id)
     {
+        $customField = CustomField::findTenanted($id);
         $customField->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(int $id)
     {
-        $customField = CustomField::withTrashed()->findOrFail($id);
+        $customField = CustomField::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $customField->forceDelete();
 
         return $this->deletedResponse();
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
-        $customField = CustomField::withTrashed()->findOrFail($id);
+        $customField = CustomField::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $customField->restore();
 
         return new CustomFieldResource($customField);
