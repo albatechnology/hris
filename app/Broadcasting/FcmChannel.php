@@ -3,7 +3,9 @@
 namespace App\Broadcasting;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 
@@ -45,8 +47,8 @@ class FcmChannel
 
                 $this->fcm->send($data);
             }
-        } catch (\Throwable $th) {
-            //throw $th;
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), $e->getTrace());
         }
     }
 }
