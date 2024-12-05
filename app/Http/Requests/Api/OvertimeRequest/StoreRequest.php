@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests\Api\OvertimeRequest;
 
+use App\Enums\OvertimeSetting;
 use App\Models\Schedule;
+use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -39,7 +42,14 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => [
+                'required',
+                function (string $attribute, mixed $value, Closure $fail) {
+                    $user = User::select('id')->with('payrollInfo', fn($q) => $q->select('id', 'user_id', 'overtime_setting'))->where('id', $value)->firstOrFail();
+                    if (!$user) return $fail('User not found');
+                    if ($user->payrollInfo->overtime_setting->is(OvertimeSetting::NOT_ELIGIBLE)) return $fail('User with overtime setting not eligible can not request overtime');
+                }
+            ],
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'shift_id' => 'required|exists:shifts,id',
             // 'type' => ['required', Rule::enum(OvertimeRequestType::class)],

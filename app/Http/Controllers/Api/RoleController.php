@@ -43,7 +43,6 @@ class RoleController extends BaseController
      */
     public function store(StoreRequest $request)
     {
-        // $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
         $permissionNames = $request->permission_ids ?? [];
         $role = DB::transaction(function () use ($request, $permissionNames) {
             $data = $request->validated();
@@ -83,7 +82,6 @@ class RoleController extends BaseController
             return response()->json(['message' => 'Role administrator tidak dapat diupdate!']);
         }
 
-        // $permissionNames = PermissionService::getPermissionNames($request->permission_ids ?? []);
         $permissionNames = $request->permission_ids ?? [];
         $role = DB::transaction(function () use ($request, $permissionNames, $role) {
             $data = $request->validated();

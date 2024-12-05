@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\TaskRequest;
 use App\Models\User;
 
 class TaskService
@@ -12,7 +13,7 @@ class TaskService
             $user = $user->id;
         }
 
-        $taskRequests = \App\Models\TaskRequest::tenanted()
+        $taskRequests = TaskRequest::tenanted()
             ->approved()
             // ->where('approval_status', \App\Enums\ApprovalStatus::APPROVED)
             ->where('user_id', $user)

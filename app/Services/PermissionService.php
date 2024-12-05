@@ -45,7 +45,7 @@ class PermissionService
     {
         return [
             'national_holiday_access' => [
-                // 'national_holiday_read',
+                'national_holiday_read',
                 'national_holiday_create',
                 'national_holiday_edit',
                 'national_holiday_delete',
@@ -160,9 +160,9 @@ class PermissionService
             ],
             'payroll_setting_access' => [
                 'payroll_setting_read',
-                // 'payroll_setting_create',
+                'payroll_setting_create',
                 'payroll_setting_edit',
-                // 'payroll_setting_delete',
+                'payroll_setting_delete',
             ],
             'run_payroll_access' => [
                 'run_payroll_read',
@@ -238,12 +238,12 @@ class PermissionService
                 // 'national_holiday_edit',
                 // 'national_holiday_delete',
             ],
-            // 'supervisor_type_access' => [
-            //     'supervisor_type_read',
-            //     'supervisor_type_create',
-            //     'supervisor_type_edit',
-            //     'supervisor_type_delete',
-            // ],
+            'supervisor_type_access' => [
+                'supervisor_type_read',
+                'supervisor_type_create',
+                'supervisor_type_edit',
+                'supervisor_type_delete',
+            ],
             'task_access' => [
                 'task_read',
                 'task_create',
@@ -292,16 +292,16 @@ class PermissionService
         return [
             'user_access' => [
                 'user_read',
-                'user_create',
-                'user_edit',
+                // 'user_create',
+                // 'user_edit',
                 // 'user_delete',
             ],
-            // 'group_access' => [
-            //     'group_read',
-            //     'group_create',
-            //     'group_edit',
-            //     'group_delete',
-            // ],
+            'group_access' => [
+                'group_read',
+                // 'group_create',
+                // 'group_edit',
+                // 'group_delete',
+            ],
             'company_access' => [
                 'company_read',
                 // 'company_create',
@@ -356,6 +356,12 @@ class PermissionService
                 'attendance_edit',
                 'attendance_delete',
             ],
+            'time_management_access' => [
+                'time_management_read',
+                'time_management_create',
+                'time_management_edit',
+                // 'time_management_delete',
+            ],
             'timeoff_access' => [
                 'timeoff_read',
                 'timeoff_create',
@@ -368,6 +374,18 @@ class PermissionService
                 // 'timeoff_regulation_edit',
                 // 'timeoff_regulation_delete',
             ],
+            'payroll_schedule_access' => [
+                'payroll_schedule_read',
+                // 'payroll_schedule_create',
+                // 'payroll_schedule_edit',
+                // 'payroll_schedule_delete',
+            ],
+            'cut_off_and_tax_setting_access' => [
+                'cut_off_and_tax_setting_read',
+                // 'cut_off_and_tax_setting_create',
+                // 'cut_off_and_tax_setting_edit',
+                // 'cut_off_and_tax_setting_delete',
+            ],
             'payroll_component_access' => [
                 'payroll_component_read',
                 // 'payroll_component_create',
@@ -377,14 +395,20 @@ class PermissionService
             'payroll_setting_access' => [
                 'payroll_setting_read',
                 // 'payroll_setting_create',
-                'payroll_setting_edit',
+                // 'payroll_setting_edit',
                 // 'payroll_setting_delete',
             ],
             'run_payroll_access' => [
                 'run_payroll_read',
-                'run_payroll_create',
-                'run_payroll_edit',
-                'run_payroll_delete',
+                // 'run_payroll_create',
+                // 'run_payroll_edit',
+                // 'run_payroll_delete',
+            ],
+            'pro_rate_setting_access' => [
+                'pro_rate_setting_read',
+                // 'pro_rate_setting_create',
+                // 'pro_rate_setting_edit',
+                // 'pro_rate_setting_delete',
             ],
             'overtime_access' => [
                 'overtime_read',
@@ -448,6 +472,12 @@ class PermissionService
                 // 'national_holiday_edit',
                 // 'national_holiday_delete',
             ],
+            'supervisor_type_access' => [
+                'supervisor_type_read',
+                // 'supervisor_type_create',
+                // 'supervisor_type_edit',
+                // 'supervisor_type_delete',
+            ],
             'task_access' => [
                 'task_read',
                 'task_create',
@@ -456,15 +486,15 @@ class PermissionService
             ],
             'user_transfer_access' => [
                 'user_transfer_read',
-                'user_transfer_create',
-                'user_transfer_edit',
-                'user_transfer_delete',
+                // 'user_transfer_create',
+                // 'user_transfer_edit',
+                // 'user_transfer_delete',
             ],
             'announcement_access' => [
                 'announcement_read',
-                'announcement_create',
-                'announcement_edit',
-                'announcement_delete',
+                // 'announcement_create',
+                // 'announcement_edit',
+                // 'announcement_delete',
             ],
             'incident_access' => [
                 'incident_read',
@@ -474,15 +504,19 @@ class PermissionService
             ],
             'client_access' => [
                 'client_read',
-                'client_create',
-                'client_edit',
-                'client_delete',
+                // 'client_create',
+                // 'client_edit',
+                // 'client_delete',
             ],
             'patrol_access' => [
                 'patrol_read',
-                'patrol_create',
-                'patrol_edit',
-                'patrol_delete',
+                // 'patrol_create',
+                // 'patrol_edit',
+                // 'patrol_delete',
+            ],
+            'setting_access' => [
+                'setting_read',
+                // 'setting_edit',
             ],
         ];
     }
@@ -511,38 +545,38 @@ class PermissionService
     /**
      * filter permissions ids
      */
-    public static function getPermissionNames(array $permissionIds = []): array
-    {
-        $pids = [];
-        if (!is_array($permissionIds) || count($permissionIds) <= 0) {
-            return $pids;
-        }
+    // public static function getPermissionNames(array $permissionIds = []): array
+    // {
+    //     $pids = [];
+    //     if (!is_array($permissionIds) || count($permissionIds) <= 0) {
+    //         return $pids;
+    //     }
 
-        foreach ($permissionIds as $id) {
-            $permission = Permission::find($id, ['id', 'name']);
-            if ($permission) {
-                $pids[] = $permission->name;
+    //     foreach ($permissionIds as $id) {
+    //         $permission = Permission::find($id, ['id', 'name']);
+    //         if ($permission) {
+    //             $pids[] = $permission->name;
 
-                $permissionNames = self::getRelatedPermissions($permission->name);
-                array_push($pids, ...$permissionNames);
-            }
-        }
+    //             $permissionNames = self::getRelatedPermissions($permission->name);
+    //             array_push($pids, ...$permissionNames);
+    //         }
+    //     }
 
-        return $pids;
-    }
+    //     return $pids;
+    // }
 
-    public static function getRelatedPermissions(string $permission): array
-    {
-        return match ($permission) {
-            'receive_order_access' => ['stock_read'],
-            'stock_access' => ['product_category_read', 'product_brand_read', 'warehouse_read'],
-            'sales_order_access' => ['product_unit_read', 'warehouse_read', 'user_access'],
-            'delivery_order_access' => ['sales_order_read'],
-            'product_access' => ['product_category_read', 'product_brand_read', 'product_unit_read'],
-            'user_access' => ['role_read'],
-            default => [],
-        };
-    }
+    // public static function getRelatedPermissions(string $permission): array
+    // {
+    //     return match ($permission) {
+    //         'receive_order_access' => ['stock_read'],
+    //         'stock_access' => ['product_category_read', 'product_brand_read', 'warehouse_read'],
+    //         'sales_order_access' => ['product_unit_read', 'warehouse_read', 'user_access'],
+    //         'delivery_order_access' => ['sales_order_read'],
+    //         'product_access' => ['product_category_read', 'product_brand_read', 'product_unit_read'],
+    //         'user_access' => ['role_read'],
+    //         default => [],
+    //     };
+    // }
 
     public static function getMyPermissions()
     {
