@@ -46,6 +46,8 @@ class UserController extends BaseController
         $this->middleware('permission:user_create', ['only' => 'store']);
         $this->middleware('permission:user_edit', ['only' => 'update']);
         $this->middleware('permission:user_delete', ['only' => ['destroy', 'forceDelete']]);
+
+        $this->middleware('permission:request_change_data_create', ['only' => 'requestChangeData']);
     }
 
     private function getAllowedIncludes()

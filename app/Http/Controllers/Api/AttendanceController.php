@@ -47,7 +47,7 @@ class AttendanceController extends BaseController
         parent::__construct();
         // $this->middleware('permission:attendance_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:attendance_access', ['only' => ['restore']]);
-        // $this->middleware('permission:attendance_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:attendance_read', ['only' => ['index', 'show', 'report', 'employees', 'employeesSummary']]);
         $this->middleware('permission:attendance_create', ['only' => ['store', 'request']]);
         $this->middleware('permission:attendance_edit', ['only' => 'update']);
         $this->middleware('permission:attendance_delete', ['only' => ['destroy', 'forceDelete']]);
@@ -65,7 +65,7 @@ class AttendanceController extends BaseController
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->get(['id', 'name', 'nik']);
+            ->get(['id', 'name', 'last_name', 'nik']);
 
         $data = [];
         foreach ($users as $user) {

@@ -81,7 +81,7 @@ class RunPayrollController extends BaseController
 
     // public function update(int $id, UpdateRequest $request): RunPayrollResource|JsonResponse
     // {
-        $runPayroll = RunPayroll::findTenanted($id);
+        // $runPayroll = RunPayroll::findTenanted($id);
     //     DB::beginTransaction();
     //     try {
     //         $runPayroll->update($request->validated());

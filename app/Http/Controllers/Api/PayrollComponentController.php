@@ -20,11 +20,11 @@ class PayrollComponentController extends BaseController
     {
         parent::__construct();
 
-        $this->middleware('permission:payroll_component_access', ['only' => ['restore']]);
-        $this->middleware('permission:payroll_component_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:payroll_component_create', ['only' => 'store']);
-        $this->middleware('permission:payroll_component_edit', ['only' => 'update']);
-        $this->middleware('permission:payroll_component_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:payroll_setting_access', ['only' => ['restore']]);
+        $this->middleware('permission:payroll_setting_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:payroll_setting_create', ['only' => 'store']);
+        $this->middleware('permission:payroll_setting_edit', ['only' => 'update']);
+        $this->middleware('permission:payroll_setting_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index(): ResourceCollection

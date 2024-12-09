@@ -12,6 +12,12 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserScheduleController extends BaseController
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->middleware('permission:schedule_edit');
+    }
+
     public function index(int $scheduleId)
     {
         $schedule = Schedule::select('id')->tenanted()->where('id', $scheduleId)->firstOrFail();

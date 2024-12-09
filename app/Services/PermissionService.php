@@ -61,6 +61,7 @@ class PermissionService
                 'user_create',
                 'user_edit',
                 'user_delete',
+                'user_set_supervisor',
             ],
             'group_access' => [
                 'group_read',
@@ -388,9 +389,9 @@ class PermissionService
             ],
             'payroll_component_access' => [
                 'payroll_component_read',
-                // 'payroll_component_create',
-                // 'payroll_component_edit',
-                // 'payroll_component_delete',
+                'payroll_component_create',
+                'payroll_component_edit',
+                'payroll_component_delete',
             ],
             'payroll_setting_access' => [
                 'payroll_setting_read',
@@ -609,8 +610,9 @@ class PermissionService
         }
 
         $allPermissions['navbar']['company']['user_management_access'] = false;
-        $allPermissions['navbar']['company']['payroll_access'] = false;
         $allPermissions['navbar']['company']['setting_access'] = false;
+        $allPermissions['navbar']['company']['payroll_access'] = false;
+        // $allPermissions['navbar']['company']['update_payroll_component_access'] = false;
 
         foreach ($allPermissions as $parent => $childs) {
             foreach ($childs as $key => $value) {
