@@ -584,7 +584,7 @@ class PermissionService
         /** @var \App\Models\User $user */
         $user = auth()->user();
         $allPermissions = [];
-        if ($user->is_super_admin) {
+        if ($user->is_super_admin || $user->is_admin) {
             foreach (self::getAllPermissions() as $parent => $childs) {
                 if (is_array($childs)) {
                     $allPermissions[$parent][$parent] = true;
