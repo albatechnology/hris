@@ -12,19 +12,22 @@ use Illuminate\Support\Facades\DB;
 class RequestApprovalService
 {
     /**
-     * Create approvals for request change data. If setting for request change data
-     * approver exists, send notification to approver, else we have to find user
-     * supervisor to be approver.
+     * Create new approvals based on given $requestedbaseModel and $approvers
+     * if $approvers is null, it will use getApprovers method to get the supervisors
+     * it will create new RequestApproval and send notification to the first supervisor
      *
      * @param RequestedBaseModel $requestedbaseModel
+     * @param array|null $approvers
      * @return void
      */
-    public static function createApprovals(RequestedBaseModel $requestedbaseModel): void
+    public static function createApprovals(RequestedBaseModel $requestedbaseModel, ?array $approvers = null): void
     {
         /** @var User $user this is user requester */
         $user = self::getUser($requestedbaseModel);
 
-        $approvers = self::getApprovers($requestedbaseModel);
+        if (!$approvers) {
+            $approvers = self::getApprovers($requestedbaseModel);
+        }
 
         if (count($approvers) <= 0) {
             return;

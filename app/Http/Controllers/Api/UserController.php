@@ -6,6 +6,7 @@ use App\Enums\ApprovalStatus;
 use App\Enums\MediaCollection;
 use App\Enums\PayrollComponentType;
 use App\Enums\RequestChangeDataType;
+use App\Enums\SettingKey;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
 use App\Http\Requests\Api\User\RegisterRequest;
@@ -26,6 +27,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\TaskHour;
 use App\Models\User;
+use App\Services\RequestApprovalService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -477,11 +479,29 @@ class UserController extends BaseController
                 $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
             } else {
                 /** @var \App\Models\RequestChangeData $requestChangeData */
-                $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+                $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
+
+                if (!is_null($photoProfile)) {
+                    $defaultApproverId = $user->company->settings()->where('key', SettingKey::PROFILE_PICTURE_APPROVER)->first(['value'])?->value;
+
+                    /** @var User $defaultApprover */
+                    $defaultApprover = User::find($defaultApproverId, ['id']);
+                    if (!$defaultApprover) {
+                        $defaultApprover = User::where('company_id', $user->company_id)->where('type', UserType::ADMIN)->first(['id']);
+                    }
+
+                    $approvers[] = [
+                        'user_id' => $defaultApprover->id,
+                    ];
+
+                    $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
+                    RequestApprovalService::createApprovals($requestChangeData, $approvers);
+                } else {
+                    $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+                }
 
                 if (count($dataRequested) > 0) {
                     $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
-                    $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
 
                     if ($photoProfile && $photoProfile['value']?->isValid()) {
                         $requestChangeDataDetail = $requestChangeData->details()->create($photoProfile);

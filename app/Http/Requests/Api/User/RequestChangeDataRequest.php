@@ -23,8 +23,16 @@ class RequestChangeDataRequest extends FormRequest
     protected function prepareForValidation()
     {
         $data = $this->all() ?? [];
+
         $description = $data['description'] ?? null;
         $file = $data['file'] ?? null;
+
+        if (isset($data['photo_profile']) && !is_null($data['photo_profile'])) {
+            $data = [
+                'photo_profile' => $data['photo_profile']
+            ];
+        }
+
         unset($data['description']);
         unset($data['file']);
 

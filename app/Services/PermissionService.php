@@ -625,3 +625,11 @@ class PermissionService
         return $allPermissions;
     }
 }
+
+// related permission
+// user_read = branch_read
+
+
+// additional permissions :
+// user_set_supervisor
+// update_payroll_component_access

@@ -512,8 +512,6 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $user = auth('sanctum')->user();
-
         $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
             ->tenanted(true)
             ->with([

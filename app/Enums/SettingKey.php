@@ -8,11 +8,13 @@ enum SettingKey: string
 {
     use BaseEnum;
 
+    case PROFILE_PICTURE_APPROVER = 'profile_picture_approver';
     case REQUEST_APPROVER = 'request_approver';
 
     public function getValueType(): mixed
     {
         return match ($this) {
+            self::PROFILE_PICTURE_APPROVER,
             self::REQUEST_APPROVER => SettingValueType::MODEL,
             default => null,
         };
@@ -21,6 +23,7 @@ enum SettingKey: string
     public function getSource(): mixed
     {
         return match ($this) {
+            self::PROFILE_PICTURE_APPROVER,
             self::REQUEST_APPROVER => route('users.index'),
             default => null,
         };
@@ -36,6 +39,7 @@ enum SettingKey: string
     public function getValidationRules(): mixed
     {
         return match ($this) {
+            self::PROFILE_PICTURE_APPROVER,
             self::REQUEST_APPROVER => [
                 'nullable',
                 new CompanyTenantedRule(\App\Models\User::class, 'User not found')
