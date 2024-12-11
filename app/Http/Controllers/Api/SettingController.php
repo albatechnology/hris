@@ -21,7 +21,7 @@ class SettingController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Setting::tenanted())
+        $data = QueryBuilder::for(Setting::tenanted()->with('company', fn($q) => $q->select('id', 'name')))
             ->allowedFilters(AllowedFilter::exact('company_id'))
             ->get();
 
