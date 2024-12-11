@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Setting\UpdateRequest;
-use App\Http\Resources\DefaultResource;
+use App\Http\Resources\Setting\SettingResource;
 use App\Models\Setting;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -25,13 +25,13 @@ class SettingController extends BaseController
             ->allowedFilters(AllowedFilter::exact('company_id'))
             ->get();
 
-        return DefaultResource::collection($data);
+        return SettingResource::collection($data);
     }
 
     public function show(int $id)
     {
         $setting = Setting::findTenanted($id);
-        return new DefaultResource($setting);
+        return new SettingResource($setting);
     }
 
     public function update(int $id, UpdateRequest $request)
@@ -39,6 +39,6 @@ class SettingController extends BaseController
         $setting = Setting::findTenanted($id);
         $setting->update($request->validated());
 
-        return (new DefaultResource($setting))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new SettingResource($setting))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 }

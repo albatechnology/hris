@@ -27,8 +27,9 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $setting = Setting::findTenanted($this->setting);
         return [
-            'value' => $this->setting->key->getValidationRules(),
+            'value' => $setting->key->getValidationRules(),
         ];
     }
 }
