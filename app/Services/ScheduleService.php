@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ScheduleType;
 use App\Models\Event;
 use App\Models\NationalHoliday;
+use App\Models\RequestShift;
 use App\Models\Schedule;
 use App\Models\User;
 use Carbon\Carbon;
@@ -24,6 +25,19 @@ class ScheduleService
 
         $datetime = is_null($datetime) ? date('Y-m-d H:i:00') : date('Y-m-d H:i:00', strtotime($datetime));
         list($date, $time) = explode(' ', $datetime);
+
+        $requestShift = RequestShift::select('id', 'schedule_id', 'new_shift_id')
+            ->where('user_id', $user->id)->approved()
+            ->whereHas('schedule', fn($q) => $q->where('type', $scheduleType))
+            ->whereDate('date', $date)->first();
+
+        if ($requestShift) {
+            return $user->schedules()
+                ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+                ->where('id', $requestShift->schedule_id)
+                ->with('shift', fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id))
+                ->first();
+        }
 
         /** @var Schedule $schedule */
         if ($scheduleType == ScheduleType::ATTENDANCE->value) {

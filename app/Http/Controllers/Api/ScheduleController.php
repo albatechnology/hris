@@ -134,6 +134,10 @@ class ScheduleController extends BaseController
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
         }
 
+        if ($request->include && $request->include == 'shifts') {
+            $schedule->load(['shifts' => fn($q) => $q->selectMinimalist()]);
+        }
+
         return new TodayScheduleResource($schedule);
     }
 

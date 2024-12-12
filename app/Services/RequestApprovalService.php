@@ -7,6 +7,7 @@ use App\Models\AttendanceDetail;
 use App\Models\RequestedBaseModel;
 use App\Models\User;
 use App\Models\UserSupervisor;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class RequestApprovalService
@@ -35,14 +36,13 @@ class RequestApprovalService
 
         /** @var User $approver first supervisor to notify */
         $approver = User::find($approvers[0]['user_id'], ['id', 'name', 'email', 'fcm_token']);
-
         DB::beginTransaction();
         try {
             $requestedbaseModel->approvals()->createMany($approvers);
             $requestedbaseModel->sendRequestNotification($approver, $user, $requestedbaseModel);
             // self::sendNotification($approver, $user, $requestedbaseModel);
             DB::commit();
-        } catch (\Throwable $th) {
+        } catch (Exception $e) {
             DB::rollBack();
         }
     }

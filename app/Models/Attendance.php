@@ -4,9 +4,7 @@ namespace App\Models;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
-use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Builder;

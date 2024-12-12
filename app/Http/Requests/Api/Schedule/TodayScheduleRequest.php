@@ -37,6 +37,7 @@ class TodayScheduleRequest extends FormRequest
     {
         return [
             'date' => 'nullable|date_format:Y-m-d H:i:s',
+            'include' => 'nullable|string',
         ];
     }
 }

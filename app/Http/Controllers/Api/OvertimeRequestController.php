@@ -32,7 +32,7 @@ class OvertimeRequestController extends BaseController
             OvertimeRequest::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')))
                 ->with([
                     'user' => fn($q) => $q->select('id', 'name'),
-                    'shift' => fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),
+                    'shift' => fn($q) => $q->selectMinimalist(),
                 ])
         )
             ->allowedFilters([
@@ -135,7 +135,7 @@ class OvertimeRequestController extends BaseController
             ->with([
                 'user' => fn($q) => $q->select('id', 'name'),
                 // 'approvedBy' => fn($q) => $q->select('id', 'name'),
-                'shift' => fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'),
+                'shift' => fn($q) => $q->selectMinimalist(),
                 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
             ]);
 
