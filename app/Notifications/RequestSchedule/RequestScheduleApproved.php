@@ -18,7 +18,7 @@ class RequestScheduleApproved extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private RequestSchedule $RequestSchedule)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private RequestSchedule $requestSchedule)
     {
         //
     }
@@ -56,7 +56,7 @@ class RequestScheduleApproved extends Notification
             'message' => sprintf($this->notificationType->getMessage(), $this->approvalStatus->value),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
-            'model_id' => $this->RequestSchedule->id
+            'model_id' => $this->requestSchedule->id
         ];
     }
 
@@ -75,7 +75,7 @@ class RequestScheduleApproved extends Notification
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,
-                'notifiable_id' => $this->RequestSchedule->id,
+                'notifiable_id' => $this->requestSchedule->id,
             ],
         ];
     }

@@ -29,6 +29,9 @@ enum NotificationType: string
     case REQUEST_SCHEDULE = 'request_schedule';
     case REQUEST_SCHEDULE_APPROVED = 'request_schedule_approved';
 
+    case REQUEST_SHIFT = 'request_shift';
+    case REQUEST_SHIFT_APPROVED = 'request_shift_approved';
+
     case SETUP_PASSWORD = 'setup_password';
 
     public function getNotificationClass(): string
@@ -49,6 +52,8 @@ enum NotificationType: string
             self::REQUEST_CHANGE_DATA_APPROVED => \App\Notifications\RequestChangeData\RequestChangeDataApproved::class,
             self::REQUEST_SCHEDULE => \App\Notifications\RequestSchedule\RequestSchedule::class,
             self::REQUEST_SCHEDULE_APPROVED => \App\Notifications\RequestSchedule\RequestScheduleApproved::class,
+            self::REQUEST_SHIFT => \App\Notifications\RequestShift\RequestShift::class,
+            self::REQUEST_SHIFT_APPROVED => \App\Notifications\RequestShift\RequestShiftApproved::class,
             self::SETUP_PASSWORD => \App\Notifications\User\SetupPasswordNotification::class,
         };
     }
@@ -70,6 +75,8 @@ enum NotificationType: string
             self::REQUEST_CHANGE_DATA_APPROVED => 'Your change data request has been %s.', // approved/rejected
             self::REQUEST_SCHEDULE => 'Requesting schedule',
             self::REQUEST_SCHEDULE_APPROVED => 'Your schedule request has been %s.', // approved/rejected
+            self::REQUEST_SHIFT => 'Requesting shift',
+            self::REQUEST_SHIFT_APPROVED => 'Your shift request has been %s.', // approved/rejected
             default => null,
         };
     }

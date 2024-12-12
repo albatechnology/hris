@@ -33,7 +33,7 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
 
     public function scopeApproved(Builder $query)
     {
-        $query->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::APPROVED)->whereNotIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS]));
+        $query->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS]));
     }
 
     public function scopeWhereApprovalStatus(Builder $query, string|ApprovalStatus $status = ApprovalStatus::PENDING->value): Builder
@@ -72,7 +72,6 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
      */
     public function sendRequestNotification(User $receiver, User $requester): void
     {
-        // $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
         $notificationType = $this->getNotificationType();
         $receiver?->notify(new ($notificationType->getNotificationClass())($notificationType, $requester, $this));
     }
@@ -108,6 +107,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         } elseif ($this instanceof TaskRequest) {
             if ($isApproved) return NotificationType::TASK_APPROVED;
             return NotificationType::REQUEST_TASK;
+        } elseif ($this instanceof RequestShift) {
+            if ($isApproved) return NotificationType::REQUEST_SHIFT_APPROVED;
+            return NotificationType::REQUEST_SHIFT;
         }
     }
 
@@ -119,7 +121,7 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         if ($this->approvals->every(fn($approval) => $approval->approval_status == ApprovalStatus::APPROVED)) {
             return ApprovalStatus::APPROVED->value;
         }
-        if ($this->approvals->every(fn($approval) => $approval->approval_status == ApprovalStatus::REJECTED)) {
+        if ($this->approvals->contains(fn($approval) => $approval->approval_status == ApprovalStatus::REJECTED)) {
             return ApprovalStatus::REJECTED->value;
         }
 
@@ -144,8 +146,6 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         }
 
         if ($this->approval_status == ApprovalStatus::APPROVED->value) {
-            // $this->load(['user' => fn($q) => $q->select('id')]);
-
             if ($this instanceof RequestChangeData) {
                 $this->details->each(function (RequestChangeDataDetail $detail) use ($user) {
                     if ($detail->type->is(RequestChangeDataType::PHOTO_PROFILE)) {

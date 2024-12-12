@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Notifications\RequestSchedule;
+namespace App\Notifications\RequestShift;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
-use App\Models\RequestSchedule as RequestScheduleModel;
+use App\Models\RequestShift;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RequestSchedule extends Notification
+class RequestShiftApproved extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private User $user, private RequestScheduleModel $requestSchedule)
+    public function __construct(private NotificationType $notificationType, private User $user, private ApprovalStatus $approvalStatus, private RequestShift $requestShift)
     {
         //
     }
@@ -52,10 +53,10 @@ class RequestSchedule extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage()),
+            'message' => sprintf($this->notificationType->getMessage(), $this->approvalStatus->value),
             'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
-            'model_id' => $this->requestSchedule->id
+            'model_id' => $this->requestShift->id
         ];
     }
 
@@ -64,7 +65,7 @@ class RequestSchedule extends Notification
      */
     public function toFcm(object $notifiable): array
     {
-        $body = sprintf($this->notificationType->getMessage());
+        $body = sprintf($this->notificationType->getMessage(), $this->approvalStatus->value);
 
         return [
             'token' => $notifiable->fcm_token,
@@ -74,7 +75,7 @@ class RequestSchedule extends Notification
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,
-                'notifiable_id' => $this->requestSchedule->id,
+                'notifiable_id' => $this->requestShift->id,
             ],
         ];
     }

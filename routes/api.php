@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
 use App\Http\Controllers\Api\RequestScheduleController;
+use App\Http\Controllers\Api\RequestShiftController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -246,6 +247,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('request-schedules/approvals/count-total', [RequestScheduleController::class, 'countTotalApprovals']);
     Route::put('request-schedules/{request_schedule}/approve', [RequestScheduleController::class, 'approve']);
     Route::apiResource('request-schedules', RequestScheduleController::class);
+
+    Route::get('request-shifts/approvals', [RequestShiftController::class, 'approvals']);
+    Route::get('request-shifts/approvals/count-total', [RequestShiftController::class, 'countTotalApprovals']);
+    Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);
+    Route::apiResource('request-shifts', RequestShiftController::class);
 
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);

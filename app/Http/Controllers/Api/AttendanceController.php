@@ -182,6 +182,192 @@ class AttendanceController extends BaseController
         return DefaultResource::collection($data);
     }
 
+    // public function indexBackup(IndexRequest $request)
+    // {
+    //     if (isset($request->filter['user_id'])) {
+    //         $user = User::where('id', $request->filter['user_id'])->firstOrFail(['id', 'company_id']);
+    //     } else {
+    //         $user = auth('sanctum')->user();
+    //     }
+
+    //     // $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
+    //     $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['id', 'cutoff_attendance_start_date']);
+
+    //     $month = date('m');
+
+    //     $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
+    //     $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
+    //     if (date('d') <= $payrollSetting->cutoff_attendance_start_date) {
+    //         $month -= 1;
+    //     }
+
+    //     $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cutoff_attendance_start_date));
+    //     $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
+    //     $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
+    //     $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+    //     $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+    //     $data = [];
+
+    //     $summaryPresentAbsent = 0;
+    //     $summaryPresentOnTime = 0;
+    //     $summaryPresentLateClockIn = 0;
+    //     $summaryPresentEarlyClockOut = 0;
+    //     $summaryNotPresentAbsent = 0;
+    //     $summaryNotPresentNoClockIn = 0;
+    //     $summaryNotPresentNoClockOut = 0;
+    //     $summaryAwayDayOff = 0;
+    //     $summaryAwayTimeOff = 0;
+
+    //     $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
+    //     if ($schedule) {
+    //         $order = $schedule->shifts->where('id', $schedule->shift->id);
+    //         $orderKey = array_keys($order->toArray())[0];
+    //         $totalShifts = $schedule->shifts->count();
+
+    //         $attendances = Attendance::where('user_id', $user->id)
+    //             ->whereHas('details', fn($q) => $q->approved())
+    //             ->with([
+    //                 'shift',
+    //                 'timeoff.timeoffPolicy',
+    //                 'clockIn' => fn($q) => $q->approved(),
+    //                 'clockOut' => fn($q) => $q->approved(),
+    //                 'details' => fn($q) => $q->approved()->orderBy('created_at')
+    //             ])
+    //             ->whereDateBetween($startDate, $endDate)
+    //             ->get();
+
+    //         $companyHolidays = Event::tenanted()->whereHoliday()->get();
+    //         $nationalHolidays = NationalHoliday::orderBy('date')->get();
+
+    //         foreach ($dateRange as $date) {
+    //             // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
+    //             // 2. kalo company event(holiday), shiftnya pake holiday
+    //             // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift
+    //             // 4. kalo schedulenya is_overide_company_holiday == false, shiftnya pake shift
+    //             // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
+    //             $date = $date->format('Y-m-d');
+    //             $attendance = $attendances->firstWhere('date', $date);
+
+    //             if ($attendance) {
+    //                 $shift = $attendance->shift;
+
+    //                 if ($attendance->clockIn) {
+    //                     $shiftClockInTime = strtotime($shift->clock_in);
+    //                     $clockInTime = strtotime(date('H:i:s', strtotime($attendance->clockIn->time)));
+
+    //                     // calculate present on time (include early clock in)
+    //                     if ($clockInTime <= $shiftClockInTime) {
+    //                         $summaryPresentOnTime += 1;
+    //                     }
+
+    //                     // calculate late clock in
+    //                     if ($clockInTime > $shiftClockInTime) {
+    //                         $summaryPresentLateClockIn += 1;
+    //                     }
+
+    //                     // calculate if no clock out but clock in
+    //                     if (!$attendance->clockOut) {
+    //                         $summaryNotPresentNoClockOut += 1;
+    //                     }
+    //                 }
+
+    //                 if ($attendance->clockOut) {
+    //                     $shiftClockOutTime = strtotime($shift->clock_out);
+    //                     $clockOutTime = strtotime(date('H:i:s', strtotime($attendance->clockOut->time)));
+
+    //                     // calculate early clock out
+    //                     if ($clockOutTime < $shiftClockOutTime) {
+    //                         $summaryPresentEarlyClockOut += 1;
+    //                     }
+
+    //                     // calculate if no clock in but clock out
+    //                     if (!$attendance->clockIn) {
+    //                         $summaryNotPresentNoClockIn += 1;
+    //                     }
+    //                 }
+
+    //                 if ($attendance->clockIn && $attendance->clockOut) {
+    //                     $summaryPresentAbsent += 1;
+    //                 }
+
+    //                 // calculate timeoff
+    //                 if ($attendance->timeoff) {
+    //                     $summaryAwayTimeOff += 1;
+    //                 }
+
+    //                 // load overtime
+    //                 $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
+    //                 $attendance->total_overtime = $totalOvertime;
+
+    //                 // load task
+    //                 // $totalTask = TaskService::getSumDuration($user, $date);
+    //                 // $attendance->total_task = $totalTask;
+    //             } else {
+    //                 $shift = $schedule->shifts[$orderKey];
+    //                 $summaryNotPresentAbsent += 1;
+    //             }
+    //             $shiftType = 'shift';
+
+    //             $companyHolidayData = null;
+    //             if ($schedule->is_overide_company_holiday == false) {
+    //                 $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+    //                     return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+    //                 });
+
+    //                 if ($companyHolidayData) {
+    //                     $shift = $companyHolidayData;
+    //                     $shiftType = 'company_holiday';
+    //                 }
+    //             }
+
+    //             if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+    //                 $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+    //                 if ($nationalHoliday) {
+    //                     $shift = $nationalHoliday;
+    //                     $shiftType = 'national_holiday';
+    //                 }
+    //             }
+
+    //             unset($shift->pivot);
+
+    //             $data[] = [
+    //                 'date' => $date,
+    //                 'shift_type' => $shiftType,
+    //                 'shift' => $shift,
+    //                 'attendance' => $attendance
+    //             ];
+
+    //             if (($orderKey + 1) === $totalShifts) {
+    //                 $orderKey = 0;
+    //             } else {
+    //                 $orderKey++;
+    //             }
+    //         }
+    //     }
+
+    //     return response()->json([
+    //         'summary' => [
+    //             'present' => [
+    //                 'absent' => $summaryPresentAbsent,
+    //                 'on_time' => $summaryPresentOnTime,
+    //                 'late_clock_in' => $summaryPresentLateClockIn,
+    //                 'early_clock_out' => $summaryPresentEarlyClockOut,
+    //             ],
+    //             'not_present' => [
+    //                 'absent' => $summaryNotPresentAbsent,
+    //                 'no_clock_in' => $summaryNotPresentNoClockIn,
+    //                 'no_clock_out' => $summaryNotPresentNoClockOut,
+    //             ],
+    //             'away' => [
+    //                 'day_off' => $summaryAwayDayOff,
+    //                 'time_off' => $summaryAwayTimeOff,
+    //             ]
+    //         ],
+    //         'data' => $data,
+    //     ]);
+    // }
+
     public function index(IndexRequest $request)
     {
         if (isset($request->filter['user_id'])) {
@@ -219,16 +405,17 @@ class AttendanceController extends BaseController
         $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
-        $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
+        // $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
+        $schedule = ScheduleService::getTodaySchedule($user, $endDate, ['id'], ['id']);
         if ($schedule) {
-            $order = $schedule->shifts->where('id', $schedule->shift->id);
-            $orderKey = array_keys($order->toArray())[0];
-            $totalShifts = $schedule->shifts->count();
+            // $order = $schedule->shifts->where('id', $schedule->shift->id);
+            // $orderKey = array_keys($order->toArray())[0];
+            // $totalShifts = $schedule->shifts->count();
 
             $attendances = Attendance::where('user_id', $user->id)
                 ->whereHas('details', fn($q) => $q->approved())
                 ->with([
-                    'shift',
+                    'shift' => fn($q) => $q->selectMinimalist(),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -241,6 +428,7 @@ class AttendanceController extends BaseController
             $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
             foreach ($dateRange as $date) {
+                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
                 // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
                 // 2. kalo company event(holiday), shiftnya pake holiday
                 // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift
@@ -304,7 +492,7 @@ class AttendanceController extends BaseController
                     // $totalTask = TaskService::getSumDuration($user, $date);
                     // $attendance->total_task = $totalTask;
                 } else {
-                    $shift = $schedule->shifts[$orderKey];
+                    $shift = $schedule->shift;
                     $summaryNotPresentAbsent += 1;
                 }
                 $shiftType = 'shift';
@@ -338,11 +526,11 @@ class AttendanceController extends BaseController
                     'attendance' => $attendance
                 ];
 
-                if (($orderKey + 1) === $totalShifts) {
-                    $orderKey = 0;
-                } else {
-                    $orderKey++;
-                }
+                // if (($orderKey + 1) === $totalShifts) {
+                //     $orderKey = 0;
+                // } else {
+                //     $orderKey++;
+                // }
             }
         }
 
@@ -541,7 +729,7 @@ class AttendanceController extends BaseController
                 ->where('date', $date)
                 ->whereHas('details', fn($q) => $q->approved())
                 ->with([
-                    'shift',
+                    'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -612,7 +800,7 @@ class AttendanceController extends BaseController
             ->allowedIncludes([
                 AllowedInclude::callback('attendance', function ($query) {
                     $query->select('id', 'schedule_id', 'shift_id', 'code')
-                        ->with('shift', fn($q) => $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out'));
+                        ->with('shift', fn($q) => $q->selectMinimalist());
                 }),
             ])
             ->allowedSorts(['id', 'is_clock_in', 'created_at'])

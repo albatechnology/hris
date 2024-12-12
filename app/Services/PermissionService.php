@@ -195,6 +195,18 @@ class PermissionService
                 'task_request_edit',
                 'task_request_delete',
             ],
+            'request_shift_access' => [
+                'request_shift_read',
+                'request_shift_create',
+                'request_shift_edit',
+                'request_shift_delete',
+            ],
+            'request_schedule_access' => [
+                'request_schedule_read',
+                'request_schedule_create',
+                'request_schedule_edit',
+                'request_schedule_delete',
+            ],
             'advanced_leave_request_access' => [
                 'advanced_leave_request_read',
                 'advanced_leave_request_create',
@@ -428,6 +440,18 @@ class PermissionService
                 'task_request_create',
                 'task_request_edit',
                 'task_request_delete',
+            ],
+            'request_shift_access' => [
+                'request_shift_read',
+                'request_shift_create',
+                'request_shift_edit',
+                'request_shift_delete',
+            ],
+            'request_schedule_access' => [
+                'request_schedule_read',
+                'request_schedule_create',
+                'request_schedule_edit',
+                'request_schedule_delete',
             ],
             'advanced_leave_request_access' => [
                 'advanced_leave_request_read',

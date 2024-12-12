@@ -62,6 +62,11 @@ class Shift extends BaseModel implements TenantedInterface
         });
     }
 
+    public function scopeSelectMinimalist($q)
+    {
+        $q->select('id', 'is_dayoff', 'name', 'clock_in', 'clock_out');
+    }
+
     public function schedules(): BelongsToMany
     {
         return $this->belongsToMany(Schedule::class, 'schedule_shifts');
