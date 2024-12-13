@@ -67,7 +67,6 @@ class TimeoffController extends BaseController
     public function store(StoreRequest $request)
     {
         $request = TimeoffService::requestTimeoffValidation($request);
-
         DB::beginTransaction();
         try {
             $timeoff = Timeoff::create($request->all());

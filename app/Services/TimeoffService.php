@@ -6,6 +6,7 @@ use App\Enums\ApprovalStatus;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Models\Attendance;
+use App\Models\Shift;
 use App\Models\Timeoff;
 use App\Models\TimeoffPolicy;
 use App\Models\TimeoffQuota;
@@ -35,7 +36,7 @@ class TimeoffService
             $timeoffRequestType = TimeoffRequestType::from($timeoffRequestType);
         }
 
-        if ($timeoffRequestType->is(TimeoffRequestType::HALF_DAY)) return $value;
+        if ($timeoffRequestType->isHalfDay()) return $value;
 
         $startDate = date('Y-m-d', strtotime($startDate));
         $endDate = date('Y-m-d', strtotime($endDate));
@@ -73,15 +74,22 @@ class TimeoffService
         $timeoffPolicy = TimeoffPolicy::findOrFail($request->timeoff_policy_id);
 
         // check if request is half day, and half day is not allowed
-        if ($request->request_type === TimeoffRequestType::HALF_DAY->value && !$timeoffPolicy->is_allow_halfday) {
+        $isHalfDay = $request->request_type === TimeoffRequestType::HALF_DAY_BEFORE_BREAK->value || $request->request_type === TimeoffRequestType::HALF_DAY_AFTER_BREAK->value;
+        if ($isHalfDay && !$timeoffPolicy->is_allow_halfday) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Half day is not allowed');
+        }
+
+        $startAtDate = date('Y-m-d', strtotime($request->start_at));
+        $endAtDate = date('Y-m-d', strtotime($request->end_at));
+        if ($isHalfDay && $startAtDate != $endAtDate) {
+            throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Half day is not allowed for multiple days');
         }
 
         // if request start_at and end_at is the same day, basicly total request day is 1. but before, we need to check if the schedule is available and is dayoff or not
         // else, we need to calculate the total request day based on the start_at and end_at
-        if (date('Y-m-d', strtotime($request->start_at)) === date('Y-m-d', strtotime($request->end_at))) {
+        if ($startAtDate === $endAtDate) {
             $todaySchedule = ScheduleService::getTodaySchedule($user, $request->start_at);
-            if (!$todaySchedule || !$todaySchedule->shift) {
+            if (!$todaySchedule || !$todaySchedule?->shift) {
                 throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Schedule is not available');
             }
 
@@ -90,6 +98,17 @@ class TimeoffService
             }
 
             $totalRequestDay = 1;
+
+            if ($isHalfDay) {
+                $totalRequestDay = 0.5;
+
+                list($start, $end) = self::setStartEndTime($request->start_at, $request->end_at, $request->request_type, $todaySchedule->shift);
+
+                $request->merge([
+                    'start_at' => $start,
+                    'end_at' => $end
+                ]);
+            }
         } else {
             $totalRequestDay = self::getTotalRequestDay($user, $request->start_at, $request->end_at, $request->request_type);
         }
@@ -211,5 +230,24 @@ class TimeoffService
             // Recursively call the function if the total request day is still greater than 0
             if ($totalRequestDay > 0) self::applyTimeoffQuota($timeoff, $totalRequestDay);
         }
+    }
+
+    public static function setStartEndTime(string $startAt, string $endAt, string $requestType, Shift $shift)
+    {
+        $startAtDate = date('Y-m-d', strtotime($startAt));
+        $endAtDate = date('Y-m-d', strtotime($endAt));
+        $interval = ShiftService::getIntervalHours($shift) / 2;
+        if ($requestType == TimeoffRequestType::HALF_DAY_BEFORE_BREAK->value) {
+            $startAt = date('Y-m-d H:i:s', strtotime($startAtDate . $shift->clock_in));
+            $endAt = date('Y-m-d H:i:s', strtotime($startAt . '+' . $interval . ' hours'));
+        } else {
+            $endAt = date('Y-m-d H:i:s', strtotime($endAtDate . $shift->clock_out));
+            $startAt = date('Y-m-d H:i:s', strtotime($endAt . '-' . $interval . ' hours'));
+        }
+
+        return [
+            $startAt,
+            $endAt
+        ];
     }
 }
