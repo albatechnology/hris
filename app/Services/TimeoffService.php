@@ -236,7 +236,7 @@ class TimeoffService
     {
         $startAtDate = date('Y-m-d', strtotime($startAt));
         $endAtDate = date('Y-m-d', strtotime($endAt));
-        $interval = ShiftService::getIntervalHours($shift) / 2;
+        $interval = ceil(ShiftService::getIntervalHours($shift) / 2);
         if ($requestType == TimeoffRequestType::HALF_DAY_BEFORE_BREAK->value) {
             $startAt = date('Y-m-d H:i:s', strtotime($startAtDate . $shift->clock_in));
             $endAt = date('Y-m-d H:i:s', strtotime($startAt . '+' . $interval . ' hours'));

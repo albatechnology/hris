@@ -20,9 +20,7 @@ class ShiftService
             $shiftClockOut = new Carbon(date('Y-m-d ' . $shift->clock_out));
         }
 
-        $totalRestHour = 1;
-        $interval = $shiftClockIn->diffInHours($shiftClockOut);
-        $interval = max($interval - $totalRestHour, 0);
-        return $interval;
+        $interval = max($shiftClockIn->diffInHours($shiftClockOut), 0);
+        return ceil($interval);
     }
 }
