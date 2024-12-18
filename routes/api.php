@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\RunPayrollController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\SupervisorRequestScheduleController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TaskHourController;
@@ -247,6 +248,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('request-schedules/approvals/count-total', [RequestScheduleController::class, 'countTotalApprovals']);
     Route::put('request-schedules/{request_schedule}/approve', [RequestScheduleController::class, 'approve']);
     Route::apiResource('request-schedules', RequestScheduleController::class);
+
+    Route::put('supervisor-request-schedules/{schedule}/approve', [SupervisorRequestScheduleController::class, 'approve']);
+    Route::apiResource('supervisor-request-schedules', SupervisorRequestScheduleController::class);
 
     Route::get('request-shifts/approvals', [RequestShiftController::class, 'approvals']);
     Route::get('request-shifts/approvals/count-total', [RequestShiftController::class, 'countTotalApprovals']);

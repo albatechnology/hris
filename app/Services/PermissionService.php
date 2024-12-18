@@ -117,6 +117,12 @@ class PermissionService
                 'schedule_edit',
                 'schedule_delete',
             ],
+            'supervisor_request_schedule_access' => [
+                'supervisor_request_schedule_read',
+                'supervisor_request_schedule_create',
+                'supervisor_request_schedule_edit',
+                'supervisor_request_schedule_delete',
+            ],
             'attendance_access' => [
                 'attendance_read',
                 'attendance_create',
@@ -362,6 +368,12 @@ class PermissionService
                 // 'schedule_create',
                 // 'schedule_edit',
                 // 'schedule_delete',
+            ],
+            'supervisor_request_schedule_access' => [
+                'supervisor_request_schedule_read',
+                'supervisor_request_schedule_create',
+                'supervisor_request_schedule_edit',
+                'supervisor_request_schedule_delete',
             ],
             'attendance_access' => [
                 'attendance_read',

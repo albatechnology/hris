@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Schedule;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\ScheduleType;
 use App\Models\Shift;
 use App\Rules\CompanyTenantedRule;
@@ -56,6 +57,8 @@ class StoreRequest extends FormRequest
             'is_include_early_out' => 'nullable|boolean',
             'is_flexible' => 'nullable|boolean',
             'is_generate_timeoff' => 'nullable|boolean',
+            'is_need_approval' => 'nullable|boolean',
+            'approval_status' => ['nullable', Rule::enum(ApprovalStatus::class)],
 
             'shifts' => 'nullable|array',
             // 'shifts.*.id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],

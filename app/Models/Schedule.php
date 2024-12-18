@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\ScheduleType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Schedule extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted, CustomSoftDeletes;
+    use CompanyTenanted, CustomSoftDeletes, CreatedUpdatedInfo;
 
+    // columns description, approval_status(pending/approved/rejected), approved_by, approved_at used to supervisor request schedule for their descendant
     protected $fillable = [
         'company_id',
         'type',
@@ -24,6 +28,11 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_flexible',
         'is_generate_timeoff',
         'deleted_by',
+        'description',
+        'is_need_approval',
+        'approval_status',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -34,7 +43,26 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_include_early_out' => 'boolean',
         'is_flexible' => 'boolean',
         'is_generate_timeoff' => 'boolean',
+        'is_need_approval' => 'boolean',
+        'approval_status' => ApprovalStatus::class,
     ];
+
+    public function scopeRequestTenanted(Builder $query, ?User $user = null): Builder
+    {
+        $query->where('is_need_approval', 1);
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
+
+        if ($user->is_super_admin) return $query;
+
+        $query->tenanted();
+
+        if ($user->is_admin) return $query;
+
+        return $query->where('created_by', $user->id);
+    }
 
     public function shifts(): BelongsToMany
     {

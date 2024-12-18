@@ -2,39 +2,34 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exports\ImportScheduleShiftsExport;
+use App\Enums\ApprovalStatus;
+use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\Schedule\StoreRequest;
-use App\Http\Requests\Api\Schedule\TodayScheduleRequest;
+use App\Http\Resources\DefaultResource;
 use App\Http\Resources\Schedule\ScheduleResource;
-use App\Http\Resources\Schedule\TodayScheduleResource;
-use App\Imports\ImportShiftsImport;
 use App\Models\Schedule;
-use App\Services\ScheduleService;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class ScheduleController extends BaseController
+class SupervisorRequestScheduleController extends BaseController
 {
     public function __construct()
     {
         parent::__construct();
-        $this->middleware('permission:schedule_access', ['only' => ['restore']]);
-        $this->middleware('permission:schedule_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:schedule_create', ['only' => 'store']);
-        $this->middleware('permission:schedule_edit', ['only' => 'update']);
-        $this->middleware('permission:schedule_delete', ['only' => ['destroy', 'forceDelete']]);
-
-        $this->middleware('permission:attendance_create', ['only' => 'today']);
+        $this->middleware('permission:supervisor_request_schedule_access', ['only' => ['restore']]);
+        $this->middleware('permission:supervisor_request_schedule_read', ['only' => ['index', 'show']]);
+        $this->middleware('permission:supervisor_request_schedule_create', ['only' => 'store']);
+        $this->middleware('permission:supervisor_request_schedule_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:supervisor_request_schedule_edit', ['only' => 'update']);
+        $this->middleware('permission:schedule_edit', ['only' => 'approve']);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Schedule::tenanted())
+        $data = QueryBuilder::for(Schedule::requestTenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('created_by'),
@@ -44,9 +39,8 @@ class ScheduleController extends BaseController
                 'effective_date',
                 'approval_status',
                 'approved_at',
-                'is_need_approval',
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['company', 'created_by', 'approved_by'])
             ->allowedSorts([
                 'id',
                 'company_id',
@@ -57,24 +51,33 @@ class ScheduleController extends BaseController
                 'approval_status',
                 'created_at',
                 'approved_at',
-                'is_need_approval',
             ])
             ->paginate($this->per_page);
 
-        return ScheduleResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function show(int $id)
     {
-        $schedule = Schedule::findTenanted($id);
-        return new ScheduleResource($schedule->load(['shifts' => fn($q) => $q->orderBy('order')]));
+        $requestSchedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
+        $requestSchedule->load([
+            'shifts' => fn($q) => $q->orderBy('order'),
+            'created_by' => fn($q) => $q->select('id', 'name', 'last_name'),
+            'approved_by' => fn($q) => $q->select('id', 'name', 'last_name'),
+        ]);
+        return new DefaultResource($requestSchedule);
     }
 
     public function store(StoreRequest $request)
     {
+        $validated = $request->safe()->merge([
+            'is_need_approval' => true,
+            'approval_status' => ApprovalStatus::PENDING,
+        ]);
+
         DB::beginTransaction();
         try {
-            $schedule = Schedule::create($request->validated());
+            $schedule = Schedule::create($validated->input());
 
             $order = 1;
             foreach ($request->shifts ?? [] as $shift) {
@@ -89,10 +92,9 @@ class ScheduleController extends BaseController
 
         return new ScheduleResource($schedule);
     }
-
     public function update(int $id, StoreRequest $request)
     {
-        $schedule = Schedule::findTenanted($id);
+        $schedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
         DB::beginTransaction();
         try {
             $schedule->shifts()->sync([]);
@@ -114,7 +116,7 @@ class ScheduleController extends BaseController
 
     public function destroy(int $id)
     {
-        $schedule = Schedule::findTenanted($id);
+        $schedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
         $schedule->delete();
 
         return $this->deletedResponse();
@@ -136,37 +138,18 @@ class ScheduleController extends BaseController
         return new ScheduleResource($schedule);
     }
 
-    public function today(TodayScheduleRequest $request)
+    public function approve(ApproveRequest $request, int $id)
     {
-        $schedule = ScheduleService::getTodaySchedule(datetime: $request->date, shiftColumn: ['id', 'name', 'is_dayoff', 'type', 'clock_in', 'clock_out']);
-
-        if (!$schedule) {
-            return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
+        $schedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
+        DB::beginTransaction();
+        try {
+            $schedule->update($request->validated());
+            DB::commit();
+        } catch (\Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
         }
 
-        if ($request->include && $request->include == 'shifts') {
-            $schedule->load(['shifts' => fn($q) => $q->selectMinimalist()]);
-        }
-
-        return new TodayScheduleResource($schedule);
-    }
-
-    public function downloadTemplateImport(int $id, Request $request)
-    {
-        $schedule = Schedule::findTenanted($id);
-
-        return Excel::download(new ImportScheduleShiftsExport($schedule), 'import shifts - ' . $schedule->name . '.xlsx');
-    }
-
-    public function importShifts(int $id, Request $request)
-    {
-        $request->validate([
-            'file' => 'required|file|mimes:csv,xls,xlsx',
-        ]);
-
-        $schedule = Schedule::findTenanted($id);
-
-        Excel::import(new ImportShiftsImport($schedule), $request->file);
         return $this->updatedResponse();
     }
 }

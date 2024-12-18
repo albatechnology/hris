@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\UserSchedule;
 
+use App\Models\User;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -23,7 +25,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'user_ids' => 'required|array',
-            'user_ids.*' => 'required|exists:users,id',
+            'user_ids.*' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
         ];
     }
 }
