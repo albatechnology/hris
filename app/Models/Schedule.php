@@ -64,6 +64,14 @@ class Schedule extends BaseModel implements TenantedInterface
         return $query->where('created_by', $user->id);
     }
 
+    public function scopeWhereApproved(Builder $query)
+    {
+        $query->where(function ($q) {
+            $q->where('is_need_approval', 0)
+                ->orWhere(fn($q) => $q->where('is_need_approval', 1)->where('approval_status', ApprovalStatus::APPROVED));
+        });
+    }
+
     public function shifts(): BelongsToMany
     {
         // return $this->belongsToMany(Shift::class, 'schedule_shifts')->using(ScheduleShift::class)->withPivot('order');

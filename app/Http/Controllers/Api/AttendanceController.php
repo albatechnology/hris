@@ -868,6 +868,11 @@ class AttendanceController extends BaseController
         $user = User::find($request->user_id);
 
         $schedule = ScheduleService::getTodaySchedule($user, $request->date, scheduleType: ScheduleType::ATTENDANCE->value);
+
+        if (!$schedule) {
+            return $this->errorResponse(message: 'Schedule not found!', code: 404);
+        }
+
         $attendance = AttendanceService::getTodayAttendance($schedule->id, $request->shift_id, $user, $request->date);
 
         DB::beginTransaction();

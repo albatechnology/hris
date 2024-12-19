@@ -29,35 +29,35 @@ class ScheduleController extends BaseController
         $this->middleware('permission:schedule_edit', ['only' => 'update']);
         $this->middleware('permission:schedule_delete', ['only' => ['destroy', 'forceDelete']]);
 
-        $this->middleware('permission:attendance_create', ['only' => 'today']);
+        // $this->middleware('permission:attendance_create', ['only' => 'today']);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Schedule::tenanted())
+        $data = QueryBuilder::for(Schedule::tenanted()->whereApproved())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('created_by'),
-                AllowedFilter::exact('approved_by'),
                 'name',
                 'type',
                 'effective_date',
-                'approval_status',
-                'approved_at',
-                'is_need_approval',
+                // AllowedFilter::exact('approved_by'),
+                // 'approval_status',
+                // 'approved_at',
+                // 'is_need_approval',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
                 'id',
                 'company_id',
                 'created_by',
-                'approved_by',
                 'name',
                 'effective_date',
-                'approval_status',
                 'created_at',
-                'approved_at',
-                'is_need_approval',
+                // 'approved_by',
+                // 'approval_status',
+                // 'approved_at',
+                // 'is_need_approval',
             ])
             ->paginate($this->per_page);
 
