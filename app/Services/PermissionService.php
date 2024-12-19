@@ -170,6 +170,7 @@ class PermissionService
                 'payroll_setting_create',
                 'payroll_setting_edit',
                 'payroll_setting_delete',
+                'user_can_show_payroll_information',
             ],
             'run_payroll_access' => [
                 'run_payroll_read',
@@ -422,6 +423,7 @@ class PermissionService
                 // 'payroll_setting_create',
                 // 'payroll_setting_edit',
                 // 'payroll_setting_delete',
+                'user_can_show_payroll_information',
             ],
             'run_payroll_access' => [
                 'run_payroll_read',
