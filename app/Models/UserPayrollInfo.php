@@ -21,6 +21,7 @@ class UserPayrollInfo extends BaseModel
 
     protected $fillable = [
         'user_id',
+        'total_working_days',
         'basic_salary',
         'salary_type',
         'payment_schedule',
@@ -45,6 +46,7 @@ class UserPayrollInfo extends BaseModel
     ];
 
     protected $casts = [
+        'basic_salary' => 'float',
         'salary_type' => SalaryType::class,
         'payment_schedule' => PaymentSchedule::class,
         'prorate_setting' => ProrateSetting::class,

@@ -45,7 +45,7 @@ class TimeoffService
             return 1;
         }
 
-        // $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cutoff_attendance_start_date));
+        // $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cut_off_date));
         // $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromFormat('Y-m-d', $startDate);
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);

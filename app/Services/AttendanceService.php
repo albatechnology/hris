@@ -95,7 +95,7 @@ class AttendanceService
      * @param DailyAttendance $dailyAttendance The attendance type to calculate (default: DailyAttendance::PRESENT).
      * @return int The total attendance(present/alpha) count.
      */
-    public static function getTotalAttendance(User|int $user, $startDate, $endDate, DailyAttendance $dailyAttendance = DailyAttendance::PRESENT): int
+    public static function getTotalPresent(User|int $user, $startDate, $endDate): int
     {
         if (!$user instanceof User) {
             $user = User::find($user, ['id', 'type', 'group_id']);
@@ -105,11 +105,22 @@ class AttendanceService
             ->whereDateBetween($startDate, $endDate)
             ->count();
 
-        if ($dailyAttendance == DailyAttendance::PRESENT) return $totalAttendance;
+        return $totalAttendance;
 
-        $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
+        // if ($dailyAttendance == DailyAttendance::PRESENT) return $totalAttendance;
 
-        return abs($totalAttendance - $totalWorkingDays);
+        // $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
+
+        // return abs($totalAttendance - $totalWorkingDays);
+    }
+
+    public static function getTotalAlpa(User|int $user, $startDate, $endDate): int
+    {
+        if (!$user instanceof User) {
+            $user = User::find($user, ['id', 'type', 'group_id']);
+        }
+
+        return ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate) - self::getTotalPresent($user, $startDate, $endDate);
     }
 
     public static function getTotalAttendanceInShifts(User|int $user, $startDate, $endDate, Shift|array $shifts = []): int

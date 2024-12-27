@@ -2,10 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\PayrollComponentCategory;
-use App\Enums\PayrollComponentDailyMaximumAmountType;
-use App\Enums\PayrollComponentPeriodType;
-use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Models\PayrollComponent;
 use App\Services\FormulaService;
@@ -23,14 +19,9 @@ class PayrollComponentSeeder extends Seeder
             "name" => "daily attendance",
             "type" => PayrollComponentType::ALLOWANCE,
             "category" => "default",
-            "setting" => "default",
             "is_taxable" => false,
             "period_type" => "daily",
             "is_monthly_prorate" => false,
-            "is_daily_default" => false,
-            "daily_maximum_amount_type" => "not_use",
-            "daily_maximum_amount" => "0",
-            "is_one_time_bonus" => false,
             "is_include_backpay" => false,
         ]);
         $formulas = [
@@ -49,14 +40,9 @@ class PayrollComponentSeeder extends Seeder
             "name" => "shift",
             "type" => PayrollComponentType::ALLOWANCE,
             "category" => "default",
-            "setting" => "default",
             "is_taxable" => false,
             "period_type" => "daily",
             "is_monthly_prorate" => false,
-            "is_daily_default" => false,
-            "daily_maximum_amount_type" => "not_use",
-            "daily_maximum_amount" => "0",
-            "is_one_time_bonus" => true,
             "is_include_backpay" => false,
         ]);
         $formulas = [
@@ -74,15 +60,10 @@ class PayrollComponentSeeder extends Seeder
             "name" => "makan siang gratis",
             "type" => PayrollComponentType::ALLOWANCE,
             "category" => "default",
-            "setting" => "default",
             "amount" => 5000,
             "is_taxable" => false,
             "period_type" => "daily",
             "is_monthly_prorate" => false,
-            "is_daily_default" => false,
-            "daily_maximum_amount_type" => "not_use",
-            "daily_maximum_amount" => "0",
-            "is_one_time_bonus" => true,
             "is_include_backpay" => false,
         ]);
 
@@ -91,15 +72,10 @@ class PayrollComponentSeeder extends Seeder
             "name" => "Potongan 1000",
             "type" => PayrollComponentType::DEDUCTION,
             "category" => "default",
-            "setting" => "default",
             "amount" => 1000,
             "is_taxable" => false,
             "period_type" => "daily",
             "is_monthly_prorate" => false,
-            "is_daily_default" => false,
-            "daily_maximum_amount_type" => "not_use",
-            "daily_maximum_amount" => "0",
-            "is_one_time_bonus" => true,
             "is_include_backpay" => false,
         ]);
 
@@ -108,15 +84,10 @@ class PayrollComponentSeeder extends Seeder
             "name" => "Benefit 2000",
             "type" => PayrollComponentType::BENEFIT,
             "category" => "default",
-            "setting" => "default",
             "amount" => 2000,
             "is_taxable" => false,
             "period_type" => "daily",
             "is_monthly_prorate" => false,
-            "is_daily_default" => false,
-            "daily_maximum_amount_type" => "not_use",
-            "daily_maximum_amount" => "0",
-            "is_one_time_bonus" => true,
             "is_include_backpay" => false,
         ]);
     }

@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('payroll_settings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained();
-            $table->integer('payroll_schedule_date')->nullable();
+            $table->char('cut_off_date', 2)->default("20");
             // $table->boolean('is_default_cutoff')->default(0);
-            $table->char('cutoff_attendance_start_date', 2)->nullable();
-            $table->char('cutoff_attendance_end_date', 2)->nullable();
+            // $table->char('cutoff_attendance_start_date', 2)->nullable();
+            // $table->char('cutoff_attendance_end_date', 2)->nullable();
             // $table->boolean('is_attendance_pay_last_month')->default(0);
             // $table->integer('cutoff_payroll_end_date')->nullable();
             // $table->integer('cutoff_payroll_end_date')->nullable();

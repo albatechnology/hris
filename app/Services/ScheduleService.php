@@ -127,41 +127,51 @@ class ScheduleService
         return $user->schedules()->whereApproved()->whereDate('effective_date', '<=', $startDate)->orWhereDate('effective_date', '<=', $endDate)->orderByDesc('effective_date')->exists();
     }
 
+    /**
+     * Calculate the total working days of a user within a given date range.
+     *
+     * @param  User  $user  The user for whom the total working days is being calculated.
+     * @param  string|DateTime  $startPeriod  The start date of the date range in 'Y-m-d' format.
+     * @param  string|DateTime  $endPeriod  The end date of the date range in 'Y-m-d' format.
+     * @return int  The total working days count.
+     */
     public static function getTotalWorkingDaysInPeriod(User $user, string|DateTime $startPeriod, string|DateTime $endPeriod): int
     {
-        $totalDays = 0;
-        $startPeriod = Carbon::createFromFormat('Y-m-d', $startPeriod)->addDay();
-        $endPeriod = Carbon::createFromFormat('Y-m-d', $endPeriod);
-        $dateRange = \Carbon\CarbonPeriod::create($startPeriod, $endPeriod);
+        // return total_working_days since user only have 21/25 working days
+        return $user->payrollInfo?->total_working_days ?? 0;
+        // $totalDays = 0;
+        // $startPeriod = Carbon::createFromFormat('Y-m-d', $startPeriod)->addDay();
+        // $endPeriod = Carbon::createFromFormat('Y-m-d', $endPeriod);
+        // $dateRange = \Carbon\CarbonPeriod::create($startPeriod, $endPeriod);
 
-        $companyHolidays = Event::tenanted($user)->whereHoliday()->get(['id', 'start_at', 'end_at']);
-        $nationalHolidays = NationalHoliday::orderBy('date')->get(['id', 'date']);
+        // $companyHolidays = Event::tenanted($user)->whereHoliday()->get(['id', 'start_at', 'end_at']);
+        // $nationalHolidays = NationalHoliday::orderBy('date')->get(['id', 'date']);
 
-        foreach ($dateRange as $date) {
-            $schedule = self::getTodaySchedule(
-                $user,
-                $date,
-                ['id', 'is_overide_national_holiday', 'is_overide_national_holiday', 'is_overide_company_holiday'],
-                ['id', 'is_dayoff']
-            );
+        // foreach ($dateRange as $date) {
+        //     $schedule = self::getTodaySchedule(
+        //         $user,
+        //         $date,
+        //         ['id', 'is_overide_national_holiday', 'is_overide_national_holiday', 'is_overide_company_holiday'],
+        //         ['id', 'is_dayoff']
+        //     );
 
-            $companyHolidayData = null;
-            if ($schedule->is_overide_company_holiday == false) {
-                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
-                });
-            }
+        //     $companyHolidayData = null;
+        //     if ($schedule->is_overide_company_holiday == false) {
+        //         $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
+        //             return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+        //         });
+        //     }
 
-            $nationalHoliday = null;
-            if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
-            }
+        //     $nationalHoliday = null;
+        //     if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
+        //         $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+        //     }
 
-            if (is_null($companyHolidayData) && is_null($nationalHoliday) && !$schedule->shift->is_dayoff) {
-                $totalDays += 1;
-            }
-        }
+        //     if (is_null($companyHolidayData) && is_null($nationalHoliday) && !$schedule->shift->is_dayoff) {
+        //         $totalDays += 1;
+        //     }
+        // }
 
-        return $totalDays;
+        // return $totalDays;
     }
 }

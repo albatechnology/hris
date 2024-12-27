@@ -37,7 +37,19 @@ class PayrollComponentController extends BaseController
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
-                'id', 'company_id', 'name', 'type', 'amount', 'is_taxable', 'period_type', 'is_monthly_prorate', 'is_daily_default', 'daily_maximum_amount_type', 'daily_maximum_amount', 'is_one_time_bonus', 'created_at',
+                'id',
+                'company_id',
+                'name',
+                'type',
+                'amount',
+                'is_taxable',
+                'period_type',
+                'is_monthly_prorate',
+                // 'is_daily_default',
+                // 'daily_maximum_amount_type',
+                // 'daily_maximum_amount',
+                // 'is_one_time_bonus',
+                'created_at',
             ])
             ->paginate($this->per_page);
 

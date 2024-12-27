@@ -222,6 +222,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::get('formulas/components/{formula_component}', [\App\Http\Controllers\Api\FormulaController::class, 'components']);
     Route::get('formulas/amounts', [\App\Http\Controllers\Api\FormulaController::class, 'amounts']);
+    Route::get('formulas/test', [\App\Http\Controllers\Api\FormulaController::class, 'test']);
 
     Route::apiResource('payroll-components', PayrollComponentController::class);
     Route::get('payroll-setting', [PayrollSettingController::class, 'index']);

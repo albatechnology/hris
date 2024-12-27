@@ -302,6 +302,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(UserDepartmentPosition::class);
     }
 
+    public function overtimes(): BelongsToMany
+    {
+        return $this->belongsToMany(Overtime::class, 'user_overtimes');
+    }
+
     public function timeoffPolicies(): BelongsToMany
     {
         return $this->belongsToMany(TimeoffPolicy::class, 'user_timeoff_policies');
@@ -462,8 +467,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             // $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $this->company_id)->first(['cut_off_date']);
             // $cutoffDate = $timeoffRegulation->cut_off_date;
 
-            $payrollSetting = PayrollSetting::where('company_id', $this->company_id)->first(['id', 'cutoff_attendance_start_date']);
-            $cutoffDate = $payrollSetting->cutoff_attendance_start_date;
+            $payrollSetting = PayrollSetting::where('company_id', $this->company_id)->first(['id', 'cut_off_date']);
+            $cutoffDate = $payrollSetting->cut_off_date;
         }
 
         $joinDate = date_create($this->join_date);

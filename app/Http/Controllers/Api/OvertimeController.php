@@ -57,9 +57,8 @@ class OvertimeController extends BaseController
         return new OvertimeResource($overtime);
     }
 
-    public static function saveRelationship(int $id, Request $request)
+    public static function saveRelationship(Overtime $overtime, Request $request)
     {
-        $overtime = Overtime::findTenanted($id);
         $overtime->overtimeRoundings()->delete();
         $overtime->overtimeMultipliers()->delete();
         $overtime->overtimeAllowances()->delete();
@@ -70,9 +69,9 @@ class OvertimeController extends BaseController
         if ($request->overtime_multipliers) {
             $overtime->overtimeMultipliers()->createMany($request->overtime_multipliers);
         }
-        if ($request->overtime_allowances) {
-            $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
-        }
+        // if ($request->overtime_allowances) {
+        //     $overtime->overtimeAllowances()->createMany($request->overtime_allowances);
+        // }
     }
 
     public function store(StoreRequest $request): OvertimeResource|JsonResponse

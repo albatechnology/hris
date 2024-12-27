@@ -1,0 +1,134 @@
+FormulaComponentEnum
+ - DAILY_ATTENDANCE = 'daily_attendance';
+ - SHIFT = 'shift';
+ - BRANCH = 'branch';
+ - HOLIDAY = 'holiday';
+ - EMPLOYEMENT_STATUS = 'employement_status';
+ - JOB_POSITION = 'job_position';
+ - GENDER = 'gender';
+ - RELIGION = 'religion';
+ - MARITAL_STATUS = 'marital_status';
+ - ELSE = 'else';
+
+FormulaAmountType
+ - SALARY_PER_SCHEDULE_CALENDAR_DAY = 'salary_per_schedule_calendar_day'; (amount = basic_salary/totalWorkingDays(21 atau 25 atau totalHariKerja))
+ - FULL_SALARY = 'full_salary'; (amount = basic_salary)
+ - HALF_OF_SALARY = 'half_of_salary'; (amount = basic_salary/2)
+ - NUMBER = 'number'; (amount = kolom amount)
+
+Formula dapat berdiri sendiri atau mempunyai child (ada kolom parent_id di table).
+Formula memiliki amount type untuk menentukan amount/nilai yang akan didapat berdasarkan type nya.
+Contoh "Overtime Teacher" memiliki formula
+    1. DAILY_ATTENDANCE present
+        1. Shift (dayoff/national_holiday) akan mendapatkan 100000
+        2. Shift weekday akan mendapatkan 50000
+        3. ELSE 0
+    2. MARITAL_STATUS widow
+        1. female akan mendapatkan 30000
+        2. male akan mendapatkan 20000
+    3. ELSE 0
+Dari contoh diatas, hanya 1 kondisi yang akan diambil amount nya. misal:
+    1. user melakukan overtime di weekday selama 2jam per hari (selama 10 hari). maka user tsb akan mendapatkan upah overtime sebanyak 2*10*50000 = 1,000,000
+    2. user melakukan overtime di dayoff selama 1jam per hari (selama 3 hari). maka user tsb akan mendapatkan upah overtime sebanyak 1*3*100000 = 300,000
+    3. maka total upah user adalah 1,300,000
+
+    - Jika Formula memiliki child, perhitungannya sebagai berikut:
+        1. Jika component === DAILY_ATTENDANCE
+            1. Jika DAILY_ATTENDANCE === present
+                1. jika child component === DAILY_ATTENDANCE
+                    1. cek di tanggal tersebut apakah user ada absen masuk
+                    2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+                2. jika child component === SHIFT
+                    1. cek di tanggal tersebut apakah user ada absen masuk berdasarkan SHIFT yang dibutuhkan
+                    2. jika true maka akan mendapatkan amount berdasarkan amount_type child nya
+                3. jika child component === BRANCH
+                    1. cek di tanggal tersebut apakah user ada absen masuk berdasarkan BRANCH yang dibutuhkan
+                    2. jika true maka akan mendapatkan amount berdasarkan amount_type child nya
+                4. jika child component === EMPLOYEMENT_STATUS
+                    1. cek di tanggal tersebut apakah user ada absen masuk berdasarkan EMPLOYEMENT_STATUS yang dibutuhkan
+                    2. jika true maka akan mendapatkan amount berdasarkan amount_type child nya
+                dan seterusnya...
+
+            2. Jika DAILY_ATTENDANCE === alpa
+                kondisinya sama seperti DAILY_ATTENDANCE === present
+        2. Jika component === SHIFT
+            1. Jika child component === DAILY_ATTENDANCE
+                1. Jika DAILY_ATTENDANCE === present
+                    1. cek di tanggal tersebut apakah user ada absen masuk berdasarkan SHIFT yang dibutuhkan
+                    2. jika true maka akan mendapatkan amount berdasarkan amount_type child nya
+                2. Jika DAILY_ATTENDANCE === alpa
+                    1. cek di tanggal tersebut apakah user ada absen masuk berdasarkan SHIFT yang dibutuhkan
+                    2. jika true maka akan mendapatkan amount berdasarkan amount_type child nya
+            2. jika child component === SHIFT
+                1. cek apakah user memiliki semua SHIFT yang dibutuhkan
+            3. jika child component === BRANCH
+                1. cek apakah
+
+
+    - Jika Formula tidak memiliki child, perhitungannya sebagai berikut:
+        1. Jika component === DAILY_ATTENDANCE
+            1. Jika DAILY_ATTENDANCE === present
+                1. cek di tanggal tersebut apakah user ada absen masuk
+                2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+            2. Jika DAILY_ATTENDANCE === alpa
+                1. cek di tanggal tersebut apakah user ada absen masuk
+                2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        2. Jika component === SHIFT
+            1. cek apakah user memiliki shift yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        3. Jika componet === BRANCH [DONE]
+            1. cek apakah user memiliki branch yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        4. Jika component === EMPLOYEMENT_STATUS
+            1. cek apakah user memiliki EMPLOYEMENT_STATUS yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        5. Jika component === JOB_POSITION
+            1. cek apakah user memiliki JOB_POSITION yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        6. Jika component === GENDER [DONE]
+            1. cek apakah user memiliki GENDER yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        7. Jika component === RELIGION
+            1. cek apakah user memiliki RELIGION yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        8. Jika component === MARITAL_STATUS
+            1. cek apakah user memiliki MARITAL_STATUS yang dibutuhkan
+            2. jika true maka akan mendapatkan amount berdasarkan amount_type nya
+        8. Jika component === ELSE
+            1. user akan mendapatkan amount berdasarkan amount_type nya
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=== CARA HITUNG FORMULA ===
+kasus overtime
+1. apabila overtime mempunyai formula, maka hitung fromulanya
+    1. compensation_rate_per_day tidak berlaku
+    2. rate_amount tidak berlaku
+
+    formula bisa punya child. (untuk sekarang child hanya 1 tingkat, artinya child tidak mungkin mempunyai child lagi)
+    - jika formula tidak mempunyai child, maka
+        1. cek dulu amount_type(SALARY_PER_SCHEDULE_CALENDAR_DAY |FULL_SALARY | HALF_OF_SALARY | NUMBER) nya
+            1. jika SALARY_PER_SCHEDULE_CALENDAR_DAY, maka basic_salary * totalWorkingDays
+            2. jika FULL_SALARY, maka basic_salary * 1
+            3. jika HALF_OF_SALARY, maka basic_salary / 2
+            4. jika NUMBER, maka amount
+    - jika formula mempunyai child, maka pehitungan sama seperti diatas.
+
+Overtime punya formula sbgai berikut:
+ 1. daily_attendance -> punya child, maka amount nya nggak berlaku

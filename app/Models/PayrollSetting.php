@@ -16,9 +16,9 @@ class PayrollSetting extends Model implements TenantedInterface
 
     protected $fillable = [
         'company_id',
-        'payroll_schedule_date',
+        'cut_off_date',
         'cutoff_attendance_start_date',
-        'cutoff_attendance_end_date',
+        // 'cutoff_attendance_end_date',
         'default_employee_tax_setting',
         'default_employee_salary_tax_setting',
         'default_oas_setting',
@@ -31,7 +31,6 @@ class PayrollSetting extends Model implements TenantedInterface
     ];
 
     protected $casts = [
-        'payroll_schedule_date' => 'integer',
         'default_employee_tax_setting' => TaxMethod::class,
         'default_employee_salary_tax_setting' => TaxSalary::class,
         'default_oas_setting' => JhtCost::class,

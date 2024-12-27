@@ -73,14 +73,14 @@ class UpdatePayrollComponentController extends BaseController
             $updatePayrollComponent = UpdatePayrollComponent::create($request->validated());
             $updatePayrollComponent->details()->createMany($request->details);
 
-            foreach ($request->details as $detail) {
-                $user = User::find($detail['user_id']);
-                $payrollComponent = PayrollComponent::find($detail['payroll_component_id']);
+            // foreach ($request->details as $detail) {
+            //     $user = User::find($detail['user_id']);
+            //     $payrollComponent = PayrollComponent::find($detail['payroll_component_id']);
 
-                if ($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail['new_amount']]);
-                if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KESEHATAN)) $user->userBpjs()->update(['upah_bpjs_kesehatan' => $detail['new_amount']]);
-                if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KETENAGAKERJAAN)) $user->userBpjs()->update(['upah_bpjs_ketenagakerjaan' => $detail['new_amount']]);
-            }
+            //     if ($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail['new_amount']]);
+            //     if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KESEHATAN)) $user->userBpjs()->update(['upah_bpjs_kesehatan' => $detail['new_amount']]);
+            //     if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KETENAGAKERJAAN)) $user->userBpjs()->update(['upah_bpjs_ketenagakerjaan' => $detail['new_amount']]);
+            // }
 
             DB::commit();
         } catch (\Exception $th) {
@@ -102,14 +102,14 @@ class UpdatePayrollComponentController extends BaseController
             $updatePayrollComponent->details()->delete();
             $updatePayrollComponent->details()->createMany($request->details);
 
-            foreach ($request->details as $detail) {
-                $user = User::find($detail['user_id']);
-                $payrollComponent = PayrollComponent::find($detail['payroll_component_id']);
+            // foreach ($request->details as $detail) {
+            //     $user = User::find($detail['user_id']);
+            //     $payrollComponent = PayrollComponent::find($detail['payroll_component_id']);
 
-                if ($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail['new_amount']]);
-                if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KESEHATAN)) $user->userBpjs()->update(['upah_bpjs_kesehatan' => $detail['new_amount']]);
-                if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KETENAGAKERJAAN)) $user->userBpjs()->update(['upah_bpjs_ketenagakerjaan' => $detail['new_amount']]);
-            }
+            //     if ($payrollComponent->category->is(PayrollComponentCategory::BASIC_SALARY)) $user->payrollInfo()->update(['basic_salary' => $detail['new_amount']]);
+            //     if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KESEHATAN)) $user->userBpjs()->update(['upah_bpjs_kesehatan' => $detail['new_amount']]);
+            //     if ($payrollComponent->category->is(PayrollComponentCategory::BPJS_KETENAGAKERJAAN)) $user->userBpjs()->update(['upah_bpjs_ketenagakerjaan' => $detail['new_amount']]);
+            // }
 
             DB::commit();
         } catch (\Exception $th) {

@@ -667,7 +667,7 @@ class UserController extends BaseController
             'components.payrollComponent',
         ]);
 
-        $cutoffDate = date('Y', strtotime($runPayrollUser->runPayroll->cutoff_start_date)) == date('Y', strtotime($runPayrollUser->runPayroll->cutoff_end_date)) ? date('d M', strtotime($runPayrollUser->runPayroll->cutoff_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cutoff_end_date)) : date('d M Y', strtotime($runPayrollUser->runPayroll->cutoff_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cutoff_end_date));
+        $cutoffDate = date('Y', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date));
 
         $earnings = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE);
         $deductions = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION);

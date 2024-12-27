@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UpdatePayrollComponentDetail extends BaseModel
 {
+    use BelongsToUser;
+
     protected $fillable = [
         'update_payroll_component_id',
         'user_id',
@@ -22,9 +25,9 @@ class UpdatePayrollComponentDetail extends BaseModel
         'new_amount' => 'double',
     ];
 
-    public function user(): BelongsTo
+    public function updatePayrollComponent(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(UpdatePayrollComponent::class);
     }
 
     public function payrollComponent(): BelongsTo

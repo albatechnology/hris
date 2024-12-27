@@ -12,6 +12,7 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
     use BelongsToUser, TenantedThroughUser;
 
     protected $fillable = [
+        'overtime_id',
         'user_id',
         'schedule_id',
         'shift_id',
@@ -83,9 +84,19 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
         return trim($result);
     }
 
+    public function overtime(): BelongsTo
+    {
+        return $this->belongsTo(Overtime::class);
+    }
+
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function scopeWhereDateBetween($query, string $dateFrom, string $dateTo)
+    {
+        $query->whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo);
     }
 
     // public function approvedBy(): BelongsTo

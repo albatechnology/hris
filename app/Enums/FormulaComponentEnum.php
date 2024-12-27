@@ -27,7 +27,7 @@ enum FormulaComponentEnum: string
     {
         return match ($this) {
             self::DAILY_ATTENDANCE => DailyAttendance::all(),
-            self::SHIFT => \App\Models\Shift::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
+            self::SHIFT => \App\Models\Shift::tenanted()->orWhereNull('company_id')->get(['id', 'name'])->pluck('name', 'id')->toArray(),
             self::BRANCH => \App\Models\Branch::tenanted()->get(['branches.id', 'branches.name'])->pluck('name', 'id')->toArray(),
             self::HOLIDAY => [
                 'event' => 'Event',

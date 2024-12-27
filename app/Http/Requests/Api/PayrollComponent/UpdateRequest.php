@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\PayrollComponent;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
-use App\Enums\PayrollComponentSetting;
+// use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
@@ -34,8 +34,8 @@ class UpdateRequest extends FormRequest
         $this->merge([
             'is_taxable' => $this->toBoolean($this->is_taxable),
             'is_monthly_prorate' => $this->toBoolean($this->is_monthly_prorate),
-            'is_daily_default' => $this->toBoolean($this->is_daily_default),
-            'is_one_time_bonus' => $this->toBoolean($this->is_one_time_bonus),
+            // 'is_daily_default' => $this->toBoolean($this->is_daily_default),
+            // 'is_one_time_bonus' => $this->toBoolean($this->is_one_time_bonus),
             'is_include_backpay' => $this->toBoolean($this->is_include_backpay),
         ]);
     }
@@ -52,15 +52,15 @@ class UpdateRequest extends FormRequest
             'name' => 'required|string',
             'type' => ['required', Rule::enum(PayrollComponentType::class)],
             'category' => ['nullable', Rule::enum(PayrollComponentCategory::class)],
-            'setting' => ['nullable', Rule::enum(PayrollComponentSetting::class)],
+            // 'setting' => ['nullable', Rule::enum(PayrollComponentSetting::class)],
             'amount' => 'required|numeric',
             'is_taxable' => 'required|boolean',
             'period_type' => ['required', Rule::enum(PayrollComponentPeriodType::class)],
             'is_monthly_prorate' => 'nullable|boolean',
-            'is_daily_default' => 'nullable|boolean',
-            'daily_maximum_amount_type' => ['nullable', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
-            'daily_maximum_amount' => 'nullable|numeric',
-            'is_one_time_bonus' => 'nullable|boolean',
+            // 'is_daily_default' => 'nullable|boolean',
+            // 'daily_maximum_amount_type' => ['nullable', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
+            // 'daily_maximum_amount' => 'nullable|numeric',
+            // 'is_one_time_bonus' => 'nullable|boolean',
             'is_include_backpay' => 'nullable|boolean',
 
             'includes' => 'nullable|array',

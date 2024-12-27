@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\OvertimeRequest;
 
 use App\Enums\OvertimeSetting;
+use App\Models\Overtime;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
@@ -42,6 +43,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'overtime_id' => ['required', new CompanyTenantedRule(Overtime::class, 'Overtime not found')],
             'user_id' => [
                 'required',
                 function (string $attribute, mixed $value, Closure $fail) {

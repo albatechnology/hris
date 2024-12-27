@@ -13,73 +13,41 @@ use App\Models\User;
 use DateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 
-class FormulaService
+class OvertimeService
 {
-    /**
-     * sync formula with related model
-     *
-     * @param  array|null  $formulas
-     * @param  Formula|null  $parent,  used for insert recursively (nested $formulas)
-     */
-    public static function sync(Model $model, ?array $formulas = [], ?Formula $parent = null): void
+    public static function calculate(User $user, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null)
     {
-        // delete all existing formulas
-        self::destroy($model);
+        if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
+        if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
 
-        // create new formula
-        if ($formulas) self::create($model, $formulas, $parent);
-    }
+        $overtimeRequests = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
+        if ($overtimeRequests->count() <= 0) return 0;
 
-    /**
-     * destroy formula from related model
-     */
-    public static function destroy(Model $model): void
-    {
-        foreach ($model->formulas as $formula) {
-            Schema::disableForeignKeyConstraints();
+        $userOvertimes = $user->overtimes->load([
+            'formulas.formulaComponents',
+            'overtimeMultipliers',
+            'overtimeRoundings'
+        ]);
 
-            $formula->formulaComponents()->delete();
-            $formula->delete();
+        $amount = 0;
+        foreach ($overtimeRequests as $overtimeRequest) {
+            $overtime = $userOvertimes->where('id', $overtimeRequest->overtime_id)->first();
+            if (!$overtime) continue;
+            dump($overtime->toArray());
+            dump($overtimeRequest->toArray());
 
-            Schema::enableForeignKeyConstraints();
+            $overtimeDuration = $overtimeRequest->duration;
+            // OVERTIME ROUNDING BELUM DIHITUNG
+            // if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
+            //     $overtimeDuration = $overtimeRounding->rounded;
+            // }
         }
+
+        return $amount;
     }
 
-    /**
-     * sync formula with related model
-     *
-     * @param  Formula|null  $parent,  used for insert recursively (nested $formulas)
-     */
-    public static function create(Model $model, array $formulas, ?Formula $parent = null): void
-    {
-        foreach ($formulas as $formula) {
-            if (isset($formula['child']) && is_array($formula['child'])) {
-                $newFormula = $model->formulas()->create([
-                    'parent_id' => $parent->id ?? null,
-                    'component' => $formula['component'],
-                    'amount' => $formula['amount'] ?? null,
-                ]);
-
-                // nested array
-                self::create($model, $formula['child'], $newFormula);
-            } else {
-                $newFormula = $model->formulas()->create([
-                    'parent_id' => $parent->id ?? null,
-                    'component' => $formula['component'],
-                    'amount' => $formula['amount'],
-                ]);
-            }
-
-            // create the component of it's formula
-            collect(explode(',', $formula['value']))->each(function ($formulaValue) use ($newFormula) {
-                $newFormula->formulaComponents()->create([
-                    'value' => $formulaValue,
-                ]);
-            });
-        }
-    }
+    public static function calculateFormula(Overtime $model, Collection $formulas) {}
 
     /**
      * count formula amount
@@ -91,7 +59,7 @@ class FormulaService
      * @param  string       $startPeriod
      * @param  string       $endPeriod
      */
-    public static function calculate(User $user, Model $model, Collection $formulas, float $amount = 0, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null)
+    public static function calculateBackup(User $user, Model $model, Collection $formulas, float $amount = 0, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null)
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));

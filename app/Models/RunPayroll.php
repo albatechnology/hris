@@ -18,8 +18,8 @@ class RunPayroll extends BaseModel
         'period',
         'payment_schedule',
         'status',
-        'cutoff_start_date',
-        'cutoff_end_date',
+        'cut_off_start_date',
+        'cut_off_end_date',
     ];
 
     protected $casts = [

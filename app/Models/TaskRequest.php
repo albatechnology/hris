@@ -29,13 +29,13 @@ class TaskRequest extends RequestedBaseModel implements TenantedInterface, HasMe
         'files'
     ];
 
-    protected static function booted(): void
-    {
-        parent::booted();
-        // static::creating(function (self $model) {
-        //     $model->approved_by = $model->user->approval?->id ?? null;
-        // });
-    }
+    // protected static function booted(): void
+    // {
+    //     parent::booted();
+    //     // static::creating(function (self $model) {
+    //     //     $model->approved_by = $model->user->approval?->id ?? null;
+    //     // });
+    // }
 
     public function taskHour(): BelongsTo
     {

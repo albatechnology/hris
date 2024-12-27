@@ -49,7 +49,7 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
 
     public function scopeValid(Builder $query)
     {
-        $query->whereHas('details', fn($q) => $q->whereIn('type', [AttendanceType::AUTOMATIC, AttendanceType::OTHER])->orWhere(fn($q) => $q->where('type', AttendanceType::MANUAL)->where('approval_status', ApprovalStatus::APPROVED)));
+        $query->whereHas('details', fn($q) => $q->approved());
     }
 
     public function timeoff(): BelongsTo
