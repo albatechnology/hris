@@ -121,7 +121,12 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             return $query->where('users.id', '!=', $user->id);
         }
 
-        if (UserService::hasDescendants($user)) {
+        if ($user->hasPermissionTo(Permission::select('id')->firstWhere('name', 'can_read_all_users'))) {
+            return $query;
+        } else if ($isDescendant) {
+            $query->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id));
+            return $query->where('users.id', '!=', $user->id);
+        } else if (UserService::hasDescendants($user)) {
             return $query->where(function ($q) use ($user) {
                 $q->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id))->orWhere('id', $user->id);
             });
