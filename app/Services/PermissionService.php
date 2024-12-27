@@ -62,6 +62,7 @@ class PermissionService
                 'user_edit',
                 'user_delete',
                 'user_set_supervisor',
+                'can_read_all_users',
             ],
             'group_access' => [
                 'group_read',
