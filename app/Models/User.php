@@ -99,6 +99,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         //         ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
         // }
 
+        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+
+        $query->whereIn('company_id', $companyIds);
+
         if ($user->is_admin) {
             return $query->where('group_id', $user->group_id);
         }
@@ -122,10 +126,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
                 $q->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id))->orWhere('id', $user->id);
             });
         }
-
-        // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-
-        // return $query->whereHas('companies', fn($q) => $q->where('company_id', $companyIds));
 
         return $query->where('id', $user->id);
     }
