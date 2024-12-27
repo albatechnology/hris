@@ -100,11 +100,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         // }
 
         $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-
         $query->whereIn('company_id', $companyIds);
 
         if ($user->is_admin) {
-            return $query->where('group_id', $user->group_id);
+            return $query;
+            // return $query->where('group_id', $user->group_id);
         }
 
         // if ($isDescendant) {

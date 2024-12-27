@@ -19,8 +19,12 @@ trait TenantedThroughUser
 
         if ($user->is_super_admin) return $query;
 
+        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        $query->whereHas('user', fn($q) => $q->whereIn('company_id', $companyIds));
+
         if ($user->is_admin) {
-            return $query->whereHas('user', fn($q) => $q->where('group_id', $user->group_id));
+            return $query;
+            // return $query->whereHas('user', fn($q) => $q->where('group_id', $user->group_id));
         }
 
         if (UserService::hasDescendants($user)) {

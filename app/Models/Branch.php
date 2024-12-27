@@ -32,8 +32,12 @@ class Branch extends BaseModel implements TenantedInterface
             return $query;
         }
 
+        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        $query->whereIn('company_id', $companyIds);
+
         if ($user->is_admin) {
-            return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
+            return $query;
+            // return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
         }
 
         $branchIds = $user->branches()->get(['branch_id'])?->pluck('branch_id') ?? [];

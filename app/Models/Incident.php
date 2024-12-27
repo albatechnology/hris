@@ -30,35 +30,6 @@ class Incident extends BaseModel implements HasMedia, TenantedInterface
         });
     }
 
-    // public function scopeTenanted(Builder $query, ?User $user = null): Builder
-    // {
-    //     if (!$user) {
-    //         /** @var User $user */
-    //         $user = auth('sanctum')->user();
-    //     }
-
-    //     if ($user->is_super_admin) {
-    //         return $query;
-    //     }
-    //     if ($user->is_administrator) {
-    //         return $query->whereHas('incidentType', fn($q) => $q->whereHas('company', fn($q) => $q->where('group_id', $user->group_id)));
-    //     }
-
-    //     $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-
-    //     return $query->whereHas('incidentType', fn($q) => $q->whereIn('company_id', $companyIds));
-    // }
-
-    // public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
-    // {
-    //     $query->tenanted()->where('id', $id);
-    //     if ($fail) {
-    //         return $query->firstOrFail();
-    //     }
-
-    //     return $query->first();
-    // }
-
     public function incidentType(): BelongsTo
     {
         return $this->belongsTo(IncidentType::class);
