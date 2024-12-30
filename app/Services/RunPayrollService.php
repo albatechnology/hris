@@ -336,18 +336,34 @@ class RunPayrollService
                     self::createComponent($runPayrollUser, $bpjsPayrollComponent, $amount);
                 }
             }
+            // END
 
-            // overtime payroll component
+            /**
+             * five, calculate overtime
+             */
             $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
 
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
+            $isOb = false;
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
                 // dump($userBasicSalary);
-                $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
+                $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary, $isOb);
                 // dd($amount);
 
                 self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
             }
+            // END
+
+            /**
+             * six, calculate task overtime
+             */
+            $taskOvertimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
+            if ($taskOvertimePayrollComponent) {
+                $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
+
+                self::createComponent($runPayrollUser, $taskOvertimePayrollComponent, $amount);
+            }
+            // END
 
             // if ($isUserOvertimeEligible && $overtimePayrollComponent) {
             //     /** @var Collection|\App\Models\Overtime[] $userOvertimes A collection of user overtimes */

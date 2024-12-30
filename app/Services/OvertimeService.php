@@ -11,6 +11,8 @@ use App\Models\Formula;
 use App\Models\Overtime;
 use App\Models\OvertimeRequest;
 use App\Models\PayrollComponent;
+use App\Models\TaskHour;
+use App\Models\TaskRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use DateTime;
@@ -18,13 +20,31 @@ use Illuminate\Database\Eloquent\Collection;
 
 class OvertimeService
 {
-    public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary)
+    public static function calculateOb(User $user, Collection $overtimeRequests): int|float
+    {
+        $basicSalary = $user->payrollInfo?->basic_salary > $user->branch->umk ? $user->payrollInfo?->basic_salary : $user->branch->umk;
+
+        $totalDurationInHours = 0;
+        foreach ($overtimeRequests as $overtimeRequest) {
+            $start = Carbon::parse($overtimeRequest->start_at);
+            $end = Carbon::parse($overtimeRequest->end_at);
+            $hour = $end->diffInHours($start);
+            $totalDurationInHours += ($hour > 9 ? 9 : $hour);
+        }
+
+        return ($basicSalary / 160) * $totalDurationInHours;
+    }
+    public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary, bool $isOb = false): int|float
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
 
         $overtimeRequests = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
         if ($overtimeRequests->count() <= 0) return 0;
+
+        if ($isOb) {
+            return self::calculateOb($user, $overtimeRequests);
+        }
 
         $userOvertimes = $user->overtimes->load([
             'formulas.formulaComponents',
@@ -245,5 +265,64 @@ class OvertimeService
         }
 
         return false;
+    }
+
+
+    public static function calculateTaskOvertime(User $user, string $startPeriod = null, string $endPeriod = null)
+    {
+        if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
+        if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
+
+        $tasks = $user->tasks()
+            ->select('id')
+            ->select('id', 'min_working_hour', 'working_period', 'weekday_overtime_rate', 'weekend_overtime_rate')
+            ->withPivot('task_hour_id')
+            ->get();
+
+        $taskHours = TaskHour::select('id', 'task_id', 'min_working_hour', 'max_working_hour')->whereIn('id', $tasks->pluck('pivot.task_hour_id'))->get();
+        if ($taskHours->count() <= 0) return 0;
+
+        $amount = 0;
+        foreach ($taskHours as $taskHour) {
+            $task = $tasks->where('id', $taskHour->task_id)->first();
+            $overtimeRequests = TaskRequest::select('id', 'start_at', 'end_at')->where('user_id', $user->id)->where('task_hour_id', $taskHour->id)->whereDateBetween($startPeriod, $endPeriod)->approved()->orderBy('start_at')->get();
+
+            if (!$task || $overtimeRequests->count() <= 0) continue;
+
+            $totalDurationInHours = 0;
+            $sisa = 0;
+            $lastOvertimeRequest = null;
+            foreach ($overtimeRequests as $overtimeRequest) {
+                $start = Carbon::parse($overtimeRequest->start_at);
+                $end = Carbon::parse($overtimeRequest->end_at);
+                $totalDurationInHours += $end->diffInHours($start); // Hitung durasi dalam jam
+                if ($totalDurationInHours > $taskHour->max_working_hour) {
+                    $lastOvertimeRequest = $overtimeRequest;
+                    $sisa = $totalDurationInHours - $taskHour->max_working_hour;
+                    break;
+                }
+            }
+
+            if ($totalDurationInHours <= $taskHour->max_working_hour) continue;
+
+            $totalHourWeekday = 0;
+            $totalHourWeekend = 0;
+            $newOvertimeRequests = $overtimeRequests->skipUntil(fn($d) => $d->id === $lastOvertimeRequest->id);
+            foreach ($newOvertimeRequests as $newOvertimeRequest) {
+                $overtimeDate = Carbon::parse($newOvertimeRequest->start_at);
+                $start = Carbon::parse($newOvertimeRequest->start_at);
+                $end = Carbon::parse($newOvertimeRequest->end_at);
+                if ($overtimeDate->isWeekday()) {
+                    $totalHourWeekday += ($sisa > 0 ? $sisa : $end->diffInHours($start));
+                } else {
+                    $totalHourWeekend += ($sisa > 0 ? $sisa : $end->diffInHours($start));
+                }
+                $sisa = 0;
+            }
+
+            $amount += ($totalHourWeekday * $task->weekday_overtime_rate) + ($totalHourWeekend * $task->weekend_overtime_rate);
+        }
+
+        return $amount;
     }
 }

@@ -58,4 +58,9 @@ class TaskRequest extends RequestedBaseModel implements TenantedInterface, HasMe
         }
         return $data;
     }
+
+    public function scopeWhereDateBetween($query, string $startAt, string $endAt)
+    {
+        $query->whereDate('start_at', '>=', $startAt)->whereDate('end_at', '<=', $endAt);
+    }
 }
