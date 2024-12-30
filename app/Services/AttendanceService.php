@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Enums\DailyAttendance;
+use App\Enums\EventType;
 use App\Models\Attendance;
+use App\Models\Event;
 use App\Models\Shift;
 use App\Models\User;
 
@@ -129,11 +131,34 @@ class AttendanceService
         if ($shifts instanceof Shift) {
             $shiftIds = [$shifts->id];
         } elseif (is_array($shifts) && count($shifts) > 0) {
-            $shiftIds = $shifts;
+            $shifts = collect($shifts);
+
+            $shiftIds = $shifts->filter(fn($value) => is_numeric($value))->values()->toArray();
+
+            $nationalHoliday = $shifts->filter(fn($value) => $value == 'national_holiday')->values()?->toArray()[0] ?? null;
+            $companyHoliday = $shifts->filter(fn($value) => $value == 'company_holiday')->values()?->toArray()[0] ?? null;
+        }
+
+        $nationalHolidayDates = [];
+        if (isset($nationalHoliday) && !is_null($nationalHoliday)) {
+            $nationalHolidayDates = EventService::getDates(EventType::NATIONAL_HOLIDAY, $startDate, $endDate);
+        }
+
+        $companyHolidayDates = [];
+        if (isset($companyHoliday) && !is_null($companyHoliday)) {
+            $companyHolidayDates = EventService::getDates(EventType::COMPANY_HOLIDAY, $startDate, $endDate);
         }
 
         $totalAttendance = Attendance::where('user_id', $user->id)->valid()
-            ->whereDateBetween($startDate, $endDate)
+            ->where(function ($q) use ($startDate, $endDate, $nationalHolidayDates, $companyHolidayDates) {
+                $q->whereDateBetween($startDate, $endDate)
+                    ->when(count($nationalHolidayDates), function ($q) use ($nationalHolidayDates) {
+                        $q->orWhereIn('date', $nationalHolidayDates);
+                    })
+                    ->when(count($companyHolidayDates), function ($q) use ($companyHolidayDates) {
+                        $q->orWhereIn('date', $companyHolidayDates);
+                    });
+            })
             ->whereIn('shift_id', $shiftIds)
             ->count();
 

@@ -144,7 +144,7 @@ class ScheduleService
         // $endPeriod = Carbon::createFromFormat('Y-m-d', $endPeriod);
         // $dateRange = \Carbon\CarbonPeriod::create($startPeriod, $endPeriod);
 
-        // $companyHolidays = Event::tenanted($user)->whereHoliday()->get(['id', 'start_at', 'end_at']);
+        // $companyHolidays = Event::tenanted($user)->whereCompanyHoliday()->get(['id', 'start_at', 'end_at']);
         // $nationalHolidays = NationalHoliday::orderBy('date')->get(['id', 'date']);
 
         // foreach ($dateRange as $date) {

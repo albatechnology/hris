@@ -144,10 +144,10 @@ class NewFormulaServiceBelumDipake
                     }
 
                     break;
-                case FormulaComponentEnum::HOLIDAY:
-                    $totalEvent = EventService::countTotalDateInPeriods($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
-                    $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalEvent;
-                    break;
+                // case FormulaComponentEnum::HOLIDAY:
+                //     $totalEvent = EventService::countTotalDateInPeriods($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
+                //     $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalEvent;
+                //     break;
                 case FormulaComponentEnum::EMPLOYEMENT_STATUS:
                     if (self::matchComponentValue($formula, $user->detail?->employment_status)) {
                         $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);

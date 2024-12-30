@@ -127,10 +127,10 @@ class FormulaService
                         $nextChild = self::matchComponentValue($formula, $user->branch_id);
 
                         break;
-                    case FormulaComponentEnum::HOLIDAY:
-                        //
+                    // case FormulaComponentEnum::HOLIDAY:
+                    //     //
 
-                        break;
+                    //     break;
                     case FormulaComponentEnum::EMPLOYEMENT_STATUS:
                         $nextChild = self::matchComponentValue($formula, $user->detail?->job_position);
 
@@ -198,11 +198,11 @@ class FormulaService
                         }
 
                         break;
-                    case FormulaComponentEnum::HOLIDAY:
-                        $totalEvent = EventService::countTotalDateInPeriods($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
-                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalEvent;
+                    // case FormulaComponentEnum::HOLIDAY:
+                    //     $totalEvent = EventService::countTotalDateInPeriods($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
+                    //     $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalEvent;
 
-                        break;
+                    //     break;
                     case FormulaComponentEnum::EMPLOYEMENT_STATUS:
                         if (self::matchComponentValue($formula, $user->detail?->employment_status)) {
                             $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);

@@ -59,7 +59,7 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
-        $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
         $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
         $users = User::tenanted(true)
@@ -237,7 +237,7 @@ class AttendanceController extends BaseController
     //             ->whereDateBetween($startDate, $endDate)
     //             ->get();
 
-    //         $companyHolidays = Event::tenanted()->whereHoliday()->get();
+    //         $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
     //         $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
     //         foreach ($dateRange as $date) {
@@ -424,7 +424,7 @@ class AttendanceController extends BaseController
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
 
-            $companyHolidays = Event::tenanted()->whereHoliday()->get();
+            $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
             $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
             foreach ($dateRange as $date) {
@@ -584,7 +584,7 @@ class AttendanceController extends BaseController
         $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
-        // $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        // $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
         // $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
         foreach ($query->get() as $user) {
@@ -720,7 +720,7 @@ class AttendanceController extends BaseController
 
         $date = $request->filter['date'];
 
-        $companyHolidays = Event::tenanted()->whereHoliday()->get();
+        $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
         $nationalHolidays = NationalHoliday::orderBy('date')->get();
         $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays, $request) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, scheduleType: $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);

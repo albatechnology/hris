@@ -92,7 +92,7 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
     //         $orderKey = array_keys($order->toArray())[0];
     //         $totalShifts = $schedule->shifts->count();
 
-    //         $companyHolidays = Event::tenanted()->where('company_id', $this->user->company_id)->whereHoliday()->get();
+    //         $companyHolidays = Event::tenanted()->where('company_id', $this->user->company_id)->whereCompanyHoliday()->get();
     //         $nationalHolidays = NationalHoliday::orderBy('date')->get(['date']);
     //         $totalDays = 0;
     //         foreach ($period as $date) {

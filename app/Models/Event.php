@@ -54,9 +54,9 @@ class Event extends Model implements TenantedInterface
         return $this->belongsToMany(User::class, 'user_events', 'event_id', 'user_id');
     }
 
-    public function scopeWhereHoliday(Builder $query)
+    public function scopeWhereCompanyHoliday(Builder $query)
     {
-        return $query->where('type', EventType::HOLIDAY);
+        return $query->where('type', EventType::COMPANY_HOLIDAY);
     }
 
     public function scopeWhereEvent(Builder $query)
@@ -67,5 +67,10 @@ class Event extends Model implements TenantedInterface
     public function scopeWhereNationalHoliday(Builder $query)
     {
         return $query->where('type', EventType::NATIONAL_HOLIDAY);
+    }
+
+    public function scopeWhereDateBetween(Builder $query, string $startDate, string $endDate)
+    {
+        $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($startDate)))->whereDate('end_at', '<=', date('Y-m-d', strtotime($endDate)));
     }
 }

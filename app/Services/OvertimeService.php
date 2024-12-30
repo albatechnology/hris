@@ -3,20 +3,22 @@
 namespace App\Services;
 
 use App\Enums\DailyAttendance;
+use App\Enums\EventType;
 use App\Enums\FormulaAmountType;
 use App\Enums\FormulaComponentEnum;
-use App\Enums\PayrollComponentType;
+use App\Enums\RateType;
 use App\Models\Formula;
 use App\Models\Overtime;
+use App\Models\OvertimeRequest;
 use App\Models\PayrollComponent;
 use App\Models\User;
+use Carbon\Carbon;
 use DateTime;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 
 class OvertimeService
 {
-    public static function calculate(User $user, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null)
+    public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary)
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
@@ -26,192 +28,178 @@ class OvertimeService
 
         $userOvertimes = $user->overtimes->load([
             'formulas.formulaComponents',
-            'overtimeMultipliers',
-            'overtimeRoundings'
+            'overtimeMultipliers' => fn($q) => $q->select('overtime_id', 'is_weekday', 'start_hour', 'end_hour', 'multiply'),
+            'overtimeRoundings' => fn($q) => $q->select('overtime_id', 'start_minute', 'end_minute', 'rounded')
         ]);
 
         $amount = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
             $overtime = $userOvertimes->where('id', $overtimeRequest->overtime_id)->first();
             if (!$overtime) continue;
-            dump($overtime->toArray());
-            dump($overtimeRequest->toArray());
+            $overtimeDate = Carbon::parse($overtimeRequest->date);
 
-            $overtimeDuration = $overtimeRequest->duration;
-            // OVERTIME ROUNDING BELUM DIHITUNG
-            // if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
-            //     $overtimeDuration = $overtimeRounding->rounded;
-            // }
+            // set overtime duration to minutes. 02:00:00 become 120
+            $overtimeDuration = Carbon::parse($overtimeRequest->duration)->diffInMinutes(Carbon::parse('00:00:00'));
+            if ($overtimeRounding = $overtime->overtimeRoundings->where('start_minute', '<=', $overtimeDuration)->where('end_minute', '>=', $overtimeDuration)->first()) {
+                $overtimeDuration = $overtimeRounding->rounded;
+            }
+
+            // set overtime duration to hour. 120 become 2
+            $overtimeDuration = round($overtimeDuration / 60);
+
+
+            $multiply = 1;
+            if ($overtime->overtimeMultipliers->count()) {
+                $multiply = 0;
+
+                if ($overtimeDate->isWeekday()) {
+                    $overtimeMultiplier = $overtime->overtimeMultipliers->where('is_weekday', true)->sortByDesc('start_hour')->where('start_hour', '<=', $overtimeDuration)->first();
+                } else {
+                    $overtimeMultiplier = $overtime->overtimeMultipliers->where('is_weekday', false)->sortByDesc('start_hour')->where('start_hour', '<=', $overtimeDuration)->first();
+                }
+
+                if ($overtimeMultiplier) {
+                    if ($overtimeDuration <= $overtimeMultiplier->end_hour) {
+                        $multiply = $overtimeMultiplier->multiply;
+                    } else {
+                        $overtimeDuration = $overtimeMultiplier->end_hour;
+                        $multiply = $overtimeMultiplier->multiply;
+                    }
+                }
+            }
+
+            $overtimeAmountMultiply = 0;
+            // if overtime paid per day. else paid per hour
+            if (!is_null($overtime->compensation_rate_per_day) && $overtime->compensation_rate_per_day > 0) {
+                $overtimeAmountMultiply = $overtime->compensation_rate_per_day;
+                $amount += $multiply * $overtimeAmountMultiply;
+            } else {
+                switch ($overtime->rate_type) {
+                    case RateType::AMOUNT:
+                        $overtimeAmountMultiply = $overtime->rate_amount;
+
+                        break;
+                    case RateType::BASIC_SALARY:
+                        $overtimeAmountMultiply = $basicSalary / $overtime->rate_amount;
+                        break;
+                        // case RateType::ALLOWANCES:
+                        //     $overtimeAmountMultiply = 0;
+
+                        //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
+                        //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
+                        //     }
+
+                        //     break;
+                    case RateType::FORMULA:
+                        // dump('OKEE');
+                        // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
+
+
+                        $overtimeAmountMultiply = self::calculateFormula($user, $overtimeRequest, $overtime, $overtime->formulas, $startPeriod, $endPeriod);
+                        break;
+                    default:
+                        $overtimeAmountMultiply = 0;
+
+                        break;
+                }
+
+                $amount += ($overtimeDuration * $multiply) * $overtimeAmountMultiply;
+            }
         }
 
         return $amount;
     }
 
-    public static function calculateFormula(Overtime $model, Collection $formulas) {}
-
-    /**
-     * count formula amount
-     *
-     * @param  User         $user
-     * @param  Model        $model
-     * @param  Collection   $formulas
-     * @param  float        $amount
-     * @param  string       $startPeriod
-     * @param  string       $endPeriod
-     */
-    public static function calculateBackup(User $user, Model $model, Collection $formulas, float $amount = 0, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null)
+    public static function calculateFormula(User $user, OvertimeRequest $overtimeRequest, Overtime $model, Collection $formulas, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null): int|float
     {
-        if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
-        if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
-
+        $amount = 0;
+        // looping semua formula, apabila kondisinya cocok langsung return
         foreach ($formulas as $formula) {
-            if (count($formula->child)) {
-                $nextChild = false;
+            // dump($formula->toArray());
+            switch ($formula->component) {
+                case FormulaComponentEnum::DAILY_ATTENDANCE:
+                    foreach ($formula->formulaComponents as $formulaComponent) {
+                        switch ($formulaComponent->value) {
+                            case DailyAttendance::PRESENT->value:
+                                // $presentAttendance = AttendanceService::getTotalPresent($user, $startPeriod, $endPeriod);
+                                $amount = self::sumAmount($model, $formula, $startPeriod, $endPeriod, $user);
+                                return $amount;
+                                break;
+                            case DailyAttendance::ALPA->value:
+                                // $alphaAttendance = AttendanceService::getTotalAlpa($user, $startPeriod, $endPeriod);
+                                $amount = self::sumAmount($model, $formula, $startPeriod, $endPeriod, $user);
+                                return $amount;
+                                break;
+                            default:
+                                //
 
-                switch ($formula->component) {
-                    case FormulaComponentEnum::DAILY_ATTENDANCE:
-                        foreach ($formula->formulaComponents as $formulaComponent) {
-                            switch ($formulaComponent->component) {
-                                case DailyAttendance::PRESENT:
-                                    $nextChild = true;
-
-                                    break;
-                                case DailyAttendance::ALPA:
-                                    $nextChild = true;
-
-                                    break;
-                                default:
-                                    //
-
-                                    break;
-                            }
+                                break;
                         }
+                    }
+                    return $amount;
+                case FormulaComponentEnum::SHIFT:
+                    // cek apakah overtimeRequest pernah dilakukan di shift ini
+                    $isTrue = self::isOvertimeInShift($overtimeRequest, $formula->formulaComponents->pluck('value')?->toArray() ?? [], $startPeriod, $endPeriod);
+                    if ($isTrue) {
+                        $amount = self::sumAmount($model, $formula, $startPeriod, $endPeriod, $user);
+                        return $amount;
+                    }
+                    break;
+                case FormulaComponentEnum::BRANCH:
+                    dump('BRANCH');
+                    break;
+                case FormulaComponentEnum::EMPLOYEMENT_STATUS:
+                    dump('BRANCH');
+                    break;
+                case FormulaComponentEnum::JOB_POSITION:
+                    dump('BRANCH');
+                    break;
+                case FormulaComponentEnum::GENDER:
+                    dump('BRANCH');
+                    break;
+                case FormulaComponentEnum::RELIGION:
+                    dump('BRANCH');
+                    break;
+                case FormulaComponentEnum::MARITAL_STATUS:
+                    dump('BRANCH');
+                    break;
+                case FormulaComponentEnum::ELSE:
+                    $amount = self::sumAmount($model, $formula, $startPeriod, $endPeriod, $user);
+                    return $amount;
+                    break;
 
-                        break;
-                    case FormulaComponentEnum::SHIFT:
-                        //
-                        break;
-                    case FormulaComponentEnum::BRANCH:
-                        $nextChild = self::matchComponentValue($formula, $user->branch_id);
-
-                        break;
-                    case FormulaComponentEnum::HOLIDAY:
-                        //
-
-                        break;
-                    case FormulaComponentEnum::EMPLOYEMENT_STATUS:
-                        $nextChild = self::matchComponentValue($formula, $user->detail?->job_position);
-
-                        break;
-                    case FormulaComponentEnum::JOB_POSITION:
-                        $nextChild = self::matchComponentValue($formula, $user->detail?->job_position);
-
-                        break;
-                    case FormulaComponentEnum::GENDER:
-                        $nextChild = self::matchComponentValue($formula, $user->gender);
-
-                        break;
-                    case FormulaComponentEnum::RELIGION:
-                        $nextChild = self::matchComponentValue($formula, $user->detail?->religion);
-
-                        break;
-                    case FormulaComponentEnum::MARITAL_STATUS:
-                        $nextChild = self::matchComponentValue($formula, $user->detail?->marital_status);
-
-                        break;
-                    case FormulaComponentEnum::ELSE:
-                        //
-
-                        break;
-                    default:
-                        //
-
-                        break;
-                }
-
-                // go to next  child
-                if ($nextChild) $amount = self::calculate(user: $user, model: $model, formulas: $formula->child, amount: $amount, startPeriod: $startPeriod, endPeriod: $endPeriod);
-
-                // skip current loop and continue to the next loop
-                continue;
-            } else {
-                switch ($formula->component) {
-                    case FormulaComponentEnum::DAILY_ATTENDANCE:
-                        foreach ($formula->formulaComponents as $formulaComponent) {
-                            switch ($formulaComponent->value) {
-                                case DailyAttendance::PRESENT->value:
-                                    $presentAttendance = AttendanceService::getTotalPresent($user, $startPeriod, $endPeriod);
-                                    $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $presentAttendance;
-                                    break;
-                                case DailyAttendance::ALPA->value:
-                                    $alphaAttendance = AttendanceService::getTotalAlpa($user, $startPeriod, $endPeriod);
-                                    $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $alphaAttendance;
-
-                                    break;
-                                default:
-                                    //
-
-                                    break;
-                            }
-                        }
-
-                        break;
-                    case FormulaComponentEnum::SHIFT:
-                        $totalAttendance = AttendanceService::getTotalAttendanceInShifts($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
-                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalAttendance;
-                        break;
-                    case FormulaComponentEnum::BRANCH:
-                        if (self::matchComponentValue($formula, $user->branch_id)) {
-                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-                        }
-
-                        break;
-                    case FormulaComponentEnum::HOLIDAY:
-                        $totalEvent = EventService::countTotalDateInPeriods($user, $startPeriod, $endPeriod, $formula->formulaComponents->pluck('value')?->toArray() ?? []);
-                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod) * $totalEvent;
-
-                        break;
-                    case FormulaComponentEnum::EMPLOYEMENT_STATUS:
-                        if (self::matchComponentValue($formula, $user->detail?->employment_status)) {
-                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-                        }
-
-                        break;
-                    case FormulaComponentEnum::JOB_POSITION:
-                        if (self::matchComponentValue($formula, $user->detail?->job_position)) {
-                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-                        }
-
-                        break;
-                    case FormulaComponentEnum::GENDER:
-                        if (self::matchComponentValue($formula, $user->gender)) {
-                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-                        }
-
-                        break;
-                    case FormulaComponentEnum::RELIGION:
-                        if (self::matchComponentValue($formula, $user->detail?->religion)) {
-                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-                        }
-
-                        break;
-                    case FormulaComponentEnum::MARITAL_STATUS:
-                        if (self::matchComponentValue($formula, $user->detail?->marital_status)) {
-                            $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-                        }
-
-                        break;
-                    case FormulaComponentEnum::ELSE:
-                        $amount = self::sumAmount($model, $formula, $amount, $user, $startPeriod, $endPeriod);
-
-                        break;
-                    default:
-                        //
-
-                        break;
-                }
+                default:
+                    return $amount;
             }
         }
+    }
+
+    public static function sumAmount(PayrollComponent|Overtime $model, Formula $formula, string|DateTime $startPeriod, string|DateTime $endPeriod, ?User $user = null): int|float
+    {
+        $amount = 0;
+        switch ($formula->amount_type) {
+            case FormulaAmountType::SALARY_PER_SCHEDULE_CALENDAR_DAY:
+                $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startPeriod, $endPeriod);
+                if ($totalWorkingDays > 0) {
+                    $amount = ($user?->payrollInfo?->basic_salary ?? 0) / $totalWorkingDays;
+                } else {
+                    $amount = 0;
+                }
+                break;
+            case FormulaAmountType::FULL_SALARY:
+                $amount = $user?->payrollInfo?->basic_salary ?? 0;
+                break;
+            case FormulaAmountType::HALF_OF_SALARY:
+                $amount = ($user?->payrollInfo?->basic_salary ?? 0) / 2;
+                break;
+            default:
+                $amount = $formula->amount ?? 0;
+                break;
+        }
+
+        // if ($model instanceof PayrollComponent && $model->type->is(PayrollComponentType::DEDUCTION)) {
+        //     $amount = -abs($amount);
+        // }
 
         return $amount;
     }
@@ -231,42 +219,31 @@ class OvertimeService
         return !is_null($formulaComponent);
     }
 
-    /**
-     * sync formula with related model
-     *
-     * @param  PayrollComponent|Overtime $model
-     * @param  Formula                   $formula
-     * @param  int|float                 $oldAmount
-     */
-    public static function sumAmount(PayrollComponent|Overtime $model, Formula $formula, int|float $oldAmount, ?User $user = null, string|DateTime $startPeriod, string|DateTime $endPeriod): int|float
+    public static function isOvertimeInShift(OvertimeRequest $overtimeRequest, array $shiftIds, string $startPeriod, string $endPeriod)
     {
-        $incomingAmount = $formula->amount;
-        switch ($formula->amount_type) {
-            case FormulaAmountType::SALARY_PER_SCHEDULE_CALENDAR_DAY:
-                $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startPeriod, $endPeriod);
-                if ($totalWorkingDays > 0) {
-                    $incomingAmount = ($user?->payrollInfo?->basic_salary ?? 0) / $totalWorkingDays;
-                } else {
-                    $incomingAmount = 0;
-                }
-                break;
-            case FormulaAmountType::FULL_SALARY:
-                $incomingAmount = $user?->payrollInfo?->basic_salary ?? 0;
-                break;
-            case FormulaAmountType::HALF_OF_SALARY:
-                $incomingAmount = ($user?->payrollInfo?->basic_salary ?? 0) / 2;
-                break;
-            default:
-                $incomingAmount = $formula->amount;
-                break;
+        $startPeriod = Carbon::parse($startPeriod);
+        $endPeriod = Carbon::parse($endPeriod);
+        $overtimeRequestDate = Carbon::parse($overtimeRequest->date);
+
+        $shifts = collect($shiftIds);
+        $shiftIds = $shifts->filter(fn($value) => is_numeric($value))->values()->toArray();
+        $nationalHoliday = $shifts->filter(fn($value) => $value == 'national_holiday')->values()?->toArray()[0] ?? null;
+        $companyHoliday = $shifts->filter(fn($value) => $value == 'company_holiday')->values()?->toArray()[0] ?? null;
+
+        if (in_array($overtimeRequest->shift_id, $shiftIds) && $overtimeRequestDate->between($startPeriod, $endPeriod)) {
+            return true;
         }
 
-        if ($model instanceof PayrollComponent && $model->type->is(PayrollComponentType::DEDUCTION)) {
-            $incomingAmount = -abs($incomingAmount);
+        if ($nationalHoliday) {
+            $nationalHolidayDates = EventService::getDates(EventType::NATIONAL_HOLIDAY, $startPeriod, $endPeriod);
+            if (in_array($overtimeRequest->date, $nationalHolidayDates)) return true;
         }
 
-        $newAmount = $oldAmount + $incomingAmount;
+        if ($companyHoliday) {
+            $companyHolidayDates = EventService::getDates(EventType::COMPANY_HOLIDAY, $startPeriod, $endPeriod);
+            if (in_array($overtimeRequest->date, $companyHolidayDates)) return true;
+        }
 
-        return $newAmount;
+        return false;
     }
 }

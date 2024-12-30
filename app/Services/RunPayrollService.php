@@ -93,21 +93,70 @@ class RunPayrollService
 
     public static function calculateProrateTotalDays(int $totalWorkingDays, Carbon $startDate, Carbon $endDate, bool $isSubOneDay = false): int
     {
-        if ($isSubOneDay) {
-            $period = CarbonPeriod::between($startDate, $endDate->subDay());
-        } else {
-            $period = CarbonPeriod::between($startDate, $endDate);
-        }
+        // if ($isSubOneDay) {
+        //     $period = CarbonPeriod::between($startDate, $endDate->subDays(2));
+        // } else {
+        //     $period = CarbonPeriod::between($startDate, $endDate);
+        // }
+        $period = CarbonPeriod::between($startDate, $endDate);
 
         if ($totalWorkingDays > 21) {
-            return collect($period)->filter(function (Carbon $tanggal) {
+            $wd = collect($period)->filter(function (Carbon $tanggal) {
                 return !$tanggal->isSunday(); // sunday is not included
             })->count();
         } else {
-            return collect($period)->filter(function (Carbon $tanggal) {
+            $wd = collect($period)->filter(function (Carbon $tanggal) {
                 return !$tanggal->isWeekend(); // weekends is not included
             })->count();
         }
+
+        if ($isSubOneDay) return $wd -= 1;
+
+        return max($wd, 0);
+    }
+
+    public static function prorate(int|float $basicAmount, int|float $updatePayrollComponentAmount, int $totalWorkingDays, Carbon $cutOffStartDate, Carbon $cutOffEndDate, Carbon $startEffectiveDate, Carbon|null $endEffectiveDate, bool $isDebug = false): int|float
+    {
+        // effective_date is between period
+        if ($startEffectiveDate->between($cutOffStartDate, $cutOffEndDate)) {
+            // jika terdapat end_date
+            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($cutOffEndDate)) {
+                $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
+                $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
+
+                $totalDaysFromStartEffectiveDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $endEffectiveDate);
+                $middleSalary = ($totalDaysFromStartEffectiveDateToEndEffectiveDate / $totalWorkingDays) * $updatePayrollComponentAmount;
+
+                $endSalary = 0;
+                if ($endEffectiveDate->lessThan($cutOffEndDate)) {
+                    $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
+                    $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $basicAmount;
+                }
+
+                $basicAmount = $startSalary + $middleSalary + $endSalary;
+            } else {
+                // NORMAL CALCULATION
+                $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
+                $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
+                $totalDaysFromStartEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $cutOffEndDate);
+                $endSalary = ($totalDaysFromStartEffectiveDateToCutOffEndDate / $totalWorkingDays) * $updatePayrollComponentAmount;
+
+                $basicAmount = $startSalary + $endSalary;
+            }
+        } else {
+            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($cutOffEndDate)) {
+                $totalDaysFromCutOffStartDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $endEffectiveDate);
+                $startSalary = ($totalDaysFromCutOffStartDateToEndEffectiveDate / $totalWorkingDays) * $updatePayrollComponentAmount;
+
+                $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
+                $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $basicAmount;
+
+                $basicAmount = $startSalary + $endSalary;
+            } else {
+                $basicAmount = $updatePayrollComponentAmount;
+            }
+        }
+        return $basicAmount;
     }
 
     /**
@@ -152,76 +201,16 @@ class RunPayrollService
              * first, calculate basic salary. for now basic salary component is required
              */
             $basicSalaryComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
-            $basicSalaryUpdatePayrollComponent = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
+            $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
 
-            if ($basicSalaryUpdatePayrollComponent) {
-                $startEffectiveDate = Carbon::parse($basicSalaryUpdatePayrollComponent->updatePayrollComponent->effective_date);
+            if ($updatePayrollComponentDetail) {
+                $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
                 // end_date / endEffectiveDate can be null
-                $endEffectiveDate = $basicSalaryUpdatePayrollComponent->updatePayrollComponent->end_date ? Carbon::parse($basicSalaryUpdatePayrollComponent->updatePayrollComponent->end_date) : null;
+                $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
-                // effective_date is between period
-                if ($startEffectiveDate->between($cutOffStartDate, $cutOffEndDate)) {
-                    // jika terdapat end_date
-                    if ($endEffectiveDate) {
-                        if ($endEffectiveDate->lessThanOrEqualTo($cutOffEndDate)) {
-                            $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
-                            $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $userBasicSalary;
-
-                            $totalDaysFromStartEffectiveDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $endEffectiveDate);
-                            $middleSalary = ($totalDaysFromStartEffectiveDateToEndEffectiveDate / $totalWorkingDays) * $basicSalaryUpdatePayrollComponent->new_amount;
-
-                            $endSalary = 0;
-                            if ($endEffectiveDate->lessThan($cutOffEndDate)) {
-                                $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
-                                $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $userBasicSalary;
-                            }
-
-                            $userBasicSalary = $startSalary + $middleSalary + $endSalary;
-                        } else {
-                            // NORMAL CALCULATION
-                            $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
-                            $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $userBasicSalary;
-
-                            $totalDaysFromStartEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $cutOffEndDate);
-                            $endSalary = ($totalDaysFromStartEffectiveDateToCutOffEndDate / $totalWorkingDays) * $basicSalaryUpdatePayrollComponent->new_amount;
-
-                            $userBasicSalary = $startSalary + $endSalary;
-                        }
-                    } else {
-                        // NORMAL CALCULATION
-                        $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
-                        $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $userBasicSalary;
-
-                        $totalDaysFromStartEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $cutOffEndDate);
-                        $endSalary = ($totalDaysFromStartEffectiveDateToCutOffEndDate / $totalWorkingDays) * $basicSalaryUpdatePayrollComponent->new_amount;
-
-                        $userBasicSalary = $startSalary + $endSalary;
-                    }
-                } else {
-                    if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($cutOffEndDate)) {
-                        if ($endEffectiveDate->equalTo($cutOffStartDate)) {
-
-                            $totalDaysFromCutOffStartDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $endEffectiveDate);
-                            $startSalary = ($totalDaysFromCutOffStartDateToEndEffectiveDate / $totalWorkingDays) * $basicSalaryUpdatePayrollComponent->new_amount;
-
-                            $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
-                            $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $userBasicSalary;
-
-                            $userBasicSalary = $startSalary + $endSalary;
-                        } else {
-                            $totalDaysFromCutOffStartDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $endEffectiveDate);
-                            $startSalary = ($totalDaysFromCutOffStartDateToEndEffectiveDate / $totalWorkingDays) * $basicSalaryUpdatePayrollComponent->new_amount;
-
-                            $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
-                            $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $userBasicSalary;
-
-                            $userBasicSalary = $startSalary + $endSalary;
-                        }
-                    } else {
-                        $userBasicSalary = $basicSalaryUpdatePayrollComponent->new_amount;
-                    }
-                }
+                // calculate prorate
+                $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
             }
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
@@ -234,16 +223,21 @@ class RunPayrollService
             $payrollComponents = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->whereNotDefault()->get();
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
-                $updatePayrollComponent = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-
-                if ($updatePayrollComponent) {
-                    $amount = $updatePayrollComponent->new_amount;
+                if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
+                    $amount = FormulaService::calculate(user: $user, model: $payrollComponent, formulas: $payrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
                 } else {
-                    if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
-                        $amount = FormulaService::calculate(user: $user, model: $payrollComponent, formulas: $payrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
-                    } else {
-                        $amount = $payrollComponent->amount;
-                    }
+                    $amount = $payrollComponent->amount;
+                }
+
+                $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+                if ($updatePayrollComponentDetail) {
+                    $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+
+                    // end_date / endEffectiveDate can be null
+                    $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+
+                    // calculate prorate
+                    $amount = self::prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
                 }
 
                 $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
@@ -256,7 +250,7 @@ class RunPayrollService
              * third, calculate alpa
              */
             $alpaComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::ALPA)->first();
-            if (!$alpaComponent) {
+            if ($alpaComponent) {
                 $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
                 if ($alpaUpdateComponent) {
                     $amount = $alpaUpdateComponent->new_amount;
@@ -344,93 +338,99 @@ class RunPayrollService
             // overtime payroll component
             $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
 
-            // $overtime = $user->overtime;
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
-
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
-                /** @var Collection|\App\Models\Overtime[] $userOvertimes A collection of user overtimes */
-                $userOvertimes = $user->overtimes;
-                // dump($userOvertimes->toArray());
+                // dump($userBasicSalary);
+                $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
+                // dd($amount);
 
-                foreach ($userOvertimes as $overtime) {
-                    /** @var Collection|\App\Models\OvertimeRequest[] $overtimeRequests A collection of user overtime requests */
-                    $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($cutOffStartDate, $cutOffEndDate)->approved()->get();
-                    // dump($overtimeRequests->toArray());
-
-                    if ($overtimeRequests->count() <= 0) continue;
-
-                    $amount = 0;
-                    $isPaidPerDay = false;
-                    $overtimeAmountMultiply = 0;
-                    if (!is_null($overtime->compensation_rate_per_day) && $overtime->compensation_rate_per_day > 0) {
-                        $isPaidPerDay = true;
-                        $overtimeAmountMultiply = $overtime->compensation_rate_per_day;
-                    } else {
-                        switch ($overtime->rate_type) {
-                            case RateType::AMOUNT:
-                                $overtimeAmountMultiply = $overtime->rate_amount;
-
-                                break;
-                            case RateType::BASIC_SALARY:
-                                $overtimeAmountMultiply = $userBasicSalary / $overtime->rate_amount;
-
-                                break;
-                                // case RateType::ALLOWANCES:
-                                //     $overtimeAmountMultiply = 0;
-
-                                //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
-                                //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
-                                //     }
-
-                                //     break;
-                            case RateType::FORMULA:
-                                dump('OKEE');
-                                $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
-
-                                break;
-                            default:
-                                $overtimeAmountMultiply = 0;
-
-                                break;
-                        }
-                    }
-
-                    dump($isPaidPerDay);
-                    dd($overtimeAmountMultiply);
-
-                    if ($isPaidPerDay) {
-                        $amount = $overtimeAmountMultiply * $overtimeRequests->count();
-                    } else {
-                        foreach ($overtimeRequests as $overtimeRequest) {
-                            // overtimme rounding
-                            $overtimeDuration = $overtimeRequest->duration;
-                            if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
-                                $overtimeDuration = $overtimeRounding->rounded;
-                            }
-
-                            // overtime multiplier
-                            foreach ($overtime->overtimeMultipliers()->where('is_weekday', Carbon::parse($overtimeRequest->date)->isWeekday())->orderBy('start_hour')->get() as $overtimeMultiplier) {
-                                // break if there's no suitable data for minimum start_hour
-                                if ($overtimeDuration < $overtimeMultiplier->start_hour) break;
-
-                                for ($hour = 1; $hour <= $overtimeDuration; $hour++) {
-                                    if (($hour >= $overtimeMultiplier->start_hour) && ($hour <= $overtimeMultiplier->end_hour)) {
-                                        $multiply = $overtimeMultiplier->multiply;
-                                    } else {
-                                        $multiply = 1;
-                                    }
-
-                                    $amount += ($overtimeAmountMultiply * $multiply);
-                                }
-                            }
-                        }
-                    }
-
-                    self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
-
-                    // logic compensation_rate_per_day (currently we don't use that logic)
-                }
+                self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
             }
+
+            // if ($isUserOvertimeEligible && $overtimePayrollComponent) {
+            //     /** @var Collection|\App\Models\Overtime[] $userOvertimes A collection of user overtimes */
+            //     $userOvertimes = $user->overtimes;
+            //     // dump($userOvertimes->toArray());
+
+            //     foreach ($userOvertimes as $overtime) {
+            //         /** @var Collection|\App\Models\OvertimeRequest[] $overtimeRequests A collection of user overtime requests */
+            //         $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($cutOffStartDate, $cutOffEndDate)->approved()->get();
+            //         // dump($overtimeRequests->toArray());
+
+            //         if ($overtimeRequests->count() <= 0) continue;
+
+            //         $amount = 0;
+            //         $isPaidPerDay = false;
+            //         $overtimeAmountMultiply = 0;
+            //         if (!is_null($overtime->compensation_rate_per_day) && $overtime->compensation_rate_per_day > 0) {
+            //             $isPaidPerDay = true;
+            //             $overtimeAmountMultiply = $overtime->compensation_rate_per_day;
+            //         } else {
+            //             switch ($overtime->rate_type) {
+            //                 case RateType::AMOUNT:
+            //                     $overtimeAmountMultiply = $overtime->rate_amount;
+
+            //                     break;
+            //                 case RateType::BASIC_SALARY:
+            //                     $overtimeAmountMultiply = $userBasicSalary / $overtime->rate_amount;
+
+            //                     break;
+            //                     // case RateType::ALLOWANCES:
+            //                     //     $overtimeAmountMultiply = 0;
+
+            //                     //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
+            //                     //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
+            //                     //     }
+
+            //                     //     break;
+            //                 case RateType::FORMULA:
+            //                     // dump('OKEE');
+            //                     $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
+
+            //                     break;
+            //                 default:
+            //                     $overtimeAmountMultiply = 0;
+
+            //                     break;
+            //             }
+            //         }
+
+            //         // dump($isPaidPerDay);
+            //         // dd($overtimeAmountMultiply);
+
+            //         if ($isPaidPerDay) {
+            //             $amount = $overtimeAmountMultiply * $overtimeRequests->count();
+            //         } else {
+            //             foreach ($overtimeRequests as $overtimeRequest) {
+            //                 // overtimme rounding
+            //                 $overtimeDuration = $overtimeRequest->duration;
+            //                 if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
+            //                     $overtimeDuration = $overtimeRounding->rounded;
+            //                 }
+
+            //                 // overtime multiplier
+            //                 foreach ($overtime->overtimeMultipliers()->where('is_weekday', Carbon::parse($overtimeRequest->date)->isWeekday())->orderBy('start_hour')->get() as $overtimeMultiplier) {
+            //                     // break if there's no suitable data for minimum start_hour
+            //                     if ($overtimeDuration < $overtimeMultiplier->start_hour) break;
+
+            //                     for ($hour = 1; $hour <= $overtimeDuration; $hour++) {
+            //                         if (($hour >= $overtimeMultiplier->start_hour) && ($hour <= $overtimeMultiplier->end_hour)) {
+            //                             $multiply = $overtimeMultiplier->multiply;
+            //                         } else {
+            //                             $multiply = 1;
+            //                         }
+
+            //                         $amount += ($overtimeAmountMultiply * $multiply);
+            //                     }
+            //                 }
+            //             }
+            //         }
+
+            //         self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
+
+            //         // logic compensation_rate_per_day (currently we don't use that logic)
+            //     }
+            // }
 
             // // dump($updatePayrollComponent?->toArray());
             // // insert other updated payroll component

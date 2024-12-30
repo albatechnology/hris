@@ -9,7 +9,7 @@ enum FormulaComponentEnum: string
     case DAILY_ATTENDANCE = 'daily_attendance';
     case SHIFT = 'shift';
     case BRANCH = 'branch';
-    case HOLIDAY = 'holiday';
+        // case HOLIDAY = 'holiday';
     case EMPLOYEMENT_STATUS = 'employement_status';
     case JOB_POSITION = 'job_position';
     case GENDER = 'gender';
@@ -27,13 +27,18 @@ enum FormulaComponentEnum: string
     {
         return match ($this) {
             self::DAILY_ATTENDANCE => DailyAttendance::all(),
-            self::SHIFT => \App\Models\Shift::tenanted()->orWhereNull('company_id')->get(['id', 'name'])->pluck('name', 'id')->toArray(),
-            self::BRANCH => \App\Models\Branch::tenanted()->get(['branches.id', 'branches.name'])->pluck('name', 'id')->toArray(),
-            self::HOLIDAY => [
-                'event' => 'Event',
-                'national_holiday' => 'National Holiday',
-                'holiday' => 'Company Holiday',
+            // self::SHIFT => \App\Models\Shift::tenanted()->orWhereNull('company_id')->get(['id', 'name'])->pluck('name', 'id')->toArray(),
+            self::SHIFT => [
+                ...\App\Models\Shift::tenanted()->orWhereNull('company_id')->get(['id', 'name'])->pluck('name', 'id')->toArray(),
+                'national_holiday' => 'national_holiday',
+                // 'company_holiday' => 'company_holiday',
             ],
+            self::BRANCH => \App\Models\Branch::tenanted()->get(['branches.id', 'branches.name'])->pluck('name', 'id')->toArray(),
+            // self::HOLIDAY => [
+            //     'event' => 'Event',
+            //     'national_holiday' => 'National Holiday',
+            //     'holiday' => 'Company Holiday',
+            // ],
             self::EMPLOYEMENT_STATUS => EmploymentStatus::all(),
             self::JOB_POSITION => \App\Models\Position::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
             self::GENDER => Gender::all(),
