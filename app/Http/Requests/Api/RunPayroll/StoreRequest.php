@@ -34,10 +34,10 @@ class StoreRequest extends FormRequest
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
             'period' => ['required', 'string', function (string $attr, string $value, Closure $fail) {
-                $runPayroll = RunPayroll::where('period', $value)->exists();
-                if ($runPayroll) {
-                    $fail('Cannot run payroll in the same period');
-                }
+                // $runPayroll = RunPayroll::where('period', $value)->exists();
+                // if ($runPayroll) {
+                //     $fail('Cannot run payroll in the same period');
+                // }
             }],
             'payment_schedule' => 'required|date',
             'user_ids' => [
