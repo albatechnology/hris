@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Enums\SettingKey;
 use App\Enums\UserType;
-use App\Imports\UserSunImport;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Department;
@@ -123,11 +122,11 @@ class UserSeeder extends Seeder
                 'join_date' => date('Y') . '-01-01',
             ]);
             $admin->payrollInfo()->create([
-                'basic_salary' => 1000000
+                'basic_salary' => 10000000
             ]);
             $admin->userBpjs()->create([
-                'upah_bpjs_kesehatan' => 1000000,
-                'upah_bpjs_ketenagakerjaan' => 1000000,
+                'upah_bpjs_kesehatan' => 10000000,
+                'upah_bpjs_ketenagakerjaan' => 10000000,
             ]);
             $admin->detail()->create([]);
             DB::table('model_has_roles')->insert([
@@ -220,11 +219,11 @@ class UserSeeder extends Seeder
                         ]);
                         $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
                         $user->payrollInfo()->create([
-                            'basic_salary' => 1000000
+                            'basic_salary' => 10000000
                         ]);
                         $user->userBpjs()->create([
-                            'upah_bpjs_kesehatan' => 1000000,
-                            'upah_bpjs_ketenagakerjaan' => 1000000,
+                            'upah_bpjs_kesehatan' => 10000000,
+                            'upah_bpjs_ketenagakerjaan' => 10000000,
                         ]);
                         $user->detail()->create([]);
                         DB::table('model_has_roles')->insert([
@@ -255,7 +254,7 @@ class UserSeeder extends Seeder
                     //     ]);
                     //     $user->addMedia(public_path('img/difa.jpg'))->preservingOriginal()->toMediaCollection('user');
                     //     $user->payrollInfo()->create([
-                    //         'basic_salary' => 1000000
+                    //         'basic_salary' => 10000000
                     //     ]);
                     //     $user->detail()->create([]);
                     //     DB::table('model_has_roles')->insert([
