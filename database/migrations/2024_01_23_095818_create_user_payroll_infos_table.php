@@ -27,7 +27,7 @@ return new class extends Migration
             $table->unsignedDouble('basic_salary')->default(0);
             $table->string('salary_type')->default(SalaryType::MONTHLY);
             $table->string('payment_schedule')->default(PaymentSchedule::DEFAULT);
-            $table->string('prorate_setting')->default(ProrateSetting::BASE_ON_CALENDAR_DAY);
+            $table->string('prorate_setting')->default(ProrateSetting::BASE_ON_WORKING_DAY);
             $table->string('overtime_setting')->default(OvertimeSetting::ELIGIBLE);
             $table->string('cost_center_category')->default(CostCenterCategory::DIRECT);
             $table->string('currency')->default(CurrencyCode::IDR);
