@@ -45,6 +45,7 @@ class RegisterRequest extends FormRequest
         $data = [
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
+            'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
 
         if ($this->company_id) {
