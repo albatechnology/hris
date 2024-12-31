@@ -8,21 +8,17 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Enums\PtkpStatus;
-use App\Enums\RateType;
 use App\Enums\RunPayrollStatus;
 use App\Enums\TaxMethod;
-use App\Models\Company;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
-use App\Models\UpdatePayrollComponent;
 use App\Models\UpdatePayrollComponentDetail;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -249,7 +245,7 @@ class RunPayrollService
             /**
              * third, calculate alpa
              */
-            if (env('CALCULATE_ALPA', false)) {
+            if ($user->payrollInfo?->is_ignore_alpa == true) {
                 $alpaComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::ALPA)->first();
                 if ($alpaComponent) {
                     $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
@@ -344,10 +340,10 @@ class RunPayrollService
             $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
 
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
-            $isOb = false;
+
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
                 // dump($userBasicSalary);
-                $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary, $isOb);
+                $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
                 // dd($amount);
 
                 self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);

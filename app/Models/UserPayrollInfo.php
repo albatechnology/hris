@@ -22,10 +22,11 @@ class UserPayrollInfo extends BaseModel
     protected $fillable = [
         'user_id',
         'total_working_days',
+        'is_ignore_alpa',
         'basic_salary',
-        'salary_type',
-        'payment_schedule',
-        'prorate_setting',
+        'salary_type', // not used yet
+        'payment_schedule', // not used yet
+        'prorate_setting', // not used yet
         'overtime_setting',
         'cost_center_category',
         'currency',
@@ -38,24 +39,26 @@ class UserPayrollInfo extends BaseModel
         'npwp',
         'ptkp_status',
         'tax_method',
-        'tax_salary',
-        'taxable_date',
-        'employee_tax_status',
-        'beginning_netto',
-        'pph21_paid',
+        'tax_salary', // not used yet
+        'taxable_date', // not used yet
+        'employee_tax_status', // not used yet
+        'beginning_netto', // not used yet
+        'pph21_paid', // not used yet
     ];
 
     protected $casts = [
+        'total_working_days' => 'integer',
+        'is_ignore_alpa' => 'boolean',
         'basic_salary' => 'float',
-        'salary_type' => SalaryType::class,
-        'payment_schedule' => PaymentSchedule::class,
-        'prorate_setting' => ProrateSetting::class,
+        'salary_type' => SalaryType::class, // not used yet
+        'payment_schedule' => PaymentSchedule::class, // not used yet
+        'prorate_setting' => ProrateSetting::class, // not used yet
         'overtime_setting' => OvertimeSetting::class,
         'cost_center_category' => CostCenterCategory::class,
-        'currency' => CurrencyCode::class,
+        'currency' => CurrencyCode::class, // not used yet
         'ptkp_status' => PtkpStatus::class,
         'tax_method' => TaxMethod::class,
-        'tax_salary' => TaxSalary::class,
+        'tax_salary' => TaxSalary::class, // not used yet
         'employee_tax_status' => EmploymentStatus::class,
     ];
 

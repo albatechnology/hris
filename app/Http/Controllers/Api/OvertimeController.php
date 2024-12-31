@@ -76,6 +76,8 @@ class OvertimeController extends BaseController
 
     public function store(StoreRequest $request): OvertimeResource|JsonResponse
     {
+        if ($request->name == 'ob') return $this->errorResponse('OB cannot be created');
+
         DB::beginTransaction();
         try {
             $overtime = Overtime::create($request->validated());
@@ -96,6 +98,8 @@ class OvertimeController extends BaseController
     public function update(int $id, UpdateRequest $request): OvertimeResource|JsonResponse
     {
         $overtime = Overtime::findTenanted($id);
+        if ($overtime->name == 'ob') return $this->errorResponse('OB cannot be updated');
+
         DB::beginTransaction();
         try {
             $overtime->update($request->validated());
@@ -117,6 +121,7 @@ class OvertimeController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $overtime = Overtime::findTenanted($id);
+        if ($overtime->name == 'ob') return $this->errorResponse('OB cannot be deleted');
         DB::beginTransaction();
         try {
             // sync formula with empty data []

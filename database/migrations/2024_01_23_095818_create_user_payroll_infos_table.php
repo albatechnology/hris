@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\CostCenterCategory;
 use App\Enums\CurrencyCode;
 use App\Enums\OvertimeSetting;
 use App\Enums\PaymentSchedule;
+use App\Enums\ProrateSetting;
 use App\Enums\PtkpStatus;
 use App\Enums\SalaryType;
 use App\Enums\TaxMethod;
@@ -25,9 +27,9 @@ return new class extends Migration
             $table->unsignedDouble('basic_salary')->default(0);
             $table->string('salary_type')->default(SalaryType::MONTHLY);
             $table->string('payment_schedule')->default(PaymentSchedule::DEFAULT);
-            $table->string('prorate_setting')->nullable();
+            $table->string('prorate_setting')->default(ProrateSetting::BASE_ON_CALENDAR_DAY);
             $table->string('overtime_setting')->default(OvertimeSetting::ELIGIBLE);
-            $table->string('cost_center_category')->nullable();
+            $table->string('cost_center_category')->default(CostCenterCategory::DIRECT);
             $table->string('currency')->default(CurrencyCode::IDR);
             $table->string('bank_name')->nullable();
             $table->string('bank_account_no')->nullable();

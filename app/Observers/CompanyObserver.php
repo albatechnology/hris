@@ -18,11 +18,11 @@ class CompanyObserver
         \App\Models\RequestChangeDataAllowes::createForCompany($company);
         Overtime::create([
             'company_id' => $company->id,
-            'compensation_rate_per_day' => 10000,
-            'is_rounding' => false,
-            'name' => "Default Overtime",
-            'rate_amount' => 10000,
-            'rate_type' => "amount",
+            'compensation_rate_per_day' => 0,
+            // 'is_rounding' => false,
+            'name' => "OB",
+            // 'rate_amount' => 10000,
+            // 'rate_type' => "amount",
         ]);
 
         SettingService::create($company);

@@ -34,17 +34,19 @@ class OvertimeService
 
         return ($basicSalary / 160) * $totalDurationInHours;
     }
-    public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary, bool $isOb = false): int|float
+    public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary): int|float
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
 
-        $overtimeRequests = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
-        if ($overtimeRequests->count() <= 0) return 0;
-
-        if ($isOb) {
+        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob')) {
+            $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $user->overtimes->whereIn('name', ['ob', 'OB'])->value('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
             return self::calculateOb($user, $overtimeRequests);
         }
+
+        $overtimeRequests = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
+
+        if ($overtimeRequests->count() <= 0) return 0;
 
         $userOvertimes = $user->overtimes->load([
             'formulas.formulaComponents',
