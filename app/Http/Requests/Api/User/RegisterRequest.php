@@ -105,7 +105,7 @@ class RegisterRequest extends FormRequest
             'prorate_setting' => ['nullable', Rule::enum(ProrateSetting::class)],
             'overtime_setting' => ['required', Rule::enum(OvertimeSetting::class)],
             'cost_center_category' => ['nullable', Rule::enum(CostCenterCategory::class)],
-            'currency' => ['required', Rule::enum(CurrencyCode::class)],
+            'currency' => ['nullable', Rule::enum(CurrencyCode::class)],
             'bank_name' => 'nullable|string',
             'bank_account_no' => 'nullable|string',
             'bank_account_holder' => 'nullable|string',
