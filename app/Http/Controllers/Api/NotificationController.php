@@ -67,9 +67,6 @@ class NotificationController extends BaseController
 
     public function test(string $token)
     {
-        dump($token);
-        dump(Crypt::decryptString($token));
-
         $dec = urldecode($token);
         dump($dec);
         dd(Crypt::decryptString($dec));
