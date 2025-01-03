@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 
 class SetupPasswordMailable extends Mailable implements ShouldQueue
 {
@@ -41,6 +42,11 @@ class SetupPasswordMailable extends Mailable implements ShouldQueue
         // $encryptedEmail = urlencode(base64_encode(openssl_encrypt($this->user->email, 'AES-128-CBC', env('CRYPT_SECRET_KEY'), OPENSSL_RAW_DATA, env('CRYPT_IV'))));
 
         $encryptedEmail = Crypt::encryptString($this->user->email);
+        Log::info("USER REGISTERED", [
+            'email' => $this->user->email,
+            'encrypted' => $encryptedEmail,
+            'encrypted_urlencode' => urlencode($encryptedEmail),
+        ]);
 
         return new Content(
             view: 'mails.setup-password',
