@@ -67,9 +67,27 @@ class NotificationController extends BaseController
 
     public function test(string $token)
     {
-        $dec = urldecode($token);
-        dump($dec);
-        dd(Crypt::decryptString($dec));
+
+        try {
+            $eee = Crypt::decryptString($token);
+            dd($eee);
+        } catch (\Throwable $th) {
+            dump('error 1');
+            dump($th->getMessage());
+        }
+
+        $urldecode = urldecode($token);
+        dump($urldecode);
+
+        try {
+            $dec = Crypt::decryptString($urldecode);
+            dump('dec 2');
+            dump($dec);
+        } catch (\Throwable $th) {
+            dump('error 2');
+            dump($th->getMessage());
+        }
+        dd($token);
         // $title = $request->title ?? "Test Notification";
         // $body = $request->body ?? "This is a test notification";
         // $users = User::whereIn('id', $request->user_ids ?? [])->get(['id', 'name', 'last_name', 'fcm_token']);
