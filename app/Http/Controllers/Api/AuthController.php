@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\User\ResendSetupPasswordRequest;
 use App\Http\Requests\Api\User\SetupPasswordRequest;
 use App\Models\User;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -61,7 +62,9 @@ class AuthController extends BaseController
     public function setupPassword(SetupPasswordRequest $request)
     {
         try {
-            $decryptedEmail = openssl_decrypt(base64_decode(urldecode($request->token)), 'AES-128-CBC', env('CRYPT_SECRET_KEY'), OPENSSL_RAW_DATA, env('CRYPT_IV'));
+            // $decryptedEmail = openssl_decrypt(base64_decode(urldecode($request->token)), 'AES-128-CBC', env('CRYPT_SECRET_KEY'), OPENSSL_RAW_DATA, env('CRYPT_IV'));
+
+            $decryptedEmail = Crypt::decryptString($request->token);
             if (!$decryptedEmail) {
                 return $this->errorResponse('Invalid token');
             }
