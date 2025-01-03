@@ -64,7 +64,7 @@ class AuthController extends BaseController
         try {
             // $decryptedEmail = openssl_decrypt(base64_decode(urldecode($request->token)), 'AES-128-CBC', env('CRYPT_SECRET_KEY'), OPENSSL_RAW_DATA, env('CRYPT_IV'));
 
-            $decryptedEmail = Crypt::decryptString($request->token);
+            $decryptedEmail = Crypt::decryptString(urldecode($request->token));
             if (!$decryptedEmail) {
                 return $this->errorResponse('Invalid token');
             }

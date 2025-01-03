@@ -7,6 +7,7 @@ use App\Models\DatabaseNotification;
 use App\Models\User;
 use App\Notifications\TestNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -64,21 +65,27 @@ class NotificationController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function test(Request $request)
+    public function test(string $token)
     {
-        $title = $request->title ?? "Test Notification";
-        $body = $request->body ?? "This is a test notification";
-        $users = User::whereIn('id', $request->user_ids ?? [])->get(['id', 'name', 'last_name', 'fcm_token']);
-        foreach ($users as $user) {
-            $user->notify(new TestNotification($title, $body));
-        }
+        dump($token);
+        dump(Crypt::decryptString($token));
 
-        return response()->json([
-            'data' => [
-                "title" => $request->title,
-                "body" => $request->body,
-                'users' => $users
-            ]
-        ]);
+        $dec = urldecode($token);
+        dump($dec);
+        dd(Crypt::decryptString($dec));
+        // $title = $request->title ?? "Test Notification";
+        // $body = $request->body ?? "This is a test notification";
+        // $users = User::whereIn('id', $request->user_ids ?? [])->get(['id', 'name', 'last_name', 'fcm_token']);
+        // foreach ($users as $user) {
+        //     $user->notify(new TestNotification($title, $body));
+        // }
+
+        // return response()->json([
+        //     'data' => [
+        //         "title" => $request->title,
+        //         "body" => $request->body,
+        //         'users' => $users
+        //     ]
+        // ]);
     }
 }

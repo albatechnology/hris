@@ -45,7 +45,7 @@ class SetupPasswordMailable extends Mailable implements ShouldQueue
         return new Content(
             view: 'mails.setup-password',
             with: [
-                'url'  => env('FRONTEND_URL') . '/set-password' . '?token=' . $encryptedEmail,
+                'url'  => env('FRONTEND_URL') . '/set-password' . '?token=' . urlencode($encryptedEmail),
             ]
         );
     }
