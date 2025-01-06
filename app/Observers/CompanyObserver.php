@@ -24,6 +24,14 @@ class CompanyObserver
             // 'rate_amount' => 10000,
             // 'rate_type' => "amount",
         ]);
+        Overtime::create([
+            'company_id' => $company->id,
+            'compensation_rate_per_day' => 0,
+            // 'is_rounding' => false,
+            'name' => "OB_SUN_ENGLISH",
+            'rate_amount' => 12500,
+            'rate_type' => "amount",
+        ]);
 
         SettingService::create($company);
     }

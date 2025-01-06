@@ -34,6 +34,22 @@ class OvertimeService
 
         return ($basicSalary / 160) * $totalDurationInHours;
     }
+
+    public static function calculateObSunEnglish(User $user, Overtime $overtime, Collection $overtimeRequests): int|float
+    {
+        $totalDurationInHours = 0;
+        foreach ($overtimeRequests as $overtimeRequest) {
+            $start = Carbon::parse($overtimeRequest->start_at);
+            $end = Carbon::parse($overtimeRequest->end_at);
+            $hour = $end->diffInHours($start);
+            $totalDurationInHours += ($hour > 9 ? 9 : $hour);
+        }
+
+        $rate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 12500;
+
+        return $rate * $totalDurationInHours;
+    }
+
     public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary): int|float
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
@@ -42,6 +58,16 @@ class OvertimeService
         if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob')) {
             $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $user->overtimes->whereIn('name', ['ob', 'OB'])->value('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
             return self::calculateOb($user, $overtimeRequests);
+        }
+
+        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'OB_SUN_ENGLISH')) {
+            $overtime = $user->overtimes->where('name', 'OB_SUN_ENGLISH')->first();
+            if ($overtime) {
+                $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
+                return self::calculateObSunEnglish($user, $overtime, $overtimeRequests);
+            } else {
+                return 0;
+            }
         }
 
         $overtimeRequests = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();

@@ -342,9 +342,7 @@ class RunPayrollService
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
 
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
-                // dump($userBasicSalary);
                 $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
-                // dd($amount);
 
                 self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
             }
