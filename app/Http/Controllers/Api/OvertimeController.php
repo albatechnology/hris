@@ -121,7 +121,7 @@ class OvertimeController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $overtime = Overtime::findTenanted($id);
-        if ($overtime->name == 'ob') return $this->errorResponse('OB cannot be deleted');
+        if ($overtime->name == 'ob' || $overtime->name == 'OB_SUN_ENGLISH') return $this->errorResponse('OB cannot be deleted');
         DB::beginTransaction();
         try {
             // sync formula with empty data []
