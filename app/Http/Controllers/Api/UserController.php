@@ -618,16 +618,16 @@ class UserController extends BaseController
 
         if (!is_null($order)) {
             $name = $request->filter['name'] ?? null;
-            $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
+            $users = User::select('id', 'name', 'last_name')->tenanted()->where('id', '!=', $user->id)
                 ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
 
             if ($name) {
                 $users = $users->whereLike('name', $name);
             }
 
-            $users = $users->paginate();
+            $users = $users->paginate($this->per_page);
         } else {
-            $users = User::where('id', '<', 0)->paginate();
+            $users = User::where('id', '<', 0)->paginate($this->per_page);
         }
 
         return UserResource::collection($users);
