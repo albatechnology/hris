@@ -24,7 +24,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'payroll_schedule_date' => 'required|date_format:d',
+            'cut_off_date' => 'required|date_format:d',
         ];
     }
 }
