@@ -77,7 +77,7 @@ class UserController extends BaseController
                 $query->select('id', 'name');
             }),
             AllowedInclude::callback('supervisors', function ($query) {
-                $query->orderByDesc('order')->with('user', fn($q) => $q->select('id', 'name', 'last_name'));
+                $query->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name', 'last_name'));
             }),
             'detail',
             'payrollInfo',
