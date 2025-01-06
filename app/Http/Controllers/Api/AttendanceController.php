@@ -72,7 +72,7 @@ class AttendanceController extends BaseController
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -415,7 +415,7 @@ class AttendanceController extends BaseController
             $attendances = Attendance::where('user_id', $user->id)
                 ->whereHas('details', fn($q) => $q->approved())
                 ->with([
-                    'shift' => fn($q) => $q->selectMinimalist(),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -596,7 +596,7 @@ class AttendanceController extends BaseController
                     $q->where('schedules.type', $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
                 })
                 ->with([
-                    'shift' => fn($q) => $q->select('id', 'clock_in', 'clock_out'),
+                    'shift' => fn($q) => $q->withTrashed()->select('id', 'clock_in', 'clock_out'),
                     'timeoff' => fn($q) => $q->select('id'),
                     'clockIn' => fn($q) => $q->select('attendance_id', 'time'),
                     'clockOut' => fn($q) => $q->select('attendance_id', 'time'),
@@ -729,7 +729,7 @@ class AttendanceController extends BaseController
                 ->where('date', $date)
                 ->whereHas('details', fn($q) => $q->approved())
                 ->with([
-                    'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -800,7 +800,7 @@ class AttendanceController extends BaseController
             ->allowedIncludes([
                 AllowedInclude::callback('attendance', function ($query) {
                     $query->select('id', 'schedule_id', 'shift_id', 'code')
-                        ->with('shift', fn($q) => $q->selectMinimalist());
+                        ->with('shift', fn($q) => $q->withTrashed()->selectMinimalist());
                 }),
             ])
             ->allowedSorts(['id', 'is_clock_in', 'created_at'])
@@ -1039,7 +1039,7 @@ class AttendanceController extends BaseController
             ->myApprovals()
             ->with('attendance', fn($q) => $q->with([
                 'user' => fn($q) => $q->select('id', 'name'),
-                'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                 'schedule' => fn($q) => $q->select('id', 'name')
             ]));
 
@@ -1065,7 +1065,7 @@ class AttendanceController extends BaseController
                 'attendance' => fn($q) => $q
                     ->with([
                         'user' => fn($q) => $q->select('id', 'name'),
-                        'shift' => fn($q) => $q->select('id', 'name', 'is_dayoff', 'clock_in', 'clock_out'),
+                        'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                         'schedule' => fn($q) => $q->select('id', 'name')
                     ])
             ]
