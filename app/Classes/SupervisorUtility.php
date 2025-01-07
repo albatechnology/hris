@@ -12,7 +12,7 @@ class SupervisorUtility
 
     protected function __construct(protected User $user, protected User $supervisor)
     {
-        $this->supervisorLines = $this->user->supervisors;
+        $this->supervisorLines = $this->user->supervisors()->where('is_additional_supervisor', 0)->orderBy('order')->get();
     }
 
     public static function build(User $user, User $supervisor)

@@ -77,7 +77,7 @@ class UserController extends BaseController
                 $query->select('id', 'name');
             }),
             AllowedInclude::callback('supervisors', function ($query) {
-                $query->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name', 'last_name'));
+                $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name', 'last_name'));
             }),
             'detail',
             'payrollInfo',
@@ -626,8 +626,14 @@ class UserController extends BaseController
         $user = User::findTenanted($id);
         DB::beginTransaction();
         try {
-            $user->supervisors()->delete();
-            $user->supervisors()->createMany($request->data);
+            $user->supervisors()->where('is_additional_supervisor', $request->is_additional_supervisor)->delete();
+
+            $data = collect($request->data ?? [])->map(function ($item) use ($request) {
+                $item['is_additional_supervisor'] = $request->is_additional_supervisor;
+                return $item;
+            })?->toArray();
+
+            $user->supervisors()->createMany($data);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();

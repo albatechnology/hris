@@ -73,7 +73,7 @@ class RequestApprovalService
         $approvers = [];
 
         // find user supervisors to be approvers. if default approver has been set, use it. else find from settings where key REQUEST_APPROVER
-        $user->load(['supervisors' => fn($q) => $q->orderBy('order')]);
+        $user->load(['supervisors' => fn($q) => $q->where('is_additional_supervisor', 0)->orderBy('order')]);
         if ($user->supervisors->count() > 0) {
             $approvers = $user->supervisors?->map(fn(UserSupervisor $userSupervisor) => [
                 'user_id' => $userSupervisor->supervisor_id,

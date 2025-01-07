@@ -13,6 +13,11 @@ class UserSupervisor extends BaseModel
         'user_id',
         'supervisor_id',
         'order',
+        'is_additional_supervisor',
+    ];
+
+    protected $casts = [
+        'is_additional_supervisor' => 'boolean',
     ];
 
     public function supervisor(): BelongsTo
