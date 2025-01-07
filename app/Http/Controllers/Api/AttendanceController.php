@@ -21,7 +21,6 @@ use App\Http\Resources\DefaultResource;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
-use App\Models\NationalHoliday;
 use App\Models\PayrollSetting;
 use App\Models\User;
 use App\Services\AttendanceService;
@@ -59,16 +58,16 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
-        $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
-        $nationalHolidays = NationalHoliday::orderBy('date')->get();
-
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->get(['id', 'name', 'last_name', 'nik']);
+            ->get(['id', 'company_id', 'name', 'last_name', 'nik']);
 
         $data = [];
         foreach ($users as $user) {
+            $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
+            $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
@@ -130,20 +129,23 @@ class AttendanceController extends BaseController
                     $shift->schedule_working_hour = getIntervalTime($shift?->clock_in, $shift?->clock_out);
                     $shiftType = 'shift';
 
-                    $companyHolidayData = null;
+                    $companyHoliday = null;
                     if ($schedule?->is_overide_company_holiday == false) {
-                        $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                            return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                        $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                            return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
                         });
 
-                        if ($companyHolidayData) {
-                            $shift = $companyHolidayData;
+                        if ($companyHoliday) {
+                            $shift = $companyHoliday;
                             $shiftType = 'company_holiday';
                         }
                     }
 
-                    if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-                        $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                    if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
+                        $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                            return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                        });
+
                         if ($nationalHoliday) {
                             $shift = $nationalHoliday;
                             $shiftType = 'national_holiday';
@@ -424,8 +426,8 @@ class AttendanceController extends BaseController
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
 
-            $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
-            $nationalHolidays = NationalHoliday::orderBy('date')->get();
+            $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
+            $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
 
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
@@ -497,20 +499,23 @@ class AttendanceController extends BaseController
                 }
                 $shiftType = 'shift';
 
-                $companyHolidayData = null;
+                $companyHoliday = null;
                 if ($schedule->is_overide_company_holiday == false) {
-                    $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                        return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                    $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                        return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
                     });
 
-                    if ($companyHolidayData) {
-                        $shift = $companyHolidayData;
+                    if ($companyHoliday) {
+                        $shift = $companyHoliday;
                         $shiftType = 'company_holiday';
                     }
                 }
 
-                if ($schedule->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-                    $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+                if ($schedule->is_overide_national_holiday == false && is_null($companyHoliday)) {
+                    $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                        return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                    });
+
                     if ($nationalHoliday) {
                         $shift = $nationalHoliday;
                         $shiftType = 'national_holiday';
@@ -583,9 +588,6 @@ class AttendanceController extends BaseController
         $summaryNotPresentNoClockOut = 0;
         $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
-
-        // $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
-        // $nationalHolidays = NationalHoliday::orderBy('date')->get();
 
         foreach ($query->get() as $user) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, scheduleType: $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
@@ -700,7 +702,7 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
+        $query = User::select('id', 'company_id', 'branch_id', 'name', 'last_name', 'nik')
             ->tenanted(true)
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
@@ -720,9 +722,10 @@ class AttendanceController extends BaseController
 
         $date = $request->filter['date'];
 
-        $companyHolidays = Event::tenanted()->whereCompanyHoliday()->get();
-        $nationalHolidays = NationalHoliday::orderBy('date')->get();
-        $users->map(function ($user) use ($date, $companyHolidays, $nationalHolidays, $request) {
+        $users->map(function ($user) use ($date, $request) {
+            $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
+            $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+
             $schedule = ScheduleService::getTodaySchedule($user, $date, scheduleType: $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
 
             $attendance = $user->attendances()
@@ -751,20 +754,23 @@ class AttendanceController extends BaseController
             }
             $shiftType = 'shift';
 
-            $companyHolidayData = null;
+            $companyHoliday = null;
             if ($schedule?->is_overide_company_holiday == false) {
-                $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-                    return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
+                $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                    return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
                 });
 
-                if ($companyHolidayData) {
-                    $shift = $companyHolidayData;
+                if ($companyHoliday) {
+                    $shift = $companyHoliday;
                     $shiftType = 'company_holiday';
                 }
             }
 
-            if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-                $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
+            if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
+                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                });
+
                 if ($nationalHoliday) {
                     $shift = $nationalHoliday;
                     $shiftType = 'national_holiday';

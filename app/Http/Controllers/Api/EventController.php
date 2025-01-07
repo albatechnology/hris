@@ -26,7 +26,7 @@ class EventController extends BaseController
 
     public function index()
     {
-        $event = QueryBuilder::for(Event::tenanted()->orWhere(fn($q) => $q->whereNationalHoliday()))
+        $event = QueryBuilder::for(Event::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
             ])
@@ -99,7 +99,11 @@ class EventController extends BaseController
             $fullDate = sprintf('%s-%s-%s', $request->filter['year'], $request->filter['month'], $request->filter['date']);
         }
 
-        $events = Event::tenanted()->orWhere(fn($q) => $q->whereNationalHoliday())
+        $companyId = $request->company_id ?? auth()->user()->company_id;
+
+        $events = Event::tenanted()
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->orWhere(fn($q) => $q->whereNationalHoliday())
             ->when($fullDate, fn($q) => $q->whereDate('start_at', '<=', $fullDate)->whereDate('end_at', '>=', $fullDate), fn($q) => $q->whereYear('start_at', $request->filter['year'])->where(fn($q) => $q->whereMonth('start_at', $request->filter['month'])->orWhereMonth('end_at', $request->filter['month'])))
             ->get(['id', 'type', 'name', 'start_at', 'end_at', 'description']);
 

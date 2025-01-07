@@ -44,6 +44,34 @@ class Event extends Model implements TenantedInterface
         });
     }
 
+    public function scopeTenanted(Builder $query, ?User $user = null): Builder
+    {
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
+
+        if ($user->is_super_admin) return $query;
+
+        if ($user->is_admin) {
+            return $query->whereIn('company_id', $user->companies()->get(['company_id'])?->pluck('company_id'));
+            // return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
+        }
+
+        // return $query->whereIn('company_id', $user->companies()->get(['company_id'])?->pluck('company_id'));
+        return $query->where('company_id', $user->company_id);
+    }
+
+    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
+    {
+        $query->tenanted()->where('id', $id);
+        if ($fail) {
+            return $query->firstOrFail();
+        }
+
+        return $query->first();
+    }
+
     public function userEvents(): HasMany
     {
         return $this->hasMany(UserEvent::class);

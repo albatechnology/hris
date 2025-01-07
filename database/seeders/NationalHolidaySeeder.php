@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\EventType;
+use App\Models\Company;
 use App\Models\Event;
 use App\Models\NationalHoliday;
 use Illuminate\Database\Seeder;
@@ -34,15 +35,17 @@ class NationalHolidaySeeder extends Seeder
             ['name' => 'Hari Raya Natal', 'date' => '2024-12-25'],
         ];
 
-        collect($dates)->each(function ($date) {
-            NationalHoliday::create($date);
+        Company::all()->each(function (Company $company) use ($dates) {
+            collect($dates)->each(function ($date) use ($company) {
+                NationalHoliday::create($date);
 
-            $date['start_at'] = $date['date'];
-            $date['type'] = EventType::NATIONAL_HOLIDAY->value;
-            unset($date['date']);
-            Event::create($date);
+                $date['company_id'] = $company->id;
+                $date['start_at'] = $date['date'];
+                $date['type'] = EventType::NATIONAL_HOLIDAY->value;
+                unset($date['date']);
+                Event::create($date);
+            });
         });
-
         // NationalHoliday::create(['name' => 'Tahun Baru Masehi', 'date' => '2024-01-01']);
         // NationalHoliday::create(['name' => 'Isra Miraj', 'date' => '2024-02-08']);
         // NationalHoliday::create(['name' => 'Tahun Baru Imlek', 'date' => '2024-02-10']);
