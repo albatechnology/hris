@@ -141,18 +141,6 @@ class UserController extends BaseController
 
     public function me()
     {
-        // Log::shareContext([
-        //     'silit' => auth('sanctum')->user(),
-        // ]);
-        // Log::emergency('test emergency');
-        // Log::alert('test alert');
-        // Log::critical('test critical');
-        // Log::error('test error');
-        // Log::warning('test warning');
-        // Log::notice('test notice');
-        // Log::info('test info');
-        // Log::debug('test debug');
-        // dd('oke');
         /** @var User $user */
         $user = auth('sanctum')->user();
         $user = QueryBuilder::for(User::where('id', $user->id))

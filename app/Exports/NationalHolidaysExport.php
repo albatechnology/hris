@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\NationalHoliday;
+use App\Models\Event;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -19,7 +19,8 @@ class NationalHolidaysExport implements FromCollection, WithHeadings
      */
     public function collection()
     {
-        return NationalHoliday::all();
+        return Event::tenanted()->whereNationalHoliday()->get();
+        // return NationalHoliday::all();
     }
 
     public function headings(): array

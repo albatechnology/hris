@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\DailyAttendance;
 use App\Enums\EventType;
 use App\Models\Attendance;
-use App\Models\Event;
 use App\Models\Shift;
 use App\Models\User;
 

@@ -54,7 +54,7 @@ class EventService
 
     public static function getDates(EventType $type, string $startAt, string $endAt): array
     {
-        $events = Event::select('id', 'start_at', 'end_at')->where('type', $type)->whereDateBetween($startAt, $endAt)->get();
+        $events = Event::select('id', 'start_at', 'end_at')->tenanted()->where('type', $type)->whereDateBetween($startAt, $endAt)->get();
 
         $dates = $events->flatMap(function ($item) {
             $start = Carbon::parse($item['start_at']);

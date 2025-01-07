@@ -3,12 +3,9 @@
 namespace App\Services;
 
 use App\Enums\ScheduleType;
-use App\Models\Event;
-use App\Models\NationalHoliday;
 use App\Models\RequestShift;
 use App\Models\Schedule;
 use App\Models\User;
-use Carbon\Carbon;
 use DateTime;
 
 class ScheduleService

@@ -25,9 +25,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
-            'type' => ['nullable', Rule::enum(EventType::class)],
+            'type' => ['required', Rule::enum(EventType::class)],
             'start_at' => 'required|date_format:Y-m-d',
             'end_at' => 'required|date_format:Y-m-d',
             'is_public' => 'required|boolean',
