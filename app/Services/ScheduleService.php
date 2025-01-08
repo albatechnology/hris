@@ -45,7 +45,7 @@ class ScheduleService
                 ->where('type', $scheduleType)
                 ->whereDate('effective_date', '<=', $date)
                 ->withCount('shifts')
-                ->orderByDesc('effective_date')->first();
+                ->orderByDesc('effective_date', 'created_at')->first();
         } else {
             $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
                 $q->whereApproved();
@@ -56,7 +56,7 @@ class ScheduleService
                 ->where('type', $scheduleType)
                 ->whereDate('effective_date', '<=', $date)
                 ->withCount('shifts')
-                ->orderByDesc('effective_date')->first();
+                ->orderByDesc('effective_date', 'created_at')->first();
         }
 
         if (!$schedule || $schedule->shifts_count === 0) return null;
@@ -121,7 +121,7 @@ class ScheduleService
         $startDate = is_null($startDate) ? date('Y-m-d') : date('Y-m-d', strtotime($startDate));
         $endDate = is_null($endDate) ? $startDate : date('Y-m-d', strtotime($endDate));
 
-        return $user->schedules()->whereApproved()->whereDate('effective_date', '<=', $startDate)->orWhereDate('effective_date', '<=', $endDate)->orderByDesc('effective_date')->exists();
+        return $user->schedules()->whereApproved()->whereDate('effective_date', '<=', $startDate)->orWhereDate('effective_date', '<=', $endDate)->orderByDesc('effective_date', 'created_at')->exists();
     }
 
     /**
