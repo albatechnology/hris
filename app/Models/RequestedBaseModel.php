@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Classes\SupervisorUtility;
 use App\Enums\ApprovalStatus;
+use App\Enums\AttendanceType;
 use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
 use App\Enums\RequestChangeDataType;
@@ -22,7 +23,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
     protected static function booted(): void
     {
         static::created(function (self $model) {
-            RequestApprovalService::createApprovals($model);
+            if (!$model instanceof AttendanceDetail || ($model instanceof AttendanceDetail && $model->type->is(AttendanceType::MANUAL))) {
+                RequestApprovalService::createApprovals($model);
+            }
         });
     }
 
