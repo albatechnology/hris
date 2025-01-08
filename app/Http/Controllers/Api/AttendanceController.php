@@ -1121,8 +1121,8 @@ class AttendanceController extends BaseController
         foreach ($attendanceDetails as $attendanceDetail) {
             $attendanceDetail->approvals()->delete();
             DatabaseNotification::where('type', 'App\\Notifications\\Attendance\\RequestAttendance')
-                ->whereJsonContains('data->type', 'request_attendance')
-                ->whereJsonContains('data->model_id', $attendanceDetail->id)
+                ->where('data->type', 'request_attendance')
+                ->where('data->model_id', $attendanceDetail->id)
                 ->delete();
         }
         die('dono');
