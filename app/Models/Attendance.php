@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\ApprovalStatus;
-use App\Enums\AttendanceType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
@@ -74,12 +72,12 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
 
     public function clockIn(): HasOne
     {
-        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', true)->orderByDesc('attendance_details.id');
+        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', true)->orderBy('attendance_details.time');
     }
 
     public function clockOut(): HasOne
     {
-        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', false)->orderByDesc('attendance_details.id');
+        return $this->hasOne(AttendanceDetail::class)->where('is_clock_in', false)->orderByDesc('attendance_details.time');
     }
 
     /**
