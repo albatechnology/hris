@@ -20,6 +20,7 @@ use App\Http\Resources\Attendance\AttendanceResource;
 use App\Http\Resources\DefaultResource;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
+use App\Models\DatabaseNotification;
 use App\Models\Event;
 use App\Models\PayrollSetting;
 use App\Models\User;
@@ -1110,5 +1111,20 @@ class AttendanceController extends BaseController
 
         // return new AttendanceDetailResource($attendanceDetail);
         return $this->updatedResponse();
+    }
+
+    public function clear()
+    {
+        $attendanceDetails = AttendanceDetail::where('type', AttendanceType::AUTOMATIC)
+            ->get(['id']);
+
+        foreach ($attendanceDetails as $attendanceDetail) {
+            $attendanceDetail->approvals()->delete();
+            DatabaseNotification::where('type', 'App\\Notifications\\Attendance\\RequestAttendance')
+                ->whereJsonContains('data->type', 'request_attendance')
+                ->whereJsonContains('data->model_id', $attendanceDetail->id)
+                ->delete();
+        }
+        die('dono');
     }
 }

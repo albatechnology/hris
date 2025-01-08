@@ -153,6 +153,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('schedules', ScheduleController::class);
 
+    Route::get('attendances/clear', [AttendanceController::class, 'clear']);
     Route::get('attendances/employees/summary', [AttendanceController::class, 'employeesSummary']);
     Route::get('attendances/employees', [AttendanceController::class, 'employees']);
     Route::get('attendances/logs', [AttendanceController::class, 'logs']);
