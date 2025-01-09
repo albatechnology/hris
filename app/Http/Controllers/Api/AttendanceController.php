@@ -1116,6 +1116,7 @@ class AttendanceController extends BaseController
     public function clear()
     {
         $attendanceDetails = AttendanceDetail::where('type', AttendanceType::AUTOMATIC)
+            ->has('approvals')
             ->get(['id']);
 
         foreach ($attendanceDetails as $attendanceDetail) {
