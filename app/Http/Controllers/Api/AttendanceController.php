@@ -416,7 +416,7 @@ class AttendanceController extends BaseController
             // $totalShifts = $schedule->shifts->count();
 
             $attendances = Attendance::where('user_id', $user->id)
-                ->whereHas('details', fn($q) => $q->approved())
+                ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                     'timeoff.timeoffPolicy',
@@ -439,7 +439,6 @@ class AttendanceController extends BaseController
                 // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
                 $date = $date->format('Y-m-d');
                 $attendance = $attendances->firstWhere('date', $date);
-
                 if ($attendance) {
                     $shift = $attendance->shift;
 
