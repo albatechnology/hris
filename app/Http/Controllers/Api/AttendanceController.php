@@ -72,7 +72,7 @@ class AttendanceController extends BaseController
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['clock_in_tolerance', 'clock_out_tolerance']),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -83,6 +83,7 @@ class AttendanceController extends BaseController
             $dataAttendance = [];
             foreach ($dateRange as $date) {
                 $date = $date->format('Y-m-d');
+
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
                 $attendance = $attendances->firstWhere('date', $date);
                 if ($attendance?->clockIn) {
@@ -97,6 +98,7 @@ class AttendanceController extends BaseController
                         $attendance->timeoff->timeoffPolicy = $attendance?->timeoff->timeoffPolicy;
                     }
                 }
+
                 if ($attendance) {
                     $shift = $attendance->shift;
 
@@ -111,12 +113,16 @@ class AttendanceController extends BaseController
                     $totalTask = TaskService::getSumDuration($user, $date);
                     $attendance->total_task = $totalTask;
 
-                    if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_late_in && $attendance->clockIn) {
-                        $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
+                    // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_late_in && $attendance->clockIn) {
+                    if ($attendance->clockIn) {
+                        // $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
+                        $attendance->late_in = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
                     }
 
-                    if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_early_out && $attendance->clockOut) {
-                        $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
+                    // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_early_out && $attendance->clockOut) {
+                    if ($attendance->clockOut) {
+                        // $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
+                        $attendance->early_out = AttendanceService::getTotalLateTime($attendance->clockOut, $shift);
                     }
 
                     if ($attendance->clockIn && $attendance->clockOut) {
@@ -730,7 +736,8 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->whereHas('details', fn($q) => $q->approved())
+                ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
+                // ->whereHas('details', fn($q) => $q->approved())
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                     'timeoff.timeoffPolicy',
@@ -979,7 +986,7 @@ class AttendanceController extends BaseController
             }
 
             if ($request->is_clock_in) {
-                $attendanceDetailClockIn = $attendance->details()->create([
+                $attendance->details()->create([
                     'is_clock_in' => true,
                     'time' => $request->date . ' ' . $request->clock_in_hour,
                     'type' => $request->type,
@@ -989,7 +996,7 @@ class AttendanceController extends BaseController
             }
 
             if ($request->is_clock_out) {
-                $attendanceDetailClockOut = $attendance->details()->create([
+                $attendance->details()->create([
                     'is_clock_in' => false,
                     'time' => $request->date . ' ' . $request->clock_out_hour,
                     'type' => $request->type,

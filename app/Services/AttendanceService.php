@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Enums\DailyAttendance;
 use App\Enums\EventType;
 use App\Models\Attendance;
+use App\Models\AttendanceDetail;
 use App\Models\Shift;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AttendanceService
 {
@@ -162,5 +164,42 @@ class AttendanceService
             ->count();
 
         return $totalAttendance;
+    }
+
+    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, bool $isFormatTime = true): int|string
+    {
+        $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+
+        if ($attendanceDetail->is_clock_in) {
+            $tolerance = $shift->clock_in_tolerance;
+            $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
+            $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+
+            if ($endTime->lessThanOrEqualTo($startTime)) {
+                $diffInSeconds = 0;
+            } else {
+                $diffInSeconds = $startTime->diffInSeconds($endTime);
+            }
+        } else {
+            $tolerance = $shift->clock_out_tolerance;
+            $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+            $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+
+            if ($endTime->lessThanOrEqualTo($startTime)) {
+                $diffInSeconds = $endTime->diffInSeconds($startTime);
+            } else {
+                $diffInSeconds = 0;
+            }
+        }
+
+        $diffInMinutes = floor($diffInSeconds / 60);
+
+        if ($isFormatTime === false) return $diffInMinutes > $tolerance ? $diffInMinutes : 0;
+
+        if ($diffInMinutes > $tolerance) {
+            return gmdate('H:i:s', $diffInSeconds);
+        }
+
+        return "00:00:00";
     }
 }
