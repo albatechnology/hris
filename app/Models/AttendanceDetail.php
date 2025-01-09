@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AttendanceDetail extends RequestedBaseModel implements HasMedia
 {
-    use InteractsWithMedia;
+    use CustomSoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'attendance_id',
