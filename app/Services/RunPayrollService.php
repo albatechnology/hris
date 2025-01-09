@@ -294,19 +294,18 @@ class RunPayrollService
 
                 // jkk
                 $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
-                $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
+                $company_totalJkk = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkk / 100);
 
                 // jkm
                 $company_percentageJkm = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
-                $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
+                $company_totalJkm = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkm / 100);
 
                 // jht
                 $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
-
-                $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
+                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
 
                 $employee_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
-                $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
+                $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
 
                 // jp
                 $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
