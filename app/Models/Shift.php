@@ -24,8 +24,8 @@ class Shift extends BaseModel implements TenantedInterface
         'color',
         'description',
         'is_enable_validation',
-        'clock_in_tolerance',
-        'clock_out_tolerance',
+        'clock_in_min_before',
+        'clock_out_max_after',
         'is_enable_grace_period',
         'clock_in_dispensation',
         'clock_out_dispensation',
@@ -46,8 +46,8 @@ class Shift extends BaseModel implements TenantedInterface
     {
         static::saving(function (self $model) {
             if (! $model->is_enable_validation) {
-                $model->clock_in_tolerance = 0;
-                $model->clock_out_tolerance = 0;
+                $model->clock_in_min_before = 0;
+                $model->clock_out_max_after = 0;
             }
 
             if (! $model->is_enable_grace_period) {

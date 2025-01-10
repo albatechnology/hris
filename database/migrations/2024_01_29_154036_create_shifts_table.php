@@ -25,10 +25,8 @@ return new class extends Migration
             $table->char('color', 7)->default('#ffffff');
             $table->text('description')->nullable();
             $table->boolean('is_enable_validation')->default(0);
-            $table->unsignedSmallInteger('clock_in_tolerance')->default(0);
-            $table->unsignedSmallInteger('clock_out_tolerance')->default(0);
-            // $table->unsignedSmallInteger('clock_in_tolerance')->default(0);
-            // $table->unsignedSmallInteger('clock_out_tolerance')->default(0);
+            $table->unsignedSmallInteger('clock_in_min_before')->default(0);
+            $table->unsignedSmallInteger('clock_out_max_after')->default(0);
             $table->boolean('is_enable_grace_period')->default(0);
             $table->unsignedSmallInteger('clock_in_dispensation')->default(0);
             $table->unsignedSmallInteger('clock_out_dispensation')->default(0);

@@ -171,7 +171,7 @@ class AttendanceService
         $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
 
         if ($attendanceDetail->is_clock_in) {
-            $tolerance = $shift->clock_in_tolerance;
+            $tolerance = $shift->clock_in_dispensation;
             $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
             $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
 
@@ -181,7 +181,7 @@ class AttendanceService
                 $diffInSeconds = $startTime->diffInSeconds($endTime);
             }
         } else {
-            $tolerance = $shift->clock_out_tolerance;
+            $tolerance = $shift->clock_out_dispensation;
             $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
             $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
 
