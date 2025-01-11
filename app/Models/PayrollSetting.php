@@ -16,6 +16,8 @@ class PayrollSetting extends Model implements TenantedInterface
 
     protected $fillable = [
         'company_id',
+        'cut_off_attendance_start_date',
+        'cut_off_attendance_end_date',
         'cut_off_date',
         // 'cutoff_attendance_start_date',
         // 'cutoff_attendance_end_date',

@@ -737,59 +737,60 @@ class UserController extends BaseController
 
     public function updateSupervisor()
     {
-        $users = User::whereIn('nik', ['312004', '221023', '324008', '315026', '312001', '322003', '323003', '323008', '222027', '217022', '319009'])
-            ->get(['id']);
+        return "AFAANTUH";
+        // $users = User::whereIn('nik', ['312004', '221023', '324008', '315026', '312001', '322003', '323003', '323008', '222027', '217022', '319009'])
+        //     ->get(['id']);
 
-        $count = 0;
-        foreach ($users as $user) {
-            $supervisor = $user->supervisors[0] ?? null;
-            if ($supervisor) {
-                $count++;
-                AttendanceDetail::whereHas('attendance', fn($q) => $q->where('user_id', $user->id))
-                    ->whereApprovalStatus(ApprovalStatus::PENDING)
-                    ->get()
-                    ->each(function ($attendanceDetail) use ($supervisor) {
-                        $attendanceDetail->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
-                            'user_id' => $supervisor->supervisor_id
-                        ]);
-                    });
+        // $count = 0;
+        // foreach ($users as $user) {
+        //     $supervisor = $user->supervisors[0] ?? null;
+        //     if ($supervisor) {
+        //         $count++;
+        //         AttendanceDetail::whereHas('attendance', fn($q) => $q->where('user_id', $user->id))
+        //             ->whereApprovalStatus(ApprovalStatus::PENDING)
+        //             ->get()
+        //             ->each(function ($attendanceDetail) use ($supervisor) {
+        //                 $attendanceDetail->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
+        //                     'user_id' => $supervisor->supervisor_id
+        //                 ]);
+        //             });
 
-                Timeoff::where('user_id', $user->id)
-                    ->whereApprovalStatus(ApprovalStatus::PENDING)
-                    ->get()
-                    ->each(function ($timeoff) use ($supervisor) {
-                        $timeoff->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
-                            'user_id' => $supervisor->supervisor_id
-                        ]);
-                    });
+        //         Timeoff::where('user_id', $user->id)
+        //             ->whereApprovalStatus(ApprovalStatus::PENDING)
+        //             ->get()
+        //             ->each(function ($timeoff) use ($supervisor) {
+        //                 $timeoff->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
+        //                     'user_id' => $supervisor->supervisor_id
+        //                 ]);
+        //             });
 
-                OvertimeRequest::where('user_id', $user->id)
-                    ->whereApprovalStatus(ApprovalStatus::PENDING)
-                    ->get()
-                    ->each(function ($overtimeRequest) use ($supervisor) {
-                        $overtimeRequest->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
-                            'user_id' => $supervisor->supervisor_id
-                        ]);
-                    });
+        //         OvertimeRequest::where('user_id', $user->id)
+        //             ->whereApprovalStatus(ApprovalStatus::PENDING)
+        //             ->get()
+        //             ->each(function ($overtimeRequest) use ($supervisor) {
+        //                 $overtimeRequest->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
+        //                     'user_id' => $supervisor->supervisor_id
+        //                 ]);
+        //             });
 
-                RequestChangeData::where('user_id', $user->id)
-                    ->whereApprovalStatus(ApprovalStatus::PENDING)
-                    ->get()
-                    ->each(function ($requestChangeData) use ($supervisor) {
-                        $requestChangeData->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
-                            'user_id' => $supervisor->supervisor_id
-                        ]);
-                    });
+        //         RequestChangeData::where('user_id', $user->id)
+        //             ->whereApprovalStatus(ApprovalStatus::PENDING)
+        //             ->get()
+        //             ->each(function ($requestChangeData) use ($supervisor) {
+        //                 $requestChangeData->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
+        //                     'user_id' => $supervisor->supervisor_id
+        //                 ]);
+        //             });
 
-                RequestShift::where('user_id', $user->id)
-                    ->whereApprovalStatus(ApprovalStatus::PENDING)
-                    ->get()
-                    ->each(function ($requestShift) use ($supervisor) {
-                        $requestShift->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
-                            'user_id' => $supervisor->supervisor_id
-                        ]);
-                    });
-            }
-        }
+        //         RequestShift::where('user_id', $user->id)
+        //             ->whereApprovalStatus(ApprovalStatus::PENDING)
+        //             ->get()
+        //             ->each(function ($requestShift) use ($supervisor) {
+        //                 $requestShift->approvals()->where('approval_status', ApprovalStatus::PENDING)->update([
+        //                     'user_id' => $supervisor->supervisor_id
+        //                 ]);
+        //             });
+        //     }
+        // }
     }
 }
