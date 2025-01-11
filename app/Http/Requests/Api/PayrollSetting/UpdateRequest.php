@@ -29,8 +29,8 @@ class UpdateRequest extends FormRequest
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
             'cut_off_date' => 'required|date_format:d',
-            // 'cutoff_attendance_start_date' => 'required|date_format:d',
-            // 'cutoff_attendance_end_date' => 'required|date_format:d',
+            'cut_off_attendance_start_date' => 'required|date_format:d',
+            'cut_off_attendance_end_date' => 'required|date_format:d',
             'default_employee_tax_setting' => ['required', Rule::enum(TaxMethod::class)],
             'default_employee_salary_tax_setting' => ['required', Rule::enum(TaxSalary::class)],
             'default_oas_setting' => ['required', Rule::enum(JhtCost::class)],

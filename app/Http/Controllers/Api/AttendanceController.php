@@ -878,6 +878,15 @@ class AttendanceController extends BaseController
 
     public function manualAttendance(ManualAttendanceRequest $request)
     {
+        /**
+         *
+         * manual attendance juga kayanya masalahnya hampir sama kaya request attendance
+         *
+         * SOLUSI sementara
+         * manual attendance harus ambil ScheduleService::getTodaySchedule() yang hari ini
+         * harus dibahas lagi di fe cara pakenya gimana
+         *
+         */
         $user = User::find($request->user_id);
 
         $schedule = ScheduleService::getTodaySchedule($user, $request->date, scheduleType: ScheduleType::ATTENDANCE->value);
@@ -975,6 +984,22 @@ class AttendanceController extends BaseController
 
     public function request(RequestAttendanceRequest $request)
     {
+        /**
+         * request attendance masih harus dibahas lagi. soalnya $request->schedule_id & $request->shfit_id masih pake schedule today
+         * atau schedule hari ini saat user request.
+         *
+         * sedangkan jika dia request di tanggal yang dipilih, lalu schedule_id atau shift_id (di table attendances) nya beda,
+         * nanti sistem akan merecord attendance baru
+         *
+         * kayanya ini yang sering kejadian attendance di tanggal yang sama ada data yang dobel. harusnya satu tanggal satu data
+         * attendance.
+         *
+         * solusi sementara (tapi belum di implementasi).
+         * harusnya AttendanceService::getTodayAttendance() parameternya date aja, gaperlu kirim schedule_id & shift_id, karena
+         * masalah nya ada disitu. kalo schedule_id atau shift_id nya beda, maka akan membuat attendance baru.
+         *
+         */
+
         // pemeriksaan kehadiran hri ini
         $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date);
 

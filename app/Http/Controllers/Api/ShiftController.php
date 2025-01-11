@@ -53,7 +53,11 @@ class ShiftController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $shift = Shift::create($request->validated());
+        $data = $request->validated();
+        $data['show_in_request_branch_ids'] = $request->branch_ids;
+        $data['show_in_request_department_ids'] = $request->department_ids;
+        $data['show_in_request_position_ids'] = $request->position_ids;
+        $shift = Shift::create($data);
 
         return new ShiftResource($shift);
     }
@@ -61,7 +65,12 @@ class ShiftController extends BaseController
     public function update(int $id, StoreRequest $request)
     {
         $shift = Shift::findTenanted($id);
-        $shift->update($request->validated());
+
+        $data = $request->validated();
+        $data['show_in_request_branch_ids'] = $request->branch_ids;
+        $data['show_in_request_department_ids'] = $request->department_ids;
+        $data['show_in_request_position_ids'] = $request->position_ids;
+        $shift->update($data);
 
         return (new ShiftResource($shift))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }

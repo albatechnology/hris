@@ -30,9 +30,10 @@ return new class extends Migration
             $table->boolean('is_enable_grace_period')->default(0);
             $table->unsignedSmallInteger('clock_in_dispensation')->default(0);
             $table->unsignedSmallInteger('clock_out_dispensation')->default(0);
-            $table->boolean('is_enable_auto_overtime')->default(0);
-            $table->time('overtime_before')->nullable();
-            $table->time('overtime_after')->nullable();
+            // $table->boolean('is_enable_auto_overtime')->default(0);
+            // $table->boolean('is_enable_auto_overtime')->default(0);
+            // $table->time('overtime_before')->nullable();
+            // $table->time('overtime_after')->nullable();
             $table->timestamps();
 
             // softDeletes must implement deleted_by

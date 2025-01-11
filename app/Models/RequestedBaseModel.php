@@ -194,73 +194,8 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
                 $schedule->users()->syncWithoutDetaching([$this->user_id]);
             } elseif ($this instanceof Timeoff) {
                 TimeoffService::approved($this);
-                // === OLD LOGIC ===
-
-
-                // $this->approved_by = auth('sanctum')->id();
-                // $this->approved_at = now();
-
-                // untuk history timeoff
-                // $value = TimeoffService::getTotalRequestDay($this->start_at, $this->end_at, $this->request_type);
-
-                // 1. kalo pending, approval_status=null dan delete attendance
-                // 2. kalo approve, approval_status=1 dan create attendance
-                // 3. kalo reject, approval_status=0 dan delete attendance
-                // if (in_array($this->approval_status, [ApprovalStatus::PENDING, ApprovalStatus::REJECTED])) {
-                // if ($this->approval_status == ApprovalStatus::REJECTED->value) {
-                //     Attendance::where('timeoff_id', $this->id)->delete();
-
-                //     UserTimeoffHistory::create([
-                //         'user_id' => $this->user_id,
-                //         'is_increment' => true,
-                //         'value' => $value,
-                //         'properties' => ['user' => $this->user, 'timeoff' => $this, 'timeoff_policy' => $this->timeoffPolicy],
-                //         'description' => sprintf(UserTimeoffHistory::DESCRIPTION['TIMEOFF'], $this->timeoffPolicy->name),
-                //     ]);
-                // } else {
-                // if ($value > $this->user->total_timeoff) {
-                //     return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-                // }
-
-                // if ($this->approval_status == ApprovalStatus::APPROVED->value) {
-                //     $intervalDays = date_diff(new \DateTime($this->start_at), new \DateTime($this->end_at))->days;
-                //     if ($intervalDays > 1) {
-                //         $dateRange = new \DatePeriod(date_create($this->start_at), new \DateInterval('P1D'), date_create($this->end_at));
-
-                //         foreach ($dateRange as $date) {
-                //             $schedule = \App\Services\ScheduleService::getTodaySchedule($this->user, $date->format('Y-m-d'));
-                //             Attendance::create([
-                //                 'user_id' => $this->user_id,
-                //                 'schedule_id' => $schedule->id,
-                //                 'shift_id' => $schedule->shift->id,
-                //                 'timeoff_id' => $this->id,
-                //                 'code' => $this->timeoffPolicy->code,
-                //                 'date' => $date->format('Y-m-d'),
-                //             ]);
-                //         }
-                //     } else {
-                //         $schedule = \App\Services\ScheduleService::getTodaySchedule($this->user, $this->start_at);
-                //         Attendance::create([
-                //             'user_id' => $this->user_id,
-                //             'schedule_id' => $schedule->id,
-                //             'shift_id' => $schedule->shift->id,
-                //             'timeoff_id' => $this->id,
-                //             'code' => $this->timeoffPolicy->code,
-                //             'date' => $this->start_at,
-                //         ]);
-                //     }
-
-                //     UserTimeoffHistory::create([
-                //         'user_id' => $this->user_id,
-                //         'is_increment' => false,
-                //         'value' => $value,
-                //         'properties' => ['user' => $this->user, 'timeoff' => $this, 'timeoff_policy' => $this->timeoffPolicy],
-                //         'description' => sprintf(UserTimeoffHistory::DESCRIPTION['TIMEOFF'], $this->timeoffPolicy->name),
-                //     ]);
-                // }
-                // // }
-
-                // $this->save();
+            } elseif ($this instanceof RequestShift) {
+                $this->requestApproved();
             }
         }
     }

@@ -29,9 +29,14 @@ class Shift extends BaseModel implements TenantedInterface
         'is_enable_grace_period',
         'clock_in_dispensation',
         'clock_out_dispensation',
-        'is_enable_auto_overtime',
-        'overtime_before',
-        'overtime_after',
+        'is_show_in_request',
+        'is_show_in_request_for_all',
+        'show_in_request_branch_ids',
+        'show_in_request_department_ids',
+        'show_in_request_position_ids',
+        // 'is_enable_auto_overtime',
+        // 'overtime_before',
+        // 'overtime_after',
     ];
 
     protected $casts = [
@@ -39,7 +44,12 @@ class Shift extends BaseModel implements TenantedInterface
         'is_dayoff' => 'boolean',
         'is_enable_validation' => 'boolean',
         'is_enable_grace_period' => 'boolean',
-        'is_enable_auto_overtime' => 'boolean',
+        'is_show_in_request' => 'boolean',
+        'is_show_in_request_for_all' => 'boolean',
+        'show_in_request_branch_ids' => 'array',
+        'show_in_request_department_ids' => 'array',
+        'show_in_request_position_ids' => 'array',
+        // 'is_enable_auto_overtime' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -55,10 +65,27 @@ class Shift extends BaseModel implements TenantedInterface
                 $model->clock_out_dispensation = 0;
             }
 
-            if (! $model->is_enable_auto_overtime) {
-                $model->overtime_before = null;
-                $model->overtime_after = null;
+            if ($model->show_in_request_branch_ids && gettype($model->show_in_request_branch_ids) == 'array') {
+                $model->show_in_request_branch_ids = array_map('intval', $model->show_in_request_branch_ids);
+            } else {
+                $model->show_in_request_branch_ids = null;
             }
+
+            if ($model->show_in_request_department_ids && gettype($model->show_in_request_department_ids) == 'array') {
+                $model->show_in_request_department_ids = array_map('intval', $model->show_in_request_department_ids);
+            } else {
+                $model->show_in_request_department_ids = null;
+            }
+
+            if ($model->show_in_request_position_ids && gettype($model->show_in_request_position_ids) == 'array') {
+                $model->show_in_request_position_ids = array_map('intval', $model->show_in_request_position_ids);
+            } else {
+                $model->show_in_request_position_ids = null;
+            }
+            // if (! $model->is_enable_auto_overtime) {
+            //     $model->overtime_before = null;
+            //     $model->overtime_after = null;
+            // }
         });
     }
 

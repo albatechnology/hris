@@ -255,6 +255,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('supervisor-request-schedules/{schedule}/approve', [SupervisorRequestScheduleController::class, 'approve']);
     Route::apiResource('supervisor-request-schedules', SupervisorRequestScheduleController::class);
 
+    Route::get('request-shifts/available-shifts', [RequestShiftController::class, 'availableShifts']);
     Route::get('request-shifts/approvals', [RequestShiftController::class, 'approvals']);
     Route::get('request-shifts/approvals/count-total', [RequestShiftController::class, 'countTotalApprovals']);
     Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);

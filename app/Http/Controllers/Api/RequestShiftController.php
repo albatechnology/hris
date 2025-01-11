@@ -7,9 +7,13 @@ use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\RequestShift\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Attendance;
+use App\Models\PayrollSetting;
 use App\Models\RequestShift;
+use App\Models\Shift;
 use App\Models\User;
 use App\Services\ScheduleService;
+use App\Services\ShiftService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -29,6 +33,37 @@ class RequestShiftController extends BaseController
         // $this->middleware('permission:request_shift_create', ['only' => 'store']);
         // $this->middleware('permission:request_shift_edit', ['only' => 'update']);
         // $this->middleware('permission:request_shift_delete', ['only' => 'destroy']);
+    }
+
+
+    public function availableShifts()
+    {
+        /** @var User $user */
+        $user = auth()->user()?->load('positions');
+
+        $branchId = $user->branch_id;
+        $departmentIds = $user->positions->pluck('department_id')?->toArray();
+        $positionIds = $user->positions->pluck('position_id')?->toArray();
+
+        $schedule = ScheduleService::getTodaySchedule(scheduleColumn: ['id'], shiftColumn: ['id']);
+
+        $shifts = Shift::tenanted()
+            ->when($schedule, fn($q) => $q->whereHas('schedules', fn($q) => $q->where('schedule_id', $schedule->id)))
+            ->orWhere(function ($q) use ($branchId, $departmentIds, $positionIds) {
+                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', true)
+                    ->orWhere(function ($q) use ($branchId) {
+                        $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_branch_ids, ?)', json_encode($branchId));
+                    })
+                    ->orWhere(function ($q) use ($departmentIds) {
+                        $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_department_ids, ?)', json_encode($departmentIds));
+                    })
+                    ->orWhere(function ($q) use ($positionIds) {
+                        $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_position_ids, ?)', json_encode($positionIds));
+                    });
+            })
+            ->get(['id', 'type', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+
+        return DefaultResource::collection($shifts);
     }
 
     public function index(): ResourceCollection
@@ -75,7 +110,7 @@ class RequestShiftController extends BaseController
     public function store(StoreRequest $request): DefaultResource|JsonResponse
     {
         $data = $request->validated();
-        $user = User::findOrFail($request->user_id);
+        $user = User::select('id', 'company_id', 'branch_id')->findOrFail($request->user_id);
 
         // 1. check if user has schedule on date requested
         // 2. check if shift requested is part of schedule
@@ -87,14 +122,39 @@ class RequestShiftController extends BaseController
         $data['schedule_id'] = $schedule->id;
         $data['old_shift_id'] = $schedule->shift->id;
 
-        $schedule->load(['shift' => fn($q) => $q->where('id', $request->new_shift_id)]);
-        if (!$schedule?->shift) {
+        // turn of this check, because user can request shift that is is_show_in_request = true and eligible for taken
+        // $schedule->load(['shift' => fn($q) => $q->where('id', $request->new_shift_id)]);
+        // if (!$schedule?->shift) {
+        //     return $this->errorResponse(message: 'Shift requested not found', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
+
+        if (!ShiftService::validateRequestShift($request->new_shift_id, $user)) {
             return $this->errorResponse(message: 'Shift requested not found', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['cut_off_attendance_start_date', 'cut_off_attendance_end_date']);
+
+        $cutOffAttendanceStartDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_start_date)->startOfDay();
+        $cutOffAttendanceEndDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_end_date)->startOfDay();
+
+        $now = Carbon::now()->startOfDay();
+        $requestDate = Carbon::parse($request->date)->startOfDay();
+
         $attendance = Attendance::where('user_id', $request->user_id)->whereDate('date', $request->date)->exists();
-        if ($attendance) {
-            return $this->errorResponse(message: 'Attendance already exist for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if ($requestDate->lessThan($now)) {
+            if (($requestDate->greaterThanOrEqualTo($cutOffAttendanceStartDate) && $requestDate->lessThanOrEqualTo($cutOffAttendanceEndDate)) === false) {
+                return $this->errorResponse(message: "Request change shift only available for {$cutOffAttendanceStartDate->format('d-m-Y')} to {$cutOffAttendanceEndDate->format('d-m-Y')}", code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            if (!$attendance) {
+                return $this->errorResponse(message: 'Attendance not found for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            $data['is_for_replace'] = true;
+        } else {
+            if ($attendance) {
+                return $this->errorResponse(message: 'Attendance already exist for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
         DB::beginTransaction();

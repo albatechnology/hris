@@ -18,6 +18,11 @@ class RequestShift extends RequestedBaseModel implements TenantedInterface
         'new_shift_id',
         'date',
         'description',
+        'is_for_replace',
+    ];
+
+    protected $casts = [
+        'is_for_replace' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -38,5 +43,12 @@ class RequestShift extends RequestedBaseModel implements TenantedInterface
     public function newShift(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'new_shift_id');
+    }
+
+    public function requestApproved()
+    {
+        if ($this->is_for_replace) {
+            Attendance::where('user_id', $this->user_id)->whereDate('date', $this->date)->update(['schedule_id' => $this->schedule_id, 'shift_id' => $this->new_shift_id]);
+        }
     }
 }

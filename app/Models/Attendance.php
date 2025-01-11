@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +15,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Attendance extends BaseModel implements TenantedInterface, HasMedia
 {
-    use CustomSoftDeletes, TenantedThroughUser, InteractsWithMedia;
+    use CustomSoftDeletes, CreatedUpdatedInfo, TenantedThroughUser, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',

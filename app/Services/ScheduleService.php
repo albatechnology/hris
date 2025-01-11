@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ScheduleType;
 use App\Models\RequestShift;
 use App\Models\Schedule;
+use App\Models\Shift;
 use App\Models\User;
 use DateTime;
 
@@ -27,14 +28,25 @@ class ScheduleService
             ->where('user_id', $user->id)->approved()
             ->whereHas('schedule', fn($q) => $q->where('type', $scheduleType))
             ->whereDate('date', $date)->first();
+        // dd($requestShift->toArray());
 
         if ($requestShift) {
-            return $user->schedules()
-                ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+            $schedule =  Schedule::select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
                 ->whereApproved()
                 ->where('id', $requestShift->schedule_id)
-                ->with('shift', fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id))
                 ->first();
+
+            $shift = Shift::select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id)->first();
+
+            $schedule->setRelation('shift', $shift);
+
+            return $schedule;
+            // return $user->schedules()
+            //     ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+            //     ->whereApproved()
+            //     ->where('id', $requestShift->schedule_id)
+            //     ->with('shift', fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id))
+            //     ->first();
         }
 
         /** @var Schedule $schedule */
