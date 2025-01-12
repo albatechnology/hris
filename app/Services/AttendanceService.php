@@ -12,8 +12,16 @@ use Carbon\Carbon;
 
 class AttendanceService
 {
-    public static function getTodayAttendance(int|string $scheduleId, int|string $shiftId, ?User $user = null, $date = null): ?Attendance
+    public static function getTodayAttendance(int|string $scheduleId, int|string $shiftId, ?User $user = null, $date = null, $isCheckByDetails = true): ?Attendance
     {
+        /**
+         *
+         * kenapa ngecheck nya whereHas('details', fn($q) => $q->whereDate('time', $date)) ?
+         * kenapa bukan where('date', $date) ?
+         * hmmm masih menjadi misteri
+         *
+         * oke ganti dulu ke where('date', $date)
+         */
         if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
@@ -24,7 +32,11 @@ class AttendanceService
         $attendance = Attendance::where('schedule_id', $scheduleId)
             ->when($user, fn($q) => $q->where('user_id', $user->id))
             ->where('shift_id', $shiftId)
-            ->whereHas('details', fn($q) => $q->whereDate('time', $date))
+            ->when(
+                $isCheckByDetails,
+                fn($q) => $q->whereHas('details', fn($q) => $q->whereDate('time', $date)),
+                fn($q) => $q->whereDate('date', $date)
+            )
             ->first();
 
         if (!$attendance) {

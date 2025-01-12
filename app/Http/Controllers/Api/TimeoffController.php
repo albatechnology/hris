@@ -67,6 +67,7 @@ class TimeoffController extends BaseController
     public function store(StoreRequest $request)
     {
         $request = TimeoffService::requestTimeoffValidation($request);
+
         DB::beginTransaction();
         try {
             $timeoff = Timeoff::create($request->all());
@@ -155,9 +156,12 @@ class TimeoffController extends BaseController
         }
 
         if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
-            $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
-            if ($remainingBalance <= 0 || $remainingBalance < $timeoff->total_days) {
-                return $this->errorResponse(message: 'User Leave balance is not enough', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            $timeoff->load(['timeoffPolicy' => fn($q) => $q->select('id', 'type')]);
+            if ($timeoff->timeoffPolicy->type->hasQuota()) {
+                $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
+                if ($remainingBalance <= 0 || $remainingBalance < $timeoff->total_days) {
+                    return $this->errorResponse(message: 'User Leave balance is not enough', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
             }
         }
 

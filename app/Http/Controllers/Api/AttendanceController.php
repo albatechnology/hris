@@ -834,7 +834,7 @@ class AttendanceController extends BaseController
     public function store(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time, false);
 
         if (config('app.enable_face_rekognition') === true) {
             try {
@@ -895,7 +895,7 @@ class AttendanceController extends BaseController
             return $this->errorResponse(message: 'Schedule not found!', code: 404);
         }
 
-        $attendance = AttendanceService::getTodayAttendance($schedule->id, $request->shift_id, $user, $request->date);
+        $attendance = AttendanceService::getTodayAttendance($schedule->id, $request->shift_id, $user, $request->date, false);
 
         DB::beginTransaction();
         try {
@@ -1001,7 +1001,7 @@ class AttendanceController extends BaseController
          */
 
         // pemeriksaan kehadiran hri ini
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date);
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date, false);
 
         DB::beginTransaction();
         try {

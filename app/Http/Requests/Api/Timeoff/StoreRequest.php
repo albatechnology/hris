@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\Timeoff;
 
 use App\Enums\TimeoffRequestType;
+use App\Models\TimeoffPolicy;
+use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -42,7 +44,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'timeoff_policy_id' => 'required|exists:timeoff_policies,id',
+            'timeoff_policy_id' => ['required', new CompanyTenantedRule(TimeoffPolicy::class, 'Timeoff policy not found')],
             'request_type' => ['required', Rule::enum(TimeoffRequestType::class)],
             'start_at' => 'required|date_format:Y-m-d H:i',
             'end_at' => 'required|date_format:Y-m-d H:i',

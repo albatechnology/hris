@@ -70,6 +70,13 @@ class TimeoffPolicySeeder extends Seeder
                     'max_consecutively_day' => 5,
                 ],
                 [
+                    'name' => 'Permission',
+                    'code' => 'P',
+                    'type' => TimeoffPolicyType::PERMISSION,
+                    'effective_date' => date('Y-m-d'),
+                    'is_allow_halfday' => true,
+                ],
+                [
                     'name' => 'Kematian suami/isteri, orangtua/mertua, anak/menantu (2 hari kerja)',
                     'code' => 'FL',
                     'type' => TimeoffPolicyType::FREE_LEAVE,
