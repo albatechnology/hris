@@ -245,7 +245,7 @@ class RunPayrollService
             /**
              * third, calculate alpa
              */
-            if ($user->payrollInfo?->is_ignore_alpa == true) {
+            if ($user->payrollInfo?->is_ignore_alpa == false) {
                 $alpaComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::ALPA)->first();
                 if ($alpaComponent) {
                     $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
