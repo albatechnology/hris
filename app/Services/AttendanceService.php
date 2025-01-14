@@ -180,7 +180,7 @@ class AttendanceService
 
     public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
     {
-        dump('remainingTimeremainingTime', $remainingTime);
+        // dump('remainingTimeremainingTime', $remainingTime);
         /**
          *
          * dispensasi keterlambatan hanya berlaku jika is_enable_grace_period == true. selain itu dihitung terlambat
@@ -224,7 +224,7 @@ class AttendanceService
         }
 
         $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
-        $remainingTimeInSeconds = $remainingTime * 60;
+        // $remainingTimeInSeconds = $remainingTime * 60;
         $diffInTime = "00:00:00";
         $realDiffInMinute = floor($diffInSeconds / 60);
         $diffInMinutes = $realDiffInMinute;
