@@ -29,6 +29,7 @@ class Shift extends BaseModel implements TenantedInterface
         'is_enable_grace_period',
         'clock_in_dispensation',
         'clock_out_dispensation',
+        'time_dispensation',
         'is_show_in_request',
         'is_show_in_request_for_all',
         'show_in_request_branch_ids',
@@ -63,6 +64,7 @@ class Shift extends BaseModel implements TenantedInterface
             if (! $model->is_enable_grace_period) {
                 $model->clock_in_dispensation = 0;
                 $model->clock_out_dispensation = 0;
+                $model->time_dispensation = 0;
             }
 
             if ($model->show_in_request_branch_ids && gettype($model->show_in_request_branch_ids) == 'array') {

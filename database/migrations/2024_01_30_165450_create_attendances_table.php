@@ -30,7 +30,9 @@ return new class extends Migration
             // $table->text('note')->nullable();
             $table->timestamps();
 
-            // softDeletes must implement deleted_by
+            // created/updated/deleted info
+            $table->unsignedInteger('created_by')->nullable();
+            $table->unsignedInteger('updated_by')->nullable();
             $table->unsignedInteger('deleted_by')->nullable();
             $table->softDeletes();
         });

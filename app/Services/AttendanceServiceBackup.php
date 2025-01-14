@@ -178,34 +178,26 @@ class AttendanceService
         return $totalAttendance;
     }
 
-    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
+    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, bool $isFormatTime = true, ?int $remainingTime = null): array
     {
-        dump('remainingTimeremainingTime', $remainingTime);
         /**
-         *
-         * dispensasi keterlambatan hanya berlaku jika is_enable_grace_period == true. selain itu dihitung terlambat
-         * hitung waktu terlambat berdasarkan selisih waktu absen baik itu clock_in atau clock_out($endTime) dengan
-         * jadwal masuk/clockin atau pulang/clockout ($startTime).
-         *
-         *
-         *
          * clock_in_dispensation = 10 menit
          * clock_out_dispensation = 10 menit
          * time_dispensation = 10 menit
          * jadwal 09:00 - 18:00
          *
          * masuk jam 09:05
-         * pulang jam 17:55 . $remainingTime 5 menitdiffInMinutes
+         * pulang jam 17:55 . $remainingTime 5 menit
          *
          */
 
-        // dump($shift->toArray());
-        // dump($attendanceDetail->toArray());
+        dump($shift->toArray());
+        dump($attendanceDetail->toArray());
 
-        $tolerance = $shift->time_dispensation;
         $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
 
         if ($attendanceDetail->is_clock_in) {
+            $tolerance = $shift->clock_in_dispensation;
             $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
 
             if ($endTime->lessThanOrEqualTo($startTime)) {
@@ -214,6 +206,7 @@ class AttendanceService
                 $diffInSeconds = $startTime->diffInSeconds($endTime);
             }
         } else {
+            $tolerance = $shift->clock_out_dispensation;
             $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
 
             if ($endTime->lessThanOrEqualTo($startTime)) {
@@ -223,128 +216,41 @@ class AttendanceService
             }
         }
 
-        $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
-        $remainingTimeInSeconds = $remainingTime * 60;
-        $diffInTime = "00:00:00";
-        $realDiffInMinute = floor($diffInSeconds / 60);
-        $diffInMinutes = $realDiffInMinute;
-        // dump('remainingTime eee', $remainingTime);
-        // dump($diffInSeconds);
-        // dump('realDiffInMinute 1', $realDiffInMinute);
+        $diffInMinutes = floor($diffInSeconds / 60);
+        dump('diffInMinutes 1', $diffInMinutes);
 
         if ($shift->is_enable_grace_period === true) {
-            if (($remainingTime + $realDiffInMinute) > $tolerance) {
-                // $diffInMinutes += $remainingTime;
-                $remainingTime = 0;
-                $diffInTime = gmdate('H:i:s', $diffInSeconds);
-            } else {
-                // dump('masuk sini');
-                $remainingTime = $tolerance - ($remainingTime + $realDiffInMinute);
-                $diffInMinutes = 0;
-            }
-        } else {
+            $remainingTime = $remainingTime <= 0 ? 0 : $remainingTime;
+            $timeDispensation = $shift->time_dispensation <= 0 ? 0 : $shift->time_dispensation;
+            dump($remainingTime);
+            dump($timeDispensation);
+            dump('remainingTime & timeDispensation');
+        }
+
+
+
+
+
+        // if ($isFormatTime === false) return $diffInMinutes > $tolerance ? $diffInMinutes : 0;
+        // if ($isFormatTime === false) {
+        //     $diffInMinutes = $diffInMinutes > $tolerance ? $diffInMinutes : 0;
+        // }
+
+        if (!$timeDispensation && $timeDispensation > 0) {
+            $diffInMinutes = $timeDispensation - $diffInMinutes;
+        }
+        dump('diffInMinutes 2', $diffInMinutes);
+
+        $diffInTime = "00:00:00";
+        dump('diffInTime 1', $diffInTime);
+        if ($diffInMinutes > $tolerance) {
             $diffInTime = gmdate('H:i:s', $diffInSeconds);
         }
+        dump('diffInTime 2', $diffInTime);
 
         return [
             $diffInMinutes, // real data
-            $diffInTime,
-            $remainingTime,
+            $diffInTime
         ];
     }
-
-    // public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, bool $isFormatTime = true, ?int $remainingTime = null): array
-    // {
-    //     /**
-    //      *
-    //      * dispensasi keterlambatan hanya berlaku jika is_enable_grace_period == true. selain itu dihitung terlambat
-    //      * hitung waktu terlambat berdasarkan selisih waktu absen baik itu clock_in atau clock_out($endTime) dengan
-    //      * jadwal masuk/clockin atau pulang/clockout ($startTime).
-    //      *
-    //      *
-    //      *
-    //      * clock_in_dispensation = 10 menit
-    //      * clock_out_dispensation = 10 menit
-    //      * time_dispensation = 10 menit
-    //      * jadwal 09:00 - 18:00
-    //      *
-    //      * masuk jam 09:05
-    //      * pulang jam 17:55 . $remainingTime 5 menitdiffInMinutes
-    //      *
-    //      */
-
-    //     dump($shift->toArray());
-    //     dump($attendanceDetail->toArray());
-
-    //     $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
-    //     $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
-
-    //     if ($attendanceDetail->is_clock_in) {
-    //         $tolerance = $shift->clock_in_dispensation;
-    //         $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
-
-    //         if ($endTime->lessThanOrEqualTo($startTime)) {
-    //             $diffInSeconds = 0;
-    //         } else {
-    //             $diffInSeconds = $startTime->diffInSeconds($endTime);
-    //         }
-    //     } else {
-    //         $tolerance = $shift->clock_out_dispensation;
-    //         $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
-
-    //         if ($endTime->lessThanOrEqualTo($startTime)) {
-    //             $diffInSeconds = $endTime->diffInSeconds($startTime);
-    //         } else {
-    //             $diffInSeconds = 0;
-    //         }
-    //     }
-
-    //     $diffInTime = "00:00:00";
-    //     $diffInMinutes = floor($diffInSeconds / 60);
-    //     dump($diffInSeconds);
-    //     dump('diffInMinutes 1', $diffInMinutes);
-
-    //     if ($shift->is_enable_grace_period === true) {
-    //         $timeDispensation = $shift->time_dispensation <= 0 ? 0 : $shift->time_dispensation;
-    //         $remainingTime = $timeDispensation <= 0 ? 0 : $timeDispensation - $diffInMinutes;
-    //         dump($remainingTime);
-    //         dump($timeDispensation);
-    //         dump('remainingTime & timeDispensation');
-
-
-    //         if ($diffInMinutes > $tolerance) {
-    //             $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //             $diffInMinutes = 0;
-    //         }
-
-    //         // if ($timeDispensation && $timeDispensation > 0) {
-    //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
-    //         // }
-
-    //         // if ($isFormatTime === false) return $diffInMinutes > $tolerance ? $diffInMinutes : 0;
-    //         // if ($isFormatTime === false) {
-    //         //     $diffInMinutes = $diffInMinutes > $tolerance ? $diffInMinutes : 0;
-    //         // }
-
-    //         // if (!$timeDispensation && $timeDispensation > 0) {
-    //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
-    //         // }
-    //         // dump('diffInMinutes 2', $diffInMinutes);
-
-    //         // $diffInTime = "00:00:00";
-    //         // dump('diffInTime 1', $diffInTime);
-    //         // if ($diffInMinutes > $tolerance) {
-    //         //     $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //         // }
-    //         // dump('diffInTime 2', $diffInTime);
-    //     } else {
-    //         $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //     }
-
-    //     return [
-    //         $diffInMinutes, // real data
-    //         $diffInTime,
-    //         $remainingTime,
-    //     ];
-    // }
 }

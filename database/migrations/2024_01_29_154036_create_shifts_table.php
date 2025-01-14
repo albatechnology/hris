@@ -30,6 +30,13 @@ return new class extends Migration
             $table->boolean('is_enable_grace_period')->default(0);
             $table->unsignedSmallInteger('clock_in_dispensation')->default(0);
             $table->unsignedSmallInteger('clock_out_dispensation')->default(0);
+            $table->unsignedSmallInteger('time_dispensation')->default(0);
+            $table->boolean('is_show_in_request')->default(0);
+            $table->boolean('is_show_in_request_for_all')->default(0);
+            $table->text('show_in_request_branch_ids')->nullable();
+            $table->text('show_in_request_department_ids')->nullable();
+            $table->text('show_in_request_position_ids')->nullable();
+
             // $table->boolean('is_enable_auto_overtime')->default(0);
             // $table->boolean('is_enable_auto_overtime')->default(0);
             // $table->time('overtime_before')->nullable();

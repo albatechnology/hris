@@ -132,19 +132,18 @@ class RequestShiftController extends BaseController
             return $this->errorResponse(message: 'Shift requested not found', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['cut_off_attendance_start_date', 'cut_off_attendance_end_date']);
+        $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->firstOrFail(['cut_off_attendance_start_date']);
 
-        $cutOffAttendanceStartDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_start_date)->startOfDay();
-        $cutOffAttendanceEndDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_end_date)->startOfDay();
+        $cutOffAttendanceStartDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_start_date)->subMonth()->startOfDay();
+        // $cutOffAttendanceEndDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_end_date)->subMonth()->startOfDay();
 
-        $now = Carbon::now()->startOfDay();
+        $now = Carbon::now()->subDay()->startOfDay();
         $requestDate = Carbon::parse($request->date)->startOfDay();
 
         $attendance = Attendance::where('user_id', $request->user_id)->whereDate('date', $request->date)->exists();
-
         if ($requestDate->lessThan($now)) {
-            if (($requestDate->greaterThanOrEqualTo($cutOffAttendanceStartDate) && $requestDate->lessThanOrEqualTo($cutOffAttendanceEndDate)) === false) {
-                return $this->errorResponse(message: "Request change shift only available for {$cutOffAttendanceStartDate->format('d-m-Y')} to {$cutOffAttendanceEndDate->format('d-m-Y')}", code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            if (($requestDate->greaterThanOrEqualTo($cutOffAttendanceStartDate) && $requestDate->lessThanOrEqualTo($now)) === false) {
+                return $this->errorResponse(message: "Request change shift only available for {$cutOffAttendanceStartDate->format('d-m-Y')} to {$now->format('d-m-Y')}", code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
             if (!$attendance) {

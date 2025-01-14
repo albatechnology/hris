@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(Schedule::class)->constrained();
             $table->foreignId('old_shift_id')->constrained('shifts');
             $table->foreignId('new_shift_id')->constrained('shifts');
+            $table->boolean('is_for_replace')->default(0);
             $table->date('date');
             $table->text('description')->nullable();
             $table->timestamps();

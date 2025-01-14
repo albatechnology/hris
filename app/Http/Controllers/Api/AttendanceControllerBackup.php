@@ -73,7 +73,7 @@ class AttendanceController extends BaseController
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'clock_in_dispensation', 'clock_out_dispensation', 'time_dispensation']),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['clock_in_dispensation', 'clock_out_dispensation', 'time_dispensation']),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
@@ -117,26 +117,21 @@ class AttendanceController extends BaseController
                     $attendance->total_task = $totalTask;
 
                     // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_late_in && $attendance->clockIn) {
-                    $remainingTime = 0;
                     if ($attendance->clockIn) {
+
                         // $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
                         // $attendance->late_in = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
-                        list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
-                        $attendance->late_in = $diffInTime;
+                        list($diffInMinute, $diffInTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
+                        dump('HASIL ===');
+                        dump($diffInMinute);
+                        dd($diffInTime);
+                        dd($attendance->toArray());
                     }
-                    // dump('remainingTime OKE', $remainingTime);
+
                     // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_early_out && $attendance->clockOut) {
                     if ($attendance->clockOut) {
-                        // dump('clockOut clockOut clockOut clockOut');
                         // $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
-                        // $attendance->early_out = AttendanceService::getTotalLateTime($attendance->clockOut, $shift);
-                        list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockOut, $shift, $remainingTime);
-                        $attendance->early_out = $diffInTime;
-
-                        if ($attendance->clockIn) {
-                            list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $shift, $diffInMinute);
-                            $attendance->late_in = $diffInTime;
-                        }
+                        $attendance->early_out = AttendanceService::getTotalLateTime($attendance->clockOut, $shift);
                     }
 
                     if ($attendance->clockIn && $attendance->clockOut) {

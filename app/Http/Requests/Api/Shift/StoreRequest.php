@@ -31,6 +31,9 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'clock_in_dispensation' => $this->clock_in_dispensation ?? 0,
+            'clock_out_dispensation' => $this->clock_out_dispensation ?? 0,
+            'time_dispensation' => $this->time_dispensation ?? 0,
             'is_enable_validation' => $this->toBoolean($this->is_enable_validation),
             'is_enable_grace_period' => $this->toBoolean($this->is_enable_grace_period),
             'is_show_in_request' => $this->toBoolean($this->is_show_in_request),
@@ -60,8 +63,9 @@ class StoreRequest extends FormRequest
             'clock_in_min_before' => 'nullable|integer',
             'clock_out_max_after' => 'nullable|integer',
             'is_enable_grace_period' => 'nullable|boolean',
-            'clock_in_dispensation' => 'nullable|integer',
-            'clock_out_dispensation' => 'nullable|integer',
+            'clock_in_dispensation' => 'integer|integer',
+            'clock_out_dispensation' => 'integer|integer',
+            'time_dispensation' => 'integer|integer',
             'is_show_in_request' => 'nullable|boolean',
             'is_show_in_request_for_all' => 'nullable|boolean',
             'branch_ids' => 'nullable|array',

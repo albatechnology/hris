@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignId('supervisor_id')->constrained('users')->cascadeOnDelete();
             $table->unsignedTinyInteger('order')->default(1);
+            $table->boolean('is_additional_supervisor')->default(0);
             $table->timestamps();
         });
     }
