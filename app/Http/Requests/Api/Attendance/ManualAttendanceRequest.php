@@ -6,6 +6,7 @@ use App\Enums\AttendanceType;
 use App\Models\Shift;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
+use App\Services\UserService;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,8 +25,17 @@ class ManualAttendanceRequest extends FormRequest
 
     protected function prepareForValidation()
     {
+        $type = $this->type ?? AttendanceType::MANUAL->value;
+
+        $user = auth()->user();
+        if (!$user->is_user) {
+            $type = AttendanceType::AUTOMATIC->value;
+        } elseif (($user->id != $this->user_id) && UserService::isMyDescendant($user, $this->user_id)) {
+            $type = AttendanceType::AUTOMATIC->value;
+        }
+
         $this->merge([
-            'type' => $this->type ?? AttendanceType::MANUAL->value,
+            'type' => $type,
         ]);
     }
 

@@ -41,4 +41,11 @@ class UserService
             ->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $userId))
             ->get();
     }
+
+    public static function isMyDescendant(User|int $user, User|int $descendant): bool
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+        $descendantId = $descendant instanceof User ? $descendant->id : $descendant;
+        return DB::table('user_supervisors')->where('supervisor_id', $userId)->where('user_id', $descendantId)->limit(1)->exists();
+    }
 }
