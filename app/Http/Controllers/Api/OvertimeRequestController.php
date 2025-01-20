@@ -63,7 +63,7 @@ class OvertimeRequestController extends BaseController
     {
         $user = User::findOrFail($request->user_id);
 
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->date);
+        $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
         if (!$attendance) {
             return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }

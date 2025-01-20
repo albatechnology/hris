@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\OvertimeRequest;
 use App\Enums\OvertimeSetting;
 use App\Models\Overtime;
 use App\Models\Schedule;
+use App\Models\Shift;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
@@ -53,7 +54,7 @@ class StoreRequest extends FormRequest
                 }
             ],
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
-            'shift_id' => 'required|exists:shifts,id',
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
             // 'type' => ['required', Rule::enum(OvertimeRequestType::class)],
             'date' => 'required|date',
             'is_after_shift' => 'required|boolean',

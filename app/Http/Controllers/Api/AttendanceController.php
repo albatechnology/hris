@@ -848,7 +848,7 @@ class AttendanceController extends BaseController
     public function store(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time, false);
+        $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
 
         if (config('app.enable_face_rekognition') === true) {
             try {
@@ -909,7 +909,7 @@ class AttendanceController extends BaseController
             return $this->errorResponse(message: 'Schedule not found!', code: 404);
         }
 
-        $attendance = AttendanceService::getTodayAttendance($schedule->id, $request->shift_id, $user, $request->date, false);
+        $attendance = AttendanceService::getTodayAttendance(date: $request->date, user: $user, isCheckByDetails: false);
 
         DB::beginTransaction();
         try {
@@ -918,6 +918,11 @@ class AttendanceController extends BaseController
                     'schedule_id' => $schedule->id,
                     'shift_id' => $request->shift_id,
                     'date' => $request->date,
+                ]);
+            } else {
+                $attendance->update([
+                    'schedule_id' => $schedule->id,
+                    'shift_id' => $request->shift_id,
                 ]);
             }
 
@@ -953,7 +958,7 @@ class AttendanceController extends BaseController
     public function update(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, $user, $request->time);
+        $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user);
 
         if (config('app.enable_face_rekognition') === true) {
             try {
@@ -1015,7 +1020,7 @@ class AttendanceController extends BaseController
          */
 
         // pemeriksaan kehadiran hri ini
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->date, false);
+        $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('sanctum')->user(), false);
 
         DB::beginTransaction();
         try {
