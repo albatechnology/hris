@@ -921,21 +921,21 @@ class AttendanceController extends BaseController
                 ]);
             }
 
-            /** @var AttendanceDetail $attendanceDetail */
             // clock in
             $attendance->details()->create([
                 'is_clock_in' => true,
                 'time' => $request->date . ' ' . $request->clock_in,
-                'type' => AttendanceType::MANUAL,
+                'type' => $request->type,
                 // 'approval_status' => ApprovalStatus::APPROVED,
                 // 'approved_at' => now(),
                 // 'approved_by' => auth('sanctum')->id(),
             ]);
+
             // clock out
             $attendance->details()->create([
                 'is_clock_in' => false,
                 'time' => $request->date . ' ' . $request->clock_out,
-                'type' => AttendanceType::MANUAL,
+                'type' => $request->type,
                 // 'approval_status' => ApprovalStatus::APPROVED,
                 // 'approved_at' => now(),
                 // 'approved_by' => auth('sanctum')->id(),

@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Enums\AttendanceType;
 use App\Models\Shift;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ManualAttendanceRequest extends FormRequest
 {
@@ -18,6 +20,13 @@ class ManualAttendanceRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'type' => $this->type ?? AttendanceType::MANUAL->value,
+        ]);
     }
 
     /**
@@ -33,6 +42,7 @@ class ManualAttendanceRequest extends FormRequest
             'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
             'clock_in' => 'required|date_format:H:i',
             'clock_out' => 'required|date_format:H:i',
+            'type' => ['required', Rule::enum(AttendanceType::class)],
         ];
     }
 }
