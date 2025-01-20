@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\AttendanceType;
 use App\Models\Schedule;
+use App\Models\Shift;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,7 +43,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
-            'shift_id' => 'required|exists:shifts,id',
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
             'is_clock_in' => 'required|boolean',
             'time' => 'required|date_format:Y-m-d H:i:s',
             'type' => ['required', Rule::enum(AttendanceType::class)],
