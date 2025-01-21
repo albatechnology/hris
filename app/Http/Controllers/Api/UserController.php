@@ -6,6 +6,7 @@ use App\Enums\ApprovalStatus;
 use App\Enums\MediaCollection;
 use App\Enums\PayrollComponentType;
 use App\Enums\RequestChangeDataType;
+use App\Enums\ResignationType;
 use App\Enums\SettingKey;
 use App\Enums\UserType;
 use App\Http\Requests\Api\User\DetailStoreRequest;
@@ -15,6 +16,8 @@ use App\Http\Requests\Api\User\UpdateRequest;
 use App\Http\Requests\Api\User\UploadPhotoRequest;
 use App\Http\Requests\Api\User\FcmTokenRequest;
 use App\Http\Requests\Api\User\PayrollRequest;
+use App\Http\Requests\Api\User\RehireRequest;
+use App\Http\Requests\Api\User\ResignRequest;
 use App\Http\Requests\Api\User\SetSupervisorRequest;
 use App\Http\Requests\Api\User\UpdateDeviceRequest;
 use App\Http\Requests\Api\User\UpdatePasswordRequest;
@@ -23,15 +26,11 @@ use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UserSunImport;
-use App\Models\AttendanceDetail;
 use App\Models\Branch;
 use App\Models\Company;
-use App\Models\OvertimeRequest;
-use App\Models\RequestChangeData;
-use App\Models\RequestShift;
 use App\Models\TaskHour;
-use App\Models\Timeoff;
 use App\Models\User;
+use App\Models\UserResignation;
 use App\Services\RequestApprovalService;
 use Carbon\Carbon;
 use Exception;
@@ -680,6 +679,44 @@ class UserController extends BaseController
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.payroll', $data)->setPaper('a4');
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
+    }
+
+    public function resign(ResignRequest $request, int $id)
+    {
+        UserResignation::create($request->validated());
+
+        return $this->createdResponse();
+    }
+
+    public function cancelResign(int $id)
+    {
+        $user = User::select('id', 'resign_date')->findTenanted($id);
+
+        if (!$user->resign_date) {
+            return $this->errorResponse("User resign date is empty");
+        }
+
+        DB::beginTransaction();
+        try {
+            UserResignation::where('user_id', $user->id)->where('type', ResignationType::RESIGN)->where('resignation_date', $user->resign_date)->delete();
+            $user->update([
+                'resign_date' => null,
+                'rehire_date' => null,
+            ]);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        return $this->updatedResponse();
+    }
+
+    public function rehire(RehireRequest $request, int $id)
+    {
+        UserResignation::create($request->validated());
+
+        return $this->createdResponse();
     }
 
     public function import(Request $request)

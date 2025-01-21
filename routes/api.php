@@ -107,6 +107,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::post('request-change-data', [UserController::class, 'requestChangeData']);
         Route::get('get-available-supervisors', [UserController::class, 'getAvailableSupervisor']);
         Route::post('set-supervisors', [UserController::class, 'setSupervisors']);
+        Route::post('resign', [UserController::class, 'resign']);
+        Route::post('cancel-resign', [UserController::class, 'cancelResign']);
+        Route::post('rehire', [UserController::class, 'rehire']);
     });
 
     Route::apiResource('users', UserController::class);

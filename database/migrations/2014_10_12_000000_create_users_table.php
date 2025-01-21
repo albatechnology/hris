@@ -38,6 +38,7 @@ return new class extends Migration
             $table->date('sign_date')->nullable();
             $table->date('end_contract_date')->nullable();
             $table->date('resign_date')->nullable();
+            $table->date('rehire_date')->nullable();
             // $table->unsignedSmallInteger('total_timeoff')->default(0);
             // $table->unsignedSmallInteger('total_remaining_timeoff')->default(0);
             $table->timestamps();
