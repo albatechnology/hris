@@ -141,7 +141,7 @@ class RequestShiftController extends BaseController
         $cutOffAttendanceStartDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_start_date)->subMonth()->startOfDay();
         // $cutOffAttendanceEndDate = Carbon::createFromDate(date('Y'), date('m'), $payrollSetting->cut_off_attendance_end_date)->subMonth()->startOfDay();
 
-        $now = Carbon::now()->subDay()->startOfDay();
+        $now = Carbon::now()->startOfDay();
         $requestDate = Carbon::parse($request->date)->startOfDay();
 
         $attendance = Attendance::where('user_id', $request->user_id)->whereDate('date', $request->date)->exists();
