@@ -259,6 +259,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasOne(Attendance::class);
     }
 
+    public function resignation(): HasOne
+    {
+        return $this->hasOne(UserResignation::class)->where('type', \App\Enums\ResignationType::RESIGN)->orderByDesc('id');
+    }
+
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);

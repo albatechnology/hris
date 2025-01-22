@@ -80,6 +80,9 @@ class UserController extends BaseController
             AllowedInclude::callback('roles', function ($query) {
                 $query->select('id', 'name');
             }),
+            AllowedInclude::callback('resignation', function ($query) {
+                $query->select('id', 'user_id', 'type', 'resignation_date', 'reason', 'merit_pay_amount', 'severance_amount', 'compensation_amount', 'total_day_timeoff_compensation', 'timeoff_amount_per_day', 'total_timeoff_compensation', 'description');
+            }),
             AllowedInclude::callback('supervisors', function ($query) {
                 $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name', 'last_name'));
             }),
