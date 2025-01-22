@@ -145,13 +145,8 @@ class OvertimeController extends BaseController
 
     public function userSetting(UserSettingRequest $request): JsonResponse
     {
-        try {
-            User::find($request->user_id)->update([
-                'overtime_id' => $request->overtime_id,
-            ]);
-        } catch (\Exception $th) {
-            return $this->errorResponse($th->getMessage());
-        }
+        $user = User::select('id')->where('id', $request->user_id)->firstOrFail();
+        $user->overtimes()->sync($request->overtime_ids);
 
         return $this->updatedResponse();
     }

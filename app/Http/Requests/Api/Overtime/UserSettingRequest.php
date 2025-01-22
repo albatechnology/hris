@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Api\Overtime;
 
+use App\Models\Overtime;
+use App\Models\User;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UserSettingRequest extends FormRequest
@@ -22,8 +25,9 @@ class UserSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer|exists:users,id',
-            'overtime_id' => 'required|integer|exists:overtimes,id',
+            'user_id' => ['required', new CompanyTenantedRule(User::class, "User not found")],
+            'overtime_ids' => 'array|nullable',
+            'overtime_ids.*' => ['required', new CompanyTenantedRule(Overtime::class, "Overtime not found")],
         ];
     }
 }
