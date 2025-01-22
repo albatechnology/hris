@@ -90,6 +90,7 @@ class UserController extends BaseController
             'payrollInfo',
             'schedules',
             'userBpjs',
+            'overtimes',
         ];
     }
 
