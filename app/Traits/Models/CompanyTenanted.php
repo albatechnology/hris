@@ -27,7 +27,7 @@ trait CompanyTenanted
         //     return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
         // }
 
-        return $query->whereIn('company_id', $user->companies()->get(['company_id'])?->pluck('company_id'));
+        return $query->where(fn($q) => $q->whereIn('company_id', $user->companies()->get(['company_id'])?->pluck('company_id')));
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

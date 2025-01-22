@@ -154,11 +154,14 @@ class RequestShiftController extends BaseController
                 return $this->errorResponse(message: 'Attendance not found for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             $data['is_for_replace'] = true;
-        } else {
-            if ($attendance) {
-                return $this->errorResponse(message: 'Attendance already exist for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        } elseif ($requestDate->equalTo($now)) {
+            $data['is_for_replace'] = true;
         }
+        // else {
+        //     if ($attendance) {
+        //         return $this->errorResponse(message: 'Attendance already exist for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        //     }
+        // }
 
         DB::beginTransaction();
         try {
