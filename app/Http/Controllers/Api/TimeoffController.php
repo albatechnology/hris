@@ -68,8 +68,6 @@ class TimeoffController extends BaseController
     {
         $request = TimeoffService::requestTimeoffValidation($request);
 
-        dump($request->validated());
-        dd($request->all());
         DB::beginTransaction();
         try {
             $timeoff = Timeoff::create($request->all());
