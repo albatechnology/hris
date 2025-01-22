@@ -16,6 +16,7 @@ use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Models\UpdatePayrollComponentDetail;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
@@ -42,7 +43,7 @@ class RunPayrollService
 
         $cutOffStartDate = Carbon::parse($payrollSetting->cut_off_date . '-' . $request['period']);
         $cutOffEndDate = $cutOffStartDate->clone()->addMonth();
-        $cutOffStartDate->addDay();
+        // $cutOffStartDate->addDay();
         $request = array_merge($request, [
             'cut_off_start_date' => $cutOffStartDate->toDateString(),
             'cut_off_end_date' => $cutOffEndDate->toDateString(),
@@ -175,10 +176,16 @@ class RunPayrollService
 
         // calculate for each user
         foreach (explode(',', $request['user_ids']) as $userId) {
+            /** @var \App\Models\User $user */
+            $user = User::find($userId);
+            if (!$user) continue;
+            if ($user->resign_date) {
+                $resignDate = Carbon::parse($user->resign_date);
+                if ($resignDate->lessThan($cutOffStartDate)) continue;
+            }
+
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
-            /** @var \App\Models\User $user */
-            $user = $runPayrollUser->user;
             $userBasicSalary = $user->payrollInfo?->basic_salary;
             $totalWorkingDays = $user->payrollInfo?->total_working_days;
 

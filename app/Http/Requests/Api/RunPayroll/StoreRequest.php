@@ -2,15 +2,11 @@
 
 namespace App\Http\Requests\Api\RunPayroll;
 
-use App\Enums\FormulaComponentEnum;
-use App\Enums\RateType;
-use App\Models\RunPayroll;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -43,7 +39,15 @@ class StoreRequest extends FormRequest
             'user_ids' => [
                 'required',
                 'string',
-                fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($userId) => User::find($userId) ?? $fail('The selected user ids is invalid (' . $userId . ')')),
+                function (string $attr, string $value, Closure $fail) {
+                    collect(explode(',', $value))->each(function ($id) use ($fail) {
+                        $user = User::tenanted()->select('id', 'resign_date')->firstWHere('id', $id);
+
+                        if (!$user) {
+                            $fail('The selected user ids is invalid (' . $id . ')');
+                        }
+                    });
+                },
             ],
         ];
     }
