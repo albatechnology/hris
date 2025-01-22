@@ -8,7 +8,7 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Join Date</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Resign Date</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Job Position</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">Bank Name</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Bank Account Holder</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Bank Account</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Basic Salary</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Gross Salary</th>
@@ -47,7 +47,7 @@
                 <td>{{ $runPayrollUser->user->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                 </td>
                 <td>{{ $runPayrollUser->user->positions?->implode(', ') }}</td>
-                <td>{{ $runPayrollUser->payroll_info['bank_name'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->payroll_info['bank_account_holder'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->payroll_info['bank_account_no'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->basic_salary }}</td>
                 <td>{{ $runPayrollUser->gross_salary }}</td>
