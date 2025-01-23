@@ -82,9 +82,6 @@ class AttendanceController extends BaseController
 
             $dataAttendance = [];
             foreach ($dateRange as $date) {
-                $date = $date->format('Y-m-d');
-                if ($date != '2025-01-06') continue;
-
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
                 $attendance = $attendances->firstWhere('date', $date);
 
