@@ -8,6 +8,15 @@ use App\Models\Shift;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use App\Exports\UserShiftsReport;
+use App\Http\Requests\Api\Attendance\ExportReportRequest;
+use App\Http\Resources\DefaultResource;
+use App\Imports\ShiftUsersImport;
+use App\Models\User;
+use App\Services\ScheduleService;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ShiftController extends BaseController
 {
@@ -97,5 +106,83 @@ class ShiftController extends BaseController
         $shift->restore();
 
         return new ShiftResource($shift);
+    }
+
+    public function reportShiftUsers(ExportReportRequest $request, ?string $export = null)
+    {
+        $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
+        $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        $users = User::tenanted(true)
+            ->where('join_date', '<=', $startDate)
+            ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            ->get(['id', 'company_id', 'name', 'last_name', 'nik']);
+
+        $data = [];
+        foreach ($users as $user) {
+            // $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
+            // $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+
+            $user->setAppends([]);
+            $dataShifts = [];
+            foreach ($dateRange as $date) {
+                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'name']);
+
+                $shift = $schedule?->shift?->name ?? null;
+
+                // if ($schedule?->is_overide_company_holiday == false) {
+                //     $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                //         return date('Y-m-d', strtotime($ch->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($ch->end_at)) >= $date->format("Y-m-d");
+                //     });
+
+                //     if ($companyHoliday) {
+                //         $shift = 'company_holiday';
+                //         // $shiftType = 'company_holiday';
+                //     }
+                // }
+
+                // if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
+                //     $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                //         return date('Y-m-d', strtotime($nh->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($nh->end_at)) >= $date->format("Y-m-d");
+                //     });
+
+                //     if ($nationalHoliday) {
+                //         $shift = 'national_holiday';
+                //         // $shiftType = 'national_holiday';
+                //     }
+                // }
+
+                $dataShifts[] = [
+                    'date' => $date->format("Y-m-d"),
+                    'shift' => $shift,
+                ];
+            }
+
+            $data[] = [
+                'user' => $user,
+                'shifts' => $dataShifts,
+            ];
+        }
+
+        $data = [
+            'dates' => $dateRange,
+            'users' => $data,
+        ];
+
+        if ($export) return Excel::download(new UserShiftsReport($data), 'user_shifts.xlsx');
+
+        return DefaultResource::collection($data);
+    }
+
+    public function importShiftUsers(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx',
+        ]);
+
+        Excel::import(new ShiftUsersImport(auth()->user()), $request->file('file'));
+
+        return $this->updatedResponse();
     }
 }

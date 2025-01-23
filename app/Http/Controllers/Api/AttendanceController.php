@@ -78,12 +78,12 @@ class AttendanceController extends BaseController
                     'clockOut' => fn($q) => $q->approved(),
                 ])
                 ->whereDateBetween($startDate, $endDate)
-                ->get();
+                ->get(['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date']);
 
             $dataAttendance = [];
             foreach ($dateRange as $date) {
-                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
-                $attendance = $attendances->firstWhere('date', $date);
+                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
+                $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
 
                 if ($attendance?->clockIn) {
                     $attendance->clock_in = $attendance?->clockIn;
@@ -149,7 +149,7 @@ class AttendanceController extends BaseController
                     $companyHoliday = null;
                     if ($schedule?->is_overide_company_holiday == false) {
                         $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
-                            return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
+                            return date('Y-m-d', strtotime($ch->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($ch->end_at)) >= $date->format("Y-m-d");
                         });
 
                         if ($companyHoliday) {
@@ -160,7 +160,7 @@ class AttendanceController extends BaseController
 
                     if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
                         $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
-                            return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                            return date('Y-m-d', strtotime($nh->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($nh->end_at)) >= $date->format("Y-m-d");
                         });
 
                         if ($nationalHoliday) {
@@ -447,7 +447,7 @@ class AttendanceController extends BaseController
             $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
 
             foreach ($dateRange as $date) {
-                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
                 // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
                 // 2. kalo company event(holiday), shiftnya pake holiday
                 // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift

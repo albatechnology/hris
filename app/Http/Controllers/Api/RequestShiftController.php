@@ -35,41 +35,6 @@ class RequestShiftController extends BaseController
         // $this->middleware('permission:request_shift_delete', ['only' => 'destroy']);
     }
 
-
-    public function availableShifts()
-    {
-        /** @var User $user */
-        $user = auth()->user()?->load('positions');
-
-        $branchId = $user->branch_id;
-        $departmentIds = $user->positions->pluck('department_id')?->toArray();
-        $positionIds = $user->positions->pluck('position_id')?->toArray();
-
-        $schedule = ScheduleService::getTodaySchedule(scheduleColumn: ['id'], shiftColumn: ['id']);
-
-        $shifts = Shift::where(
-            fn($q) =>
-            $q->tenanted()
-                ->when($schedule, fn($q) => $q->whereHas('schedules', fn($q) => $q->where('schedule_id', $schedule->id)))
-                ->orWhere(function ($q) use ($branchId, $departmentIds, $positionIds) {
-                    $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', true)
-                        ->orWhere(function ($q) use ($branchId) {
-                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_branch_ids, ?)', json_encode($branchId));
-                        })
-                        ->orWhere(function ($q) use ($departmentIds) {
-                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_department_ids, ?)', json_encode($departmentIds));
-                        })
-                        ->orWhere(function ($q) use ($positionIds) {
-                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_position_ids, ?)', json_encode($positionIds));
-                        });
-                })
-        )
-            ->orWhereNull('company_id')
-            ->get(['id', 'type', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
-
-        return DefaultResource::collection($shifts);
-    }
-
     public function index(): ResourceCollection
     {
         $data = QueryBuilder::for(
@@ -248,5 +213,39 @@ class RequestShiftController extends BaseController
             ->paginate($this->per_page);
 
         return DefaultResource::collection($data);
+    }
+
+    public function availableShifts()
+    {
+        /** @var User $user */
+        $user = auth()->user()?->load('positions');
+
+        $branchId = $user->branch_id;
+        $departmentIds = $user->positions->pluck('department_id')?->toArray();
+        $positionIds = $user->positions->pluck('position_id')?->toArray();
+
+        $schedule = ScheduleService::getTodaySchedule(scheduleColumn: ['id'], shiftColumn: ['id']);
+
+        $shifts = Shift::where(
+            fn($q) =>
+            $q->tenanted()
+                ->when($schedule, fn($q) => $q->whereHas('schedules', fn($q) => $q->where('schedule_id', $schedule->id)))
+                ->orWhere(function ($q) use ($branchId, $departmentIds, $positionIds) {
+                    $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', true)
+                        ->orWhere(function ($q) use ($branchId) {
+                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_branch_ids, ?)', json_encode($branchId));
+                        })
+                        ->orWhere(function ($q) use ($departmentIds) {
+                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_department_ids, ?)', json_encode($departmentIds));
+                        })
+                        ->orWhere(function ($q) use ($positionIds) {
+                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_position_ids, ?)', json_encode($positionIds));
+                        });
+                })
+        )
+            ->orWhereNull('company_id')
+            ->get(['id', 'type', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+
+        return DefaultResource::collection($shifts);
     }
 }

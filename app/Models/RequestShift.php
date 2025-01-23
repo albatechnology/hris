@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CreatedUpdatedInfo;
+use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RequestShift extends RequestedBaseModel implements TenantedInterface
 {
-    use BelongsToUser, TenantedThroughUser;
+    use CustomSoftDeletes, CreatedUpdatedInfo, BelongsToUser, TenantedThroughUser;
 
     protected $fillable = [
         'user_id',
@@ -47,7 +49,7 @@ class RequestShift extends RequestedBaseModel implements TenantedInterface
 
     public function requestApproved()
     {
-        if ($this->is_for_replace) {
+        if (date('Y-m-d', strtotime($this->date)) <= date('Y-m-d')) {
             Attendance::where('user_id', $this->user_id)->whereDate('date', $this->date)->update(['schedule_id' => $this->schedule_id, 'shift_id' => $this->new_shift_id]);
         }
     }
