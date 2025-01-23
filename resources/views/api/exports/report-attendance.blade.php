@@ -102,6 +102,24 @@
                     </td>
                 </tr>
             @empty
+                <tr>
+                    <td>{{ $data['user']['nik'] }}</td>
+                    <td>{{ $data['user']['name'] }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>A</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
             @endforelse
             <tr>
                 <th style="background: #ffcbb1; font-weight: bold" colspan="10">TOTAL FOR EMPLOYEE :
