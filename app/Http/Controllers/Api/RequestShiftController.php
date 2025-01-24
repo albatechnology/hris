@@ -226,23 +226,23 @@ class RequestShiftController extends BaseController
 
         $schedule = ScheduleService::getTodaySchedule(scheduleColumn: ['id'], shiftColumn: ['id']);
 
-        $shifts = Shift::where(
-            fn($q) =>
-            $q->tenanted()
-                ->when($schedule, fn($q) => $q->whereHas('schedules', fn($q) => $q->where('schedule_id', $schedule->id)))
-                ->orWhere(function ($q) use ($branchId, $departmentIds, $positionIds) {
-                    $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', true)
-                        ->orWhere(function ($q) use ($branchId) {
-                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_branch_ids, ?)', json_encode($branchId));
-                        })
-                        ->orWhere(function ($q) use ($departmentIds) {
-                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_department_ids, ?)', json_encode($departmentIds));
-                        })
-                        ->orWhere(function ($q) use ($positionIds) {
-                            $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_position_ids, ?)', json_encode($positionIds));
-                        });
-                })
-        )
+        $shifts = Shift::tenanted()
+            ->where(
+                fn($q) =>
+                $q->when($schedule, fn($q) => $q->whereHas('schedules', fn($q) => $q->where('schedule_id', $schedule->id)))
+                    ->orWhere(function ($q) use ($branchId, $departmentIds, $positionIds) {
+                        $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', true)
+                            ->orWhere(function ($q) use ($branchId) {
+                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_branch_ids, ?)', json_encode($branchId));
+                            })
+                            ->orWhere(function ($q) use ($departmentIds) {
+                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_department_ids, ?)', json_encode($departmentIds));
+                            })
+                            ->orWhere(function ($q) use ($positionIds) {
+                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_position_ids, ?)', json_encode($positionIds));
+                            });
+                    })
+            )
             ->orWhereNull('company_id')
             ->get(['id', 'type', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
 
