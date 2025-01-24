@@ -13,6 +13,7 @@ use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
 use App\Services\RunPayrollService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
@@ -91,7 +92,7 @@ class RunPayrollController extends BaseController
     //         FormulaService::sync($runPayroll, $request->formulas);
 
     //         DB::commit();
-    //     } catch (\Exception $th) {
+    //     } catch (Exception $th) {
     //         DB::rollBack();
 
     //         return $this->errorResponse($th->getMessage());
@@ -112,7 +113,7 @@ class RunPayrollController extends BaseController
 
             RunPayrollService::refreshRunPayrollUser($runPayrollUser);
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -134,7 +135,7 @@ class RunPayrollController extends BaseController
             $runPayroll->delete();
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -158,5 +159,88 @@ class RunPayrollController extends BaseController
         ]);
 
         return (new RunPayrollExport($runPayroll))->download("payroll $runPayroll->period .xlsx");
+    }
+
+    public function exportOcbc(int $id)
+    {
+        $runPayroll = RunPayroll::select('id', 'code')->findTenanted($id);
+        $datas = RunPayrollUser::where('run_payroll_id', $id)
+            ->with([
+                'user' => function ($q) {
+                    $q->withTrashed()->select('id', 'name', 'last_name')
+                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency'));
+                }
+            ])
+            ->get()
+            ->map(function (RunPayrollUser $runPayrollUser) {
+                if (!$runPayrollUser->user) {
+                    throw new Exception("User with ID $runPayrollUser->user_id not found");
+                }
+
+                if (!$runPayrollUser->user->payrollInfo) {
+                    throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
+                }
+
+                return [
+                    'PayeeID' => str_repeat(' ', 20), // 20 O
+                    'PayeeName' => substr(trim($runPayrollUser->user->payrollInfo->bank_account_holder) . str_repeat(' ', 40), 0, 40), // 40 M
+                    'PayeeAddr1' => substr(trim('Jakarta') . str_repeat(' ', 35), 0, 35), // 35 M
+                    'PayeeAddr2' => str_repeat(' ', 35), // 35 O
+                    'PayeeAddr3' => str_repeat(' ', 35), // 35 O
+                    'PaymentType' => 'P', // 1 M
+                    'PayeeAccountNo' => substr(trim($runPayrollUser->user->payrollInfo->bank_account_no) . str_repeat(' ', 34), 0, 34), // 34 M
+                    'PayeeAccountCcy' => substr(trim($runPayrollUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3), // 3 M
+                    'PayAmount' => substr(str_repeat('0', 14) . number_format($runPayrollUser->thp, 2, '.', ''), -18, 18), // 18 M (decimal 2)
+                    'PayCcy' => substr(trim($runPayrollUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3), // 3 M
+                    'Remarks' => str_repeat(' ', 255), // 255 O
+                    'BeneBankName' => str_repeat(' ', 100), // 100 C
+                    'BeneBankBranchName' => str_repeat(' ', 50), // 50 C
+                    'BeneBankNetworkID' => str_repeat(' ', 20), // 20 C
+                    'ReservedColumn1' => str_repeat(' ', 1), // 1 C
+                    'ResidentStatus' => str_repeat(' ', 1), // 1 C
+                    'ReservedColumn2' => str_repeat(' ', 2), // 2 C
+                    'RemitterCategory' => str_repeat(' ', 4), // 4 C
+                    'ReservedColumn3' => str_repeat(' ', 2), // 2 C
+                ];
+            });
+
+        $header = [
+            'OrgIDVelocity' => substr(trim('SUNEDUCATION') . str_repeat(' ', 30), 0, 30), // 30 M
+            'OrgIDBulk' => substr(trim('SUNEDUCATION') . str_repeat(' ', 40), 0, 40), // 12 M
+            'ProductType' => 'BLIDR', // 5 M
+            'ServiceID' => '10001', // 5 M
+            'ValueDate' => date('Ymd'), // 8 M
+            'DebitAcctCcy' => 'IDR', // 3 M
+            'DebitAcctNo' => '625800011136', // 19 M
+            'DebitAcctNo' => substr(trim('625800011136') . str_repeat(' ', 19), 0, 19), // 30 M
+        ];
+
+        $content = implode('', array_values($header)) . PHP_EOL;
+        foreach ($datas as $data) {
+            $content .= $data['PayeeID'];
+            $content .= $data['PayeeName'];
+            $content .= $data['PayeeAddr1'];
+            $content .= $data['PayeeAddr2'];
+            $content .= $data['PayeeAddr3'];
+            $content .= $data['PaymentType'];
+            $content .= $data['PayeeAccountNo'];
+            $content .= $data['PayeeAccountCcy'];
+            $content .= $data['PayAmount'];
+            $content .= $data['PayCcy'];
+            $content .= $data['Remarks'];
+            $content .= $data['BeneBankName'];
+            $content .= $data['BeneBankBranchName'];
+            $content .= $data['BeneBankNetworkID'];
+            $content .= $data['ReservedColumn1'];
+            $content .= $data['ResidentStatus'];
+            $content .= $data['ReservedColumn2'];
+            $content .= $data['RemitterCategory'];
+            $content .= $data['ReservedColumn3'] . PHP_EOL;
+        }
+        $fileName = "Payroll $runPayroll->code.txt";
+        return response($content, 200, [
+            'Content-type' => 'text/plain',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
+        ]);
     }
 }
