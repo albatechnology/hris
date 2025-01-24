@@ -114,14 +114,14 @@ class Patrol extends BaseModel implements TenantedInterface
             return $query->whereHas('client', fn($q) => $q->tenanted());
         }
 
-        $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleType: ScheduleType::PATROL->value);
+        // $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleType: ScheduleType::PATROL->value);
         return $query->whereHas(
             'users',
             fn($q) => $q->where('user_id', $user->id)
-                ->whereHas('userPatrolSchedules.schedule', function ($q2) use ($schedule) {
+                ->whereHas('userPatrolSchedules.schedule', function ($q2) {
                     $q2->where('schedules.type', ScheduleType::PATROL->value);
                     $q2->whereDate('schedules.effective_date', '<=', date('Y-m-d'));
-                    $q2->whereHas('shifts', fn($q3) => $q3->where('id', $schedule?->shift?->id));
+                    // $q2->whereHas('shifts', fn($q3) => $q3->where('id', $schedule?->shift?->id));
                 })
         );
     }
