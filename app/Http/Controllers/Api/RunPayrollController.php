@@ -201,18 +201,20 @@ class RunPayrollController extends BaseController
                     'ReservedColumn2' => str_repeat(' ', 2), // 2 C
                     'RemitterCategory' => str_repeat(' ', 4), // 4 C
                     'ReservedColumn3' => str_repeat(' ', 2), // 2 C
+                    'BeneCategory' => str_repeat(' ', 4), // 4 C
+                    'ReservedColumn4' => str_repeat(' ', 1), // 1 C
+                    'PaymentPurpose' => str_repeat(' ', 5), // 5 C
                 ];
             });
 
         $header = [
             'OrgIDVelocity' => substr(trim('SUNEDUCATION') . str_repeat(' ', 30), 0, 30), // 30 M
-            'OrgIDBulk' => substr(trim('SUNEDUCATION') . str_repeat(' ', 40), 0, 40), // 12 M
+            'OrgIDBulk' => substr(trim('SUNEDUCATION') . str_repeat(' ', 12), 0, 12), // 12 M
             'ProductType' => 'BLIDR', // 5 M
             'ServiceID' => '10001', // 5 M
             'ValueDate' => date('Ymd'), // 8 M
             'DebitAcctCcy' => 'IDR', // 3 M
-            'DebitAcctNo' => '625800011136', // 19 M
-            'DebitAcctNo' => substr(trim('625800011136') . str_repeat(' ', 19), 0, 19), // 30 M
+            'DebitAcctNo' => substr(trim('625800011136') . str_repeat(' ', 19), 0, 19), // 19 M
         ];
 
         $content = implode('', array_values($header)) . PHP_EOL;
