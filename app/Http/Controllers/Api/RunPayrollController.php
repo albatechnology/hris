@@ -212,7 +212,7 @@ class RunPayrollController extends BaseController
             'OrgIDBulk' => substr(trim('SUNEDUCATION') . str_repeat(' ', 12), 0, 12), // 12 M
             'ProductType' => 'BLIDR', // 5 M
             'ServiceID' => '10001', // 5 M
-            'ValueDate' => date('Y-m-d', strtotime($runPayroll->payment_schedule)), // 8 M
+            'ValueDate' => date('Ymd', strtotime($runPayroll->payment_schedule)), // 8 M
             'DebitAcctCcy' => 'IDR', // 3 M
             'DebitAcctNo' => substr(str_repeat(' ', 19) . trim('625800011136'), -19, 19), // 19 M
         ];
