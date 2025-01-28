@@ -214,7 +214,7 @@ class RunPayrollController extends BaseController
             'ServiceID' => '10001', // 5 M
             'ValueDate' => date('Y-m-d', strtotime($runPayroll->payment_schedule)), // 8 M
             'DebitAcctCcy' => 'IDR', // 3 M
-            'DebitAcctNo' => substr(trim('625800011136') . str_repeat(' ', 19), 0, 19), // 19 M
+            'DebitAcctNo' => substr(str_repeat(' ', 19) . trim('625800011136'), -19, 19), // 19 M
         ];
 
         $content = implode('', array_values($header)) . PHP_EOL;
