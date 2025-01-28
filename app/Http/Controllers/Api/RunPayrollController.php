@@ -163,7 +163,7 @@ class RunPayrollController extends BaseController
 
     public function exportOcbc(int $id)
     {
-        $runPayroll = RunPayroll::select('id', 'code')->findTenanted($id);
+        $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule')->findTenanted($id);
         $datas = RunPayrollUser::where('run_payroll_id', $id)
             ->with([
                 'user' => function ($q) {
@@ -212,7 +212,7 @@ class RunPayrollController extends BaseController
             'OrgIDBulk' => substr(trim('SUNEDUCATION') . str_repeat(' ', 12), 0, 12), // 12 M
             'ProductType' => 'BLIDR', // 5 M
             'ServiceID' => '10001', // 5 M
-            'ValueDate' => date('Ymd'), // 8 M
+            'ValueDate' => date('Y-m-d', strtotime($runPayroll->payment_schedule)), // 8 M
             'DebitAcctCcy' => 'IDR', // 3 M
             'DebitAcctNo' => substr(trim('625800011136') . str_repeat(' ', 19), 0, 19), // 19 M
         ];
