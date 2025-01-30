@@ -86,7 +86,12 @@ class ShiftController extends BaseController
 
     public function destroy(int $id)
     {
-        $shift = Shift::findTenanted($id);
+        $shift = Shift::withCount('schedules')->findTenanted($id);
+
+        if ($shift->schedules_count > 0) {
+            return $this->errorResponse(message: 'Shift is being used in the schedule. Remove it from the schedule first', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $shift->delete();
 
         return $this->deletedResponse();
@@ -95,6 +100,11 @@ class ShiftController extends BaseController
     public function forceDelete(int $id)
     {
         $shift = Shift::withTrashed()->tenanted()->where('id', $id)->fisrtOrFail();
+
+        if ($shift->schedules_count > 0) {
+            return $this->errorResponse(message: 'Shift is being used in the schedule. Remove it from the schedule first', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $shift->forceDelete();
 
         return $this->deletedResponse();
