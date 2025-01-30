@@ -212,7 +212,7 @@
                             <tbody>
                               <tr>
                                 <td style="line-height: 24px; font-size: 16px; width: 100%; margin: 0;" align="left" bgcolor="#ffffff">
-                                  <div style="background-color: #1D4076; color: #212121; padding: 30px 10px;">
+                                  <div style="background-color: #1D4076; color: #ffffff; padding: 30px 10px;">
                                     <table class="ax-center" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                                       <tbody>
                                         <tr>
@@ -261,7 +261,7 @@
                                                       <tbody>
                                                         <tr>
                                                           <td style="line-height: 24px; font-size: 16px; border-radius: 6px; margin: 0;" align="center">
-                                                            <a href="{{ $url }}" target="_blank" style="background-color: #1D4076; color: #212121; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: bold; white-space: nowrap; padding: 13px 30px; border: 1px solid transparent;">
+                                                            <a href="{{ $url }}" target="_blank" style="background-color: #1D4076; color: #ffffff; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: bold; white-space: nowrap; padding: 13px 30px; border: 1px solid transparent;">
                                                               Setup Password
                                                             </a>
                                                           </td>

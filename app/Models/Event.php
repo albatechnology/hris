@@ -101,4 +101,16 @@ class Event extends Model implements TenantedInterface
     {
         $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($startDate)))->whereDate('end_at', '<=', date('Y-m-d', strtotime($endDate)));
     }
+
+    public function scopeWhereYearMonth(Builder $query, string $date)
+    {
+        $year = date('Y', strtotime($date));
+        $month = date('m', strtotime($date));
+        $query->where(
+            fn($q) => $q->where(
+                fn($q) => $q->whereYear('start_at', $year)->whereMonth('start_at', $month)
+                    ->orWhere(fn($q) => $q->whereYear('end_at', $year)->whereMonth('end_at', $month))
+            )
+        );
+    }
 }

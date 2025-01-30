@@ -18,8 +18,7 @@ class SetupPasswordNotification extends Notification
      */
 
 
-    public function __construct(private NotificationType $notificationType) {
-    }
+    public function __construct(private NotificationType $notificationType, private ?array $users = []) {}
 
     /**
      * Get the notification's delivery channels.
@@ -40,7 +39,7 @@ class SetupPasswordNotification extends Notification
      */
     public function toMail($notifiable): SetupPasswordMailable
     {
-        return (new SetupPasswordMailable($notifiable))->to($notifiable->email);
+        return (new SetupPasswordMailable($notifiable))->to($notifiable->email)->cc($this->users);
     }
 
     /**
