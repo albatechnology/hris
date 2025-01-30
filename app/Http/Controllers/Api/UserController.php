@@ -258,10 +258,15 @@ class UserController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
+        $data = $request->validated();
+        if ($request->password) {
+            $data['password'] = $request->password;
+        }
+
         $user = User::findTenanted($id);
         DB::beginTransaction();
         try {
-            $user->update($request->validated());
+            $user->update($data);
             // if ($request->positions) {
             //     $user->positions()->delete();
             //     $user->positions()->createMany($request->positions ?? []);
