@@ -24,6 +24,20 @@ class ScheduleService
         $datetime = is_null($datetime) ? date('Y-m-d H:i:00') : date('Y-m-d H:i:00', strtotime($datetime));
         list($date, $time) = explode(' ', $datetime);
 
+        $todayAttendance = AttendanceService::getTodayAttendance(date: $date, user: $user, isCheckByDetails: false);
+        if ($todayAttendance) {
+            $schedule =  Schedule::select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+                ->whereApproved()
+                ->where('id', $todayAttendance->schedule_id)
+                ->first();
+
+            $shift = Shift::select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $todayAttendance->shift_id)->first();
+
+            $schedule->setRelation('shift', $shift);
+
+            return $schedule;
+        }
+
         $requestShift = RequestShift::select('id', 'schedule_id', 'new_shift_id')
             ->where('user_id', $user->id)->approved()
             ->whereHas('schedule', fn($q) => $q->where('type', $scheduleType))

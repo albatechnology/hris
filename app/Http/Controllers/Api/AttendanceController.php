@@ -906,7 +906,8 @@ class AttendanceController extends BaseController
         }
 
         $attendance = AttendanceService::getTodayAttendance(date: $request->date, user: $user, isCheckByDetails: false);
-
+        // dump($request->validated());
+        // dd($attendance);
         DB::beginTransaction();
         try {
             if (!$attendance) {
@@ -923,24 +924,28 @@ class AttendanceController extends BaseController
             }
 
             // clock in
-            $attendance->details()->create([
-                'is_clock_in' => true,
-                'time' => $request->date . ' ' . $request->clock_in,
-                'type' => $request->type,
-                // 'approval_status' => ApprovalStatus::APPROVED,
-                // 'approved_at' => now(),
-                // 'approved_by' => auth('sanctum')->id(),
-            ]);
+            if ($request->clock_in) {
+                $attendance->details()->create([
+                    'is_clock_in' => true,
+                    'time' => $request->date . ' ' . $request->clock_in,
+                    'type' => $request->type,
+                    // 'approval_status' => ApprovalStatus::APPROVED,
+                    // 'approved_at' => now(),
+                    // 'approved_by' => auth('sanctum')->id(),
+                ]);
+            }
 
             // clock out
-            $attendance->details()->create([
-                'is_clock_in' => false,
-                'time' => $request->date . ' ' . $request->clock_out,
-                'type' => $request->type,
-                // 'approval_status' => ApprovalStatus::APPROVED,
-                // 'approved_at' => now(),
-                // 'approved_by' => auth('sanctum')->id(),
-            ]);
+            if ($request->clock_out) {
+                $attendance->details()->create([
+                    'is_clock_in' => false,
+                    'time' => $request->date . ' ' . $request->clock_out,
+                    'type' => $request->type,
+                    // 'approval_status' => ApprovalStatus::APPROVED,
+                    // 'approved_at' => now(),
+                    // 'approved_by' => auth('sanctum')->id(),
+                ]);
+            }
 
             DB::commit();
         } catch (Exception $e) {
