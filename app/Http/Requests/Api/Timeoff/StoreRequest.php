@@ -53,7 +53,7 @@ class StoreRequest extends FormRequest
             'total_days' => 'required|numeric|multiple_of:0.5',
 
             'files' => 'nullable|array',
-            'files.*' => 'required|mimes:' . config('app.image_mimes_types'),
+            'files.*' => 'required|mimes:' . config('app.file_mimes_types'),
             // 'is_advanced_leave' => 'nullable|boolean',
         ];
     }
