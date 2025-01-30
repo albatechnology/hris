@@ -9,8 +9,10 @@ use App\Models\RunPayroll;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class RunPayrollExport implements FromView
+class RunPayrollExport implements FromView, WithColumnFormatting
 {
     use Exportable;
 
@@ -27,5 +29,12 @@ class RunPayrollExport implements FromView
             'deductions' => $payrollComponents->where('type', PayrollComponentType::DEDUCTION),
             'benefits' => $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]),
         ]);
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'I' => NumberFormat::FORMAT_TEXT
+        ];
     }
 }

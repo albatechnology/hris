@@ -47,8 +47,8 @@
                 <td>{{ $runPayrollUser->user->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                 </td>
                 <td>{{ $runPayrollUser->user->positions?->implode(', ') }}</td>
-                <td>{{ $runPayrollUser->payroll_info['bank_account_holder'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->payroll_info['bank_account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo['bank_account_holder'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo['bank_account_no'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->basic_salary }}</td>
                 <td>{{ $runPayrollUser->gross_salary }}</td>
 
