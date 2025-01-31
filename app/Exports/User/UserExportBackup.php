@@ -13,12 +13,11 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles
+class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles
 {
     use Exportable;
 
-    public function __construct(private Builder $query) {
-    }
+    public function __construct(private Builder $query) {}
 
     public function query()
     {
@@ -52,7 +51,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'Blood Type',
             'Blood Rhesus',
             'Religion',
-            // 'Basic Salary',
+            'Basic Salary',
             'Overtime Setting',
             'Bank Name',
             'Bank Account Number',
@@ -63,11 +62,11 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'Tax Salary',
             'Beginning Netto',
             'PPH 21 Paid',
-            // 'BPJS Kesehatan Plafond',
+            'BPJS Kesehatan Plafond',
             'BPJS Kesehatan Number',
             'BPJS Kesehatan Date',
             'BPJS Kesehatan Family Number',
-            // 'BPJS Ketenagakerjaan Plafond',
+            'BPJS Ketenagakerjaan Plafond',
             'BPJS Ketenagakerjaan Number',
             'BPJS Ketenagakerjaan Date',
             'BPJS Kesehatan Paid By',
@@ -113,7 +112,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             $user->detail?->blood_type?->value ?? '',
             $user->detail?->blood_rhesus?->value ?? '',
             $user->detail?->religion?->value ?? '',
-            // $user->payrollInfo?->basic_salary,
+            $user->payrollInfo?->basic_salary,
             $user->payrollInfo?->overtime_setting?->value ?? '',
             $user->payrollInfo?->bank_name,
             $user->payrollInfo?->bank_account_number,
@@ -124,11 +123,11 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             $user->payrollInfo?->tax_salary?->value ?? '',
             $user->payrollInfo?->beginning_netto,
             $user->payrollInfo?->pph21_paid,
-            // $user->userBpjs?->upah_bpjs_kesehatan,
+            $user->userBpjs?->upah_bpjs_kesehatan,
             $user->userBpjs?->bpjs_kesehatan_no,
             $user->userBpjs?->bpjs_kesehatan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_kesehatan_date)) : '',
             $user->userBpjs?->bpjs_kesehatan_family_no,
-            // $user->userBpjs?->upah_bpjs_ketenagakerjaan,
+            $user->userBpjs?->upah_bpjs_ketenagakerjaan,
             $user->userBpjs?->bpjs_ketenagakerjaan_no,
             $user->userBpjs?->bpjs_ketenagakerjaan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_ketenagakerjaan_date)) : '',
             $user->userBpjs?->bpjs_kesehatan_cost?->value ?? '',
@@ -144,18 +143,13 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'K' => NumberFormat::FORMAT_GENERAL,
             'L' => NumberFormat::FORMAT_GENERAL,
             'O' => NumberFormat::FORMAT_GENERAL,
-            // 'Y' => NumberFormat::FORMAT_NUMBER,
-            // 'AD' => NumberFormat::FORMAT_GENERAL,
-            'AC' => NumberFormat::FORMAT_GENERAL,
-
-            // 'AJ' => NumberFormat::FORMAT_NUMBER,
-            // 'AK' => NumberFormat::FORMAT_GENERAL,
-            // 'AM' => NumberFormat::FORMAT_GENERAL,
-            // 'AN' => NumberFormat::FORMAT_NUMBER,
-            // 'AO' => NumberFormat::FORMAT_GENERAL,
-            'AI' => NumberFormat::FORMAT_GENERAL,
+            'Y' => NumberFormat::FORMAT_NUMBER,
+            'AD' => NumberFormat::FORMAT_GENERAL,
+            'AJ' => NumberFormat::FORMAT_NUMBER,
             'AK' => NumberFormat::FORMAT_GENERAL,
-            'AL' => NumberFormat::FORMAT_GENERAL,
+            'AM' => NumberFormat::FORMAT_GENERAL,
+            'AN' => NumberFormat::FORMAT_NUMBER,
+            'AO' => NumberFormat::FORMAT_GENERAL,
         ];
     }
 }
