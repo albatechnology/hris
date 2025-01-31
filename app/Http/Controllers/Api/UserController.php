@@ -9,7 +9,9 @@ use App\Enums\RequestChangeDataType;
 use App\Enums\ResignationType;
 use App\Enums\SettingKey;
 use App\Enums\UserType;
+use App\Exports\User\UserExport;
 use App\Http\Requests\Api\User\DetailStoreRequest;
+use App\Http\Requests\Api\User\ExportRequest;
 use App\Http\Requests\Api\User\RegisterRequest;
 use App\Http\Requests\Api\User\StoreRequest;
 use App\Http\Requests\Api\User\UpdateRequest;
@@ -735,9 +737,24 @@ class UserController extends BaseController
         return 'oke';
     }
 
+    public function export(ExportRequest $request)
+    {
+        $query = User::tenanted()->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
+            'detail',
+            'userBpjs',
+            'payrollInfo'
+        ]);
+
+        if ($request->is_json == true) {
+            $users = $query->paginate($this->per_page);
+            return DefaultResource::collection($users);
+        }
+
+        return (new UserExport($query))->download('users.xlsx');
+    }
+
     // public function backupPhoto()
     // {
-
     //     $users = User::where('company_id', 1)
     //         // ->whereHas('media')
     //         // ->whereNotIn('id', [6])
