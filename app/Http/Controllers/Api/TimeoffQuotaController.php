@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffQuota\StoreRequest;
 use App\Http\Requests\Api\TimeoffQuota\UpdateRequest;
+use App\Http\Requests\Api\TimeoffQuota\UserTimeoffQuota;
 use App\Http\Resources\DefaultResource;
 use App\Imports\ImportTimeoffQuotaImport;
 use App\Models\Timeoff;
@@ -118,6 +119,68 @@ class TimeoffQuotaController extends BaseController
         //     ])
         //     ->paginate($this->per_page);
         // return UserTimeoffPolicyQuotaHistories::collection($data);
+    }
+
+    public function users(UserTimeoffQuota $request)
+    {
+
+        $data = QueryBuilder::for(
+            User::select(['id', 'branch_id', 'name', 'last_name', 'nik'])
+                ->tenanted()
+            // ->with('timeoffQuotas', function ($q) {
+            //     $q->whereActive()
+            //         ->select('user_id', 'timeoff_policy_id', DB::raw('SUM(quota) as total_quota'))
+            //         ->groupBy('user_id', 'timeoff_policy_id');
+            // })
+        )
+            ->allowedFilters([
+                AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('branch_id'),
+                AllowedFilter::scope('name', 'whereName'),
+            ])
+            ->allowedSorts([
+                'id',
+                'branch_id',
+                'name',
+            ])
+            ->paginate($this->per_page);
+
+
+        $companyId = $request->filter['company_id'] ?? auth()->user()->company_id;
+        $timeoffPolicyIds = [];
+        if (isset($request->filter['timeoff_policy_ids'])) {
+            $timeoffPolicyIds = explode(',', trim($request->filter['timeoff_policy_ids']));
+        }
+
+        $timeoffPolicies = TimeoffPolicy::tenanted()
+            ->whereIn('id', $timeoffPolicyIds)
+            ->whereIn('type', TimeoffPolicyType::hasQuotas())
+            ->where('company_id', $companyId)
+            ->get(['id', 'type', 'name', 'code']);
+
+        $data->map(function (User $user) use ($timeoffPolicies) {
+            $userTimeoffPolicies = collect([]);
+
+            foreach ($timeoffPolicies as $t) {
+                $timeoffPolicy = TimeoffPolicy::select(['id', 'type', 'name', 'code'])
+                    ->where('id', $t->id)
+                    ->withCount([
+                        'timeoffQuotas' => fn($q) => $q->where('user_id', $user->id)->whereActive()
+                    ])
+                    ->first();
+
+                if ($timeoffPolicy) {
+                    $timeoffPolicy = $t;
+                    $timeoffPolicy->timeoff_quotas_count = 0;
+                }
+
+                $userTimeoffPolicies->push($timeoffPolicy);
+            }
+
+            $user->setRelation('timeoff_policies', $userTimeoffPolicies);
+        });
+
+        return DefaultResource::collection($data);
     }
 
     public function index()

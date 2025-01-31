@@ -179,6 +179,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     // });
     Route::apiResource('timeoff-policies', TimeoffPolicyController::class);
 
+    Route::get('timeoff-quotas/users', [TimeoffQuotaController::class, 'users']);
     Route::get('timeoff-quotas/me/{timeoff_policy}', [TimeoffQuotaController::class, 'meDetails']);
     Route::apiResource('timeoff-quotas', TimeoffQuotaController::class);
 
