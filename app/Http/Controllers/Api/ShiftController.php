@@ -120,6 +120,8 @@ class ShiftController extends BaseController
 
     public function reportShiftUsers(ExportReportRequest $request, ?string $export = null)
     {
+        $userIds = $request->filter['user_ids'] ?? null;
+
         $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -127,6 +129,7 @@ class ShiftController extends BaseController
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
             ->get(['id', 'company_id', 'name', 'last_name', 'nik']);
 
         $data = [];

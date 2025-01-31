@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\User;
+use App\Rules\CompanyTenantedRule;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ExportReportRequest extends FormRequest
@@ -41,6 +44,18 @@ class ExportReportRequest extends FormRequest
             'filter' => 'required|array',
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',
+            'filter.user_ids' => [
+                'nullable',
+                'string',
+                function (string $attr, string $value, Closure $fail) {
+                    collect(explode(',', $value))->each(function ($id) use ($fail) {
+                        $user = User::tenanted()->select('id')->firstWHere('id', $id);
+                        if (!$user) {
+                            $fail('The selected user ids is invalid (' . $id . ')');
+                        }
+                    });
+                },
+            ],
         ];
     }
 }
