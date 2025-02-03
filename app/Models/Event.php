@@ -72,6 +72,11 @@ class Event extends Model implements TenantedInterface
         return $query->first();
     }
 
+    public function scopeSelectMinimalist(Builder $query)
+    {
+        $query->select(['id', 'type', 'name', 'start_at', 'end_at', 'description']);
+    }
+
     public function userEvents(): HasMany
     {
         return $this->hasMany(UserEvent::class);

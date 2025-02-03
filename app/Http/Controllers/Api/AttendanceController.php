@@ -66,8 +66,8 @@ class AttendanceController extends BaseController
 
         $data = [];
         foreach ($users as $user) {
-            $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
-            $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+            $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+            $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
@@ -443,8 +443,8 @@ class AttendanceController extends BaseController
                 ->whereDateBetween($startDate, $endDate)
                 ->get();
 
-            $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
-            $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+            $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+            $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
@@ -739,8 +739,8 @@ class AttendanceController extends BaseController
         $date = $request->filter['date'];
 
         $users->map(function ($user) use ($date, $request) {
-            $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
-            $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+            $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
+            $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
 
             $schedule = ScheduleService::getTodaySchedule($user, $date, scheduleType: $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
 
