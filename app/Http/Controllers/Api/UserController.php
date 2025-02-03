@@ -740,10 +740,14 @@ class UserController extends BaseController
     public function export(ExportRequest $request)
     {
         $query = User::tenanted()->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
-            'branch' => fn($q) => $q->select('id', 'company_id', 'name')->with('company', fn($q) => $q->select('id', 'name')),
             'detail',
             'userBpjs',
-            'payrollInfo'
+            'payrollInfo',
+            'branch' => fn($q) => $q->select('id', 'company_id', 'name')->with('company', fn($q) => $q->select('id', 'name')),
+            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+                'position' => fn($q) => $q->select('id', 'name'),
+                'department' => fn($q) => $q->select('id', 'name'),
+            ])
         ]);
 
         if ($request->is_json == true) {

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -13,7 +14,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles
+class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles, ShouldAutoSize
 {
     use Exportable;
 
@@ -30,6 +31,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'ID',
             'Company',
             'Branch',
+            'Department & Position',
             'NIK',
             'Name',
             'Last Name',
@@ -89,11 +91,17 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
      */
     public function map($user): array
     {
+        $positions = "";
+        foreach ($user->positions as $p) {
+            $positions .= $p->department->name . '/' . $p->position->name . ', ';
+        }
+        $positions = rtrim($positions, ', ');
+
         return [
             $user->id,
             $user->branch?->company?->name ?? '',
             $user->branch?->name ?? '',
-            $user->nik,
+            $positions,
             $user->nik,
             $user->name,
             $user->last_name,
@@ -144,22 +152,17 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     public function columnFormats(): array
     {
         return [
-            'C' => NumberFormat::FORMAT_GENERAL,
-            'M' => NumberFormat::FORMAT_GENERAL,
+            'E' => NumberFormat::FORMAT_GENERAL,
+            'I' => NumberFormat::FORMAT_GENERAL,
             'N' => NumberFormat::FORMAT_GENERAL,
-            'Q' => NumberFormat::FORMAT_GENERAL,
-            // 'Y' => NumberFormat::FORMAT_NUMBER,
-            // 'AD' => NumberFormat::FORMAT_GENERAL,
-            'AE' => NumberFormat::FORMAT_GENERAL,
-
-            // 'AJ' => NumberFormat::FORMAT_NUMBER,
-            // 'AK' => NumberFormat::FORMAT_GENERAL,
-            // 'AM' => NumberFormat::FORMAT_GENERAL,
-            // 'AN' => NumberFormat::FORMAT_NUMBER,
-            // 'AO' => NumberFormat::FORMAT_GENERAL,
-            'AK' => NumberFormat::FORMAT_GENERAL,
-            'AM' => NumberFormat::FORMAT_GENERAL,
+            'O' => NumberFormat::FORMAT_GENERAL,
+            'R' => NumberFormat::FORMAT_GENERAL,
+            'T' => NumberFormat::FORMAT_GENERAL,
+            'AD' => NumberFormat::FORMAT_GENERAL,
+            'AF' => NumberFormat::FORMAT_GENERAL,
+            'AL' => NumberFormat::FORMAT_GENERAL,
             'AN' => NumberFormat::FORMAT_GENERAL,
+            'AO' => NumberFormat::FORMAT_GENERAL,
         ];
     }
 }
