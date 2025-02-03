@@ -128,6 +128,7 @@ class TimeoffQuotaController extends BaseController
             User::select(['id', 'branch_id', 'name', 'last_name', 'nik'])
                 ->tenanted()
                 ->with('branch', fn($q) => $q->select('id', 'name'))
+                ->where('id', 15)
             // ->with('timeoffQuotas', function ($q) {
             //     $q->whereActive()
             //         ->select('user_id', 'timeoff_policy_id', DB::raw('SUM(quota) as total_quota'))
@@ -165,15 +166,16 @@ class TimeoffQuotaController extends BaseController
             foreach ($timeoffPolicies as $t) {
                 $timeoffPolicy = TimeoffPolicy::select(['id', 'type', 'name', 'code'])
                     ->where('id', $t->id)
-                    ->withCount([
-                        'timeoffQuotas' => fn($q) => $q->where('user_id', $user->id)->whereActive()
-                    ])
+                    ->withSum([
+                        'timeoffQuotas as total_quota' => fn($q) => $q->where('user_id', $user->id)->whereActive(),
+                    ], DB::raw('quota - used_quota'))
                     ->first();
 
-                if ($timeoffPolicy) {
+                if (!$timeoffPolicy) {
                     $timeoffPolicy = $t;
-                    $timeoffPolicy->timeoff_quotas_count = 0;
                 }
+
+                $timeoffPolicy->total_quota = $timeoffPolicy->total_quota ?? 0;
 
                 $userTimeoffPolicies->push($timeoffPolicy);
             }
