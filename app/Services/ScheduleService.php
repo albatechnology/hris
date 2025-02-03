@@ -31,7 +31,7 @@ class ScheduleService
                 ->where('id', $todayAttendance->schedule_id)
                 ->first();
 
-            $shift = Shift::select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $todayAttendance->shift_id)->first();
+            $shift = Shift::withTrashed()->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $todayAttendance->shift_id)->first();
 
             $schedule->setRelation('shift', $shift);
 
@@ -50,7 +50,7 @@ class ScheduleService
                 ->where('id', $requestShift->schedule_id)
                 ->first();
 
-            $shift = Shift::select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id)->first();
+            $shift = Shift::withTrashed()->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id)->first();
 
             $schedule->setRelation('shift', $shift);
 
