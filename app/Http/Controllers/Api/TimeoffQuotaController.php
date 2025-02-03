@@ -138,7 +138,7 @@ class TimeoffQuotaController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::scope('name', 'whereName'),
+                AllowedFilter::scope('search', 'whereName'),
             ])
             ->allowedSorts([
                 'id',
