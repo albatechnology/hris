@@ -37,6 +37,12 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         // 'approval_status' => ApprovalStatus::class,
     ];
 
+    protected $appends = [
+        'approval_status',
+        'files',
+    ];
+
+
     // public function scopeApproved(Builder $query)
     // {
     //     $query->where('approval_status', ApprovalStatus::APPROVED);
@@ -71,6 +77,17 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
     public function delegateTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'delegate_to');
+    }
+
+    public function getFilesAttribute()
+    {
+        $files = $this->getMedia(\App\Enums\MediaCollection::TIMEOFF->value);
+        $data = [];
+        foreach ($files as $file) {
+            $data[] = $file;
+        }
+
+        return $data;
     }
 
     // public function approvedBy(): BelongsTo
