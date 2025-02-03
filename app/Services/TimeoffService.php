@@ -145,7 +145,7 @@ class TimeoffService
         }
 
         // check if the user has taken leave in the date range
-        if ($user->attendances()->whereDateBetween($request->start_at, $request->end_at)->exists()) {
+        if ($user->attendances()->whereNotNull('timeoff_id')->whereDateBetween($request->start_at, $request->end_at)->exists()) {
             throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'You have taken leave between the dates you requested');
         }
 
