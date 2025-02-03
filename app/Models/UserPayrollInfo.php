@@ -62,11 +62,6 @@ class UserPayrollInfo extends BaseModel
         'employee_tax_status' => EmploymentStatus::class,
     ];
 
-    public function getBasicSalaryAttribute()
-    {
-        return 0;
-    }
-
     public function components(): HasMany
     {
         return $this->hasMany(UserPayrollInfoComponent::class);

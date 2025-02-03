@@ -32,10 +32,15 @@ class TimeoffPolicyController extends BaseController
                 AllowedFilter::scope('end_effective_date'),
                 AllowedFilter::callback('has_quota', function ($query, bool $value) {
                     if ($value == true) {
-                        $query->whereNotIn('type', TimeoffPolicyType::hasQuotas())
-                            ->orWhereHas('timeoffQuotas', fn($q) => $q->where('user_id', auth()->id())->whereActive());
+                        $query->whereIn('type', TimeoffPolicyType::hasQuotas());
                     }
                 }),
+                // AllowedFilter::callback('has_quota', function ($query, bool $value) {
+                //     if ($value == true) {
+                //         $query->whereNotIn('type', TimeoffPolicyType::hasQuotas())
+                //             ->orWhereHas('timeoffQuotas', fn($q) => $q->where('user_id', auth()->id())->whereActive());
+                //     }
+                // }),
                 'type',
                 'name',
                 'code',
