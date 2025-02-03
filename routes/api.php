@@ -50,6 +50,7 @@ use App\Http\Controllers\Api\TimeoffController;
 use App\Http\Controllers\Api\TimeoffPeriodRegulationController;
 use App\Http\Controllers\Api\TimeoffPolicyController;
 use App\Http\Controllers\Api\TimeoffQuotaController;
+use App\Http\Controllers\Api\TimeoffQuotaHistoryController;
 use App\Http\Controllers\Api\TimeoffRegulationController;
 use App\Http\Controllers\Api\TimeoffRegulationMonthController;
 use App\Http\Controllers\Api\UpdatePayrollComponentController;
@@ -182,6 +183,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('timeoff-quotas/users', [TimeoffQuotaController::class, 'users']);
     Route::get('timeoff-quotas/me/{timeoff_policy}', [TimeoffQuotaController::class, 'meDetails']);
     Route::apiResource('timeoff-quotas', TimeoffQuotaController::class);
+
+    Route::apiResource('timeoff-quota-histories', TimeoffQuotaHistoryController::class)->only('index', 'show');
 
     Route::get('timeoffs/approvals', [TimeoffController::class, 'approvals']);
     Route::get('timeoffs/approvals/count-total', [TimeoffController::class, 'countTotalapprovals']);

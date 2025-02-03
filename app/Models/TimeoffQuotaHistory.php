@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CreatedUpdatedInfo;
@@ -40,5 +39,10 @@ class TimeoffQuotaHistory extends BaseModel implements TenantedInterface
     public function timeoffQuota(): BelongsTo
     {
         return $this->belongsTo(TimeoffQuota::class);
+    }
+
+    public function scopeSearch(Builder $query, string $value)
+    {
+        $query->whereHas('user', fn($q) => $q->whereName($value));
     }
 }

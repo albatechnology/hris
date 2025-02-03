@@ -32,4 +32,14 @@ abstract class BaseModel extends Model
     {
         $query->orWhere($column, 'LIKE', '%' . $value . '%');
     }
+
+    public function scopeCreatedAtStart(Builder $query, $date)
+    {
+        $query->whereDate('created_at', '>=', date('Y-m-d', strtotime($date)));
+    }
+
+    public function scopeCreatedAtEnd(Builder $query, $date)
+    {
+        $query->whereDate('created_at', '<=', date('Y-m-d', strtotime($date)));
+    }
 }
