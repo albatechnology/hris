@@ -740,6 +740,7 @@ class UserController extends BaseController
     public function export(ExportRequest $request)
     {
         $query = User::tenanted()->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
+            'branch' => fn($q) => $q->select('id', 'company_id', 'name')->with('company', fn($q) => $q->select('id', 'name')),
             'detail',
             'userBpjs',
             'payrollInfo'

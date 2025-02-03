@@ -17,8 +17,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
 {
     use Exportable;
 
-    public function __construct(private Builder $query) {
-    }
+    public function __construct(private Builder $query) {}
 
     public function query()
     {
@@ -29,6 +28,8 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     {
         return [
             'ID',
+            'Company',
+            'Branch',
             'NIK',
             'Name',
             'Last Name',
@@ -90,6 +91,9 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     {
         return [
             $user->id,
+            $user->branch?->company?->name ?? '',
+            $user->branch?->name ?? '',
+            $user->nik,
             $user->nik,
             $user->name,
             $user->last_name,
@@ -140,22 +144,22 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_GENERAL,
-            'K' => NumberFormat::FORMAT_GENERAL,
-            'L' => NumberFormat::FORMAT_GENERAL,
-            'O' => NumberFormat::FORMAT_GENERAL,
+            'C' => NumberFormat::FORMAT_GENERAL,
+            'M' => NumberFormat::FORMAT_GENERAL,
+            'N' => NumberFormat::FORMAT_GENERAL,
+            'Q' => NumberFormat::FORMAT_GENERAL,
             // 'Y' => NumberFormat::FORMAT_NUMBER,
             // 'AD' => NumberFormat::FORMAT_GENERAL,
-            'AC' => NumberFormat::FORMAT_GENERAL,
+            'AE' => NumberFormat::FORMAT_GENERAL,
 
             // 'AJ' => NumberFormat::FORMAT_NUMBER,
             // 'AK' => NumberFormat::FORMAT_GENERAL,
             // 'AM' => NumberFormat::FORMAT_GENERAL,
             // 'AN' => NumberFormat::FORMAT_NUMBER,
             // 'AO' => NumberFormat::FORMAT_GENERAL,
-            'AI' => NumberFormat::FORMAT_GENERAL,
             'AK' => NumberFormat::FORMAT_GENERAL,
-            'AL' => NumberFormat::FORMAT_GENERAL,
+            'AM' => NumberFormat::FORMAT_GENERAL,
+            'AN' => NumberFormat::FORMAT_GENERAL,
         ];
     }
 }
