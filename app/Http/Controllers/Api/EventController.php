@@ -106,6 +106,7 @@ class EventController extends BaseController
             ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->orWhere(fn($q) => $q->whereNationalHoliday())
             ->when($fullDate, fn($q) => $q->whereDate('start_at', '<=', $fullDate)->whereDate('end_at', '>=', $fullDate), fn($q) => $q->whereYear('start_at', $request->filter['year'])->where(fn($q) => $q->whereMonth('start_at', $request->filter['month'])->orWhereMonth('end_at', $request->filter['month'])))
+            ->orderBy('start_at')
             ->get(['id', 'type', 'name', 'start_at', 'end_at', 'description']);
 
         $data = [];
@@ -154,6 +155,7 @@ class EventController extends BaseController
                 'user' => fn($q) => $q->select('id', 'name'),
 
             ])
+            ->orderBy('start_at')
             ->get(['user_id', 'timeoff_policy_id', 'start_at', 'end_at', 'reason']);
 
         foreach ($timeoffs as $timeoff) {
