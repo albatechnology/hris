@@ -251,6 +251,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('run-payrolls/user-components/{run_payroll_user}', [RunPayrollController::class, 'updateUserComponent']);
     Route::get('run-payrolls/{run_payroll}/export', [RunPayrollController::class, 'export']);
     Route::get('run-payrolls/{run_payroll}/export-ocbc', [RunPayrollController::class, 'exportOcbc']);
+    Route::get('run-payrolls/{run_payroll}/export/bca', [RunPayrollController::class, 'exportBca']);
     Route::apiResource('run-payrolls', RunPayrollController::class);
 
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);

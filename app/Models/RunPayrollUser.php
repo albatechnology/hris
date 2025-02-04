@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunPayrollUser extends BaseModel
 {
+    use BelongsToUser;
+
     protected $fillable = [
         'run_payroll_id',
         'user_id',
@@ -62,10 +65,5 @@ class RunPayrollUser extends BaseModel
     public function components(): HasMany
     {
         return $this->hasMany(RunPayrollUserComponent::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 }

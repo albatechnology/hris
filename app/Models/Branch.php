@@ -22,6 +22,11 @@ class Branch extends BaseModel implements TenantedInterface
         'lat',
         'lng',
         'address',
+        'bank_name',
+        'bank_account_no',
+        'bank_account_holder',
+        'bank_code',
+        'bank_branch',
     ];
 
     public function scopeTenanted(Builder $query): Builder

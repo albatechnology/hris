@@ -6,7 +6,9 @@ use App\Enums\CountrySettingKey;
 use App\Exports\RunPayrollExport;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
+use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
+use App\Models\Branch;
 use App\Models\Company;
 use App\Models\CountrySetting;
 use App\Models\RunPayroll;
@@ -218,8 +220,9 @@ class RunPayrollController extends BaseController
             'DebitAcctNo' => substr(str_repeat(' ', 19) . trim('625800011136'), -19, 19), // 19 M
         ];
 
-        $content = implode('', array_values($header)) . PHP_EOL;
+        $content = implode('', array_values($header));
         foreach ($datas as $data) {
+            $content .= PHP_EOL;
             $content .= $data['PayeeID'];
             $content .= $data['PayeeName'];
             $content .= $data['PayeeAddr1'];
@@ -241,6 +244,81 @@ class RunPayrollController extends BaseController
             $content .= $data['ReservedColumn3'] . PHP_EOL;
         }
         $fileName = "Payroll $runPayroll->code.txt";
+        return response($content, 200, [
+            'Content-type' => 'text/plain',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
+        ]);
+    }
+
+    public function exportBca(ExportRequest $request, int $id)
+    {
+        $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule')->findTenanted($id);
+        $branch = Branch::select('id', 'bank_account_no', 'bank_code')->findTenanted($request->branch_id);
+
+        $datas = RunPayrollUser::where('run_payroll_id', $id)
+            ->whereHas('user.payrollInfo', fn($q) => $q->where('payroll_branch_id', $branch->id))
+            ->with([
+                'user' => function ($q) {
+                    $q->withTrashed()->select('id', 'name', 'last_name', 'nik')
+                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency'));
+                }
+            ])
+            ->get()
+            ->map(function (RunPayrollUser $runPayrollUser) {
+                if (!$runPayrollUser->user) {
+                    throw new Exception("User with ID $runPayrollUser->user_id not found");
+                }
+
+                if (!$runPayrollUser->user->payrollInfo) {
+                    throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
+                }
+
+                if (
+                    !$runPayrollUser->user->payrollInfo?->secondary_bank_account_no ||
+                    !$runPayrollUser->user->payrollInfo?->secondary_bank_account_holder
+                ) {
+                    throw new Exception($runPayrollUser->user->full_name . "'s bank account not found");
+                }
+
+                return [
+                    'default_1' => '0', // 1 M
+                    'account_number' => substr($runPayrollUser->user->payrollInfo->secondary_bank_account_no, 0, 10), // 10 M
+                    'pay_amount' => substr(str_repeat('0', 15) . number_format($runPayrollUser->thp, 2, '', ''), -15, 15), // 15 M (decimal without separator 2)
+                    'nik' => substr($runPayrollUser->user->nik . str_repeat(' ', 10), 0, 10), // 10 M
+                    'name' => substr($runPayrollUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30), // 30 M
+                    'department_code' => substr('DEP0' . str_repeat(' ', 4), 0, 4), // 4 M
+                ];
+            });
+
+        $totalAmount = $datas->sum('pay_amount');
+        $totalData = $datas->count();
+        $header = [
+            'code' => substr(str_repeat(' ', 24) . trim($branch->bank_code), -24, 24), // 24 M
+            'day' => date('d', strtotime($runPayroll->payment_schedule)), // 2 M
+            'default_1' => '01', // 2 M
+            'account_number' => substr(trim($branch->bank_account_no) . str_repeat(' ', 10), 0, 10), // 10 M
+            'default_2' => '01MF', // 4 M
+            'total_data' => substr(str_repeat('0', 5) . $totalData, 0, 5), // 5 M
+            'total_amount' => substr(str_repeat('0', 17) . number_format($totalAmount, 2, '.', ''), -17, 17), // 17 M (decimal 2)
+            'month' => date('m', strtotime($runPayroll->payment_schedule)), // 2 M
+            'year' => date('Y', strtotime($runPayroll->payment_schedule)), // 4 M
+        ];
+
+        $header = trim(implode('', array_values($header)));
+        $header = substr(str_repeat(' ', 70) . $header, -70, 70);
+
+        $content = $header;
+        foreach ($datas as $data) {
+            $content .= PHP_EOL;
+            $content .= $data['default_1'];
+            $content .= $data['account_number'];
+            $content .= $data['pay_amount'];
+            $content .= $data['nik'];
+            $content .= $data['name'];
+            $content .= $data['department_code'];
+        }
+
+        $fileName = "Payroll $runPayroll->code - BCA.txt";
         return response($content, 200, [
             'Content-type' => 'text/plain',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"'

@@ -13,6 +13,7 @@ use App\Enums\SalaryType;
 use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
 use App\Traits\Models\BelongsToUser;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserPayrollInfo extends BaseModel
@@ -21,6 +22,7 @@ class UserPayrollInfo extends BaseModel
 
     protected $fillable = [
         'user_id',
+        'payroll_branch_id',
         'total_working_days',
         'is_ignore_alpa',
         'basic_salary',
@@ -65,5 +67,10 @@ class UserPayrollInfo extends BaseModel
     public function components(): HasMany
     {
         return $this->hasMany(UserPayrollInfoComponent::class);
+    }
+
+    public function payrollBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'payroll_branch_id');
     }
 }
