@@ -115,7 +115,7 @@ class RequestShiftController extends BaseController
                 return $this->errorResponse(message: "Request change shift only available for {$cutOffAttendanceStartDate->format('d-m-Y')} to {$now->format('d-m-Y')}", code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
-            if (!$attendance) {
+            if (!$attendance && Shift::where('id', $request->new_shift_id)->where('is_dayoff', true)->doesntExist()) {
                 return $this->errorResponse(message: 'Attendance not found for ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             $data['is_for_replace'] = true;
