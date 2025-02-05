@@ -263,34 +263,37 @@ class RunPayrollController extends BaseController
                         ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency'));
                 }
             ])
-            ->get()
-            ->map(function (RunPayrollUser $runPayrollUser) {
-                if (!$runPayrollUser->user) {
-                    throw new Exception("User with ID $runPayrollUser->user_id not found");
-                }
+            ->get();
 
-                if (!$runPayrollUser->user->payrollInfo) {
-                    throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
-                }
 
-                if (
-                    !$runPayrollUser->user->payrollInfo?->secondary_bank_account_no ||
-                    !$runPayrollUser->user->payrollInfo?->secondary_bank_account_holder
-                ) {
-                    throw new Exception($runPayrollUser->user->full_name . "'s bank account not found");
-                }
+        $body = "";
+        $totalAmount = 0;
+        foreach ($datas as $runPayrollUser) {
+            if (!$runPayrollUser->user) {
+                throw new Exception("User with ID $runPayrollUser->user_id not found");
+            }
 
-                return [
-                    'default_1' => '0', // 1 M
-                    'account_number' => substr($runPayrollUser->user->payrollInfo->secondary_bank_account_no, 0, 10), // 10 M
-                    'pay_amount' => substr(str_repeat('0', 15) . number_format($runPayrollUser->thp, 2, '', ''), -15, 15), // 15 M (decimal without separator 2)
-                    'nik' => substr($runPayrollUser->user->nik . str_repeat(' ', 10), 0, 10), // 10 M
-                    'name' => substr($runPayrollUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30), // 30 M
-                    'department_code' => substr('DEP0' . str_repeat(' ', 4), 0, 4), // 4 M
-                ];
-            });
+            if (!$runPayrollUser->user->payrollInfo) {
+                throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
+            }
 
-        $totalAmount = $datas->sum('pay_amount');
+            if (
+                !$runPayrollUser->user->payrollInfo?->secondary_bank_account_no ||
+                !$runPayrollUser->user->payrollInfo?->secondary_bank_account_holder
+            ) {
+                throw new Exception($runPayrollUser->user->full_name . "'s bank account not found");
+            }
+
+            $body .= PHP_EOL;
+            $body .= '0'; // 1 default_1
+            $body .= substr($runPayrollUser->user->payrollInfo->secondary_bank_account_no, 0, 10); // 10 account_number
+            $body .= substr(str_repeat('0', 15) . number_format($runPayrollUser->thp, 2, '', ''), -15, 15); // 15 pay_amount
+            $body .= substr($runPayrollUser->user->nik . str_repeat(' ', 10), 0, 10); // 10 nik;
+            $body .= substr($runPayrollUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30); // 30 name
+            $body .= substr('DEP0' . str_repeat(' ', 4), 0, 4); // 4 DEP0
+            $totalAmount += $runPayrollUser->thp;
+        }
+
         $totalData = $datas->count();
         $header = [
             'code' => substr(str_repeat(' ', 24) . trim($branch->bank_code), -24, 24), // 24 M
@@ -299,7 +302,7 @@ class RunPayrollController extends BaseController
             'account_number' => substr(trim($branch->bank_account_no) . str_repeat(' ', 10), 0, 10), // 10 M
             'default_2' => '01MF', // 4 M
             'total_data' => substr(str_repeat('0', 5) . $totalData, 0, 5), // 5 M
-            'total_amount' => substr(str_repeat('0', 15) . number_format($totalAmount, 2, '.', ''), -17, 17), // 17 M (decimal 2)
+            'total_amount' => substr(str_repeat('0', 17) . number_format($totalAmount, 2, '.', ''), -17, 17), // 17 M (decimal 2)
             'month' => date('m', strtotime($runPayroll->payment_schedule)), // 2 M
             'year' => date('Y', strtotime($runPayroll->payment_schedule)), // 4 M
         ];
@@ -307,16 +310,7 @@ class RunPayrollController extends BaseController
         $header = trim(implode('', array_values($header)));
         $header = substr(str_repeat(' ', 70) . $header, -70, 70);
 
-        $content = $header;
-        foreach ($datas as $data) {
-            $content .= PHP_EOL;
-            $content .= $data['default_1'];
-            $content .= $data['account_number'];
-            $content .= $data['pay_amount'];
-            $content .= $data['nik'];
-            $content .= $data['name'];
-            $content .= $data['department_code'];
-        }
+        $content = $header . $body;
 
         $fileName = "Payroll $runPayroll->code - BCA.txt";
         return response($content, 200, [
