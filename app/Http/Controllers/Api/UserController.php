@@ -571,14 +571,14 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
-    public function verifyPassword(int $id, Request $request)
+    public function verifyPassword(Request $request)
     {
         $request->validate([
             'password' => [
                 'required',
                 'string',
-                function ($attribute, string $value, \Closure $fail) use ($id) {
-                    if (!Hash::check($value, User::select('id', 'password')->findTenanted($id)->password)) {
+                function ($attribute, string $value, \Closure $fail) {
+                    if (!Hash::check($value, auth()->user()->password)) {
                         $fail('Incorrect password, recheck and enter again');
                     }
                 }
