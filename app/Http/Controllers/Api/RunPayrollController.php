@@ -265,7 +265,6 @@ class RunPayrollController extends BaseController
             ])
             ->get();
 
-
         $body = "";
         $totalAmount = 0;
         foreach ($datas as $runPayrollUser) {
@@ -300,7 +299,7 @@ class RunPayrollController extends BaseController
             'day' => date('d', strtotime($runPayroll->payment_schedule)), // 2 M
             'default_1' => '01', // 2 M
             'account_number' => substr(trim($branch->bank_account_no) . str_repeat(' ', 10), 0, 10), // 10 M
-            'default_2' => '01MF', // 4 M
+            'default_2' => '0000', // 4 M
             'total_data' => substr(str_repeat('0', 5) . $totalData, 0, 5), // 5 M
             'total_amount' => substr(str_repeat('0', 17) . number_format($totalAmount, 2, '.', ''), -17, 17), // 17 M (decimal 2)
             'month' => date('m', strtotime($runPayroll->payment_schedule)), // 2 M
