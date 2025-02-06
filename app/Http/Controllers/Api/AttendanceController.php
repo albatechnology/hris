@@ -477,7 +477,7 @@ class AttendanceController extends BaseController
                     $summaryAwayTimeOff += 1;
                 }
             } else {
-                $shift = $schedule->shift ?? null;
+                $shift = $schedule?->shift ?? null;
                 $summaryNotPresentAbsent += 1;
             }
             // $shiftType = 'shift';
@@ -581,7 +581,7 @@ class AttendanceController extends BaseController
                 // $totalTask = TaskService::getSumDuration($user, $date);
                 // $attendance->total_task = $totalTask;
             } else {
-                $shift = $schedule->shift ?? null;
+                $shift = $schedule?->shift ?? null;
             }
             $shiftType = 'shift';
 
