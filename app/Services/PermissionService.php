@@ -305,6 +305,12 @@ class PermissionService
                 'setting_read',
                 'setting_edit',
             ],
+            'bank_access' => [
+                'bank_read',
+                'bank_create',
+                'bank_edit',
+                'bank_delete',
+            ],
         ];
     }
 

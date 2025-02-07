@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\RunPayroll;
 
-use App\Models\Branch;
+use App\Models\Bank;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,7 +27,7 @@ class ExportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'bank_id' => ['required', new CompanyTenantedRule(Bank::class, 'Bank not found')],
         ];
     }
 }

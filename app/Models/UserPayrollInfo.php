@@ -22,7 +22,7 @@ class UserPayrollInfo extends BaseModel
 
     protected $fillable = [
         'user_id',
-        'payroll_branch_id',
+        'bank_id',
         'total_working_days',
         'is_ignore_alpa',
         'basic_salary',
@@ -69,8 +69,8 @@ class UserPayrollInfo extends BaseModel
         return $this->hasMany(UserPayrollInfoComponent::class);
     }
 
-    public function payrollBranch(): BelongsTo
+    public function bank(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'payroll_branch_id');
+        return $this->belongsTo(Bank::class);
     }
 }

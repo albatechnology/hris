@@ -8,6 +8,7 @@ use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
+use App\Models\Bank;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\CountrySetting;
@@ -164,10 +165,13 @@ class RunPayrollController extends BaseController
         return (new RunPayrollExport($runPayroll))->download("payroll $runPayroll->period .xlsx");
     }
 
-    public function exportOcbc(int $id)
+    public function exportOcbc(ExportRequest $request, int $id)
     {
         $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule')->findTenanted($id);
+        $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
+
         $datas = RunPayrollUser::where('run_payroll_id', $id)
+            ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'last_name')
@@ -211,13 +215,13 @@ class RunPayrollController extends BaseController
             });
 
         $header = [
-            'OrgIDVelocity' => substr(trim('SUNEDUCATION') . str_repeat(' ', 30), 0, 30), // 30 M
-            'OrgIDBulk' => substr(trim('SUNEDUCATION') . str_repeat(' ', 12), 0, 12), // 12 M
+            'OrgIDVelocity' => substr(trim($bank->code) . str_repeat(' ', 30), 0, 30), // 30 M
+            'OrgIDBulk' => substr(trim($bank->code) . str_repeat(' ', 12), 0, 12), // 12 M
             'ProductType' => 'BLIDR', // 5 M
             'ServiceID' => '10001', // 5 M
             'ValueDate' => date('Ymd', strtotime($runPayroll->payment_schedule)), // 8 M
             'DebitAcctCcy' => 'IDR', // 3 M
-            'DebitAcctNo' => substr(str_repeat(' ', 19) . trim('625800011136'), -19, 19), // 19 M
+            'DebitAcctNo' => substr(str_repeat(' ', 19) . trim($bank->account_no), -19, 19), // 19 M
         ];
 
         $content = implode('', array_values($header));
@@ -253,10 +257,10 @@ class RunPayrollController extends BaseController
     public function exportBca(ExportRequest $request, int $id)
     {
         $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule')->findTenanted($id);
-        $branch = Branch::select('id', 'bank_account_no', 'bank_code')->findTenanted($request->branch_id);
+        $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
 
         $datas = RunPayrollUser::where('run_payroll_id', $id)
-            ->whereHas('user.payrollInfo', fn($q) => $q->where('payroll_branch_id', $branch->id))
+            ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'last_name', 'nik')
@@ -295,10 +299,10 @@ class RunPayrollController extends BaseController
 
         $totalData = $datas->count();
         $header = [
-            'code' => substr(str_repeat(' ', 24) . trim($branch->bank_code), -24, 24), // 24 M
+            'code' => substr(str_repeat(' ', 24) . trim($bank->code), -24, 24), // 24 M
             'day' => date('d', strtotime($runPayroll->payment_schedule)), // 2 M
             'default_1' => '01', // 2 M
-            'account_number' => substr(trim($branch->bank_account_no) . str_repeat(' ', 10), 0, 10), // 10 M
+            'account_number' => substr(trim($bank->account_no) . str_repeat(' ', 10), 0, 10), // 10 M
             'default_2' => '0000', // 4 M
             'total_data' => substr(str_repeat('0', 5) . $totalData, -5, 5), // 5 M
             'total_amount' => substr(str_repeat('0', 17) . number_format($totalAmount, 2, '.', ''), -17, 17), // 17 M (decimal 2)

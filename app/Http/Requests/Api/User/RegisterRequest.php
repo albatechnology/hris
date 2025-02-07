@@ -19,6 +19,7 @@ use App\Enums\SalaryType;
 use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
 use App\Enums\UserType;
+use App\Models\Bank;
 use App\Models\Branch;
 use App\Models\Overtime;
 use App\Rules\CompanyTenantedRule;
@@ -100,6 +101,7 @@ class RegisterRequest extends FormRequest
             // 'batik_size' => 'required|string',
             // 'tshirt_size' => 'required|string',
 
+            'bank_id' => ['required', new CompanyTenantedRule(Bank::class, 'Bank not found')],
             'basic_salary' => 'required|numeric',
             'salary_type' => ['nullable', Rule::enum(SalaryType::class)],
             'payment_schedule' => ['nullable', Rule::enum(PaymentSchedule::class)],

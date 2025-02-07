@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdvancedLeaveRequestController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BankController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ClientLocationController;
@@ -332,4 +333,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('npp', NppController::class);
 
     Route::apiResource('settings', SettingController::class);
+    Route::apiResource('banks', BankController::class);
 });
