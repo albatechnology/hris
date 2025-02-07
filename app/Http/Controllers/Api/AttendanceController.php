@@ -22,7 +22,6 @@ use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\DatabaseNotification;
 use App\Models\Event;
-use App\Models\PayrollSetting;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\Aws\Rekognition;
@@ -210,20 +209,20 @@ class AttendanceController extends BaseController
         }
 
         // $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
-        $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
+        // $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
         $month = date('m');
 
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
-        if (date('d') <= $payrollSetting->cut_off_date) {
-            $month -= 1;
-        }
+        // if (date('d') <= $payrollSetting->cut_off_date) {
+        //     $month -= 1;
+        // }
 
-        $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cut_off_date));
-        $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
-        $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->addDay();
-        $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
+        // $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cut_off_date));
+        // $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
+        $startDate = Carbon::createFromDate($year, $month, 1);
+        $endDate = $startDate->copy()->endOfMonth();
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
