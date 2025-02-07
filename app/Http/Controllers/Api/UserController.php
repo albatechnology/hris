@@ -697,9 +697,9 @@ class UserController extends BaseController
 
         $cutoffDate = date('Y', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date));
 
-        $earnings = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE);
-        $deductions = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION);
-        $benefits = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::BENEFIT);
+        $earnings = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE)->values();
+        $deductions = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION)->values();
+        $benefits = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::BENEFIT)->values();
 
         $data = ['user' => $user, 'runPayrollUser' => $runPayrollUser, 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
 
