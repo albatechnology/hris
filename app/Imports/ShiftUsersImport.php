@@ -56,6 +56,7 @@ class ShiftUsersImport implements ToCollection
                                     $requestShift->new_shift_id = $shift->id;
                                     $requestShift->date = $value;
                                     $requestShift->description = $description;
+                                    $requestShift->created_by = $this->user->id;
                                     $requestShift->saveQuietly();
 
                                     // auto approved by uploader

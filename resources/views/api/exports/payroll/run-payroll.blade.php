@@ -8,8 +8,16 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Join Date</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Resign Date</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Job Position</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">Bank Account Holder</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">Bank Account</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Main Bank Name</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Main Bank Account Holder</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Main Bank Account</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Secondary Bank Name</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Secondary Bank Account Holder</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Secondary Bank Account</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Name</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Account Holder</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Account</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Code</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Basic Salary</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Gross Salary</th>
             <th style="text-align: center; font-weight: bold" colspan="{{ $allowances->count() }}">Allowance</th>
@@ -47,8 +55,16 @@
                 <td>{{ $runPayrollUser->user->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                 </td>
                 <td>{{ $runPayrollUser->user->positions?->implode(', ') }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo['bank_name'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->user->payrollInfo['bank_account_holder'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->user->payrollInfo['bank_account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo['secondary_bank_name'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo['secondary_bank_account_holder'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo['secondary_bank_account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo?->bank['name'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo?->bank['account_holder'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo?->bank['account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user->payrollInfo?->bank['code'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->basic_salary }}</td>
                 <td>{{ $runPayrollUser->gross_salary }}</td>
 

@@ -9,7 +9,6 @@ use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
 use App\Models\Bank;
-use App\Models\Branch;
 use App\Models\Company;
 use App\Models\CountrySetting;
 use App\Models\RunPayroll;
@@ -175,7 +174,10 @@ class RunPayrollController extends BaseController
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'last_name')
-                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency'));
+                        ->with('payrollInfo', function ($q) {
+                            $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'secondary_bank_name', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency')
+                                ->with('bank');
+                        });
                 }
             ])
             ->get()
