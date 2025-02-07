@@ -24,7 +24,6 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        dd($this->bank->id);
         return [
             'company_id' => [new CompanyTenantedRule()],
             'name' => 'required|string',
