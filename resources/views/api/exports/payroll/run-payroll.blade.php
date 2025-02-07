@@ -46,25 +46,25 @@
     <tbody>
         @foreach ($runPayroll->users as $runPayrollUser)
             <tr>
-                <td>{{ $runPayrollUser->user->nik }}</td>
-                <td>{{ $runPayrollUser->user->full_name }}</td>
+                <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->full_name ?? '' }}</td>
                 <td>{{ $runPayroll->company?->name }}</td>
-                <td>{{ $runPayrollUser->user->branch?->name }}</td>
-                <td>{{ $runPayrollUser->user->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
+                <td>{{ $runPayrollUser->user?->branch?->name }}</td>
+                <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
                 </td>
-                <td>{{ $runPayrollUser->user->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
+                <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                 </td>
-                <td>{{ $runPayrollUser->user->positions?->implode(', ') }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo['bank_name'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo['bank_account_holder'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo['bank_account_no'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo['secondary_bank_name'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo['secondary_bank_account_holder'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo['secondary_bank_account_no'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo?->bank['name'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo?->bank['account_holder'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo?->bank['account_no'] ?? '' }}</td>
-                <td>{{ $runPayrollUser->user->payrollInfo?->bank['code'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->positions?->implode(', ') }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo['bank_name'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo['bank_account_holder'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo['bank_account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo['secondary_bank_name'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo['secondary_bank_account_holder'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo['secondary_bank_account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo?->bank['name'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo?->bank['account_holder'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo?->bank['account_no'] ?? '' }}</td>
+                <td>{{ $runPayrollUser->user?->payrollInfo?->bank['code'] ?? '' }}</td>
                 <td>{{ $runPayrollUser->basic_salary }}</td>
                 <td>{{ $runPayrollUser->gross_salary }}</td>
 
