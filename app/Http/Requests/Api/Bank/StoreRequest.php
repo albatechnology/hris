@@ -31,7 +31,7 @@ class StoreRequest extends FormRequest
                 'required',
                 'string',
                 function (mixed $attribute, string $value, Closure $fail) {
-                    if (Bank::tenanted()->where('account_no', $value)->exist()) {
+                    if (Bank::tenanted()->where('account_no', $value)->exists()) {
                         $fail('Account no already exist');
                     }
                 }
@@ -41,7 +41,7 @@ class StoreRequest extends FormRequest
                 'required',
                 'string',
                 function (mixed $attribute, string $value, Closure $fail) {
-                    if (Bank::tenanted()->where('code', $value)->exist()) {
+                    if (Bank::tenanted()->where('code', $value)->exists()) {
                         $fail('Code already exist');
                     }
                 }

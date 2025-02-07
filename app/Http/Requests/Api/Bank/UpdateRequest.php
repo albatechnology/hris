@@ -32,7 +32,7 @@ class UpdateRequest extends FormRequest
                 'required',
                 'string',
                 function (mixed $attribute, string $value, Closure $fail) {
-                    if (Bank::tenanted()->where('account_no', $value)->whereNot('id', $this->bank->id)->exist()) {
+                    if (Bank::tenanted()->where('account_no', $value)->whereNot('id', $this->bank->id)->exists()) {
                         $fail('Account no already exist');
                     }
                 }
@@ -42,7 +42,7 @@ class UpdateRequest extends FormRequest
                 'required',
                 'string',
                 function (mixed $attribute, string $value, Closure $fail) {
-                    if (Bank::tenanted()->where('code', $value)->whereNot('id', $this->bank->id)->exist()) {
+                    if (Bank::tenanted()->where('code', $value)->whereNot('id', $this->bank->id)->exists()) {
                         $fail('Code already exist');
                     }
                 }
