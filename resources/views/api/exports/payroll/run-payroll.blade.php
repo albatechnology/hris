@@ -119,25 +119,25 @@
                 </tr>
             @endforeach
             <tr>
-                <td colspan="15" style="font-weight: bold;">TOTAL</td>
-                <td style="font-weight: bold;">{{ $totalBasicSalary }}</td>
+                <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
                 @foreach ($cloneTotalAllowancesStorages as $value)
-                    <th>{{ $value }}</th>
+                    <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
-                <td style="font-weight: bold;">{{ $totalAllowance }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
 
                 @foreach ($cloneTotalDeductionsStorages as $value)
-                    <th>{{ $value }}</th>
+                    <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
-                <td style="font-weight: bold;">{{ $totalDeduction }}</td>
-                <td style="font-weight: bold;">{{ $totalTax }}</td>
-                <td style="font-weight: bold;">{{ $totalThp }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
 
                 @foreach ($cloneTotalBenefitsStorages as $value)
-                    <th>{{ $value }}</th>
+                    <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
-                <td style="font-weight: bold;">{{ $totalBenefit }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
             </tr>
         @endforeach
     </tbody>

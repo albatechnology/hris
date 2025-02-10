@@ -9,10 +9,11 @@ use App\Models\RunPayroll;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class RunPayrollExport implements FromView, WithColumnFormatting
+class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
 {
     use Exportable;
 
@@ -62,10 +63,32 @@ class RunPayrollExport implements FromView, WithColumnFormatting
     public function columnFormats(): array
     {
         return [
-            'A' => NumberFormat::FORMAT_GENERAL,
-            'I' => NumberFormat::FORMAT_GENERAL,
-            'K' => NumberFormat::FORMAT_GENERAL,
-            'N' => NumberFormat::FORMAT_GENERAL,
+            'A' => NumberFormat::FORMAT_TEXT,
+            'I' => NumberFormat::FORMAT_TEXT,
+            'K' => NumberFormat::FORMAT_TEXT,
+            'N' => NumberFormat::FORMAT_TEXT,
+            'P' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'Q' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'R' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'S' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'T' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'U' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'V' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'W' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'X' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'Y' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'Z' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AA' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AB' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AC' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AD' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AE' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AF' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AG' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AH' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AI' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AJ' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AK' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
         ];
     }
 }

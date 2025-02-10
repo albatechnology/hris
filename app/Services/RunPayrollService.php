@@ -626,7 +626,7 @@ class RunPayrollService
             'additional_earning' => $additionalEarning,
             'deduction' => $deduction,
             'benefit' => $benefit,
-            'tax' => $tax,
+            'tax' => round($tax),
             'payroll_info' => $userPayrollInfo,
         ]);
     }
