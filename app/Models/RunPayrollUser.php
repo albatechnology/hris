@@ -42,19 +42,19 @@ class RunPayrollUser extends BaseModel
         'total_deduction',
     ];
 
-    public function getThpAttribute()
+    public function getThpAttribute(): int
     {
-        return $this->total_earning - $this->total_deduction;
+        return round($this->total_earning - $this->total_deduction);
     }
 
-    public function getTotalEarningAttribute()
+    public function getTotalEarningAttribute(): int
     {
-        return $this->basic_salary + $this->allowance + $this->additional_earning;
+        return round($this->basic_salary + $this->allowance + $this->additional_earning);
     }
 
-    public function getTotalDeductionAttribute()
+    public function getTotalDeductionAttribute(): int
     {
-        return $this->deduction + $this->tax;
+        return round($this->deduction + $this->tax);
     }
 
     public function runPayroll(): BelongsTo

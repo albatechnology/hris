@@ -239,7 +239,7 @@ class RunPayrollController extends BaseController
 
         $content = implode('', array_values($header)) . $body;
 
-        $fileName = "Payroll $runPayroll->code.txt";
+        $fileName = "Payroll $runPayroll->code - OCBC.txt";
         return response($content, 200, [
             'Content-type' => 'text/plain',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
