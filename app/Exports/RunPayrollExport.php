@@ -34,7 +34,10 @@ class RunPayrollExport implements FromView, WithColumnFormatting
     public function columnFormats(): array
     {
         return [
-            'I' => NumberFormat::FORMAT_GENERAL
+            'A' => NumberFormat::FORMAT_GENERAL,
+            'I' => NumberFormat::FORMAT_GENERAL,
+            'K' => NumberFormat::FORMAT_GENERAL,
+            'N' => NumberFormat::FORMAT_GENERAL,
         ];
     }
 }

@@ -157,8 +157,12 @@ class RunPayrollController extends BaseController
                         $q->select('user_id', 'bank_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'secondary_bank_name', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency')
                             ->with('bank');
                     })
-                    ->with('positions', fn($q) => $q->select('user_id', 'position_id')
-                        ->with('position', fn($q) => $q->select('id', 'name')));
+                    ->with(
+                        'positions',
+                        fn($q) => $q->select('user_id', 'position_id', 'department_id')
+                            ->with('position', fn($q) => $q->select('id', 'name'))
+                            ->with('department', fn($q) => $q->select('id', 'name'))
+                    );
             },
             'users.components.payrollComponent',
             'company' => fn($q) => $q->select('id', 'name')
