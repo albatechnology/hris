@@ -180,41 +180,52 @@ class RunPayrollController extends BaseController
                         ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency'));
                 }
             ])
-            ->get()
-            ->map(function (RunPayrollUser $runPayrollUser) {
-                if (!$runPayrollUser->user) {
-                    throw new Exception("User with ID $runPayrollUser->user_id not found");
-                }
+            ->get();
 
-                if (!$runPayrollUser->user->payrollInfo) {
-                    throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
-                }
 
-                return [
-                    'PayeeID' => str_repeat(' ', 20), // 20 O
-                    'PayeeName' => substr(trim($runPayrollUser->user->payrollInfo->bank_account_holder) . str_repeat(' ', 40), 0, 40), // 40 M
-                    'PayeeAddr1' => substr(trim('Jakarta') . str_repeat(' ', 35), 0, 35), // 35 M
-                    'PayeeAddr2' => str_repeat(' ', 35), // 35 O
-                    'PayeeAddr3' => str_repeat(' ', 35), // 35 O
-                    'PaymentType' => 'P', // 1 M
-                    'PayeeAccountNo' => substr(trim($runPayrollUser->user->payrollInfo->bank_account_no) . str_repeat(' ', 34), 0, 34), // 34 M
-                    'PayeeAccountCcy' => substr(trim($runPayrollUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3), // 3 M
-                    'PayAmount' => substr(str_repeat('0', 14) . number_format($runPayrollUser->thp, 2, '.', ''), -18, 18), // 18 M (decimal 2)
-                    'PayCcy' => substr(trim($runPayrollUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3), // 3 M
-                    'Remarks' => str_repeat(' ', 255), // 255 O
-                    'BeneBankName' => str_repeat(' ', 100), // 100 C
-                    'BeneBankBranchName' => str_repeat(' ', 50), // 50 C
-                    'BeneBankNetworkID' => str_repeat(' ', 20), // 20 C
-                    'ReservedColumn1' => str_repeat(' ', 1), // 1 C
-                    'ResidentStatus' => str_repeat(' ', 1), // 1 C
-                    'ReservedColumn2' => str_repeat(' ', 2), // 2 C
-                    'RemitterCategory' => str_repeat(' ', 4), // 4 C
-                    'ReservedColumn3' => str_repeat(' ', 2), // 2 C
-                    'BeneCategory' => str_repeat(' ', 4), // 4 C
-                    'ReservedColumn4' => str_repeat(' ', 1), // 1 C
-                    'PaymentPurpose' => str_repeat(' ', 5), // 5 C
-                ];
-            });
+        $body = "";
+        $totalAmount = 0;
+        foreach ($datas as $runPayrollUser) {
+            if (!$runPayrollUser->user) {
+                throw new Exception("User with ID $runPayrollUser->user_id not found");
+            }
+
+            if (!$runPayrollUser->user->payrollInfo) {
+                throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
+            }
+
+            if (
+                !$runPayrollUser->user->payrollInfo?->bank_account_no ||
+                !$runPayrollUser->user->payrollInfo?->bank_account_holder
+            ) {
+                throw new Exception($runPayrollUser->user->full_name . "'s bank account not found");
+            }
+
+            $body .= PHP_EOL;
+            $body .= str_repeat(' ', 20); // 20 O
+            $body .= substr(trim($runPayrollUser->user->payrollInfo->bank_account_holder) . str_repeat(' ', 40), 0, 40); // 40 M
+            $body .= substr(trim('Jakarta') . str_repeat(' ', 35), 0, 35); // 35 M
+            $body .= str_repeat(' ', 35); // 35 O
+            $body .= str_repeat(' ', 35); // 35 O
+            $body .= 'P'; // 1 M
+            $body .= substr(trim($runPayrollUser->user->payrollInfo->bank_account_no) . str_repeat(' ', 34), 0, 34); // 34 M
+            $body .= substr(trim($runPayrollUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
+            $body .= substr(str_repeat('0', 14) . number_format($runPayrollUser->thp, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            $body .= substr(trim($runPayrollUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
+
+            $body .= str_repeat(' ', 255); // 255 O
+            $body .= str_repeat(' ', 100); // 100 C
+            $body .= str_repeat(' ', 50); // 50 C
+            $body .= str_repeat(' ', 20); // 20 C
+            $body .= str_repeat(' ', 1); // 1 C
+            $body .= str_repeat(' ', 1); // 1 C
+            $body .= str_repeat(' ', 2); // 2 C
+            $body .= str_repeat(' ', 4); // 4 C
+            $body .= str_repeat(' ', 2); // 2 C
+            $body .= str_repeat(' ', 4); // 4 C
+            $body .= str_repeat(' ', 1); // 1 C
+            $body .= str_repeat(' ', 5); // 5 C
+        }
 
         $header = [
             'OrgIDVelocity' => substr(trim($bank->code) . str_repeat(' ', 30), 0, 30), // 30 M
@@ -226,29 +237,8 @@ class RunPayrollController extends BaseController
             'DebitAcctNo' => substr(str_repeat(' ', 19) . trim($bank->account_no), -19, 19), // 19 M
         ];
 
-        $content = implode('', array_values($header));
-        foreach ($datas as $data) {
-            $content .= PHP_EOL;
-            $content .= $data['PayeeID'];
-            $content .= $data['PayeeName'];
-            $content .= $data['PayeeAddr1'];
-            $content .= $data['PayeeAddr2'];
-            $content .= $data['PayeeAddr3'];
-            $content .= $data['PaymentType'];
-            $content .= $data['PayeeAccountNo'];
-            $content .= $data['PayeeAccountCcy'];
-            $content .= $data['PayAmount'];
-            $content .= $data['PayCcy'];
-            $content .= $data['Remarks'];
-            $content .= $data['BeneBankName'];
-            $content .= $data['BeneBankBranchName'];
-            $content .= $data['BeneBankNetworkID'];
-            $content .= $data['ReservedColumn1'];
-            $content .= $data['ResidentStatus'];
-            $content .= $data['ReservedColumn2'];
-            $content .= $data['RemitterCategory'];
-            $content .= $data['ReservedColumn3'] . PHP_EOL;
-        }
+        $content = implode('', array_values($header)) . $body;
+
         $fileName = "Payroll $runPayroll->code.txt";
         return response($content, 200, [
             'Content-type' => 'text/plain',
