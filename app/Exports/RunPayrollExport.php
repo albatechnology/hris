@@ -22,12 +22,40 @@ class RunPayrollExport implements FromView, WithColumnFormatting
     {
         $payrollComponents = PayrollComponent::where('company_id', $this->runPayroll->company_id)->get(['id', 'name', 'type', 'category']);
 
+        $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY);
+        $deductions = $payrollComponents->where('type', PayrollComponentType::DEDUCTION);
+        $benefits = $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]);
+
+        $runPayrollUsersGroups = $this->runPayroll->users->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
+
+        $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
+            $allowance->id => 0
+        ])->reduce(function ($carry, $item) {
+            return $carry + $item; // Menggabungkan array dengan mempertahankan key
+        }, []);
+
+        $totalDeductionsStorages = $deductions->values()->map(fn($deduction) => [
+            $deduction->id => 0
+        ])->reduce(function ($carry, $item) {
+            return $carry + $item; // Menggabungkan array dengan mempertahankan key
+        }, []);
+
+        $totalBenefitsStorages = $benefits->values()->map(fn($benefit) => [
+            $benefit->id => 0
+        ])->reduce(function ($carry, $item) {
+            return $carry + $item; // Menggabungkan array dengan mempertahankan key
+        }, []);
+
         return view('api.exports.payroll.run-payroll', [
             'runPayroll' => $this->runPayroll,
+            'runPayrollUsersGroups' => $runPayrollUsersGroups,
             'payrollComponentType' => PayrollComponentType::class,
-            'allowances' => $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY),
-            'deductions' => $payrollComponents->where('type', PayrollComponentType::DEDUCTION),
-            'benefits' => $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]),
+            'allowances' => $allowances,
+            'deductions' => $deductions,
+            'benefits' => $benefits,
+            'totalAllowancesStorages' => $totalAllowancesStorages,
+            'totalDeductionsStorages' => $totalDeductionsStorages,
+            'totalBenefitsStorages' => $totalBenefitsStorages,
         ]);
     }
 
