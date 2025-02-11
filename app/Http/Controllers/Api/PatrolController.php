@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\PatrolTaskExport;
 use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
@@ -325,7 +326,7 @@ class PatrolController extends BaseController
             }
         ]);
 
-        // return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
+        return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
 
         return $patrol;
     }
