@@ -147,6 +147,12 @@ class AttendanceService
      */
     public static function getTotalPresent(User|int $user, $startDate, $endDate): int
     {
+        /**
+         * total kehadiran masih perlu diperbaiki.
+         * misal absen di weekend(dayoff) tapi tidak ada shift?
+         * bagaimana jika data attendance tsb adalah timeoff, maka ketika menggunakan valid() tidak akan terhitng.
+         *
+         */
         if (!$user instanceof User) {
             $user = User::find($user, ['id', 'type', 'group_id']);
         }
@@ -170,7 +176,10 @@ class AttendanceService
             $user = User::find($user, ['id', 'type', 'group_id']);
         }
 
-        return ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate) - self::getTotalPresent($user, $startDate, $endDate);
+        $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
+        $totalPresent = self::getTotalPresent($user, $startDate, $endDate);
+
+        return max($totalWorkingDays - $totalPresent, 0);
     }
 
     public static function getTotalAttendanceInShifts(User|int $user, $startDate, $endDate, Shift|array $shifts = []): int

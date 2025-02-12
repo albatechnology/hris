@@ -34,16 +34,14 @@ class RunPayrollService
     public static function execute(array $request): RunPayroll | Exception | JsonResponse
     {
         $payrollSetting = PayrollSetting::with('company')->whereCompany($request['company_id'])->first();
-        if (!$payrollSetting->cut_off_date) {
-            return response()->json([
-                'success' => false,
-                'data' => 'Please set your Payroll cut off date before submit Run Payroll',
-            ]);
-        }
-
-        $cutOffStartDate = Carbon::parse($payrollSetting->cut_off_date . '-' . $request['period']);
-        $cutOffEndDate = $cutOffStartDate->clone()->addMonth();
-        // $cutOffStartDate->addDay();
+        // if (!$payrollSetting->cut_off_attendance_start_date || !$payrollSetting->cut_off_attendance_end_date) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'data' => 'Please set your Payroll cut off date before submit Run Payroll',
+        //     ]);
+        // }
+        $cutOffStartDate = Carbon::parse($payrollSetting->cut_off_attendance_start_date . '-' . $request['period']);
+        $cutOffEndDate = $cutOffStartDate->clone()->lastOfMonth();
         $request = array_merge($request, [
             'cut_off_start_date' => $cutOffStartDate->toDateString(),
             'cut_off_end_date' => $cutOffEndDate->toDateString(),
@@ -224,6 +222,7 @@ class RunPayrollService
              * second, calculate payroll component where not default
              */
             $payrollComponents = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->whereNotDefault()->get();
+
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -364,122 +363,6 @@ class RunPayrollService
                 self::createComponent($runPayrollUser, $taskOvertimePayrollComponent, $amount);
             }
             // END
-
-            // if ($isUserOvertimeEligible && $overtimePayrollComponent) {
-            //     /** @var Collection|\App\Models\Overtime[] $userOvertimes A collection of user overtimes */
-            //     $userOvertimes = $user->overtimes;
-            //     // dump($userOvertimes->toArray());
-
-            //     foreach ($userOvertimes as $overtime) {
-            //         /** @var Collection|\App\Models\OvertimeRequest[] $overtimeRequests A collection of user overtime requests */
-            //         $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($cutOffStartDate, $cutOffEndDate)->approved()->get();
-            //         // dump($overtimeRequests->toArray());
-
-            //         if ($overtimeRequests->count() <= 0) continue;
-
-            //         $amount = 0;
-            //         $isPaidPerDay = false;
-            //         $overtimeAmountMultiply = 0;
-            //         if (!is_null($overtime->compensation_rate_per_day) && $overtime->compensation_rate_per_day > 0) {
-            //             $isPaidPerDay = true;
-            //             $overtimeAmountMultiply = $overtime->compensation_rate_per_day;
-            //         } else {
-            //             switch ($overtime->rate_type) {
-            //                 case RateType::AMOUNT:
-            //                     $overtimeAmountMultiply = $overtime->rate_amount;
-
-            //                     break;
-            //                 case RateType::BASIC_SALARY:
-            //                     $overtimeAmountMultiply = $userBasicSalary / $overtime->rate_amount;
-
-            //                     break;
-            //                     // case RateType::ALLOWANCES:
-            //                     //     $overtimeAmountMultiply = 0;
-
-            //                     //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
-            //                     //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
-            //                     //     }
-
-            //                     //     break;
-            //                 case RateType::FORMULA:
-            //                     // dump('OKEE');
-            //                     $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
-
-            //                     break;
-            //                 default:
-            //                     $overtimeAmountMultiply = 0;
-
-            //                     break;
-            //             }
-            //         }
-
-            //         // dump($isPaidPerDay);
-            //         // dd($overtimeAmountMultiply);
-
-            //         if ($isPaidPerDay) {
-            //             $amount = $overtimeAmountMultiply * $overtimeRequests->count();
-            //         } else {
-            //             foreach ($overtimeRequests as $overtimeRequest) {
-            //                 // overtimme rounding
-            //                 $overtimeDuration = $overtimeRequest->duration;
-            //                 if ($overtimeRounding = $overtime->overtimeRoundings()->where('start_minute', '>=', $overtimeDuration)->where('end_minute', '<=', $overtimeDuration)->first()) {
-            //                     $overtimeDuration = $overtimeRounding->rounded;
-            //                 }
-
-            //                 // overtime multiplier
-            //                 foreach ($overtime->overtimeMultipliers()->where('is_weekday', Carbon::parse($overtimeRequest->date)->isWeekday())->orderBy('start_hour')->get() as $overtimeMultiplier) {
-            //                     // break if there's no suitable data for minimum start_hour
-            //                     if ($overtimeDuration < $overtimeMultiplier->start_hour) break;
-
-            //                     for ($hour = 1; $hour <= $overtimeDuration; $hour++) {
-            //                         if (($hour >= $overtimeMultiplier->start_hour) && ($hour <= $overtimeMultiplier->end_hour)) {
-            //                             $multiply = $overtimeMultiplier->multiply;
-            //                         } else {
-            //                             $multiply = 1;
-            //                         }
-
-            //                         $amount += ($overtimeAmountMultiply * $multiply);
-            //                     }
-            //                 }
-            //             }
-            //         }
-
-            //         self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
-
-            //         // logic compensation_rate_per_day (currently we don't use that logic)
-            //     }
-            // }
-
-            // // dump($updatePayrollComponent?->toArray());
-            // // insert other updated payroll component
-            // $otherUpdatePayrollComponents = $updatePayrollComponent?->details()->where('user_id', $userId)->whereNotIn('payroll_component_id', $defaultPayrollComponents->pluck('id')->toArray())->get(['id', 'update_payroll_component_id', 'payroll_component_id', 'new_amount']);
-            // // dump($otherUpdatePayrollComponents?->toArray());
-            // $otherUpdatePayrollComponents?->each(function ($updatePayrollComponentDetail) use ($runPayrollUser) {
-            //     self::createComponent($runPayrollUser, $updatePayrollComponentDetail->payrollComponent, $updatePayrollComponentDetail->new_amount);
-            // });
-
-            // // other payroll component
-            // $otherPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereNotIn('id', $runPayrollUser->components()->pluck('payroll_component_id'))->whereNotBpjs()->get();
-            // // dump($otherPayrollComponents?->toArray());
-            // $otherPayrollComponents?->each(function ($otherPayrollComponent) use ($runPayrollUser, $cutoffDiffDay, $cutOffStartDate, $cutOffEndDate, $userBasicSalary) {
-            //     if ($otherPayrollComponent->amount == 0 && count($otherPayrollComponent->formulas)) {
-            //         $amount = FormulaService::calculate(user: $user, model: $otherPayrollComponent, formulas: $otherPayrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
-            //     } elseif ($otherPayrollComponent->category->is(PayrollComponentCategory::ALPA)) {
-            //         // get total alpa di range tgl cuttoff
-            //         // potongan = (totalAlpa/totalHariKerja)*(basicSalary+SUM(allowance))
-            //         $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $cutOffStartDate, $cutOffEndDate);
-            //         $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
-
-            //         $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::OVERTIME]))->sum('amount');
-            //         $amount = round(max(($totalAlpa / $totalWorkingDays) * ($userBasicSalary + $totalAllowance), 0));
-            //     } else {
-            //         $amount = $otherPayrollComponent->amount;
-            //     }
-
-            //     $amount = self::calculatePayrollComponentPeriodType($otherPayrollComponent, $amount, $cutoffDiffDay, $runPayrollUser);
-
-            //     self::createComponent($runPayrollUser, $otherPayrollComponent, $amount);
-            // });
 
             // update total amount for each user
             self::refreshRunPayrollUser($runPayrollUser);
@@ -948,7 +831,6 @@ class RunPayrollService
 
 //     // company = benefit (tidak perlu kalkulasi, hanya catat)
 //     // employee = deduction (kalkulasi)
-//     dd([
 //         'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
 //         'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
 //         'company_totalJkk' => $company_totalJkk,
