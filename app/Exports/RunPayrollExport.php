@@ -41,9 +41,9 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
         });
 
 
-        $activeUsers = $runPayrollUsers->get('active')->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
-        $resignUsers = $runPayrollUsers->get('resign')->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
-        $newUsers = $runPayrollUsers->get('new')->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
+        $activeUsers = $runPayrollUsers->get('active')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
+        $resignUsers = $runPayrollUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
+        $newUsers = $runPayrollUsers->get('new')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
 
         // $runPayrollUsersGroups = $runPayrollUsers->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
 
