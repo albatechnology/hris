@@ -187,6 +187,7 @@ class RunPayrollService
 
             $userBasicSalary = $user->payrollInfo?->basic_salary;
             $totalWorkingDays = $user->payrollInfo?->total_working_days;
+            $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
                 ->where('user_id', $userId)
@@ -282,7 +283,6 @@ class RunPayrollService
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs) {
                 $bpjsPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
-
                 // calculate bpjs
                 // init bpjs variable
                 $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
@@ -295,6 +295,10 @@ class RunPayrollService
                 $company_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
 
                 $employee_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
+                if ($isTaxable) {
+                    $company_percentageBpjsKesehatan += $employee_percentageBpjsKesehatan;
+                    $employee_percentageBpjsKesehatan = 0;
+                }
 
                 $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
 
@@ -310,15 +314,23 @@ class RunPayrollService
 
                 // jht
                 $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
-                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
-
                 $employee_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
+                if ($isTaxable) {
+                    $company_percentageJht += $employee_percentageJht;
+                    $employee_percentageJht = 0;
+                }
+
+                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
                 $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
 
                 // jp
                 $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
 
                 $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+                if ($isTaxable) {
+                    $company_percentageJp += $employee_percentageJp;
+                    $employee_percentageJp = 0;
+                }
 
                 $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
 
