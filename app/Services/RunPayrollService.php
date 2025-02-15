@@ -502,7 +502,7 @@ class RunPayrollService
 
         $tax = 0;
         $userPayrollInfo = $runPayrollUser->user->payrollInfo;
-        if (!$userPayrollInfo->tax_salary->is(TaxSalary::TAXABLE)) {
+        if ($userPayrollInfo->tax_salary->is(TaxSalary::TAXABLE)) {
             $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary);
             if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
                 $grossUp1 = floatval(100 - $taxPercentage);
