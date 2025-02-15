@@ -10,6 +10,7 @@ use App\Enums\PayrollComponentType;
 use App\Enums\PtkpStatus;
 use App\Enums\RunPayrollStatus;
 use App\Enums\TaxMethod;
+use App\Enums\TaxSalary;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
@@ -485,22 +486,22 @@ class RunPayrollService
             // $q->where('is_calculateable', true);
         })->sum('amount');
 
-
         $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit;
 
+        $tax = 0;
         $userPayrollInfo = $runPayrollUser->user->payrollInfo;
+        if (!$userPayrollInfo->tax_salary->is(TaxSalary::TAXABLE)) {
+            $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary);
+            if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
+                $grossUp1 = floatval(100 - $taxPercentage);
+                $grossSalary2 = ($grossSalary / $grossUp1) * 100;
 
-        $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary);
+                $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary2);
 
-        if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
-            $grossUp1 = floatval(100 - $taxPercentage);
-            $grossSalary2 = ($grossSalary / $grossUp1) * 100;
-
-            $taxPercentage = self::calculateTax($runPayrollUser->user->payrollInfo->ptkp_status, $grossSalary2);
-
-            $tax = $grossSalary2 * ($taxPercentage / 100);
-        } else {
-            $tax = $grossSalary * ($taxPercentage / 100);
+                $tax = $grossSalary2 * ($taxPercentage / 100);
+            } else {
+                $tax = $grossSalary * ($taxPercentage / 100);
+            }
         }
 
         $runPayrollUser->update([
