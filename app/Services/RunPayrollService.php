@@ -295,7 +295,7 @@ class RunPayrollService
                 $company_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
 
                 $employee_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
-                if ($isTaxable) {
+                if (!$isTaxable) {
                     $company_percentageBpjsKesehatan += $employee_percentageBpjsKesehatan;
                     $employee_percentageBpjsKesehatan = 0;
                 }
@@ -315,7 +315,7 @@ class RunPayrollService
                 // jht
                 $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
                 $employee_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
-                if ($isTaxable) {
+                if (!$isTaxable) {
                     $company_percentageJht += $employee_percentageJht;
                     $employee_percentageJht = 0;
                 }
@@ -327,7 +327,7 @@ class RunPayrollService
                 $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
 
                 $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
-                if ($isTaxable) {
+                if (!$isTaxable) {
                     $company_percentageJp += $employee_percentageJp;
                     $employee_percentageJp = 0;
                 }
