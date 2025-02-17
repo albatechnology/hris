@@ -32,7 +32,7 @@ class ShiftController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Shift::tenanted()->orWhereNull('company_id'))
+        $data = QueryBuilder::for(Shift::where(fn($q) => $q->tenanted()->orWhereNull('company_id')))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 'name',
