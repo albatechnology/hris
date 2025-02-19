@@ -176,7 +176,7 @@
         @endforeach
         <tr>
             <th class="text-left">Total benefits</th>
-            <th class="text-right">{{ number_format($runPayrollUser->benefit) }}</th>
+            <th class="text-right">{{ number_format($runPayrollUser->total_benefit) }}</th>
         </tr>
     </table>
     <footer>

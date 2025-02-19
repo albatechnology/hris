@@ -680,7 +680,7 @@ class UserController extends BaseController
     public function payroll(int $id, PayrollRequest $request)
     {
         $user = User::findTenanted($id);
-        $user->load(['runPayrollUser' => fn($q) => $q->whereHas('runPayroll', fn($q) => $q->where('period', "$request->month-$request->year"))]);
+        $user->load(['runPayrollUser' => fn($q) => $q->orderByDesc('id')->whereHas('runPayroll', fn($q) => $q->where('period', "$request->month-$request->year"))]);
 
         if ($user->runPayrollUser->count() <= 0) return $this->errorResponse(message: "Data payroll not found", code: Response::HTTP_NOT_FOUND);
 

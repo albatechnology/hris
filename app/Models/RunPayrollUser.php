@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PayrollComponentType;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -40,6 +41,7 @@ class RunPayrollUser extends BaseModel
         'thp',
         'total_earning',
         'total_deduction',
+        'total_benefit',
     ];
 
     public function getThpAttribute(): int
@@ -55,6 +57,11 @@ class RunPayrollUser extends BaseModel
     public function getTotalDeductionAttribute(): int
     {
         return round($this->deduction + $this->tax);
+    }
+
+    public function getTotalBenefitAttribute(): int
+    {
+        return round($this->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::BENEFIT))->sum('amount'));
     }
 
     public function runPayroll(): BelongsTo
