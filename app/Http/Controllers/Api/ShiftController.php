@@ -28,6 +28,7 @@ class ShiftController extends BaseController
         $this->middleware('permission:shift_create', ['only' => 'store']);
         $this->middleware('permission:shift_edit', ['only' => 'update']);
         $this->middleware('permission:shift_delete', ['only' => ['destroy', 'forceDelete']]);
+        $this->middleware('permission:shift_import', ['only' => 'importShiftUsers']);
     }
 
     public function index()

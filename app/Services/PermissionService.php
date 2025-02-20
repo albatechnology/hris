@@ -111,6 +111,7 @@ class PermissionService
                 'shift_create',
                 'shift_edit',
                 'shift_delete',
+                'shift_import',
             ],
             'schedule_access' => [
                 'schedule_read',
@@ -311,6 +312,12 @@ class PermissionService
                 'bank_edit',
                 'bank_delete',
             ],
+            'extra_off_access' => [
+                'extra_off_read',
+                'extra_off_create',
+                // 'extra_off_edit',
+                // 'extra_off_delete',
+            ],
         ];
     }
 
@@ -370,6 +377,7 @@ class PermissionService
                 // 'shift_create',
                 // 'shift_edit',
                 // 'shift_delete',
+                // 'shift_import',
             ],
             'schedule_access' => [
                 'schedule_read',
@@ -564,6 +572,18 @@ class PermissionService
                 'setting_read',
                 // 'setting_edit',
             ],
+            // 'bank_access' => [
+            //     'bank_read',
+            //     'bank_create',
+            //     'bank_edit',
+            //     'bank_delete',
+            // ],
+            // 'extra_off_access' => [
+            // 'extra_off_read',
+            // 'extra_off_create',
+            // 'extra_off_edit',
+            // 'extra_off_delete',
+            // ],
         ];
     }
 
