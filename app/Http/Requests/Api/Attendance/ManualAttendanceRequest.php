@@ -49,7 +49,7 @@ class ManualAttendanceRequest extends FormRequest
         return [
             'user_id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
             'date' => 'required|date',
-            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],
             'clock_in' => 'nullable|date_format:H:i',
             'clock_out' => 'nullable|date_format:H:i',
             'type' => ['required', Rule::enum(AttendanceType::class)],
