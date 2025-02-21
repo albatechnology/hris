@@ -7,10 +7,12 @@ use App\Listeners\Attendance\RequestAttendanceNotification;
 use App\Models\Company;
 use App\Models\OvertimeRequest;
 use App\Models\RunPayroll;
+use App\Models\RunThr;
 use App\Models\User;
 use App\Observers\CompanyObserver;
 use App\Observers\OvertimeRequestObserver;
 use App\Observers\RunPayrollObserver;
+use App\Observers\RunThrObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -42,6 +44,7 @@ class EventServiceProvider extends ServiceProvider
         // TimeoffRegulation::observe(TimeoffRegulationObserver::class);
         User::observe(UserObserver::class);
         RunPayroll::observe(RunPayrollObserver::class);
+        RunThr::observe(RunThrObserver::class);
     }
 
     /**

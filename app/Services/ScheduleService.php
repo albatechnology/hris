@@ -42,7 +42,6 @@ class ScheduleService
             ->where('user_id', $user->id)->approved()
             ->whereHas('schedule', fn($q) => $q->where('type', $scheduleType))
             ->whereDate('date', $date)->first();
-        // dd($requestShift->toArray());
 
         if ($requestShift) {
             $schedule =  Schedule::select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])

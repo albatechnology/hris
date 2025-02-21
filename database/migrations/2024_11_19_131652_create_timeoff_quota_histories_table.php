@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained();
             $table->foreignIdFor(TimeoffQuota::class)->constrained();
             $table->boolean('is_increment');
+            $table->boolean('is_automatic')->default(0);
             $table->unsignedFloat('old_balance', 8, 1)->default(0);
             $table->unsignedFloat('new_balance', 8, 1)->default(0);
             $table->text('description')->nullable();

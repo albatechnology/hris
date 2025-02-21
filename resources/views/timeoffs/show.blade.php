@@ -52,10 +52,6 @@
                                 <p class="float-right">{{ $model->delegate_to }}</p>
                             </li>
                             <li class="list-group-item">
-                                <b>Is Advanced Leave</b>
-                                <p class="float-right">{{ $model->is_advanced_leave }}</p>
-                            </li>
-                            <li class="list-group-item">
                                 <b>Last Update</b>
                                 <p class="float-right">{{ $model->updated_at }}</p>
                             </li>

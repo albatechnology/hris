@@ -382,9 +382,19 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(RunPayroll::class);
     }
 
+    public function runThrs(): HasMany
+    {
+        return $this->hasMany(RunThr::class);
+    }
+
     public function runPayrollUser(): HasMany
     {
         return $this->hasMany(RunPayrollUser::class);
+    }
+
+    public function runThrUser(): HasMany
+    {
+        return $this->hasMany(RunThrUser::class);
     }
 
     public function patrols(): BelongsToMany

@@ -6,10 +6,11 @@ enum TimeoffPolicyType: string
 {
     use BaseEnum;
 
+    case TIME_OFF = 'time_off';
+    case DAY_OFF = 'day_off';
+    case EXTRA_OFF = 'extra_off';
     case SICK_WITHOUT_CERTIFICATE = 'sick_without_certificate';
     case SICK_WITH_CERTIFICATE = 'sick_with_certificate';
-    case DAY_OFF = 'day_off';
-    case TIME_OFF = 'time_off';
     case PERMISSION = 'permission';
     case FREE_LEAVE = 'free_leave';
     case UNPAID_LEAVE = 'unpaid_leave';
@@ -17,7 +18,7 @@ enum TimeoffPolicyType: string
 
     public static function hasQuotas(): array
     {
-        return [self::SICK_WITHOUT_CERTIFICATE, self::DAY_OFF, self::TIME_OFF];
+        return [self::TIME_OFF, self::DAY_OFF, self::EXTRA_OFF, self::SICK_WITHOUT_CERTIFICATE];
     }
 
     public function hasQuota(): bool

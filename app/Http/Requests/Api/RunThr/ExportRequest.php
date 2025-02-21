@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Timeoff;
+namespace App\Http\Requests\Api\RunPayroll;
 
-use App\Enums\TimeoffRequestType;
+use App\Models\Bank;
+use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class StoreRequest extends FormRequest
+class ExportRequest extends FormRequest
 {
     use RequestToBoolean;
 
@@ -27,13 +27,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'nullable|exists:users,id',
-            'timeoff_policy_id' => 'required|exists:timeoff_policies,id',
-            'request_type' => ['required', Rule::enum(TimeoffRequestType::class)],
-            'start_at' => 'required',
-            'end_at' => 'required',
-            'reason' => 'nullable|string',
-            'delegate_to' => 'nullable|exists:users,id',
+            'bank_id' => ['required', new CompanyTenantedRule(Bank::class, 'Bank not found')],
         ];
     }
 }

@@ -13,7 +13,6 @@
                 <x-forms.input-time name='end_at' label='End at' placeholder='End at' required :$model />
                 <x-forms.input-text name='reason' label='Reason' placeholder='Reason' required :$model />
                 <x-forms.select-collection name='delegate_to' label='Delegate to' placeholder='-- Please Select --' required='Required' :options="app(\App\Models\User::class)->get()" optionValue="id" optionLabel="name" :$model />
-                <x-forms.select-array name='is_advanced_leave' label='Is advanced leave' placeholder='-- Please Select --' required='Required' :options="\App\Enums\BooleanValue::all()" :$model />
             </div>
         </div>
     </div>

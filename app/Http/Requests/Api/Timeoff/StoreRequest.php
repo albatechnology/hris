@@ -31,7 +31,6 @@ class StoreRequest extends FormRequest
         $this->merge([
             'user_id' => $this->user_id ?? auth()->id(),
             'total_days' => 0
-            // 'is_advanced_leave' => $this->toBoolean($this->is_advanced_leave),
         ]);
     }
 
@@ -54,7 +53,6 @@ class StoreRequest extends FormRequest
 
             'files' => 'nullable|array',
             'files.*' => 'required|mimes:' . config('app.file_mimes_types'),
-            // 'is_advanced_leave' => 'nullable|boolean',
         ];
     }
 }

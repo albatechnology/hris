@@ -200,10 +200,6 @@
                     name: 'delegate_to',
                 },
                 {
-                    data: 'is_advanced_leave',
-                    name: 'is_advanced_leave',
-                },
-                {
                     data: 'actions',
                     name: 'actions',
                 },

@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Auth::routes();
+// Route::get('test', function () {
+//     ExistingEmployee::dispatchSync();
+// });
 Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 

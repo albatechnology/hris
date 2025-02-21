@@ -37,8 +37,6 @@ class TimeoffController extends Controller
 
             $table->addColumn('checkbox', '&nbsp;');
 
-            $table->editColumn('is_advanced_leave', fn ($row) => $row->is_advanced_leave == true ? 'Yes' : 'No');
-
             $table->editColumn('actions', function ($row) {
                 return Blade::renderComponent(new DatatableAction(
                     showRoute: route('timeoffs.show', $row->id),
@@ -105,7 +103,7 @@ class TimeoffController extends Controller
      */
     public function update(UpdateRequest $request, Timeoff $timeoff)
     {
-        // 
+        //
     }
 
     /**

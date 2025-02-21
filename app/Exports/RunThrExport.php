@@ -5,7 +5,7 @@ namespace App\Exports;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentType;
 use App\Models\PayrollComponent;
-use App\Models\RunPayroll;
+use App\Models\RunThr;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -16,40 +16,40 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize, WithEvents
+class RunThrExport implements FromView, WithColumnFormatting, ShouldAutoSize, WithEvents
 {
     use Exportable;
 
-    public function __construct(public RunPayroll $runPayroll) {}
+    public function __construct(public RunThr $runThr) {}
 
     public function view(): View
     {
-        $payrollComponents = PayrollComponent::where('company_id', $this->runPayroll->company_id)->get(['id', 'name', 'type', 'category']);
+        $payrollComponents = PayrollComponent::where('company_id', $this->runThr->company_id)->get(['id', 'name', 'type', 'category']);
 
-        $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY);
+        // $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY);
         $deductions = $payrollComponents->where('type', PayrollComponentType::DEDUCTION);
         $benefits = $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]);
 
-        $runPayrollUsers = $this->runPayroll->users;
+        $runThrUsers = $this->runThr->users;
 
-        $cutOffStartDate = Carbon::parse($this->runPayroll->cut_off_start_date);
-        $cutOffEndDate = Carbon::parse($this->runPayroll->cut_off_end_date);
+        $cutOffStartDate = Carbon::parse($this->runThr->cut_off_start_date);
+        $cutOffEndDate = Carbon::parse($this->runThr->cut_off_end_date);
 
-        $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($cutOffStartDate, $cutOffEndDate) {
+        $runThrUsers = $this->runThr->users->groupBy(function ($item, $key) use ($cutOffStartDate, $cutOffEndDate) {
             return $item->user->resign_date && Carbon::parse($item->user->resign_date)->between($cutOffStartDate, $cutOffEndDate) ? 'resign' : (Carbon::parse($item->user->join_date)->between($cutOffStartDate, $cutOffEndDate) ? 'new' : 'active');
         });
 
-        $activeUsers = $runPayrollUsers->get('active')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
-        $resignUsers = $runPayrollUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
-        $newUsers = $runPayrollUsers->get('new')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
+        $activeUsers = $runThrUsers->get('active')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
+        $resignUsers = $runThrUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
+        $newUsers = $runThrUsers->get('new')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
 
-        // $runPayrollUsersGroups = $runPayrollUsers->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
+        // $runThrUsersGroups = $runThrUsers->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
 
-        $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
-            $allowance->id => 0
-        ])->reduce(function ($carry, $item) {
-            return $carry + $item; // Menggabungkan array dengan mempertahankan key
-        }, []);
+        // $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
+        // $allowance->id => 0
+        // ])->reduce(function ($carry, $item) {
+        // return $carry + $item; // Menggabungkan array dengan mempertahankan key
+        // }, []);
 
         $totalDeductionsStorages = $deductions->values()->map(fn($deduction) => [
             $deduction->id => 0
@@ -63,19 +63,20 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             return $carry + $item; // Menggabungkan array dengan mempertahankan key
         }, []);
 
-        return view('api.exports.payroll.run-payroll', [
-            'runPayroll' => $this->runPayroll,
+        return view('api.exports.payroll.run-thr', [
+            'runThr' => $this->runThr,
             'activeUsers' => $activeUsers,
             'resignUsers' => $resignUsers,
             'newUsers' => $newUsers,
             'payrollComponentType' => PayrollComponentType::class,
-            'allowances' => $allowances,
+            // 'allowances' => $allowances,
             'deductions' => $deductions,
             'benefits' => $benefits,
-            'totalAllowancesStorages' => $totalAllowancesStorages,
+            // 'totalAllowancesStorages' => $totalAllowancesStorages,
             'totalDeductionsStorages' => $totalDeductionsStorages,
             'totalBenefitsStorages' => $totalBenefitsStorages,
-            'totalColumns' =>  21 +  $allowances->count() + $deductions->count() + $benefits->count()
+            'totalColumns' =>  24 +  $deductions->count() + $benefits->count()
+            // 'totalColumns' =>  21 +  $allowances->count() + $deductions->count() + $benefits->count()
         ]);
     }
 

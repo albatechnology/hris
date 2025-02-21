@@ -25,7 +25,6 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         'end_at',
         'delegate_to',
         'reason',
-        'is_advanced_leave',
         // 'approval_status',
         // 'approved_by',
         // 'approved_at',

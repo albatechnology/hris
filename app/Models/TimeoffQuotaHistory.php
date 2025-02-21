@@ -18,6 +18,7 @@ class TimeoffQuotaHistory extends BaseModel implements TenantedInterface
         'user_id',
         'timeoff_quota_id',
         'is_increment',
+        'is_automatic',
         'old_balance',
         'new_balance',
         'description',
@@ -25,6 +26,7 @@ class TimeoffQuotaHistory extends BaseModel implements TenantedInterface
 
     protected $casts = [
         'is_increment' => 'boolean',
+        'is_automatic' => 'boolean',
         'old_balance' => 'float',
         'new_balance' => 'float',
     ];

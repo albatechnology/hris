@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\ExtraOffController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\GuestBookController;
 use App\Http\Controllers\Api\IncidentController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Api\RequestScheduleController;
 use App\Http\Controllers\Api\RequestShiftController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
+use App\Http\Controllers\Api\RunThrController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
@@ -256,6 +258,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('run-payrolls/{run_payroll}/export/bca', [RunPayrollController::class, 'exportBca']);
     Route::apiResource('run-payrolls', RunPayrollController::class);
 
+    Route::put('run-thrs/user-components/{run_thr_user}', [RunThrController::class, 'updateUserComponent']);
+    Route::get('run-thrs/{run_thr}/export', [RunThrController::class, 'export']);
+    Route::get('run-thrs/{run_thr}/export/ocbc', [RunThrController::class, 'exportOcbc']);
+    Route::get('run-thrs/{run_thr}/export/bca', [RunThrController::class, 'exportBca']);
+    Route::apiResource('run-thrs', RunThrController::class);
+
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);
     Route::get('request-change-datas/approvals/count-total', [RequestChangeDataController::class, 'countTotalApprovals']);
     Route::put('request-change-datas/{request_change_data}/approve', [RequestChangeDataController::class, 'approve']);
@@ -334,4 +342,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('settings', SettingController::class);
     Route::apiResource('banks', BankController::class);
+
+    Route::get('extra-offs/users', [ExtraOffController::class, 'users']);
+    Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
+    Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
 });

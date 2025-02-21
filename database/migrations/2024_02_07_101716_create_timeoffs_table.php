@@ -25,7 +25,6 @@ return new class extends Migration
             // $table->string('approval_status')->default(ApprovalStatus::PENDING);
             // $table->foreignId('approved_by')->nullable();
             // $table->timestamp('approved_at')->nullable();
-            $table->boolean('is_advanced_leave')->default(false);
             $table->timestamps();
 
             // softDeletes must implement deleted_by
