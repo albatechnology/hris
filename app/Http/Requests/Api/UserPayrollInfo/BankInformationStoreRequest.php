@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\UserPayrollInfo;
 
+use App\Models\Bank;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class BankInformationStoreRequest extends FormRequest
@@ -28,6 +30,7 @@ class BankInformationStoreRequest extends FormRequest
             'secondary_bank_name' => 'nullable|string',
             'secondary_bank_account_no' => 'nullable|string',
             'secondary_bank_account_holder' => 'nullable|string',
+            'bank_id' => ['required', new CompanyTenantedRule(Bank::class, 'Bank not found')],
         ];
     }
 }
