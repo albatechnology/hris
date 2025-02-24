@@ -30,7 +30,7 @@ class TimeoffPolicySeeder extends Seeder
                 [
                     'name' => 'Annual Leave',
                     'code' => 'L',
-                    'type' => TimeoffPolicyType::TIME_OFF,
+                    'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                     'effective_date' => date('Y-m-d'),
                     'is_allow_halfday' => true,
                     'max_consecutively_day' => 5,
@@ -124,37 +124,37 @@ class TimeoffPolicySeeder extends Seeder
                 // [
                 //     'name' => 'External Assignment',
                 //     'code' => 'E',
-                //     'type' => TimeoffPolicyType::TIME_OFF,
+                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
                 // [
                 //     'name' => 'Extra Off',
                 //     'code' => 'EO',
-                //     'type' => TimeoffPolicyType::TIME_OFF,
+                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
                 // [
                 //     'name' => 'Half Leave End',
                 //     'code' => 'HLE',
-                //     'type' => TimeoffPolicyType::TIME_OFF,
+                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
                 // [
                 //     'name' => 'Half Leave Start',
                 //     'code' => 'HLS',
-                //     'type' => TimeoffPolicyType::TIME_OFF,
+                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
                 // [
                 //     'name' => 'Massive Leave',
                 //     'code' => 'MS',
-                //     'type' => TimeoffPolicyType::TIME_OFF,
+                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
                 // [
                 //     'name' => 'Permission',
                 //     'code' => 'PR',
-                //     'type' => TimeoffPolicyType::TIME_OFF,
+                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
             ]);
@@ -181,7 +181,7 @@ class TimeoffPolicySeeder extends Seeder
             // } else {
             //     $company->timeoffPolicies()->create([
             //         'name' => 'timeoff policy ' . $company->name,
-            //         'type' => TimeoffPolicyType::TIME_OFF,
+            //         'type' => TimeoffPolicyType::ANNUAL_LEAVE,
             //         'effective_date' => date('Y-m-d'),
             //     ]);
             // }

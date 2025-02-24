@@ -28,44 +28,78 @@ class NewEmployee implements ShouldQueue
      */
     public function handle(): void
     {
-        $today = Carbon::now()->setDay(15);
-        $date = Carbon::now()->startOfMonth()->subMonths(3);
-        $startYearDate = date('Y-01-01');
-        $endYearDate = date('Y-12-31');
+        /**
+         * 1. get users yang masa kerjanya < 1 tahun
+         * 2. where belum dapet jatah cuti di tahun ini
+         * 3. where masa kerjanya >= 3 bulan
+         * 4. user eligible to get the quota of the month user join, if join_date <= 15
+         */
 
-        $dataQuota = collect(CarbonPeriod::create($date, '1 month', $today))
-            ->map(fn($date) => $date->format('F-Y'))
-            ->filter(fn($month) => str_contains($month, $today->format('Y')));
-        $totalQuota = $dataQuota->count();
-        $description = sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $dataQuota->implode(', '));
+        // date to compare that the user should be working at least 3 months since join_date
+        $joinDate = Carbon::now()->setDay(15)->subMonths(3);
+
+        $dataQuotas = $this->getQuotas($joinDate);
+        dd($dataQuotas);
 
         $companies = Company::select('id')->get();
         foreach ($companies as $company) {
-            $timeoffPolicy = $company->timeoffPolicies()->where('type', TimeoffPolicyType::TIME_OFF)->first(['id']);
+            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()
                 ->where('company_id', $company->id)
-                ->whereYear('join_date', $date->format('Y'))
-                ->whereMonth('join_date', $date->format('m'))
-                ->whereDay('join_date', '<=', 15)
+                ->whereDate('join_date', '>', now()->subYear())
+                ->whereDate('join_date', '<=', $joinDate)
+                // ->whereYear('join_date', $joinDate->format('Y'))
+                // ->whereMonth('join_date', '<=', $joinDate->format('m'))
+                // ->whereDay('join_date', '<=', 15)
+                ->whereDoesntHave(
+                    'timeoffQuotas',
+                    fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
+                        ->whereHas(
+                            'timeoffQuotaHistories',
+                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinDate->format('Y'))
+                        )
+                )
+                ->orderBy('join_date')
+                ->limit(2)
                 ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
-                DB::transaction(function () use ($user, $totalQuota, $timeoffPolicy, $startYearDate, $endYearDate, $description) {
-                    $timeoffQuota = $user->timeoffQuotas()->create([
-                        'timeoff_policy_id' => $timeoffPolicy->id,
-                        'effective_start_date' => $startYearDate,
-                        'effective_end_date' => $endYearDate,
-                        'quota' => $totalQuota,
-                    ]);
+                DB::transaction(function () use ($user, $dataQuotas, $timeoffPolicyId) {
+                    foreach ($dataQuotas as $dataQuota) {
+                        $timeoffQuota = $user->timeoffQuotas()->create([
+                            'timeoff_policy_id' => $timeoffPolicyId,
+                            'effective_start_date' => $dataQuota['effective_start_date'],
+                            'effective_end_date' => $dataQuota['effective_end_date'],
+                            'quota' => $dataQuota['quota'],
+                        ]);
 
-                    $timeoffQuota->timeoffQuotaHistories()->create([
-                        'user_id' => $timeoffQuota->user_id,
-                        'is_increment' => true,
-                        'new_balance' => $timeoffQuota->quota,
-                        'description' => $description,
-                    ]);
+                        $timeoffQuota->timeoffQuotaHistories()->create([
+                            'user_id' => $timeoffQuota->user_id,
+                            'is_increment' => true,
+                            'is_automatic' => true,
+                            'new_balance' => $timeoffQuota->quota,
+                            'description' => $dataQuota['description'],
+                        ]);
+                    }
                 });
             }
         }
+    }
+
+    private function getQuotas(Carbon $joinDate)
+    {
+        return collect(CarbonPeriod::create($joinDate, '1 month', date('Y-12-31')))
+            // ->filter(fn($joinDate) => $joinDate->format('Y') === date('Y'))
+            ->filter(function ($joinDate) {
+                return $joinDate->format('Y') === date('Y') && $joinDate->format('m') !== '01';
+            })
+            ->map(function ($joinDate) {
+                return [
+                    'quota' => 1,
+                    'effective_start_date' => $joinDate->format('Y-m-01'),
+                    'effective_end_date' => $joinDate->format('Y') . '-12-31',
+                    'description' => sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $joinDate->format('Y-m-01'))
+                ];
+            })->values();
     }
 }

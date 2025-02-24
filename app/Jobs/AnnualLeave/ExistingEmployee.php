@@ -6,7 +6,6 @@ use App\Enums\TimeoffPolicyType;
 use App\Models\Company;
 use App\Models\User;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,6 +13,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * this job must be running at the first day of every year
+ */
 class ExistingEmployee implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -28,14 +30,18 @@ class ExistingEmployee implements ShouldQueue
      */
     public function handle(): void
     {
+        // prepare year at first for start_effective_date & end_effective_date rather than generate every call getQuotas() function
         $year = date('Y');
-        $today = Carbon::now()->startOfMonth();
+
+        // date for calculate how long the user has been working
+        $today = Carbon::now()->startOfYear();
+
         $companies = Company::select('id')->get();
         foreach ($companies as $company) {
-            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::TIME_OFF)->first(['id'])->id;
+            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()
                 ->where('company_id', $company->id)
-                ->whereMonth('join_date', '<=', now()->subYear())
+                ->whereDate('join_date', '<=', now()->subYear())
                 ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
@@ -68,11 +74,11 @@ class ExistingEmployee implements ShouldQueue
     public function getQuotas(string $joinDate, Carbon $compareDate, string $year): array
     {
         $data = [
-            [
-                'quota' => 1,
-                'effective_start_date' => $year . '-01-01',
-                'effective_end_date' => $year . '-01-31',
-            ],
+            // [
+            //     'quota' => 1,
+            //     'effective_start_date' => $year . '-01-01',
+            //     'effective_end_date' => $year . '-01-31',
+            // ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-02-01',
@@ -131,14 +137,14 @@ class ExistingEmployee implements ShouldQueue
         ];
 
         $joinDate = Carbon::parse($joinDate);
-        $year = $joinDate->diffInYears($compareDate);
-        if ($year > 3 && $year <= 5) {
+        $diffInYears = $joinDate->diffInYears($compareDate);
+        if ($diffInYears > 3 && $diffInYears <= 5) {
             $data = [
-                [
-                    'quota' => 2,
-                    'effective_start_date' => $year . '-01-01',
-                    'effective_end_date' => $year . '-01-31',
-                ],
+                // [
+                //     'quota' => 2,
+                //     'effective_start_date' => $year . '-01-01',
+                //     'effective_end_date' => $year . '-01-31',
+                // ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-02-01',
@@ -195,13 +201,13 @@ class ExistingEmployee implements ShouldQueue
                     'effective_end_date' => $year . '-12-31',
                 ],
             ];
-        } elseif ($year > 5) {
+        } elseif ($diffInYears > 5) {
             $data = [
-                [
-                    'quota' => 2,
-                    'effective_start_date' => $year . '-01-01',
-                    'effective_end_date' => $year . '-01-31',
-                ],
+                // [
+                //     'quota' => 2,
+                //     'effective_start_date' => $year . '-01-01',
+                //     'effective_end_date' => $year . '-01-31',
+                // ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-02-01',

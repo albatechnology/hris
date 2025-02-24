@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ApprovalStatus;
+use App\Enums\TimeoffPolicyType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Models\Attendance;
@@ -20,6 +21,17 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class TimeoffService
 {
+    public static function checkTotalBalanceQuotaAL(int|string $userId, int|string $timeoffPolicyId, float $totalRequestDay, string $startAt, string $endAt): bool
+    {
+        $timeoffQuota = self::getTotalBalanceQuota($userId, $timeoffPolicyId, $startAt, $endAt);
+        if ($timeoffQuota >= $totalRequestDay) return true;
+
+        $timeoffQuota = self::getTotalBalanceQuota($userId, $timeoffPolicyId, date('Y-m-d', strtotime($startAt . '+3 month')), date('Y-m-d', strtotime($endAt . '+3 month')));
+        if ($timeoffQuota >= $totalRequestDay) return true;
+
+        return false;
+    }
+
     public static function getTotalBalanceQuota(int|string $userId, int|string $timeoffPolicyId, ?string $startAt = null, ?string $endAt = null): float
     {
         $timeoffQuota = TimeoffQuota::where('user_id', $userId)->where('timeoff_policy_id', $timeoffPolicyId)->whereActive($startAt, $endAt)->groupBy('timeoff_policy_id')->first([DB::raw('SUM(quota) as total_quota'), DB::raw('SUM(used_quota) as total_used_quota')]);
@@ -120,16 +132,23 @@ class TimeoffService
 
         // check if total request day is greater than max_consecutively_day
         if ($timeoffPolicy->max_consecutively_day && ($totalRequestDay > $timeoffPolicy->max_consecutively_day)) {
-            throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Maximum consecutive day is ' . $timeoffPolicy->max_consecutively_day . ' days');
+            // throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Maximum consecutive day is ' . $timeoffPolicy->max_consecutively_day . ' days');
         }
 
         // check if the user has enough quota
         if ($timeoffPolicy->type->hasQuota()) {
-            $quota = self::getTotalBalanceQuota($user->id, $request->timeoff_policy_id, $request->start_at, $request->end_at);
-
-            // check if total request day is greater than quota
-            if ($totalRequestDay > $quota) {
-                throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Quota exceeded');
+            if ($timeoffPolicy->type->is(TimeoffPolicyType::ANNUAL_LEAVE)) {
+                if (
+                    self::checkTotalBalanceQuotaAL($user->id, $request->timeoff_policy_id, $totalRequestDay, $request->start_at, $request->end_at) === false
+                ) {
+                    throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Quota exceeded');
+                }
+            } else {
+                $quota = self::getTotalBalanceQuota($user->id, $request->timeoff_policy_id, $request->start_at, $request->end_at);
+                // check if total request day is greater than quota
+                if ($totalRequestDay > $quota) {
+                    throw new HttpException(Response::HTTP_UNPROCESSABLE_ENTITY, 'Quota exceeded');
+                }
             }
         }
 
@@ -204,31 +223,88 @@ class TimeoffService
     public static function applyTimeoffQuota(Timeoff $timeoff, float $totalRequestDay)
     {
         if ($timeoff->timeoffPolicy->type->hasQuota() && $totalRequestDay > 0) {
-            $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive()->first();
+            if ($timeoff->timeoffPolicy->type->is(TimeoffPolicyType::ANNUAL_LEAVE)) {
+                $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive($timeoff->start_at, $timeoff->end_at)->first();
 
-            // Check if the quota is exceeded
-            if (($timeoffQuota->used_quota + $totalRequestDay) > $timeoffQuota->quota) {
-                $usedQuota = $timeoffQuota->quota - $timeoffQuota->used_quota;
-                $timeoffQuota->used_quota += $usedQuota;
-                $totalRequestDay -= $usedQuota;
+                if ($timeoffQuota) {
+                    // Check if the quota is exceeded
+                    if (($timeoffQuota->used_quota + $totalRequestDay) > $timeoffQuota->quota) {
+                        $usedQuota = $timeoffQuota->quota - $timeoffQuota->used_quota;
+                        $timeoffQuota->used_quota += $usedQuota;
+                        $totalRequestDay -= $usedQuota;
+                    } else {
+                        // If quota is not exceeded, update the used quota
+                        $timeoffQuota->used_quota += $totalRequestDay;
+                        $totalRequestDay = 0;
+                    }
+
+                    $timeoffQuota->save();
+
+                    // Create a new record in the user_timeoff_histories table
+                    $timeoffQuota->timeoffQuotaHistories()->create([
+                        'user_id' => $timeoff->user->id,
+                        'is_increment' => false,
+                        'old_balance' => $timeoffQuota->quota,
+                        'new_balance' => $timeoffQuota->quota - $timeoffQuota->used_quota,
+                    ]);
+
+                    // Recursively call the function if the total request day is still greater than 0
+                    if ($totalRequestDay > 0) self::applyTimeoffQuota($timeoff, $totalRequestDay);
+                } else {
+                    $timeoffQuotas = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive(date('Y-m-d', strtotime($timeoff->start_at . '+3 month')), date('Y-m-d', strtotime($timeoff->end_at . '+3 month')))->get();
+
+                    foreach ($timeoffQuotas as $timeoffQuota) {
+                        // Check if the quota is exceeded
+                        if (($timeoffQuota->used_quota + $totalRequestDay) > $timeoffQuota->quota) {
+                            $usedQuota = $timeoffQuota->quota - $timeoffQuota->used_quota;
+                            $timeoffQuota->used_quota += $usedQuota;
+                            $totalRequestDay -= $usedQuota;
+                        } else {
+                            // If quota is not exceeded, update the used quota
+                            $timeoffQuota->used_quota += $totalRequestDay;
+                            $totalRequestDay = 0;
+                        }
+
+                        $timeoffQuota->save();
+
+                        // Create a new record in the user_timeoff_histories table
+                        $timeoffQuota->timeoffQuotaHistories()->create([
+                            'user_id' => $timeoff->user->id,
+                            'is_increment' => false,
+                            'old_balance' => $timeoffQuota->quota,
+                            'new_balance' => $timeoffQuota->quota - $timeoffQuota->used_quota,
+                        ]);
+
+                        if ($totalRequestDay <= 0) break;
+                    }
+                }
             } else {
-                // If quota is not exceeded, update the used quota
-                $timeoffQuota->used_quota += $totalRequestDay;
-                $totalRequestDay = 0;
+                $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive()->first();
+
+                // Check if the quota is exceeded
+                if (($timeoffQuota->used_quota + $totalRequestDay) > $timeoffQuota->quota) {
+                    $usedQuota = $timeoffQuota->quota - $timeoffQuota->used_quota;
+                    $timeoffQuota->used_quota += $usedQuota;
+                    $totalRequestDay -= $usedQuota;
+                } else {
+                    // If quota is not exceeded, update the used quota
+                    $timeoffQuota->used_quota += $totalRequestDay;
+                    $totalRequestDay = 0;
+                }
+
+                $timeoffQuota->save();
+
+                // Create a new record in the user_timeoff_histories table
+                $timeoffQuota->timeoffQuotaHistories()->create([
+                    'user_id' => $timeoff->user->id,
+                    'is_increment' => false,
+                    'old_balance' => $timeoffQuota->quota,
+                    'new_balance' => $timeoffQuota->quota - $timeoffQuota->used_quota,
+                ]);
+
+                // Recursively call the function if the total request day is still greater than 0
+                if ($totalRequestDay > 0) self::applyTimeoffQuota($timeoff, $totalRequestDay);
             }
-
-            $timeoffQuota->save();
-
-            // Create a new record in the user_timeoff_histories table
-            $timeoffQuota->timeoffQuotaHistories()->create([
-                'user_id' => $timeoff->user->id,
-                'is_increment' => false,
-                'old_balance' => $timeoffQuota->quota,
-                'new_balance' => $timeoffQuota->quota - $timeoffQuota->used_quota,
-            ]);
-
-            // Recursively call the function if the total request day is still greater than 0
-            if ($totalRequestDay > 0) self::applyTimeoffQuota($timeoff, $totalRequestDay);
         }
     }
 

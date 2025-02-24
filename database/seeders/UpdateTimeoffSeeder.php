@@ -27,7 +27,7 @@ class UpdateTimeoffSeeder extends Seeder
                 [
                     'name' => 'Annual Leave',
                     'code' => 'L',
-                    'type' => TimeoffPolicyType::TIME_OFF,
+                    'type' => TimeoffPolicyType::ANNUAL_LEAVE,
                     'effective_date' => "2025-01-01",
                     'is_allow_halfday' => true,
                     'max_consecutively_day' => 5,

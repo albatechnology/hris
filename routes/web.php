@@ -12,6 +12,8 @@ use App\Http\Controllers\OvertimeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TimeoffController;
+use App\Jobs\AnnualLeave\ExistingEmployee;
+use App\Jobs\AnnualLeave\NewEmployee;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,10 +27,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('existing-employee', function () {
+    ExistingEmployee::dispatchSync();
+});
+Route::get('new-employee', function () {
+    NewEmployee::dispatchSync();
+});
 Auth::routes();
-// Route::get('test', function () {
-//     ExistingEmployee::dispatchSync();
-// });
 Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 

@@ -41,7 +41,7 @@ class NewEmployeeBackup implements ShouldQueue
 
         $companies = Company::select('id')->get();
         foreach ($companies as $company) {
-            $timeoffPolicy = $company->timeoffPolicies()->where('type', TimeoffPolicyType::TIME_OFF)->first(['id']);
+            $timeoffPolicy = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id']);
             $users = User::query()
                 ->where('company_id', $company->id)
                 ->whereYear('join_date', $date->format('Y'))

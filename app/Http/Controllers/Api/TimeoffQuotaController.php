@@ -52,6 +52,7 @@ class TimeoffQuotaController extends BaseController
                 $remainingBalance = TimeoffQuota::select(DB::raw('SUM(quota - used_quota) as remaining_balance'))
                     ->where('user_id', $userId)
                     ->where('timeoff_policy_id', $timeoffPolicy->id)
+                    ->whereActive()
                     ->first();
                 $timeoffPolicy->remaining_balance = (float) $remainingBalance?->remaining_balance ?? 0;
                 return $timeoffPolicy;

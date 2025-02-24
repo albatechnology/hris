@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\MediaCollection;
+use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
@@ -67,6 +68,7 @@ class TimeoffController extends BaseController
     public function store(StoreRequest $request)
     {
         $request = TimeoffService::requestTimeoffValidation($request);
+
         DB::beginTransaction();
         try {
             $timeoff = Timeoff::create($request->all());
@@ -157,8 +159,15 @@ class TimeoffController extends BaseController
         if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
             $timeoff->load(['timeoffPolicy' => fn($q) => $q->select('id', 'type')]);
             if ($timeoff->timeoffPolicy->type->hasQuota()) {
-                $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
-                if ($remainingBalance <= 0 || $remainingBalance < $timeoff->total_days) {
+                if ($timeoff->timeoffPolicy->type->is(TimeoffPolicyType::ANNUAL_LEAVE)) {
+                    $isQuotaExceeded = TimeoffService::checkTotalBalanceQuotaAL($timeoff->user_id, $timeoff->timeoff_policy_id, $timeoff->total_days, $timeoff->start_at, $timeoff->end_at) === false;
+                } else {
+                    $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
+
+                    $isQuotaExceeded = $remainingBalance <= 0 || $remainingBalance < $timeoff->total_days;
+                }
+
+                if ($isQuotaExceeded) {
                     return $this->errorResponse(message: 'User Leave balance is not enough', code: Response::HTTP_UNPROCESSABLE_ENTITY);
                 }
             }
