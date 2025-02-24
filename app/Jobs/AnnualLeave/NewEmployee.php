@@ -41,7 +41,7 @@ class NewEmployee implements ShouldQueue
         $dataQuotas = $this->getQuotas($joinDate);
         dd($dataQuotas);
 
-        $companies = Company::select('id')->get();
+        $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
             $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()

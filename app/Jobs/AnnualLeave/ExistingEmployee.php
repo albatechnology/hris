@@ -36,7 +36,7 @@ class ExistingEmployee implements ShouldQueue
         // date for calculate how long the user has been working
         $today = Carbon::now()->startOfYear();
 
-        $companies = Company::select('id')->get();
+        $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
             $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()
