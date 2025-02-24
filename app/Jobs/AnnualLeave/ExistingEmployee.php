@@ -73,66 +73,67 @@ class ExistingEmployee implements ShouldQueue
 
     public function getQuotas(string $joinDate, Carbon $compareDate, string $year): array
     {
+        $effectiveEndDate = $year . '-12-31';
         $data = [
             // [
             //     'quota' => 1,
             //     'effective_start_date' => $year . '-01-01',
-            //     'effective_end_date' => $year . '-01-31',
+            //     'effective_end_date' => $effectiveEndDate,
             // ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-02-01',
-                'effective_end_date' => date('Y-02-t'),
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-03-01',
-                'effective_end_date' => $year . '-03-31',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-04-01',
-                'effective_end_date' => $year . '-04-30',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-05-01',
-                'effective_end_date' => $year . '-05-31',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-06-01',
-                'effective_end_date' => $year . '-06-30',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-07-01',
-                'effective_end_date' => $year . '-07-31',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-08-01',
-                'effective_end_date' => $year . '-08-31',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-09-01',
-                'effective_end_date' => $year . '-09-30',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-10-01',
-                'effective_end_date' => $year . '-10-31',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-11-01',
-                'effective_end_date' => $year . '-11-30',
+                'effective_end_date' => $effectiveEndDate,
             ],
             [
                 'quota' => 1,
                 'effective_start_date' => $year . '-12-01',
-                'effective_end_date' => $year . '-12-31',
+                'effective_end_date' => $effectiveEndDate,
             ],
         ];
 
@@ -143,62 +144,62 @@ class ExistingEmployee implements ShouldQueue
                 // [
                 //     'quota' => 2,
                 //     'effective_start_date' => $year . '-01-01',
-                //     'effective_end_date' => $year . '-01-31',
+                //     'effective_end_date' => $effectiveEndDate,
                 // ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-02-01',
-                    'effective_end_date' => date('Y-02-t'),
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-03-01',
-                    'effective_end_date' => $year . '-03-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-04-01',
-                    'effective_end_date' => $year . '-04-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-05-01',
-                    'effective_end_date' => $year . '-05-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-06-01',
-                    'effective_end_date' => $year . '-06-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 2,
                     'effective_start_date' => $year . '-07-01',
-                    'effective_end_date' => $year . '-07-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-08-01',
-                    'effective_end_date' => $year . '-08-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-09-01',
-                    'effective_end_date' => $year . '-09-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-10-01',
-                    'effective_end_date' => $year . '-10-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-11-01',
-                    'effective_end_date' => $year . '-11-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-12-01',
-                    'effective_end_date' => $year . '-12-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
             ];
         } elseif ($diffInYears > 5) {
@@ -206,62 +207,62 @@ class ExistingEmployee implements ShouldQueue
                 // [
                 //     'quota' => 2,
                 //     'effective_start_date' => $year . '-01-01',
-                //     'effective_end_date' => $year . '-01-31',
+                //     'effective_end_date' => $effectiveEndDate,
                 // ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-02-01',
-                    'effective_end_date' => date('Y-02-t'),
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-03-01',
-                    'effective_end_date' => $year . '-03-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 2,
                     'effective_start_date' => $year . '-04-01',
-                    'effective_end_date' => $year . '-04-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-05-01',
-                    'effective_end_date' => $year . '-05-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-06-01',
-                    'effective_end_date' => $year . '-06-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 2,
                     'effective_start_date' => $year . '-07-01',
-                    'effective_end_date' => $year . '-07-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-08-01',
-                    'effective_end_date' => $year . '-08-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-09-01',
-                    'effective_end_date' => $year . '-09-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 2,
                     'effective_start_date' => $year . '-10-01',
-                    'effective_end_date' => $year . '-10-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-11-01',
-                    'effective_end_date' => $year . '-11-30',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
                 [
                     'quota' => 1,
                     'effective_start_date' => $year . '-12-01',
-                    'effective_end_date' => $year . '-12-31',
+                    'effective_end_date' => $effectiveEndDate,
                 ],
             ];
         }
