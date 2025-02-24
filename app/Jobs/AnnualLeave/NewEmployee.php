@@ -39,7 +39,6 @@ class NewEmployee implements ShouldQueue
         $joinDate = Carbon::now()->setDay(15)->subMonths(3);
 
         $dataQuotas = $this->getQuotas($joinDate);
-        dd($dataQuotas);
 
         $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
