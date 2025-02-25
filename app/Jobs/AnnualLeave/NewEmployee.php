@@ -59,7 +59,7 @@ class NewEmployee implements ShouldQueue
                         )
                 )
                 ->orderBy('join_date')
-                ->limit(2)
+                ->whereNotIn('id', [16, 82, 50])
                 ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
