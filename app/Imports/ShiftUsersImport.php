@@ -38,38 +38,17 @@ class ShiftUsersImport implements ToCollection
                     if ($shift) {
                         if ($today >= $value) {
                             // if change shift for today and before, just update shift_id on user attendance
-                            $user->attendances()->where('date', $value)->update([
-                                'shift_id' => $shift->id
-                            ]);
-                        } else {
-                            $todaySchedule = ScheduleService::getTodaySchedule($user, $value, ['id'], ['id']);
-                            if ($todaySchedule && $todaySchedule->shift) {
-                                $description = 'Import Shift by ' . $this->user->full_name . ' - AUTO APPROVED';
-                                try {
-                                    // delete request existing request shift
-                                    RequestShift::where('user_id', $user->id)->where('date', $value)->delete();
+                            $attendance = $user->attendances()->where('date', $value)->first();
 
-                                    $requestShift = new RequestShift();
-                                    $requestShift->user_id = $user->id;
-                                    $requestShift->schedule_id = $todaySchedule->id;
-                                    $requestShift->old_shift_id = $todaySchedule->shift->id;
-                                    $requestShift->new_shift_id = $shift->id;
-                                    $requestShift->date = $value;
-                                    $requestShift->description = $description;
-                                    $requestShift->created_by = $this->user->id;
-                                    $requestShift->saveQuietly();
-
-                                    // auto approved by uploader
-                                    $requestShift->approvals()->createQuietly([
-                                        'user_id' => $this->user->id,
-                                        'approval_status' => ApprovalStatus::APPROVED,
-                                        'approved_at' => now(),
-                                        'description' => $description,
-                                    ]);
-                                } catch (Exception $e) {
-                                    throw $e;
-                                }
+                            if ($attendance) {
+                                $attendance->update([
+                                    'shift_id' => $shift->id
+                                ]);
+                            } else {
+                                $this->createRequestShift($user, $shift, $value);
                             }
+                        } else {
+                            $this->createRequestShift($user, $shift, $value);
                         }
                     }
                 }
@@ -77,10 +56,35 @@ class ShiftUsersImport implements ToCollection
         }
     }
 
-    // public function rules(): array
-    // {
-    //     return [
-    //         '0' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
-    //     ];
-    // }
+    public function createRequestShift(User $user, Shift $shift, string $value)
+    {
+        $todaySchedule = ScheduleService::getTodaySchedule($user, $value, ['id'], ['id']);
+        if ($todaySchedule && $todaySchedule->shift) {
+            $description = 'Import Shift by ' . $this->user->full_name . ' - AUTO APPROVED';
+            try {
+                // delete request existing request shift
+                RequestShift::where('user_id', $user->id)->where('date', $value)->delete();
+
+                $requestShift = new RequestShift();
+                $requestShift->user_id = $user->id;
+                $requestShift->schedule_id = $todaySchedule->id;
+                $requestShift->old_shift_id = $todaySchedule->shift->id;
+                $requestShift->new_shift_id = $shift->id;
+                $requestShift->date = $value;
+                $requestShift->description = $description;
+                $requestShift->created_by = $this->user->id;
+                $requestShift->saveQuietly();
+
+                // auto approved by uploader
+                $requestShift->approvals()->createQuietly([
+                    'user_id' => $this->user->id,
+                    'approval_status' => ApprovalStatus::APPROVED,
+                    'approved_at' => now(),
+                    'description' => $description,
+                ]);
+            } catch (Exception $e) {
+                throw $e;
+            }
+        }
+    }
 }
