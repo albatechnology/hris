@@ -41,7 +41,7 @@ class ScheduleService
         $requestShift = RequestShift::select('id', 'schedule_id', 'new_shift_id')
             ->where('user_id', $user->id)->approved()
             ->whereHas('schedule', fn($q) => $q->where('type', $scheduleType))
-            ->whereDate('date', $date)->first();
+            ->whereDate('date', $date)->latest('id')->first();
 
         if ($requestShift) {
             $schedule =  Schedule::select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
