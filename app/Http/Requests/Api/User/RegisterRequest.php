@@ -46,6 +46,7 @@ class RegisterRequest extends FormRequest
         $data = [
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
+            'email_verified_at' => $this->email_verified_at ? date('Y-m-d H:i:s', strtotime($this->email_verified_at)) : null,
             'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
 
@@ -73,6 +74,7 @@ class RegisterRequest extends FormRequest
             'name' => 'required|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
+            'email_verified_at' => 'nullable|date',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',

@@ -208,8 +208,10 @@ class UserController extends BaseController
                 })->all();
             $user->branches()->createMany($branchIds);
 
-            $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
-            $user->notify(new ($notificationType->getNotificationClass())($notificationType));
+            if (!empty($user->password)) {
+                $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
+                $user->notify(new ($notificationType->getNotificationClass())($notificationType));
+            }
 
             DB::commit();
         } catch (Exception $th) {
