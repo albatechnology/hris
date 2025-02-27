@@ -183,6 +183,12 @@ class UserController extends BaseController
         DB::beginTransaction();
         try {
             $user = User::create($request->validated());
+
+            if ($request->hasFile('photo_profile') && $request->file('photo_profile')->isValid()) {
+                $mediaCollection = MediaCollection::USER->value;
+                $user->addMediaFromRequest('photo_profile')->toMediaCollection($mediaCollection);
+            }
+
             $user->detail()->create($request->validated());
             $user->payrollInfo()->create($request->validated());
             $user->positions()->createMany($request->positions ?? []);

@@ -74,7 +74,7 @@ class RegisterRequest extends FormRequest
             'name' => 'required|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
-            'email_verified_at' => 'nullable|date',
+            'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
             'nik' => 'nullable',
@@ -84,6 +84,7 @@ class RegisterRequest extends FormRequest
             'sign_date' => 'nullable|date',
             'end_contract_date' => 'nullable|date',
             'resign_date' => 'nullable|date',
+            'photo_profile' => 'nullable|mimes:' . config('app.file_mimes_types'),
 
             'no_ktp' => 'required|string',
             'kk_no' => 'nullable|string',
