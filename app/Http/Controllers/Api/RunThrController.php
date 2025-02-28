@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\CountrySettingKey;
 use App\Exports\RunThrExport;
+use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Requests\Api\RunThr\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunThr\StoreRequest;
-use App\Http\Requests\Api\RunThr\ExportRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Bank;
 use App\Models\Company;
@@ -41,14 +41,15 @@ class RunThrController extends BaseController
         $data = QueryBuilder::for(RunThr::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('period'),
+                'thr_date',
+                'payment_date',
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
                 'id',
                 'company_id',
-                'period',
-                'payment_schedule',
+                'thr_date',
+                'payment_date',
                 'created_at',
             ])
             ->paginate($this->per_page);
@@ -109,7 +110,7 @@ class RunThrController extends BaseController
         DB::beginTransaction();
         try {
             foreach ($request->user_components as $userComponent) {
-                $runThrUserComponent = RunThrUserComponent::where('run_payroll_user_id', $runThrUser->id)->findOrFail($userComponent['id'], ['id', 'amount']);
+                $runThrUserComponent = RunThrUserComponent::where('run_thr_user_id', $runThrUser->id)->findOrFail($userComponent['id'], ['id', 'amount']);
                 $runThrUserComponent->update(['amount' => $userComponent['amount']]);
             }
 
@@ -173,10 +174,10 @@ class RunThrController extends BaseController
 
     public function exportOcbc(ExportRequest $request, int $id)
     {
-        $runThr = RunThr::select('id', 'code', 'payment_schedule')->findTenanted($id);
+        $runThr = RunThr::select('id', 'code', 'payment_date')->findTenanted($id);
         $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
 
-        $datas = RunThrUser::where('run_payroll_id', $id)
+        $datas = RunThrUser::where('run_thr_id', $id)
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
@@ -214,7 +215,7 @@ class RunThrController extends BaseController
             $body .= 'P'; // 1 M
             $body .= substr(trim($runThrUser->user->payrollInfo->bank_account_no) . str_repeat(' ', 34), 0, 34); // 34 M
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
-            $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
 
             $body .= str_repeat(' ', 255); // 255 O
@@ -236,14 +237,14 @@ class RunThrController extends BaseController
             'OrgIDBulk' => substr(trim($bank->code) . str_repeat(' ', 12), 0, 12), // 12 M
             'ProductType' => 'BLIDR', // 5 M
             'ServiceID' => '10001', // 5 M
-            'ValueDate' => date('Ymd', strtotime($runThr->payment_schedule)), // 8 M
+            'ValueDate' => date('Ymd', strtotime($runThr->payment_date)), // 8 M
             'DebitAcctCcy' => 'IDR', // 3 M
             'DebitAcctNo' => substr(str_repeat(' ', 19) . trim($bank->account_no), -19, 19), // 19 M
         ];
 
         $content = implode('', array_values($header)) . $body;
 
-        $fileName = "Payroll $runThr->code - OCBC.txt";
+        $fileName = "THR $runThr->code - OCBC.txt";
         return response($content, 200, [
             'Content-type' => 'text/plain',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
@@ -252,10 +253,10 @@ class RunThrController extends BaseController
 
     public function exportBca(ExportRequest $request, int $id)
     {
-        $runThr = RunThr::select('id', 'code', 'payment_schedule')->findTenanted($id);
+        $runThr = RunThr::select('id', 'code', 'payment_date')->findTenanted($id);
         $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
 
-        $datas = RunThrUser::where('run_payroll_id', $id)
+        $datas = RunThrUser::where('run_thr_id', $id)
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
@@ -286,24 +287,24 @@ class RunThrController extends BaseController
             $body .= PHP_EOL;
             $body .= '0'; // 1 default_1
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_no, 0, 10); // 10 account_number
-            $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp, 2, '', ''), -15, 15); // 15 pay_amount
+            $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
             $body .= substr($runThrUser->user->nik . str_repeat(' ', 10), 0, 10); // 10 nik;
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30); // 30 name
             $body .= substr('DEP0' . str_repeat(' ', 4), 0, 4); // 4 DEP0
-            $totalAmount += $runThrUser->thp;
+            $totalAmount += $runThrUser->thp_thr;
         }
 
         $totalData = $datas->count();
         $header = [
             'code' => substr(str_repeat(' ', 24) . trim($bank->code), -24, 24), // 24 M
-            'day' => date('d', strtotime($runThr->payment_schedule)), // 2 M
+            'day' => date('d', strtotime($runThr->payment_date)), // 2 M
             'default_1' => '01', // 2 M
             'account_number' => substr(trim($bank->account_no) . str_repeat(' ', 10), 0, 10), // 10 M
             'default_2' => '0000', // 4 M
             'total_data' => substr(str_repeat('0', 5) . $totalData, -5, 5), // 5 M
             'total_amount' => substr(str_repeat('0', 17) . number_format($totalAmount, 2, '.', ''), -17, 17), // 17 M (decimal 2)
-            'month' => date('m', strtotime($runThr->payment_schedule)), // 2 M
-            'year' => date('Y', strtotime($runThr->payment_schedule)), // 4 M
+            'month' => date('m', strtotime($runThr->payment_date)), // 2 M
+            'year' => date('Y', strtotime($runThr->payment_date)), // 4 M
         ];
 
         $header = trim(implode('', array_values($header)));
@@ -311,7 +312,7 @@ class RunThrController extends BaseController
 
         $content = $header . $body;
 
-        $fileName = "Payroll $runThr->code - BCA.txt";
+        $fileName = "THR $runThr->code - BCA.txt";
         return response($content, 200, [
             'Content-type' => 'text/plain',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
