@@ -10,7 +10,8 @@ class CompanyTenantedRule implements ValidationRule
     public function __construct(
         private $model = null,
         private string $message = 'Company not found',
-        private ?Closure $query = null
+        private ?Closure $query = null,
+        private ?Closure $outsideQuery = null
     ) {
         if (is_null($model)) {
             $this->model = \App\Models\Company::class;
@@ -24,7 +25,7 @@ class CompanyTenantedRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $data = $this->model::where(fn($q) => $q->tenanted()->when($this->query, $this->query))->where('id', $value)->exists();
+        $data = $this->model::where(fn($q) => $q->tenanted()->when($this->query, $this->query))->when($this->outsideQuery, $this->outsideQuery)->where('id', $value)->exists();
 
         if (!$data) {
             $fail($this->message);

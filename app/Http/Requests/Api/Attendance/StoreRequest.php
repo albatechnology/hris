@@ -42,9 +42,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found', fn($q) => $q->withTrashed())],
-            // 'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
-            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->withTrashed()->orWhereNull('company_id'))],
+            'schedule_id' => ['required', new CompanyTenantedRule(model: Schedule::class, message: 'Schedule not found', outsideQuery: fn($q) => $q->withTrashed())],
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'), fn($q) => $q->withTrashed())],
             'is_clock_in' => 'required|boolean',
             'time' => 'required|date_format:Y-m-d H:i:s',
             'type' => ['required', Rule::enum(AttendanceType::class)],
