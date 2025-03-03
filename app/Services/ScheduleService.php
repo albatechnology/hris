@@ -27,6 +27,7 @@ class ScheduleService
         $todayAttendance = AttendanceService::getTodayAttendance(date: $date, user: $user, isCheckByDetails: false);
         if ($todayAttendance) {
             $schedule =  Schedule::select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+                ->withTrashed()
                 ->whereApproved()
                 ->where('id', $todayAttendance->schedule_id)
                 ->first();
