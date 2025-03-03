@@ -181,7 +181,7 @@ class RunThrController extends BaseController
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
-                    $q->withTrashed()->select('id', 'name', 'last_name')
+                    $q->withTrashed()->select('id', 'name', 'last_name', 'join_date')
                         ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency', 'ptkp_status'));
                 }
             ])
@@ -260,7 +260,7 @@ class RunThrController extends BaseController
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
-                    $q->withTrashed()->select('id', 'name', 'last_name', 'nik')
+                    $q->withTrashed()->select('id', 'name', 'last_name', 'join_date', 'nik')
                         ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'ptkp_status'));
                 }
             ])
