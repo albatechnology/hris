@@ -216,13 +216,13 @@ class RunThrService
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runThrUser);
 
-            // prorate basic salary
-            $joinDate = Carbon::parse($user->join_date)->startOfDay();
-            $totalWorkingMonths = $joinDate->diffInDays($request['thr_date']);
-            $totalWorkingMonths = intdiv($totalWorkingMonths, 30);
-            $thrMultiplier = $totalWorkingMonths >= 12 ? 1 : (($totalWorkingMonths + 1) / 12);
+            // // prorate basic salary
+            // $joinDate = Carbon::parse($user->join_date)->startOfDay();
+            // $totalWorkingMonths = $joinDate->diffInDays($request['thr_date']);
+            // $totalWorkingMonths = intdiv($totalWorkingMonths, 30);
+            // $thrMultiplier = $totalWorkingMonths >= 12 ? 1 : (($totalWorkingMonths + 1) / 12);
 
-            $amount = $thrMultiplier * $amount;
+            // $amount = $thrMultiplier * $amount;
 
             self::createComponent($runThrUser, $basicSalaryComponent, $amount);
             // END

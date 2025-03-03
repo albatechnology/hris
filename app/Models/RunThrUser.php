@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PayrollComponentCategory;
 use App\Services\RunThrService;
 use App\Traits\Models\BelongsToUser;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -43,6 +44,7 @@ class RunThrUser extends BaseModel
         'total_earning',
         'total_deduction',
         'total_month',
+        'thr_prorate',
         'total_beban_month',
         'total_tax_month',
         'tax_thr',
@@ -55,9 +57,21 @@ class RunThrUser extends BaseModel
         return round($this->total_earning + $benefit);
     }
 
+    public function getThrProrateAttribute(): int
+    {
+        // prorate basic salary
+        $joinDate = Carbon::parse($this->user->join_date)->startOfDay();
+        $totalWorkingMonths = $joinDate->diffInDays($this->runThr->thr_date);
+        $totalWorkingMonths = intdiv($totalWorkingMonths, 30);
+        $thrMultiplier = $totalWorkingMonths >= 12 ? 1 : (($totalWorkingMonths + 1) / 12);
+
+        return $thrMultiplier * $this->basic_salary;
+    }
+
     public function getTotalBebanMonthAttribute(): int
     {
-        return round($this->total_month + $this->basic_salary);
+        return round($this->total_month + $this->thr_prorate);
+        // return round($this->total_month + $this->basic_salary);
     }
 
     public function getTotalTaxMonthAttribute(): int
@@ -73,7 +87,7 @@ class RunThrUser extends BaseModel
 
     public function getThpThrAttribute(): int
     {
-        return $this->basic_salary - $this->tax_thr;
+        return $this->thr_prorate - $this->tax_thr;
     }
 
     public function getThpAttribute(): int

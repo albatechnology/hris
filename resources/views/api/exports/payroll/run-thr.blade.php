@@ -73,7 +73,7 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalBasicSalary += $runThrUser->basic_salary;
+                    $totalBasicSalary += $runThrUser->thr_prorate;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
@@ -107,7 +107,7 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
-                    <td>{{ $runThrUser->basic_salary }}</td>
+                    <td>{{ $runThrUser->thr_prorate }}</td>
 
                     {{-- @foreach ($allowances as $allowance)
                         @php
@@ -205,7 +205,7 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalBasicSalary += $runThrUser->basic_salary;
+                    $totalBasicSalary += $runThrUser->thr_prorate;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
@@ -239,7 +239,7 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
-                    <td>{{ $runThrUser->basic_salary }}</td>
+                    <td>{{ $runThrUser->thr_prorate }}</td>
 
                     {{-- @foreach ($allowances as $allowance)
                         @php
@@ -337,7 +337,7 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalBasicSalary += $runThrUser->basic_salary;
+                    $totalBasicSalary += $runThrUser->thr_prorate;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
@@ -371,7 +371,7 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
-                    <td>{{ $runThrUser->basic_salary }}</td>
+                    <td>{{ $runThrUser->thr_prorate }}</td>
 
                     {{-- @foreach ($allowances as $allowance)
                         @php

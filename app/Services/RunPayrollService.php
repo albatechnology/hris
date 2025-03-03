@@ -265,11 +265,16 @@ class RunPayrollService
                         // potongan = (totalAlpa/totalHariKerja)*(basicSalary+SUM(allowance))
                         $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $cutOffStartDate, $cutOffEndDate);
                         $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
+                        // dump($user->toArray());
+                        // dump($totalWorkingDays);
+                        // dump($totalAlpa);
 
                         $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::OVERTIME]))->sum('amount');
+                        // dump($totalAllowance);
                         $amount = round(max(($totalAlpa / $totalWorkingDays) * ($userBasicSalary + $totalAllowance), 0));
+                        // dd($amount);
 
-                        $amount = self::calculatePayrollComponentPeriodType($alpaComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                        // $amount = self::calculatePayrollComponentPeriodType($alpaComponent, $amount, $totalWorkingDays, $runPayrollUser);
                     }
 
                     $amount = self::calculatePayrollComponentPeriodType($alpaComponent, $amount, $totalWorkingDays, $runPayrollUser);
