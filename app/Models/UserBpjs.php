@@ -43,7 +43,7 @@ class UserBpjs extends BaseModel
             }
 
             if (empty($model->upah_bpjs_ketenagakerjaan)) {
-                $upah_bpjs_ketenagakerjaan = $model->user->payrollInfo->basic_salary > 10042300 ? 10042300 : $model->user->payrollInfo->basic_salary;
+                $upah_bpjs_ketenagakerjaan = $model->user->payrollInfo->basic_salary > 10547400 ? 10547400 : $model->user->payrollInfo->basic_salary;
                 $model->upah_bpjs_ketenagakerjaan = $upah_bpjs_ketenagakerjaan;
             }
 

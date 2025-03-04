@@ -58,7 +58,7 @@ class CountrySeeder extends Seeder
         [
           'country_id' => $country->id,
           'key' => CountrySettingKey::JP_MAXIMUM_SALARY,
-          'value' => 10042300,
+          'value' => 10547400,
         ],
         [
           'country_id' => $country->id,

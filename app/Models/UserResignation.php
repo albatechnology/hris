@@ -85,7 +85,7 @@ class UserResignation extends BaseModel implements TenantedInterface
                     $upahBpjsKesehatan = $model->basic_salary;
                 }
 
-                $upahBpjsKetenagakerjaan = CountrySetting::where('country_id', $model->branch->company->country_id)->where('key', CountrySettingKey::JP_MAXIMUM_SALARY)->value('value') ?? 10042300;
+                $upahBpjsKetenagakerjaan = CountrySetting::where('country_id', $model->branch->company->country_id)->where('key', CountrySettingKey::JP_MAXIMUM_SALARY)->value('value') ?? 10547400;
                 if ($upahBpjsKetenagakerjaan && $model->basic_salary < $upahBpjsKetenagakerjaan) {
                     $upahBpjsKetenagakerjaan = $model->basic_salary;
                 }
