@@ -18,7 +18,7 @@ class RequestTimeoff extends Notification
      */
     public function __construct(private NotificationType $notificationType, private User $user, private Timeoff $timeoff)
     {
-        //
+        $this->timeoff->load(['timeoffPolicy' => fn($q) => $q->select('id', 'code')]);
     }
 
     /**
@@ -52,11 +52,13 @@ class RequestTimeoff extends Notification
         if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
             $message = sprintf(
                 $this->notificationType->getMessage(),
+                $this->timeoff->timeoffPolicy->code,
                 date('d M Y', strtotime($this->timeoff->start_at)),
             );
         } else {
             $message = sprintf(
                 $this->notificationType->getMessage(),
+                $this->timeoff->timeoffPolicy->code,
                 date('d M Y', strtotime($this->timeoff->start_at)) . ' - ' . date('d M Y', strtotime($this->timeoff->end_at)),
             );
         }
@@ -78,11 +80,13 @@ class RequestTimeoff extends Notification
         if (date('Y-m-d', strtotime($this->timeoff->start_at)) == date('Y-m-d', strtotime($this->timeoff->end_at))) {
             $body = sprintf(
                 $this->notificationType->getMessage(),
+                $this->timeoff->timeoffPolicy->code,
                 date('d M Y', strtotime($this->timeoff->start_at)),
             );
         } else {
             $body = sprintf(
                 $this->notificationType->getMessage(),
+                $this->timeoff->timeoffPolicy->code,
                 date('d M Y', strtotime($this->timeoff->start_at)) . ' - ' . date('d M Y', strtotime($this->timeoff->end_at)),
             );
         }
