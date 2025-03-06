@@ -17,6 +17,7 @@ use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\QueryBuilder\AllowedInclude;
 
 class ShiftController extends BaseController
 {
@@ -41,7 +42,12 @@ class ShiftController extends BaseController
                 'clock_in',
                 'clock_out',
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes([
+                'company',
+                AllowedInclude::callback('schedules', function ($query) {
+                    $query->select('id', 'name');
+                }),
+            ])
             ->allowedSorts([
                 'id',
                 'company_id',
@@ -58,6 +64,7 @@ class ShiftController extends BaseController
     public function show(int $id)
     {
         $shift = Shift::findTenanted($id);
+        $shift->load(['schedules' => fn($q) => $q->select('id', 'name')]);
         return new ShiftResource($shift);
     }
 
