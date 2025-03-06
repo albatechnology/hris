@@ -12,6 +12,7 @@ use App\Exports\UserShiftsReport;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
 use App\Http\Resources\DefaultResource;
 use App\Imports\ShiftUsersImport;
+use App\Models\Event;
 use App\Models\User;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
@@ -141,9 +142,13 @@ class ShiftController extends BaseController
             ->get(['id', 'company_id', 'name', 'last_name', 'nik']);
 
         $data = [];
+        $companyId = null;
         foreach ($users as $user) {
-            // $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['start_at', 'end_at']);
-            // $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['start_at', 'end_at']);
+            if ($companyId !== $user->company_id) {
+                // $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['name', 'start_at', 'end_at']);
+                $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['name', 'start_at', 'end_at']);
+                $companyId = $user->company_id;
+            }
 
             $user->setAppends([]);
             $dataShifts = [];
@@ -164,15 +169,16 @@ class ShiftController extends BaseController
                 // }
 
                 // if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
-                //     $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
-                //         return date('Y-m-d', strtotime($nh->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($nh->end_at)) >= $date->format("Y-m-d");
-                //     });
+                if ($schedule?->is_overide_national_holiday == false) {
+                    $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                        return date('Y-m-d', strtotime($nh->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($nh->end_at)) >= $date->format("Y-m-d");
+                    });
 
-                //     if ($nationalHoliday) {
-                //         $shift = 'national_holiday';
-                //         // $shiftType = 'national_holiday';
-                //     }
-                // }
+                    if ($nationalHoliday) {
+                        $shift = 'national_holiday';
+                        // $shiftType = 'national_holiday';
+                    }
+                }
 
                 $dataShifts[] = [
                     'date' => $date->format("Y-m-d"),
