@@ -43,7 +43,17 @@ class RegisterRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        $email = $this->email;
+        if (!$email) {
+            if ($this->nik) {
+                $email = $this->nik . '@gmail.com';
+            } else {
+                $email = str_replace(' ', '', $this->name) . time() . '@gmail.com';
+            }
+        }
+
         $data = [
+            'email' => $email,
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
             'email_verified_at' => $this->email_verified_at ? date('Y-m-d H:i:s', strtotime($this->email_verified_at)) : null,
@@ -73,7 +83,7 @@ class RegisterRequest extends FormRequest
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'last_name' => 'nullable|string',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
