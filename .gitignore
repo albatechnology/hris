@@ -23,5 +23,5 @@ Homestead.json
 /.vagrant
 .phpunit.result.cache
 
-/bootstrap/cache
+# /bootstrap/cache
 firebase_credentials.json
