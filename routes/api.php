@@ -165,17 +165,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('schedules', ScheduleController::class);
 
-    Route::get('attendances/clear', [AttendanceController::class, 'clear']);
-    Route::get('attendances/employees/summary', [AttendanceController::class, 'employeesSummary']);
-    Route::get('attendances/employees', [AttendanceController::class, 'employees']);
-    Route::get('attendances/logs', [AttendanceController::class, 'logs']);
-    Route::get('attendances/report/{export?}', [AttendanceController::class, 'report']);
-    Route::post('attendances/manual-attendances', [AttendanceController::class, 'manualAttendance']);
-    Route::post('attendances/request', [AttendanceController::class, 'request']);
-    Route::get('attendances/approvals', [AttendanceController::class, 'approvals']);
-    Route::get('attendances/approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
-    Route::get('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
-    Route::put('attendances/approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
+    Route::group(['prefix' => 'attendances'], function () {
+        Route::get('clear', [AttendanceController::class, 'clear']);
+        Route::get('employees/summary', [AttendanceController::class, 'employeesSummary']);
+        Route::get('employees', [AttendanceController::class, 'employees']);
+        Route::get('logs', [AttendanceController::class, 'logs']);
+        Route::get('report/{export?}', [AttendanceController::class, 'report']);
+        Route::post('manual-attendances', [AttendanceController::class, 'manualAttendance']);
+        Route::post('request', [AttendanceController::class, 'request']);
+        Route::get('approvals', [AttendanceController::class, 'approvals']);
+        Route::get('approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
+        Route::get('approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
+        Route::put('approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
+        Route::put('{attendance}/restore', [AttendanceController::class, 'restore']);
+        Route::delete('{attendance}/force-delete', [AttendanceController::class, 'forceDelete']);
+    });
     Route::apiResource('attendances', AttendanceController::class);
 
     // Route::group(['prefix' => 'timeoff-policies/{timeoff_policy}'], function () {
