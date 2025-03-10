@@ -9,6 +9,7 @@ use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -23,8 +24,11 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         'request_type',
         'start_at',
         'end_at',
-        'delegate_to',
         'reason',
+        'is_cancelled',
+        'cancelled_by',
+        'cancelled_at',
+        'timeoff_quota_histories',
         // 'approval_status',
         // 'approved_by',
         // 'approved_at',
@@ -33,6 +37,8 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
     protected $casts = [
         'total_days' => 'float',
         'request_type' => TimeoffRequestType::class,
+        'is_cancelled' => 'boolean',
+        'timeoff_quota_histories' => 'array',
         // 'approval_status' => ApprovalStatus::class,
     ];
 
@@ -73,9 +79,14 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         return $this->belongsTo(TimeoffPolicy::class);
     }
 
-    public function delegateTo(): BelongsTo
+    public function cancelledBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'delegate_to');
+        return $this->belongsTo(User::class, '');
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
     }
 
     public function getFilesAttribute()

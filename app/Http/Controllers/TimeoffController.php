@@ -32,7 +32,7 @@ class TimeoffController extends Controller
     public function index(Request $request): mixed
     {
         if ($request->ajax()) {
-            $query = $this->model->with('user', 'timeoffPolicy', 'delegateTo');
+            $query = $this->model->with('user', 'timeoffPolicy');
             $table = DataTables::of($query);
 
             $table->addColumn('checkbox', '&nbsp;');

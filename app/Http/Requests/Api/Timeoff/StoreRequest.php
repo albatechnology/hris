@@ -48,7 +48,6 @@ class StoreRequest extends FormRequest
             'start_at' => 'required|date_format:Y-m-d H:i',
             'end_at' => 'required|date_format:Y-m-d H:i',
             'reason' => 'nullable|string',
-            'delegate_to' => 'nullable|exists:users,id',
             'total_days' => 'required|numeric|multiple_of:0.5',
 
             'files' => 'nullable|array',

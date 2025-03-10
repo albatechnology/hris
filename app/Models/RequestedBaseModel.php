@@ -142,7 +142,7 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         return !!$approved;
     }
 
-    public function checkAndUpdate(User $user = null): void
+    public function checkAndUpdate(?User $user = null): void
     {
         if (!$user) {
             $user = RequestApprovalService::getUser($this);

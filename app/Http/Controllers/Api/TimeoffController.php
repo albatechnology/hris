@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
 use App\Models\Timeoff;
+use App\Models\TimeoffQuota;
 use App\Services\ScheduleService;
 use App\Services\TimeoffService;
 use Exception;
@@ -35,21 +36,24 @@ class TimeoffController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('timeoff_policy_id'),
-                AllowedFilter::exact('delegate_to'),
+                AllowedFilter::exact('cancelled_by'),
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'request_type',
+                'is_cancelled',
             ])
-            ->allowedIncludes(['user', 'timeoffPolicy', 'delegateTo'])
+            ->allowedIncludes(['user', 'timeoffPolicy', 'cancelledBy'])
             ->allowedSorts([
                 'id',
                 'user_id',
                 'timeoff_policy_id',
-                'delegate_to',
                 'start_at',
                 'end_at',
                 'request_type',
+                'is_cancelled',
+                'cancelled_by',
+                'cancelled_at',
                 'created_at',
             ])
             ->paginate($this->per_page);
@@ -60,7 +64,7 @@ class TimeoffController extends BaseController
     public function show(int $id)
     {
         $timeoff = Timeoff::findTenanted($id);
-        $timeoff->load(['user', 'timeoffPolicy', 'delegateTo', 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))]);
+        $timeoff->load(['user', 'timeoffPolicy', 'cancelledBy', 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))]);
 
         return new TimeoffResource($timeoff);
     }
@@ -129,9 +133,62 @@ class TimeoffController extends BaseController
         return new TimeoffResource($timeoff);
     }
 
+    public function cancel(Timeoff $timeoff)
+    {
+        /**
+         * if approval_status is approved, reverse timeoff quota from timeoff_quota_histories
+         *
+         */
+
+        if (date('Y-m-d', strtotime($timeoff->start_at)) < date('Y-m-d')) {
+            return $this->errorResponse(message: 'Cannot cancel timeoff before start date', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if (!$timeoff->is_cancelled) {
+            DB::beginTransaction();
+            try {
+                if ($timeoff->approval_status == ApprovalStatus::APPROVED->value) {
+                    foreach ($timeoff->timeoff_quota_histories as $quota) {
+                        $timeoffQuota = TimeoffQuota::select(['id', 'quota', 'used_quota'])->firstWhere('id', $quota['timeoff_quota_id']);
+                        if ($timeoffQuota) {
+                            $oldBalance = $timeoffQuota->balance;
+                            $timeoffQuota->used_quota = max($timeoffQuota->used_quota - $quota['balance'], 0);
+                            $timeoffQuota->save();
+
+                            $timeoffQuota->timeoffQuotaHistories()->create([
+                                'user_id' => $timeoff->user->id,
+                                'is_increment' => true,
+                                'old_balance' => $oldBalance,
+                                'new_balance' => $timeoffQuota->balance,
+                                'description' => "REVERSE QUOTA FROM CANCEL TIMEOFF ($timeoff->id)",
+                            ]);
+                        }
+                    }
+                }
+
+                $timeoff->attendances()->delete();
+
+                $timeoff->update([
+                    'is_cancelled' => true,
+                    'cancelled_by' => auth('sanctum')->id(),
+                    'cancelled_at' => now(),
+                    'timeoff_quota_histories' => null,
+                ]);
+                DB::commit();
+            } catch (Exception $e) {
+                DB::rollBack();
+                return $this->errorResponse(message: $e->getMessage());
+            }
+        }
+
+        return (new TimeoffResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+    }
+
     public function approve(Timeoff $timeoff, ApproveRequest $request)
     {
-        $requestApproval = $timeoff->approvals()->where('user_id', auth()->id())->first();
+        if ($timeoff->is_cancelled) return $this->errorResponse(message: 'Request is cancelled', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        $requestApproval = $timeoff->approvals()->where('user_id', auth('sanctum')->id())->first();
 
         if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
 
@@ -232,21 +289,24 @@ class TimeoffController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('timeoff_policy_id'),
-                AllowedFilter::exact('delegate_to'),
+                AllowedFilter::exact('cancelled_by'),
                 AllowedFilter::scope('start_at'),
                 AllowedFilter::scope('end_at'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'request_type',
+                'is_cancelled',
             ])
-            ->allowedIncludes(['timeoffPolicy', 'delegateTo'])
+            ->allowedIncludes(['timeoffPolicy', 'cancelledBy'])
             ->allowedSorts([
                 'id',
                 'user_id',
                 'timeoff_policy_id',
-                'delegate_to',
                 'start_at',
                 'end_at',
                 'request_type',
+                'is_cancelled',
+                'cancelled_by',
+                'cancelled_at',
                 'created_at',
             ])
             ->paginate($this->per_page);

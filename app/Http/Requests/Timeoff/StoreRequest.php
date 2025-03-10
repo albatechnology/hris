@@ -33,7 +33,6 @@ class StoreRequest extends FormRequest
             'start_at' => 'required',
             'end_at' => 'required',
             'reason' => 'nullable|string',
-            'delegate_to' => 'nullable|exists:users,id',
         ];
     }
 }

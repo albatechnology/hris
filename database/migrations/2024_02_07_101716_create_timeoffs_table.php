@@ -21,7 +21,6 @@ return new class extends Migration
             $table->timestamp('start_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('end_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->text('reason')->nullable();
-            $table->foreignId('delegate_to')->nullable();
             // $table->string('approval_status')->default(ApprovalStatus::PENDING);
             // $table->foreignId('approved_by')->nullable();
             // $table->timestamp('approved_at')->nullable();

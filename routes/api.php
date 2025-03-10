@@ -193,6 +193,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('timeoffs/approvals', [TimeoffController::class, 'approvals']);
     Route::get('timeoffs/approvals/count-total', [TimeoffController::class, 'countTotalapprovals']);
     Route::group(['prefix' => 'timeoffs/{timeoff}'], function () {
+        Route::put('cancel', [TimeoffController::class, 'cancel']);
         Route::put('approve', [TimeoffController::class, 'approve']);
     });
     Route::apiResource('timeoffs', TimeoffController::class);
