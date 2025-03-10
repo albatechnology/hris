@@ -148,7 +148,7 @@ class TimeoffController extends BaseController
             DB::beginTransaction();
             try {
                 if ($timeoff->approval_status == ApprovalStatus::APPROVED->value) {
-                    foreach ($timeoff->timeoff_quota_histories as $quota) {
+                    foreach ($timeoff->timeoff_quota_histories ?? [] as $quota) {
                         $timeoffQuota = TimeoffQuota::select(['id', 'quota', 'used_quota'])->firstWhere('id', $quota['timeoff_quota_id']);
                         if ($timeoffQuota) {
                             $oldBalance = $timeoffQuota->balance;
