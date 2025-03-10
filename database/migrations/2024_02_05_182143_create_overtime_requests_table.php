@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('schedule_id')->constrained();
             $table->foreignId('shift_id')->constrained();
-            // $table->foreignId('overtime_id')->constrained();
+            $table->foreignId('overtime_id')->constrained();
             // $table->string('type')->default(OvertimeRequestType::OVERTIME->value);
             $table->date('date');
             $table->boolean('is_after_shift')->default(true);
