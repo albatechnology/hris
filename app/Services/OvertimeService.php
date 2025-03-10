@@ -22,7 +22,8 @@ class OvertimeService
 {
     public static function calculateOb(User $user, Collection $overtimeRequests): int|float
     {
-        $basicSalary = $user->payrollInfo?->basic_salary > $user->branch->umk ? $user->payrollInfo?->basic_salary : $user->branch->umk;
+        $umk = $user->branch?->umk ?? 0;
+        $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
 
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
