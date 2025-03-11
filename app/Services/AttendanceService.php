@@ -206,8 +206,9 @@ class AttendanceService
             ->with([
                 'clockIn' => fn($q) => $q->approved()->select('id', 'attendance_id'),
                 'clockOut' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'timeoff' => fn($q) => $q->select('id', 'is_cancelled'),
             ])
-            ->get(['id', 'date']);
+            ->get(['id', 'date', 'timeoff_id']);
 
         $totalAlpa = 0;
         foreach ($dateRange as $date) {
@@ -233,6 +234,10 @@ class AttendanceService
             $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
             if (!$attendanceOnDate) {
                 $totalAlpa++;
+                continue;
+            }
+
+            if ($attendanceOnDate->timeoff && $attendanceOnDate->timeoff->is_cancelled == false) {
                 continue;
             }
 
@@ -317,7 +322,6 @@ class AttendanceService
 
     public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
     {
-        // dump('remainingTimeremainingTime', $remainingTime);
         /**
          *
          * dispensasi keterlambatan hanya berlaku jika is_enable_grace_period == true. selain itu dihitung terlambat
@@ -336,8 +340,6 @@ class AttendanceService
          *
          */
 
-        // dump($shift->toArray());
-        // dump($attendanceDetail->toArray());
 
         $tolerance = $shift->time_dispensation;
         $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
@@ -365,9 +367,6 @@ class AttendanceService
         $diffInTime = "00:00:00";
         $realDiffInMinute = floor($diffInSeconds / 60);
         $diffInMinutes = $realDiffInMinute;
-        // dump('remainingTime eee', $remainingTime);
-        // dump($diffInSeconds);
-        // dump('realDiffInMinute 1', $realDiffInMinute);
 
         if ($shift->is_enable_grace_period === true) {
             if (($remainingTime + $realDiffInMinute) > $tolerance) {
@@ -375,7 +374,6 @@ class AttendanceService
                 $remainingTime = 0;
                 $diffInTime = gmdate('H:i:s', $diffInSeconds);
             } else {
-                // dump('masuk sini');
                 $remainingTime = $tolerance - ($remainingTime + $realDiffInMinute);
                 $diffInMinutes = 0;
             }
@@ -410,8 +408,6 @@ class AttendanceService
     //      *
     //      */
 
-    //     dump($shift->toArray());
-    //     dump($attendanceDetail->toArray());
 
     //     $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
     //     $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
@@ -438,15 +434,10 @@ class AttendanceService
 
     //     $diffInTime = "00:00:00";
     //     $diffInMinutes = floor($diffInSeconds / 60);
-    //     dump($diffInSeconds);
-    //     dump('diffInMinutes 1', $diffInMinutes);
 
     //     if ($shift->is_enable_grace_period === true) {
     //         $timeDispensation = $shift->time_dispensation <= 0 ? 0 : $shift->time_dispensation;
     //         $remainingTime = $timeDispensation <= 0 ? 0 : $timeDispensation - $diffInMinutes;
-    //         dump($remainingTime);
-    //         dump($timeDispensation);
-    //         dump('remainingTime & timeDispensation');
 
 
     //         if ($diffInMinutes > $tolerance) {
@@ -466,14 +457,11 @@ class AttendanceService
     //         // if (!$timeDispensation && $timeDispensation > 0) {
     //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
     //         // }
-    //         // dump('diffInMinutes 2', $diffInMinutes);
 
     //         // $diffInTime = "00:00:00";
-    //         // dump('diffInTime 1', $diffInTime);
     //         // if ($diffInMinutes > $tolerance) {
     //         //     $diffInTime = gmdate('H:i:s', $diffInSeconds);
     //         // }
-    //         // dump('diffInTime 2', $diffInTime);
     //     } else {
     //         $diffInTime = gmdate('H:i:s', $diffInSeconds);
     //     }
