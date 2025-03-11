@@ -6,13 +6,15 @@ use App\Enums\DailyAttendance;
 use App\Enums\EventType;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
+use App\Models\Event;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 class AttendanceService
 {
-    public static function getTodayAttendance(?string $date = null, int|string $scheduleId = null, int|string $shiftId = null, ?User $user = null, $isCheckByDetails = true): ?Attendance
+    public static function getTodayAttendance(?string $date = null, ?int $scheduleId = null, ?int $shiftId = null, ?User $user = null, $isCheckByDetails = true): ?Attendance
     {
         /**
          *
@@ -170,16 +172,107 @@ class AttendanceService
         // return abs($totalAttendance - $totalWorkingDays);
     }
 
-    public static function getTotalAlpa(User|int $user, $startDate, $endDate): int
+    // public static function getTotalAlpa(User|int $user, $startDate, $endDate): int
+    // {
+    //     if (!$user instanceof User) {
+    //         $user = User::find($user, ['id', 'type', 'group_id']);
+    //     }
+
+    //     $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
+    //     $totalPresent = self::getTotalPresent($user, $startDate, $endDate);
+
+    //     return max($totalWorkingDays - $totalPresent, 0);
+    // }
+
+    public static function getTotalAlpa(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
     {
-        if (!$user instanceof User) {
-            $user = User::find($user, ['id', 'type', 'group_id']);
+        $userId = $user;
+        if ($user instanceof User) {
+            $userId = $user->id;
         }
 
-        $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
-        $totalPresent = self::getTotalPresent($user, $startDate, $endDate);
+        if (!($startDate instanceof Carbon)) {
+            $startDate = Carbon::parse($startDate)->startOfDay();
+        }
 
-        return max($totalWorkingDays - $totalPresent, 0);
+        if (!($endDate instanceof Carbon)) {
+            $endDate = Carbon::parse($endDate)->startOfDay();
+        }
+
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $attendances = Attendance::where('user_id', $userId)
+            ->whereDate('date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('date', '<=', $endDate->format('Y-m-d'))
+            ->with([
+                'clockIn' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'clockOut' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+            ])
+            ->get(['id', 'date']);
+
+        $totalAlpa = 0;
+        foreach ($dateRange as $date) {
+            $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id'], ['id', 'is_dayoff']);
+            if (!$todaySchedule?->shift) {
+                $totalAlpa++;
+                continue;
+            }
+
+            if ($todaySchedule?->shift->is_dayoff) {
+                continue;
+            }
+
+            $nationalHoliday = Event::whereNationalHoliday()
+                ->where('company_id', $user->company_id)
+                ->where(
+                    fn($q) => $q->whereDate('start_at', '<=', $date->format('Y-m-d'))
+                        ->whereDate('end_at', '>=', $date->format('Y-m-d'))
+                )
+                ->exists();
+            if ($nationalHoliday) continue;
+
+            $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
+            if (!$attendanceOnDate) {
+                $totalAlpa++;
+                continue;
+            }
+
+            if (!$attendanceOnDate->clockIn || !$attendanceOnDate->clockOut) {
+                $totalAlpa++;
+                continue;
+            }
+
+            // $attendanceClockIn = Carbon::parse($attendanceOnDate->clockIn->time);
+            // $scheduleClockIn = Carbon::parse($attendanceClockIn->format('Y-m-d') . ' ' . $todaySchedule->shift->clock_in);
+            // if ($attendanceClockIn->greaterThan($scheduleClockIn)) {
+            //     $time = $attendanceClockIn->diffInMinutes($scheduleClockIn);
+            //     $graceTotalLate += $time;
+            //     if ($graceTotalLate > 10) {
+            //         $totalLate += $time - 10;
+            //     }
+            // }
+
+            // if ($totalLate > 10) {
+            //     $totalAlpa++;
+            //     continue;
+            // }
+
+            // $attendanceClockOut = Carbon::parse($attendanceOnDate->clockOut->time);
+            // $scheduleClockOut = Carbon::parse($attendanceClockOut->format('Y-m-d') . ' ' . $todaySchedule->shift->clock_out);
+            // if ($attendanceClockOut->lessThan($scheduleClockOut)) {
+            //     $time = $attendanceClockOut->diffInMinutes($scheduleClockOut);
+            //     $graceTotalLate += $time;
+            //     if ($graceTotalLate > 10) {
+            //         $totalLate += $time - max(10 - $graceTotalLate, 0);
+            //     }
+            // }
+
+            // if ($totalLate > 10) {
+            //     $totalAlpa++;
+            //     continue;
+            // }
+        }
+
+        return $totalAlpa;
     }
 
     public static function getTotalAttendanceInShifts(User|int $user, $startDate, $endDate, Shift|array $shifts = []): int

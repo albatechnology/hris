@@ -55,12 +55,6 @@ class ScheduleService
             $schedule?->setRelation('shift', $shift);
 
             return $schedule;
-            // return $user->schedules()
-            //     ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-            //     ->whereApproved()
-            //     ->where('id', $requestShift->schedule_id)
-            //     ->with('shift', fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id))
-            //     ->first();
         }
 
         /** @var Schedule $schedule */
