@@ -83,7 +83,7 @@ class RegisterRequest extends FormRequest
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
             'last_name' => 'nullable|string',
-            'email' => 'nullable|email|unique:users,email',
+            'email' => 'required|email|unique:users,email',
             'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
