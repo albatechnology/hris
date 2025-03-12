@@ -28,15 +28,13 @@ class RequestChangeDataRequest extends FormRequest
         $file = $data['file'] ?? null;
 
         if (isset($data['photo_profile']) && !is_null($data['photo_profile'])) {
-            $data = [
-                'photo_profile' => $data['photo_profile']
-            ];
+            $data['photo_profile'] = $data['photo_profile'];
         }
 
         unset($data['description']);
         unset($data['file']);
 
-        $this->merge([
+        $this->replace([
             'description' => $description,
             'file' => $file,
             'details' => count($data) > 0 ? $data : null,
@@ -51,7 +49,7 @@ class RequestChangeDataRequest extends FormRequest
     public function rules(): array
     {
         $validations = [];
-        foreach ($this->all() as $type => $value) {
+        foreach ($this->details as $type => $value) {
             $requestChangeDataType = RequestChangeDataType::tryFrom($type);
             if ($requestChangeDataType) {
                 if ($requestChangeDataType->is(RequestChangeDataType::EMAIL)) {

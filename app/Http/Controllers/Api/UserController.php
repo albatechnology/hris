@@ -482,7 +482,7 @@ class UserController extends BaseController
                     RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
                 }
 
-                $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
+                $mediaCollection = MediaCollection::USER->value;
                 $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
 
                 if ($photoProfile && $photoProfile['value']?->isValid()) {

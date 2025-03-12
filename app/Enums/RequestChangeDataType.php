@@ -63,6 +63,8 @@ enum RequestChangeDataType: string
             $self = RequestChangeDataType::from($self);
         }
 
+        if ($self->is(self::PHOTO_PROFILE)) return;
+
         return match ($self) {
             // self::PHOTO_PROFILE, updated in controller
             self::NAME,
