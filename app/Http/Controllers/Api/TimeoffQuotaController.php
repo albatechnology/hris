@@ -228,6 +228,7 @@ class TimeoffQuotaController extends BaseController
 
             $timeoffQuota->timeoffQuotaHistories()->create([
                 'user_id' => $timeoffQuota->user_id,
+                'is_automatic' => $timeoffQuota?->timeoffPolicy->type->is(TimeoffPolicyType::EXTRA_OFF),
                 'is_increment' => true,
                 'new_balance' => $timeoffQuota->quota,
                 'description' => $request->description,
