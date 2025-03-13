@@ -30,6 +30,7 @@ use App\Http\Resources\User\UserResource;
 use App\Imports\UserSunImport;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\RunPayroll;
 use App\Models\TaskHour;
 use App\Models\User;
 use App\Models\UserResignation;
@@ -692,9 +693,15 @@ class UserController extends BaseController
     public function payroll(int $id, PayrollRequest $request)
     {
         $user = User::findTenanted($id);
-        $user->load(['runPayrollUser' => fn($q) => $q->orderByDesc('id')->whereHas('runPayroll', fn($q) => $q->where('period', "$request->month-$request->year"))]);
 
-        if ($user->runPayrollUser->count() <= 0) return $this->errorResponse(message: "Data payroll not found", code: Response::HTTP_NOT_FOUND);
+        $runPayroll = RunPayroll::query()
+            ->where('period', "$request->month-$request->year")
+            ->release()
+            ->whereHas('users', fn($q) => $q->where('user_id', $user->id))
+            ->orderByDesc('updated_at')
+            ->first();
+
+        if (!$runPayroll) return $this->errorResponse(message: "Data payroll not found", code: Response::HTTP_NOT_FOUND);
 
         $user->load([
             'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
@@ -702,18 +709,18 @@ class UserController extends BaseController
             'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp'),
         ]);
 
-        $runPayrollUser = $user->runPayrollUser[0]->load([
-            'runPayroll.company',
-            'components.payrollComponent',
+        $runPayroll->load([
+            'company',
+            'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
         ]);
 
-        $cutoffDate = date('Y', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayrollUser->runPayroll->cut_off_end_date));
+        $cutoffDate = date('Y', strtotime($runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date));
 
-        $earnings = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE)->values();
-        $deductions = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION)->values();
-        $benefits = $runPayrollUser->components->where('payrollComponent.type', PayrollComponentType::BENEFIT)->values();
+        $earnings = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE)->values();
+        $deductions = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION)->values();
+        $benefits = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::BENEFIT)->values();
 
-        $data = ['user' => $user, 'runPayrollUser' => $runPayrollUser, 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
+        $data = ['user' => $user, 'runPayroll' => $runPayroll, 'runPayrollUser' => $runPayroll->users[0], 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
 
         if ($request->is_json == true) {
             return response()->json($data);

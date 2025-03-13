@@ -7,5 +7,5 @@ enum RunPayrollStatus: string
     use BaseEnum;
 
     case REVIEW = 'review';
-    case FINISH = 'finish';
+    case RELEASE = 'release';
 }

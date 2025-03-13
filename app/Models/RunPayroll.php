@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\RunPayrollStatus;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunPayroll extends BaseModel
@@ -34,6 +35,11 @@ class RunPayroll extends BaseModel
     public function users(): HasMany
     {
         return $this->hasMany(RunPayrollUser::class);
+    }
+
+    public function scopeRelease(Builder $query)
+    {
+        $query->where('status', RunPayrollStatus::RELEASE);
     }
 
     public static function generateCode()

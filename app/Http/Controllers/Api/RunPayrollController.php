@@ -6,6 +6,7 @@ use App\Enums\CountrySettingKey;
 use App\Exports\RunPayrollExport;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
+use App\Http\Requests\Api\RunPayroll\UpdateRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
 use App\Models\Bank;
@@ -82,26 +83,16 @@ class RunPayrollController extends BaseController
         return new RunPayrollResource($runPayroll);
     }
 
-    // public function update(int $id, UpdateRequest $request): RunPayrollResource|JsonResponse
-    // {
-    // $runPayroll = RunPayroll::findTenanted($id);
-    //     DB::beginTransaction();
-    //     try {
-    //         $runPayroll->update($request->validated());
+    public function update(UpdateRequest $request, int $id): RunPayrollResource|JsonResponse
+    {
+        $runPayroll = RunPayroll::findTenanted($id);
 
-    //         self::saveRelationship($runPayroll, $request);
+        if (count($request->validated())) {
+            $runPayroll->update($request->validated());
+        }
 
-    //         FormulaService::sync($runPayroll, $request->formulas);
-
-    //         DB::commit();
-    //     } catch (Exception $th) {
-    //         DB::rollBack();
-
-    //         return $this->errorResponse($th->getMessage());
-    //     }
-
-    //     return (new RunPayrollResource($runPayroll->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
-    // }
+        return (new RunPayrollResource($runPayroll->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+    }
 
 
     public function updateUserComponent(RunPayrollUser $runPayrollUser, UpdateUserComponentRequest $request): RunPayrollResource|JsonResponse
