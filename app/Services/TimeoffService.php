@@ -7,6 +7,7 @@ use App\Enums\TimeoffPolicyType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Models\Attendance;
+use App\Models\Event;
 use App\Models\Shift;
 use App\Models\Timeoff;
 use App\Models\TimeoffPolicy;
@@ -63,10 +64,19 @@ class TimeoffService
         $endDate = Carbon::createFromFormat('Y-m-d', $endDate);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::select(['id', 'start_at', 'end_at'])->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+
         $value = 0;
         foreach ($dateRange as $date) {
-            $todaySchedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id'], ['id', 'is_dayoff']);
-            if (($todaySchedule || $todaySchedule->shift) && $todaySchedule->shift->is_dayoff === false) {
+            $todaySchedule = ScheduleService::getTodaySchedule($user, $date->format('Y-m-d'), ['id', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff']);
+
+            $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                return date('Y-m-d', strtotime($nh->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($nh->end_at)) >= $date->format("Y-m-d");
+            });
+
+
+            if (($todaySchedule || $todaySchedule->shift) && !$todaySchedule->shift->is_dayoff && !$nationalHoliday) {
                 $value++;
             }
         }
