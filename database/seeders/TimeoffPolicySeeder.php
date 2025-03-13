@@ -36,6 +36,12 @@ class TimeoffPolicySeeder extends Seeder
                     'max_consecutively_day' => 5,
                 ],
                 [
+                    'name' => 'Extra Off',
+                    'code' => 'EO',
+                    'type' => TimeoffPolicyType::EXTRA_OFF,
+                    'effective_date' => date('Y-m-d'),
+                ],
+                [
                     'name' => 'Day Off',
                     'code' => 'DO',
                     'type' => TimeoffPolicyType::DAY_OFF,
@@ -130,7 +136,7 @@ class TimeoffPolicySeeder extends Seeder
                 // [
                 //     'name' => 'Extra Off',
                 //     'code' => 'EO',
-                //     'type' => TimeoffPolicyType::ANNUAL_LEAVE,
+                //     'type' => TimeoffPolicyType::EXTRA_OFF,
                 //     'effective_date' => date('Y-m-d'),
                 // ],
                 // [
