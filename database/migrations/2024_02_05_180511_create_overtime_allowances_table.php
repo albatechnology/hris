@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('overtime_id')->constrained();
             $table->foreignId('payroll_component_id')->constrained();
-            $table->unsignedDouble('amount', 13, 2)->default(0);
+            $table->double('amount', 13, 2)->unsigned()->default(0);
             $table->timestamps();
         });
     }

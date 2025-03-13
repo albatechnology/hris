@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_payroll_info_id')->constrained();
             $table->foreignId('payroll_component_id')->constrained();
-            $table->unsignedDouble('amount', 13, 2)->nullable();
+            $table->double('amount', 13, 2)->unsigned()->nullable();
             $table->timestamps();
         });
     }

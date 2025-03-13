@@ -19,7 +19,7 @@ return new class extends Migration
             // $table->foreignId('timeoff_period_regulation_id')->constrained();
             // $table->string('month', 2);
             $table->text('data')->nullable(); // isinya array dari timeoff regulation month new dan old
-            $table->unsignedFloat('amount')->default(0);
+            $table->float('amount')->unsigned()->default(0);
             $table->string('approval_status')->default(ApprovalStatus::PENDING);
             $table->foreignId('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('end_date');
             $table->date('expired_date')->nullable();
             $table->string('score')->nullable();
-            $table->unsignedDouble('fee', 12, 2)->nullable();
+            $table->double('fee', 12, 2)->unsigned()->nullable();
             $table->timestamps();
         });
     }

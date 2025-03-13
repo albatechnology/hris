@@ -24,7 +24,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->unsignedTinyInteger('total_working_days')->default(21);
-            $table->unsignedDouble('basic_salary')->default(0);
+            $table->double('basic_salary')->unsigned()->default(0);
             $table->string('salary_type')->default(SalaryType::MONTHLY);
             $table->string('payment_schedule')->default(PaymentSchedule::DEFAULT);
             $table->string('prorate_setting')->default(ProrateSetting::BASE_ON_WORKING_DAY);

@@ -19,8 +19,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('min_working_hour')->default(0);
             $table->string('working_period');
             $table->text('description')->nullable();
-            $table->unsignedFloat('weekday_overtime_rate', 12)->default(0);
-            $table->unsignedFloat('weekend_overtime_rate', 12)->default(0);
+            $table->float('weekday_overtime_rate', 12)->unsigned()->default(0);
+            $table->float('weekend_overtime_rate', 12)->unsigned()->default(0);
             $table->timestamps();
 
             // softDeletes must implement deleted_by

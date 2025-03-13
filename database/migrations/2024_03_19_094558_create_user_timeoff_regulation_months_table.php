@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->cascadeOnDelete();
             $table->string('month', 2);
-            $table->unsignedFloat('amount')->default(0);
+            $table->float('amount')->unsigned()->default(0);
             $table->timestamps();
         });
     }

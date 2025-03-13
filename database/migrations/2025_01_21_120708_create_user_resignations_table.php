@@ -21,12 +21,12 @@ return new class extends Migration
             // FOR RESIGN
             $table->string('reason')->nullable();
             $table->date('resignation_date');
-            $table->unsignedDouble('merit_pay_amount')->default(0);
-            $table->unsignedDouble('severance_amount')->default(0);
-            $table->unsignedDouble('compensation_amount')->default(0);
+            $table->double('merit_pay_amount')->unsigned()->default(0);
+            $table->double('severance_amount')->unsigned()->default(0);
+            $table->double('compensation_amount')->unsigned()->default(0);
             $table->unsignedTinyInteger('total_day_timeoff_compensation')->default(0);
-            $table->unsignedDouble('timeoff_amount_per_day')->default(0);
-            $table->unsignedDouble('total_timeoff_compensation')->default(0);
+            $table->double('timeoff_amount_per_day')->unsigned()->default(0);
+            $table->double('total_timeoff_compensation')->unsigned()->default(0);
 
             // FOR REHIRE
             $table->string('nik')->nullable();
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->integer('department_id')->nullable();
             $table->integer('position_id')->nullable();
             $table->char('employment_status', 10)->nullable();
-            $table->unsignedDouble('basic_salary')->default(0);
+            $table->double('basic_salary')->unsigned()->default(0);
 
             $table->text('description')->nullable();
             $table->timestamps();

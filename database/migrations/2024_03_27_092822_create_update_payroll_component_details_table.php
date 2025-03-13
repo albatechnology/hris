@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('update_payroll_component_id')->constrained()->index('updatepayrollcomponentdetails_updatepayrollcomponentid_foreign'); // because the default update_payroll_component_details_update_payroll_component_id_foreign is too long (68/65 characters)
             $table->foreignId('user_id')->constrained();
             $table->foreignId('payroll_component_id')->constrained();
-            $table->unsignedDouble('current_amount', 13, 2)->nullable();
-            $table->unsignedDouble('new_amount', 13, 2)->nullable();
+            $table->double('current_amount', 13, 2)->unsigned()->nullable();
+            $table->double('new_amount', 13, 2)->unsigned()->nullable();
             $table->timestamps();
         });
     }

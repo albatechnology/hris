@@ -19,8 +19,8 @@ return new class extends Migration
             $table->foreignIdFor(TimeoffPolicy::class)->constrained();
             $table->date('effective_start_date')->nullable();
             $table->date('effective_end_date')->nullable();
-            $table->unsignedFloat('quota', 8, 1)->default(0);
-            $table->unsignedFloat('used_quota', 8, 1)->default(0);
+            $table->float('quota', 8, 1)->unsigned()->default(0);
+            $table->float('used_quota', 8, 1)->unsigned()->default(0);
             $table->timestamps();
 
             // created/updated/deleted info

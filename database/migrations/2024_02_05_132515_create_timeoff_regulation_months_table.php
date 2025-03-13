@@ -18,7 +18,7 @@ return new class extends Migration
             // $table->foreignIdFor(User::class)->nullable()->cascadeOnDelete();
             $table->foreignIdFor(TimeoffPeriodRegulation::class)->constrained()->cascadeOnDelete();
             $table->string('month', 2);
-            $table->unsignedFloat('amount')->default(0);
+            $table->float('amount')->unsigned()->default(0);
             $table->timestamps();
         });
     }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(RunThrUser::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(PayrollComponent::class)->constrained();
-            $table->unsignedDouble('amount', 13, 2)->nullable();
+            $table->double('amount', 13, 2)->unsigned()->nullable();
             $table->boolean('is_editable')->default(0);
             $table->json('payroll_component');
             $table->timestamps();
