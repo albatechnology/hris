@@ -202,7 +202,7 @@ class AttendanceService
 
         $hasPayroll = RunPayrollUser::query()->where('user_id', $user->id)
             ->whereHas('runPayroll', fn($q) => $q->release())
-            ->doesntExist();
+            ->exists();
         if ($hasPayroll) {
             $joinDate = Carbon::parse($user->join_date);
             if ($joinDate->between($startDate, $endDate)) {
