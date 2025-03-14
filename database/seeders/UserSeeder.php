@@ -113,7 +113,7 @@ class UserSeeder extends Seeder
                 'company_id' => $company->id,
                 'branch_id' => null,
                 'name' => 'Admin ' . $company->name,
-                'email' => $company->id == 3 ? 'admin.alba@gmail.com' : 'admin' . $company->id . '@gmail.com',
+                'email' => $company->id == 2 ? 'admin.alba@gmail.com' : 'admin' . $company->id . '@gmail.com',
                 'email_verified_at' => now(),
                 'password' => self::PASSWORD,
                 'type' => UserType::ADMIN,
@@ -159,7 +159,7 @@ class UserSeeder extends Seeder
             $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin) {
                 $admin->branches()->create(['branch_id' => $branch->id]);
 
-                if ($company->id == 3) {
+                if ($company->id == 2) {
                     $albaUsers = [
                         [
                             'name' => 'Nikko Febika',
