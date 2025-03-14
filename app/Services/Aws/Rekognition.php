@@ -35,7 +35,7 @@ class Rekognition
                 'SimilarityThreshold' => self::$similarityThreshold,
                 'SourceImage' => [
                     'S3Object' => [
-                        'Bucket' => 'alba-hris-development',
+                        'Bucket' => config('filesystems.disks.s3.bucket', ''),
                         'Name' => $sourceImage
                     ]
                 ],
@@ -59,7 +59,7 @@ class Rekognition
         if (
             isset($result['FaceMatches']) &&
             count($result['FaceMatches']) > 0 &&
-            collect($result['FaceMatches'])->contains(fn ($match) => $match['Similarity'] >= self::$similarityThreshold)
+            collect($result['FaceMatches'])->contains(fn($match) => $match['Similarity'] >= self::$similarityThreshold)
         ) return true;
 
         return false;
