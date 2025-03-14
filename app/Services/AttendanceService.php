@@ -7,6 +7,7 @@ use App\Enums\EventType;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
+use App\Models\RunPayrollUser;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -197,6 +198,16 @@ class AttendanceService
 
         if (!($endDate instanceof Carbon)) {
             $endDate = Carbon::parse($endDate)->startOfDay();
+        }
+
+        $hasPayroll = RunPayrollUser::query()->where('user_id', $user->id)
+            ->whereHas('runPayroll', fn($q) => $q->release())
+            ->doesntExist();
+        if ($hasPayroll) {
+            $joinDate = Carbon::parse($user->join_date);
+            if ($joinDate->between($startDate, $endDate)) {
+                $startDate = $joinDate;
+            }
         }
 
         $dateRange = CarbonPeriod::create($startDate, $endDate);

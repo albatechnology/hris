@@ -14,9 +14,9 @@ class BaseController extends Controller
         $this->per_page = $perPage > 0 ? $perPage : 20;
     }
 
-    public function createdResponse()
+    public function createdResponse(string $message = 'Data created successfully')
     {
-        return response()->json(['message' => 'Data created successfully']);
+        return response()->json(['message' => $message]);
     }
 
     public function updatedResponse(string $message = 'Data updated successfully')
