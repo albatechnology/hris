@@ -12,6 +12,7 @@ enum TimeoffPolicyType: string
     case SICK_WITHOUT_CERTIFICATE = 'sick_without_certificate';
     case SICK_WITH_CERTIFICATE = 'sick_with_certificate';
     case PERMISSION = 'permission';
+    case UMROH = 'umroh';
     case FREE_LEAVE = 'free_leave';
     case UNPAID_LEAVE = 'unpaid_leave';
     case MATERNITY_LEAVE = 'maternity_leave';
