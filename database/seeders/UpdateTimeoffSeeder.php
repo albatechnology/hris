@@ -46,6 +46,13 @@ class UpdateTimeoffSeeder extends Seeder
                     'is_allow_halfday' => true,
                 ],
                 [
+                    'name' => 'Umroh',
+                    'code' => 'UM',
+                    'type' => TimeoffPolicyType::UMROH,
+                    'effective_date' => date('Y-m-d'),
+                    'is_allow_halfday' => false,
+                ],
+                [
                     'name' => 'Sick Without Certificate',
                     'code' => 'SWC',
                     'type' => TimeoffPolicyType::SICK_WITHOUT_CERTIFICATE,
