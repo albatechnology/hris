@@ -27,6 +27,7 @@ use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
+use App\Imports\UsersImport;
 use App\Imports\UserSunImport;
 use App\Models\Branch;
 use App\Models\Company;
@@ -730,6 +731,42 @@ class UserController extends BaseController
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
     }
 
+    public function thr(int $id, PayrollRequest $request)
+    {
+        $user = User::findTenanted($id);
+
+        $runThr = \App\Models\RunThr::query()
+            ->whereYear('thr_date', "$request->year")
+            ->whereHas('users', fn($q) => $q->where('user_id', $user->id))
+            ->orderByDesc('updated_at')
+            ->first();
+        // ->release()
+
+        if (!$runThr) return $this->errorResponse(message: "Data THR not found", code: Response::HTTP_NOT_FOUND);
+
+        $user->load([
+            'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
+            'detail' => fn($q) => $q->select('user_id', 'job_level'),
+            'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp'),
+        ]);
+
+        $runThr->load([
+            'company',
+            'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
+        ]);
+
+        // return $runThr;
+
+        $data = ['user' => $user, 'runThr' => $runThr, 'runThrUser' => $runThr->users[0]];
+
+        if ($request->is_json == true) {
+            return response()->json($data);
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.thr', $data)->setPaper('a4');
+        return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
+    }
+
     public function resign(ResignRequest $request, int $id)
     {
         UserResignation::create($request->validated());
@@ -770,9 +807,9 @@ class UserController extends BaseController
 
     public function import(Request $request)
     {
-        (new UserSunImport)->import($request->file);
+        (new UsersImport)->import($request->file);
 
-        return 'oke';
+        return $this->createdResponse();
     }
 
     public function export(ExportRequest $request)

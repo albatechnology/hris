@@ -95,6 +95,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::post('users/verify-password', [UserController::class, 'verifyPassword']);
     Route::group(['prefix' => 'users/{user}'], function () {
         Route::get('payroll', [UserController::class, 'payroll']);
+        Route::get('thr', [UserController::class, 'thr']);
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
 
