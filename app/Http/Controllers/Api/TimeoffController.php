@@ -140,8 +140,8 @@ class TimeoffController extends BaseController
          *
          */
 
-        if (date('Y-m-d', strtotime($timeoff->start_at)) < date('Y-m-d')) {
-            return $this->errorResponse(message: 'Cannot cancel timeoff before start date', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if ($timeoff->approval_status != ApprovalStatus::APPROVED->value && date('Y-m-d', strtotime($timeoff->start_at)) < date('Y-m-d')) {
+            return $this->errorResponse(message: 'Cannot cancel past leave', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if (!$timeoff->is_cancelled) {
