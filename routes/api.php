@@ -84,6 +84,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::post('import-timeoff-quotas', [TimeoffQuotaController::class, 'importTimeoffQuota']);
     Route::get('users/updateSupervisor', [UserController::class, 'updateSupervisor']);
     Route::get('users/export', [UserController::class, 'export']);
+    Route::get('users/import/{sample?}', [UserController::class, 'import']);
     Route::post('users/import', [UserController::class, 'import']);
     Route::get('users/me', [UserController::class, 'me']);
     Route::post('users/register', [UserController::class, 'register']);

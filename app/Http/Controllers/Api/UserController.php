@@ -755,8 +755,6 @@ class UserController extends BaseController
             'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
         ]);
 
-        // return $runThr;
-
         $data = ['user' => $user, 'runThr' => $runThr, 'runThrUser' => $runThr->users[0]];
 
         if ($request->is_json == true) {
@@ -805,8 +803,9 @@ class UserController extends BaseController
         return $this->createdResponse();
     }
 
-    public function import(Request $request)
+    public function import(Request $request, ?string $sample = null)
     {
+        dd($sample);
         (new UsersImport)->import($request->file);
 
         return $this->createdResponse();
