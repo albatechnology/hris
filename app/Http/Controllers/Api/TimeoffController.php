@@ -75,7 +75,10 @@ class TimeoffController extends BaseController
 
         DB::beginTransaction();
         try {
-            $timeoff = Timeoff::create($request->all());
+            $timeoff = Timeoff::create([
+                ...$request->all(),
+                'reason' => $request->reason ?? null,
+            ]);
 
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
