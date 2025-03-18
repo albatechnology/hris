@@ -805,7 +805,6 @@ class UserController extends BaseController
 
     public function import(Request $request, ?string $sample = null)
     {
-        dd($sample);
         (new UsersImport)->import($request->file);
 
         return $this->createdResponse();
