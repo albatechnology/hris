@@ -6,6 +6,7 @@ use App\Enums\BloodType;
 use App\Enums\EmploymentStatus;
 use App\Enums\Gender;
 use App\Enums\MaritalStatus;
+use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\OvertimeSetting;
 use App\Enums\PtkpStatus;
 use App\Enums\Religion;
@@ -31,12 +32,14 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
     private User $user;
     private $emailVerifiedAt;
     private UserType $userType;
+    private NppBpjsKetenagakerjaan $nppBpjsKetenagakerjaan;
 
     public function __construct()
     {
         $this->user = auth()->user();
         $this->emailVerifiedAt = now();
         $this->userType = UserType::USER;
+        $this->nppBpjsKetenagakerjaan = NppBpjsKetenagakerjaan::DEFAULT;
     }
 
     public function rules(): array
@@ -169,7 +172,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
         // create user_bpjs
         $user->userBpjs()->create([
             'bpjs_ketenagakerjaan_no' => $row['bpjs_ketenagakerjaan_number'],
-            // 'npp_bpjs_ketenagakerjaan' => $row['npp_bpjs_ketenagakerjaan'],
+            'npp_bpjs_ketenagakerjaan' => $this->nppBpjsKetenagakerjaan,
             'bpjs_ketenagakerjaan_date' => date('Y-m-d', strtotime($row['bpjs_ketenagakerjaan_date'])),
             'bpjs_kesehatan_no' => $row['bpjs_kesehatan_number'],
             'bpjs_kesehatan_family_no' => $row['bpjs_kesehatan_family_number'],
