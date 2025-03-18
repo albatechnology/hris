@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
+use App\Http\Controllers\Api\LoanController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NppController;
@@ -353,4 +354,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('extra-offs/users', [ExtraOffController::class, 'users']);
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('loans', LoanController::class);
 });

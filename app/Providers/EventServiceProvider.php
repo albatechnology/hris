@@ -5,11 +5,13 @@ namespace App\Providers;
 use App\Events\Attendance\AttendanceRequested;
 use App\Listeners\Attendance\RequestAttendanceNotification;
 use App\Models\Company;
+use App\Models\Loan;
 use App\Models\OvertimeRequest;
 use App\Models\RunPayroll;
 use App\Models\RunThr;
 use App\Models\User;
 use App\Observers\CompanyObserver;
+use App\Observers\LoanObserver;
 use App\Observers\OvertimeRequestObserver;
 use App\Observers\RunPayrollObserver;
 use App\Observers\RunThrObserver;
@@ -45,6 +47,7 @@ class EventServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         RunPayroll::observe(RunPayrollObserver::class);
         RunThr::observe(RunThrObserver::class);
+        Loan::observe(LoanObserver::class);
     }
 
     /**
