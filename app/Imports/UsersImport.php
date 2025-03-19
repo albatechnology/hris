@@ -55,7 +55,11 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'password' => 'required|string|min:6|max:50',
             'nik' => 'required|max:50',
             'phone' => 'required|string|max:20',
-            'gender' => ['required', Rule::enum(Gender::class)],
+            'gender' => ['required', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), Gender::getValues())) {
+                    $fail('Invalid gender value.');
+                }
+            }],
             'join_date' => 'required|date',
             'sign_date' => 'nullable|date',
 
@@ -64,7 +68,11 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'postal_code' => 'nullable|alpha_num|min:3|max:10',
             'address' => 'nullable|string',
             'address_ktp' => 'nullable|string',
-            'employment_status' => ['required', Rule::enum(EmploymentStatus::class)],
+            'employment_status' => ['required', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), EmploymentStatus::getValues())) {
+                    $fail('Invalid Employment Status value.');
+                }
+            }],
             'passport_number' => 'nullable|alpha_num|min:6|max:50',
             'passport_expired' => 'nullable|date',
             'birth_place' => 'nullable|string',
@@ -72,14 +80,22 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
             'blood_type' => ['nullable', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), BloodType::getValues())) {
-                    $fail('Invalid blood type.');
+                    $fail('Invalid blood value.');
                 }
             }],
             'rhesus' => 'nullable|string',
-            'religion' => ['nullable', Rule::enum(Religion::class)],
+            'religion' => ['nullable', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), Religion::getValues())) {
+                    $fail('Invalid religion value.');
+                }
+            }],
 
             'basic_salary' => 'required|numeric',
-            'overtime_setting' => ['required', Rule::enum(OvertimeSetting::class)],
+            'overtime_setting' => ['required', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), OvertimeSetting::getValues())) {
+                    $fail('Invalid Overtime Setting value.');
+                }
+            }],
             'bank_name' => 'nullable|string|min:3|max:100',
             'bank_account_number' => 'nullable|alpha_num|min:3|max:50',
             'bank_account_holder' => 'nullable|string|min:3|max:50',
@@ -87,9 +103,21 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'secondary_bank_account_number' => 'nullable|alpha_num|min:3|max:50',
             'secondary_bank_account_holder' => 'nullable|string|min:3|max:50',
             'npwp' => 'nullable|alpha_num|min:3|max:50',
-            'ptkp_status' => ['required', Rule::enum(PtkpStatus::class)],
-            'tax_method' => ['required', Rule::enum(TaxMethod::class)],
-            'tax_salary' => ['required', Rule::enum(TaxSalary::class)],
+            'ptkp_status' => ['required', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), PtkpStatus::getValues())) {
+                    $fail('Invalid PTKP Status value.');
+                }
+            }],
+            'tax_method' => ['required', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), TaxMethod::getValues())) {
+                    $fail('Invalid Tax Method value.');
+                }
+            }],
+            'tax_salary' => ['required', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), TaxSalary::getValues())) {
+                    $fail('Invalid Tax Salary value.');
+                }
+            }],
             'beginning_netto' => 'nullable|numeric',
             'pph_21_paid' => 'nullable|numeric',
 
