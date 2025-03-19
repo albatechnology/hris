@@ -53,7 +53,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'last_name' => 'nullable|string|min:2|max:100',
             'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:6|max:50',
-            'nik' => 'required|alpha_num|max:50',
+            'nik' => 'required|max:50',
             'phone' => 'required|string|max:20',
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'required|date',
