@@ -108,7 +108,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
     public function model(array $row)
     {
         if (!isset($row['email']) || empty($row['email'])) {
-            $row['email'] = str_replace(' ', '', strtolower($row['name'])) . "" . $row['nik'] . "@gmail.com";
+            $row['email'] = str_replace(' ', '', strtolower($row['name'])) . "." . $row['nik'] . "@gmail.com";
         }
 
         $branch = Branch::select('id', 'company_id')->firstWhere('id', $row['branch_id']);
