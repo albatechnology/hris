@@ -23,12 +23,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithConditionalSheets;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class UsersImport implements ToModel, WithHeadingRow, WithValidation
+class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultipleSheets
 {
     use Importable;
+
     private User $user;
     private $emailVerifiedAt;
     private UserType $userType;
@@ -40,6 +43,13 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
         $this->emailVerifiedAt = now();
         $this->userType = UserType::USER;
         $this->nppBpjsKetenagakerjaan = NppBpjsKetenagakerjaan::DEFAULT;
+    }
+
+    public function sheets(): array
+    {
+        return [
+            new UsersImport(),
+        ];
     }
 
     public function rules(): array
@@ -103,11 +113,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'secondary_bank_account_number' => 'nullable|min:3|max:50',
             'secondary_bank_account_holder' => 'nullable|min:3|max:50',
             'npwp' => 'nullable|min:3|max:50',
-            'ptkp_status' => ['required', function ($attribute, $value, $fail) {
-                if (!in_array(strtolower($value), PtkpStatus::getValues())) {
-                    $fail('Invalid PTKP Status value.');
-                }
-            }],
+            'ptkp_status' => ['required', Rule::enum(PtkpStatus::class)],
             'tax_method' => ['required', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), TaxMethod::getValues())) {
                     $fail('Invalid Tax Method value.');
@@ -172,21 +178,21 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'postal_code' => $row['postal_code'],
             'address' => $row['address'],
             'address_ktp' => $row['address_ktp'],
-            'employment_status' => $row['employment_status'],
+            'employment_status' => strtolower($row['employment_status']),
             'passport_no' => $row['passport_number'],
             'passport_expired' => date('Y-m-d', strtotime($row['passport_expired'])),
             'birth_place' => $row['birth_place'],
             'birthdate' => date('Y-m-d', strtotime($row['birthdate'])),
-            'marital_status' => $row['marital_status'],
+            'marital_status' => strtolower($row['marital_status']),
             'blood_type' => strtolower($row['blood_type']),
             'rhesus' => $row['blood_rhesus'],
-            'religion' => $row['religion'],
+            'religion' => strtolower($row['religion']),
         ]);
 
         // create user_payroll_infos
         $user->payrollInfo()->create([
             'basic_salary' => $row['basic_salary'],
-            'overtime_setting' => $row['overtime_setting'],
+            'overtime_setting' => strtolower($row['overtime_setting']),
             'bank_name' => $row['bank_name'],
             'bank_account_no' => $row['bank_account_number'],
             'bank_account_holder' => $row['bank_account_holder'],
@@ -195,8 +201,8 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'secondary_bank_account_holder' => $row['secondary_bank_account_holder'],
             'npwp' => $row['npwp'],
             'ptkp_status' => $row['ptkp_status'],
-            'tax_method' => $row['tax_method'],
-            'tax_salary' => $row['tax_salary'],
+            'tax_method' => strtolower($row['tax_method']),
+            'tax_salary' => strtolower($row['tax_salary']),
             'beginning_netto' => $row['beginning_netto'],
             'pph_21_paid' => $row['pph_21_paid'],
         ]);
