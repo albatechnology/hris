@@ -51,7 +51,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'name' => 'required|string|min:2|max:100',
             'last_name' => 'nullable|string|min:2|max:100',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:6|max:50',
             'nik' => 'required|alpha_num|max:50',
             'phone' => 'required|string|max:20',
@@ -107,6 +107,10 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
      */
     public function model(array $row)
     {
+        if (!isset($row['email']) || empty($row['email'])) {
+            $row['email'] = str_replace(' ', '', strtolower($row['name'])) . "" . $row['nik'] . "@gmail.com";
+        }
+
         $branch = Branch::select('id', 'company_id')->firstWhere('id', $row['branch_id']);
         $user = User::create([
             'group_id' => $this->user->group_id,
