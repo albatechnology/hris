@@ -17,6 +17,7 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\LiveAttendance;
 use App\Models\Position;
+use App\Models\Role;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Support\Collection;
@@ -55,6 +56,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
     public function rules(): array
     {
         return [
+            'role_id' => ['required', new CompanyTenantedRule(Role::class, 'Role not found')],
             'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
@@ -165,6 +167,8 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'join_date' => date('Y-m-d', strtotime($row['join_date'])),
             'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
         ]);
+
+        $user->roles()->syncWithPivotValues([$row['role_id']], ['group_id' => $user->group_id]);
 
         $user->positions()->create([
             'department_id' => $row['department_id'],
