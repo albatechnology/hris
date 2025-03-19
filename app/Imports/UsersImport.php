@@ -49,12 +49,12 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
-            'name' => 'required|string|min:2|max:100',
-            'last_name' => 'nullable|string|min:2|max:100',
+            'name' => 'required|min:2|max:100',
+            'last_name' => 'nullable|min:2|max:100',
             'email' => 'nullable|email|unique:users,email',
-            'password' => 'required|string|min:6|max:50',
+            'password' => 'required|min:6|max:50',
             'nik' => 'required|max:50',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|max:20',
             'gender' => ['required', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), Gender::getValues())) {
                     $fail('Invalid gender value.');
@@ -66,8 +66,8 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'kk_number' => 'nullable|min:6|max:50',
             'ktp_number' => 'nullable|min:6|max:50',
             'postal_code' => 'nullable|min:3|max:10',
-            'address' => 'nullable|string',
-            'address_ktp' => 'nullable|string',
+            'address' => 'nullable',
+            'address_ktp' => 'nullable',
             'employment_status' => ['required', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), EmploymentStatus::getValues())) {
                     $fail('Invalid Employment Status value.');
@@ -75,7 +75,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             }],
             'passport_number' => 'nullable|min:6|max:50',
             'passport_expired' => 'nullable|date',
-            'birth_place' => 'nullable|string',
+            'birth_place' => 'nullable',
             'birthdate' => 'nullable|date',
             'marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
             'blood_type' => ['nullable', function ($attribute, $value, $fail) {
@@ -83,7 +83,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
                     $fail('Invalid blood value.');
                 }
             }],
-            'rhesus' => 'nullable|string',
+            'rhesus' => 'nullable',
             'religion' => ['nullable', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), Religion::getValues())) {
                     $fail('Invalid religion value.');
@@ -96,12 +96,12 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
                     $fail('Invalid Overtime Setting value.');
                 }
             }],
-            'bank_name' => 'nullable|string|min:3|max:100',
+            'bank_name' => 'nullable|min:3|max:100',
             'bank_account_number' => 'nullable|min:3|max:50',
-            'bank_account_holder' => 'nullable|string|min:3|max:50',
-            'secondary_bank_name' => 'nullable|string|min:3|max:100',
+            'bank_account_holder' => 'nullable|min:3|max:50',
+            'secondary_bank_name' => 'nullable|min:3|max:100',
             'secondary_bank_account_number' => 'nullable|min:3|max:50',
-            'secondary_bank_account_holder' => 'nullable|string|min:3|max:50',
+            'secondary_bank_account_holder' => 'nullable|min:3|max:50',
             'npwp' => 'nullable|min:3|max:50',
             'ptkp_status' => ['required', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), PtkpStatus::getValues())) {
