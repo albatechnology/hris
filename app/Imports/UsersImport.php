@@ -63,9 +63,9 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'join_date' => 'required|date',
             'sign_date' => 'nullable|date',
 
-            'kk_number' => 'nullable|alpha_num|min:6|max:50',
-            'ktp_number' => 'nullable|alpha_num|min:6|max:50',
-            'postal_code' => 'nullable|alpha_num|min:3|max:10',
+            'kk_number' => 'nullable|min:6|max:50',
+            'ktp_number' => 'nullable|min:6|max:50',
+            'postal_code' => 'nullable|min:3|max:10',
             'address' => 'nullable|string',
             'address_ktp' => 'nullable|string',
             'employment_status' => ['required', function ($attribute, $value, $fail) {
@@ -73,7 +73,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
                     $fail('Invalid Employment Status value.');
                 }
             }],
-            'passport_number' => 'nullable|alpha_num|min:6|max:50',
+            'passport_number' => 'nullable|min:6|max:50',
             'passport_expired' => 'nullable|date',
             'birth_place' => 'nullable|string',
             'birthdate' => 'nullable|date',
@@ -97,12 +97,12 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
                 }
             }],
             'bank_name' => 'nullable|string|min:3|max:100',
-            'bank_account_number' => 'nullable|alpha_num|min:3|max:50',
+            'bank_account_number' => 'nullable|min:3|max:50',
             'bank_account_holder' => 'nullable|string|min:3|max:50',
             'secondary_bank_name' => 'nullable|string|min:3|max:100',
-            'secondary_bank_account_number' => 'nullable|alpha_num|min:3|max:50',
+            'secondary_bank_account_number' => 'nullable|min:3|max:50',
             'secondary_bank_account_holder' => 'nullable|string|min:3|max:50',
-            'npwp' => 'nullable|alpha_num|min:3|max:50',
+            'npwp' => 'nullable|min:3|max:50',
             'ptkp_status' => ['required', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), PtkpStatus::getValues())) {
                     $fail('Invalid PTKP Status value.');
@@ -121,10 +121,10 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
             'beginning_netto' => 'nullable|numeric',
             'pph_21_paid' => 'nullable|numeric',
 
-            'bpjs_ketenagakerjaan_number' => 'nullable|alpha_num|min:6|max:50',
+            'bpjs_ketenagakerjaan_number' => 'nullable|min:6|max:50',
             'bpjs_ketenagakerjaan_date' => 'nullable|date',
-            'bpjs_kesehatan_number' => 'nullable|alpha_num|min:6|max:50',
-            'bpjs_kesehatan_family_number' => 'nullable|alpha_num|min:6|max:50',
+            'bpjs_kesehatan_number' => 'nullable|min:6|max:50',
+            'bpjs_kesehatan_family_number' => 'nullable|min:6|max:50',
             'bpjs_kesehatan_date' => 'nullable|date',
             'jaminan_pensiun_date' => 'nullable|date',
         ];
