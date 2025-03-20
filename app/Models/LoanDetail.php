@@ -33,4 +33,9 @@ class LoanDetail extends BaseModel
     {
         return $this->belongsTo(Loan::class);
     }
+
+    public function runPayrollUser()
+    {
+        return $this->belongsTo(RunPayrollUser::class);
+    }
 }

@@ -27,8 +27,19 @@ class Loan extends BaseModel
         'type' => LoanType::class,
     ];
 
-    public function details(): HasMany {
+    public function details(): HasMany
+    {
         return $this->hasMany(LoanDetail::class);
+    }
+
+    public function scopeWhereLoan($q)
+    {
+        $q->where('type', LoanType::LOAN);
+    }
+
+    public function scopeWhereInsurance($q)
+    {
+        $q->where('type', LoanType::INSURANCE);
     }
 
     public static function generateCode()

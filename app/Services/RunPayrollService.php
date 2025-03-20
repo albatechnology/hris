@@ -11,6 +11,7 @@ use App\Enums\PtkpStatus;
 use App\Enums\RunPayrollStatus;
 use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
+use App\Models\Loan;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
@@ -226,7 +227,6 @@ class RunPayrollService
              * second, calculate payroll component where not default
              */
             $payrollComponents = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->whereNotDefault()->get();
-
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -276,6 +276,40 @@ class RunPayrollService
                 }
             }
             // END
+
+            /**
+             * calculate LOAN
+             */
+            $loanComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::LOAN)->first();
+            if ($loanComponent) {
+                $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $cutOffStartDate->format('Y'))->where('payment_period_month', $cutOffStartDate->format('m'));
+                $loans = Loan::where('user_id', $user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
+                if ($loans->count()) {
+                    $loans->load(['details' => $whereHas]);
+                    $amount = $loans->sum(fn($loan) => $loan->details->sum('total'));
+
+                    $loans->each(fn($loan) => $loan->details->each->update(['run_payroll_user_id' => $runPayrollUser->id]));
+
+                    self::createComponent($runPayrollUser, $loanComponent, $amount);
+                }
+            }
+
+            /**
+             * calculate INSURANCE
+             */
+            $insuranceComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::INSURANCE)->first();
+            if ($insuranceComponent) {
+                $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $cutOffStartDate->format('Y'))->where('payment_period_month', $cutOffStartDate->format('m'));
+                $insurances = Loan::where('user_id', $user->id)->whereInsurance()->whereHas('details', $whereHas)->get(['id']);
+                if ($insurances->count()) {
+                    $insurances->load(['details' => $whereHas]);
+                    $amount = $insurances->sum(fn($loan) => $loan->details->sum('total'));
+
+                    $insurances->each(fn($loan) => $loan->details->each->update(['run_payroll_user_id' => $runPayrollUser->id]));
+
+                    self::createComponent($runPayrollUser, $insuranceComponent, $amount);
+                }
+            }
 
             /**
              * fourth, calculate bpjs

@@ -7,5 +7,5 @@ enum LoanType: string
     use BaseEnum;
 
     case LOAN = 'loan';
-    case ASSURANCE = 'assurance';
+    case INSURANCE = 'insurance';
 }
