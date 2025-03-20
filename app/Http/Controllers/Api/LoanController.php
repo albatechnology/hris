@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Loan\StoreRequest;
 use App\Http\Requests\Api\Loan\UpdateRequest;
 use App\Http\Resources\DefaultResource;
+use App\Http\Resources\Loan\LoanResource;
 use App\Models\Loan;
 use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class LoanController extends BaseController
@@ -35,6 +37,11 @@ class LoanController extends BaseController
                 'installment',
                 'interest',
             ])
+            ->allowedIncludes([
+                AllowedInclude::callback('user', function ($query) {
+                    $query->select('id', 'name', 'last_name', 'nik', 'email');
+                }),
+            ])
             ->allowedSorts([
                 'id',
                 'user_id',
@@ -54,7 +61,10 @@ class LoanController extends BaseController
     public function show(int $id)
     {
         $loan = Loan::findTenanted($id);
-        return new DefaultResource($loan->loadMissing('details'));
+        return new LoanResource($loan->loadMissing([
+            'details',
+            'user' => fn($q) => $q->select('id', 'name', 'last_name', 'nik', 'email'),
+        ]));
     }
 
     public function store(StoreRequest $request)
@@ -74,7 +84,7 @@ class LoanController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        // $loan = Loan::findTenanted($id);
+        $loan = Loan::findTenanted($id);
         // $loan->update($request->validated());
 
         return (new DefaultResource($loan))->response()->setStatusCode(Response::HTTP_ACCEPTED);

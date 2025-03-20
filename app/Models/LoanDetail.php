@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LoanDetail extends BaseModel
 {
     protected $fillable = [
+        'run_payroll_user_id',
         'loan_id',
         'payment_period_year',
         'payment_period_month',
@@ -17,23 +18,13 @@ class LoanDetail extends BaseModel
 
     protected $appends = [
         'total',
-        'remaining_loan',
     ];
 
     protected function total(): Attribute
     {
         return new Attribute(
             get: function () {
-                return 0;
-            },
-        );
-    }
-
-    protected function remainingLoan(): Attribute
-    {
-        return new Attribute(
-            get: function () {
-                return 0;
+                return $this->basic_payment + ($this->basic_payment * ($this->interest / 100));
             },
         );
     }

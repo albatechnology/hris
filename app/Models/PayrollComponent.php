@@ -67,6 +67,8 @@ class PayrollComponent extends BaseModel implements TenantedInterface
                 PayrollComponentCategory::BASIC_SALARY,
                 PayrollComponentCategory::OVERTIME,
                 PayrollComponentCategory::ALPA,
+                PayrollComponentCategory::LOAN,
+                PayrollComponentCategory::INSURANCE,
                 PayrollComponentCategory::BPJS_KESEHATAN,
                 PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
                 PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,

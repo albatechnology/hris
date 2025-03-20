@@ -11,6 +11,8 @@ enum PayrollComponentCategory: string
     case OVERTIME = 'overtime';
     case TASK_OVERTIME = 'task_overtime';
     case ALPA = 'alpa';
+    case LOAN = 'loan';
+    case INSURANCE = 'insurance';
 
     case BPJS_KESEHATAN = 'bpjs_kesehatan';
     case BPJS_KETENAGAKERJAAN = 'bpjs_ketenagakerjaan';
