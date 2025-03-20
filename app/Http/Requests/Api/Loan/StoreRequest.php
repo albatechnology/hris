@@ -20,6 +20,18 @@ class StoreRequest extends FormRequest
         return true;
     }
 
+     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'installment' => count($this->details ?? []),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

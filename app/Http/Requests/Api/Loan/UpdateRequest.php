@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Api\Loan;
 
+use App\Enums\LoanType;
 use App\Models\Loan;
 use App\Rules\CompanyTenantedRule;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
@@ -18,6 +20,18 @@ class UpdateRequest extends FormRequest
     }
 
     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'installment' => count($this->details ?? []),
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -25,28 +39,18 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => [new CompanyTenantedRule()],
-            'name' => 'required|string',
-            'account_no' => [
-                'required',
-                'string',
-                function (mixed $attribute, string $value, Closure $fail) {
-                    if (Loan::tenanted()->where('account_no', $value)->whereNot('id', $this->loan)->exists()) {
-                        $fail('Account no already exist');
-                    }
-                }
-            ],
-            'account_holder' => 'required|string',
-            'code' => [
-                'required',
-                'string',
-                function (mixed $attribute, string $value, Closure $fail) {
-                    if (Loan::tenanted()->where('code', $value)->whereNot('id', $this->loan)->exists()) {
-                        $fail('Code already exist');
-                    }
-                }
-            ],
-            'branch' => 'required|string',
+            // 'user_id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
+            'effective_date' => 'nullable|date',
+            'type' => ['nullable', Rule::enum(LoanType::class)],
+            'installment' => 'required|integer',
+            'interest' => 'nullable|numeric',
+            'amount' => 'required|numeric',
+            'description' => 'nullable|string',
+            'details' => 'required|array',
+            'details.*.payment_period_year' => 'required|date_format:Y',
+            'details.*.payment_period_month' => 'required|date_format:m',
+            'details.*.basic_payment' => 'required|numeric',
+            'details.*.interest' => 'nullable|numeric',
         ];
     }
 }

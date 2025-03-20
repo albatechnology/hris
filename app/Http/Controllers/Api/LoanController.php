@@ -62,7 +62,10 @@ class LoanController extends BaseController
     {
         $loan = Loan::findTenanted($id);
         return new LoanResource($loan->loadMissing([
-            'details' => fn($q) => $q->with('runPayrollUser', fn($q) => $q->select('id', 'run_payroll_id')->with('runPayroll')),
+            'details' => fn($q) => $q->with([
+                'runPayrollUser' => fn($q) => $q->select('id', 'run_payroll_id')->with('runPayroll'),
+                'userContact'
+            ]),
             'user' => fn($q) => $q->select('id', 'name', 'last_name', 'nik', 'email'),
         ]));
     }
