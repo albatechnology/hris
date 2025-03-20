@@ -62,11 +62,11 @@ class GroupSeeder extends Seeder
         ];
 
         $group = Group::create([
-            'name' => 'LUMORA',
+            'name' => 'ATARA Corp',
         ]);
 
-        $company1 = $group->companies()->create([
-            'name' => 'LUMORA',
+        $company = $group->companies()->create([
+            'name' => 'PT. Argusindo Investama Raharja',
             'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
             'country_id' => 1,
             'country' => 'Indonesia',
@@ -76,11 +76,11 @@ class GroupSeeder extends Seeder
             'lat' => '-6.2326902',
             'lng' => '106.6645009',
         ]);
-        $company1->positions()->createMany($positions);
-        $division = $company1->divisions()->create(['name' => 'Operasional (' . $company1->name . ')']);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
         $division->departments()->createMany($departments);
-        $company1->branches()->create([
-            'name' => 'LUMORA Tangerang',
+        $company->branches()->create([
+            'name' => 'PT. Argusindo Investama Raharja',
             'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
             'country' => 'Indonesia',
             'province' => 'Banten',
@@ -90,7 +90,137 @@ class GroupSeeder extends Seeder
             'lng' => '106.5766001',
             'umk' => 5067381,
         ]);
-        // $company1->branches()->create([
+
+        $company = $group->companies()->create([
+            'name' => 'PT. ATARA RESOURCES CANDRASA',
+            'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
+            'country_id' => 1,
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15143',
+            'lat' => '-6.2326902',
+            'lng' => '106.6645009',
+        ]);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division->departments()->createMany($departments);
+        $company->branches()->create([
+            'name' => 'PT. ATARA RESOURCES CANDRASA',
+            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15320',
+            'lat' => '-6.2348656',
+            'lng' => '106.5766001',
+            'umk' => 5067381,
+        ]);
+
+        $company = $group->companies()->create([
+            'name' => 'PT. DUTADHARMA UTAMA',
+            'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
+            'country_id' => 1,
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15143',
+            'lat' => '-6.2326902',
+            'lng' => '106.6645009',
+        ]);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division->departments()->createMany($departments);
+        $company->branches()->create([
+            'name' => 'PT. DUTADHARMA UTAMA',
+            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15320',
+            'lat' => '-6.2348656',
+            'lng' => '106.5766001',
+            'umk' => 5067381,
+        ]);
+
+        $company = $group->companies()->create([
+            'name' => 'PT. AMAN BARATAMA SEJAHTERA',
+            'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
+            'country_id' => 1,
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15143',
+            'lat' => '-6.2326902',
+            'lng' => '106.6645009',
+        ]);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division->departments()->createMany($departments);
+        $company->branches()->create([
+            'name' => 'PT. AMAN BARATAMA SEJAHTERA',
+            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15320',
+            'lat' => '-6.2348656',
+            'lng' => '106.5766001',
+            'umk' => 5067381,
+        ]);
+
+        $company = $group->companies()->create([
+            'name' => 'PT. BANJAR BUMI PERSADA',
+            'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
+            'country_id' => 1,
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15143',
+            'lat' => '-6.2326902',
+            'lng' => '106.6645009',
+        ]);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division->departments()->createMany($departments);
+        $company->branches()->create([
+            'name' => 'PT. BANJAR BUMI PERSADA',
+            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15320',
+            'lat' => '-6.2348656',
+            'lng' => '106.5766001',
+            'umk' => 5067381,
+        ]);
+
+        $company = $group->companies()->create([
+            'name' => 'PT. MITRA AGRO SEMESTA',
+            'address' => 'Alam Sutera, The Prominence, Jl. Jalur Sutera Bar. No.25 Blok 38D, RT.003/RW.006, Panunggangan Tim., Kec. Pinang, Kota Tangerang Selatan, Banten 15143',
+            'country_id' => 1,
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15143',
+            'lat' => '-6.2326902',
+            'lng' => '106.6645009',
+        ]);
+        $company->positions()->createMany($positions);
+        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        $division->departments()->createMany($departments);
+        $company->branches()->create([
+            'name' => 'PT. MITRA AGRO SEMESTA',
+            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+            'country' => 'Indonesia',
+            'province' => 'Banten',
+            'city' => 'Kota Tangerang Selatan',
+            'zip_code' => '15320',
+            'lat' => '-6.2348656',
+            'lng' => '106.5766001',
+            'umk' => 5067381,
+        ]);
+        // $company->branches()->create([
         //     'name' => 'Tanjung Duren',
         //     'address' => 'Tanjung Duren',
         //     'country' => 'Indonesia',
@@ -101,7 +231,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Kebon Jeruk',
         //     'address' => 'Kebon Jeruk',
         //     'country' => 'Indonesia',
@@ -112,7 +242,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'SUN Alam Sutera',
         //     'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
         //     'country' => 'Indonesia',
@@ -123,7 +253,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.5766001',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Kelapa Gading Timur',
         //     'address' => 'Kelapa Gading Timur',
         //     'country' => 'Indonesia',
@@ -134,7 +264,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Kelapa Gading Barat',
         //     'address' => 'Kelapa Gading Barat',
         //     'country' => 'Indonesia',
@@ -145,7 +275,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'STC Senayan',
         //     'address' => 'STC Senayan',
         //     'country' => 'Indonesia',
@@ -156,7 +286,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Pluit',
         //     'address' => 'Pluit',
         //     'country' => 'Indonesia',
@@ -167,7 +297,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Pondok Indah',
         //     'address' => 'Pondok Indah',
         //     'country' => 'Indonesia',
@@ -178,7 +308,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Bali',
         //     'address' => 'Bali',
         //     'country' => 'Indonesia',
@@ -189,7 +319,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Surabaya Timur',
         //     'address' => 'Surabaya Timur',
         //     'country' => 'Indonesia',
@@ -200,7 +330,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Surabaya Barat',
         //     'address' => 'Surabaya Barat',
         //     'country' => 'Indonesia',
@@ -211,7 +341,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Medan',
         //     'address' => 'Medan',
         //     'country' => 'Indonesia',
@@ -222,7 +352,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Pekanbaru',
         //     'address' => 'Pekanbaru',
         //     'country' => 'Indonesia',
@@ -233,7 +363,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Batam',
         //     'address' => 'Batam',
         //     'country' => 'Indonesia',
@@ -244,7 +374,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Lampung',
         //     'address' => 'Lampung',
         //     'country' => 'Indonesia',
@@ -255,7 +385,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Palembang',
         //     'address' => 'Palembang',
         //     'country' => 'Indonesia',
@@ -266,7 +396,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Bandung',
         //     'address' => 'Bandung',
         //     'country' => 'Indonesia',
@@ -277,7 +407,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Semarang',
         //     'address' => 'Semarang',
         //     'country' => 'Indonesia',
@@ -288,7 +418,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Cirebon',
         //     'address' => 'Cirebon',
         //     'country' => 'Indonesia',
@@ -299,7 +429,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Yogyakarta',
         //     'address' => 'Yogyakarta',
         //     'country' => 'Indonesia',
@@ -310,7 +440,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Makassar',
         //     'address' => 'Makassar',
         //     'country' => 'Indonesia',
@@ -321,7 +451,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Samarinda',
         //     'address' => 'Samarinda',
         //     'country' => 'Indonesia',
@@ -332,7 +462,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Balikpapan',
         //     'address' => 'Balikpapan',
         //     'country' => 'Indonesia',
@@ -343,7 +473,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Pontianak',
         //     'address' => 'Pontianak',
         //     'country' => 'Indonesia',
@@ -354,7 +484,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Cibubur',
         //     'address' => 'Cibubur',
         //     'country' => 'Indonesia',
@@ -365,7 +495,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '106.742916',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Gading Serpong',
         //     'address' => 'Gading Serpong',
         //     'country' => 'Indonesia',
@@ -413,7 +543,7 @@ class GroupSeeder extends Seeder
         //     'lng' => '101.5256048',
         //     'umk' => 5067381,
         // ]);
-        // $company1->branches()->create([
+        // $company->branches()->create([
         //     'name' => 'Surabaya',
         //     'address' => 'Surabaya',
         //     'country' => 'Malaysia',

@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
             'email' => 'administrator1@gmail.com',
             'email_verified_at' => now(),
             'password' => self::PASSWORD,
-            'type' => UserType::ADMINISTRATOR,
+            'type' => UserType::ADMIN,
         ]);
         $administrator->payrollInfo()->create([]);
         $administrator->detail()->create([]);
@@ -69,7 +69,7 @@ class UserSeeder extends Seeder
             'email' => 'administrator.alba@gmail.com',
             'email_verified_at' => now(),
             'password' => self::PASSWORD,
-            'type' => UserType::ADMINISTRATOR,
+            'type' => UserType::ADMIN,
         ]);
         $administrator->payrollInfo()->create([]);
         $administrator->detail()->create([]);
@@ -89,7 +89,7 @@ class UserSeeder extends Seeder
         //     'email' => 'administrator.patroli@gmail.com',
         //     'email_verified_at' => now(),
         //     'password' => self::PASSWORD,
-        //     'type' => UserType::ADMINISTRATOR,
+        //     'type' => UserType::ADMIN,
         // ]);
         // $administrator->payrollInfo()->create([]);
         // $administrator->detail()->create([]);
@@ -113,10 +113,10 @@ class UserSeeder extends Seeder
                 'company_id' => $company->id,
                 'branch_id' => null,
                 'name' => 'Admin ' . $company->name,
-                'email' => $company->id == 2 ? 'admin.alba@gmail.com' : 'admin' . $company->id . '@gmail.com',
+                'email' => 'admin' . $company->id . '@gmail.com',
                 'email_verified_at' => now(),
                 'password' => self::PASSWORD,
-                'type' => UserType::ADMIN,
+                'type' => UserType::USER,
                 'nik' => rand(16, 100),
                 'sign_date' => date('Y') . '-01-01',
                 'join_date' => date('Y') . '-01-01',
@@ -159,7 +159,7 @@ class UserSeeder extends Seeder
             $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin) {
                 $admin->branches()->create(['branch_id' => $branch->id]);
 
-                if ($company->id == 2) {
+                if ($company->group_id == 2) {
                     $albaUsers = [
                         [
                             'name' => 'Nikko Febika',
