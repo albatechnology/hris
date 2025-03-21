@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Loan;
 use App\Enums\LoanType;
 use App\Models\Loan;
 use App\Models\User;
+use App\Models\UserContact;
 use App\Rules\CompanyTenantedRule;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -41,6 +42,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'user_id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
+            'user_contact_id' => ['nullable', new CompanyTenantedRule(UserContact::class, 'Family of user not found')],
             'effective_date' => 'required|date',
             'type' => ['required', Rule::enum(LoanType::class)],
             'installment' => 'required|integer',

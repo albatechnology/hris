@@ -7,12 +7,11 @@ use App\Enums\Gender;
 use App\Enums\RelationshipType;
 use App\Enums\Religion;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\TenantedThroughUser;
 
 class UserContact extends BaseModel implements TenantedInterface
 {
-    use BelongsToUser, TenantedThroughUser;
+    use TenantedThroughUser;
 
     protected $fillable = [
         'user_id',

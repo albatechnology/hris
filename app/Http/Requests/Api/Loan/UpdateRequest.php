@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Api\Loan;
 
 use App\Enums\LoanType;
-use App\Models\Loan;
+use App\Models\UserContact;
 use App\Rules\CompanyTenantedRule;
-use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,8 +25,10 @@ class UpdateRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        $details = collect($this->details ?? [])->reject(fn($detail) => $detail['basic_payment'] <= 0);
         $this->merge([
-            'installment' => count($this->details ?? []),
+            'installment' => $details->count(),
+            'details' => $details->toArray(),
         ]);
     }
 
@@ -40,6 +41,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             // 'user_id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
+            'user_contact_id' => ['nullable', new CompanyTenantedRule(UserContact::class, 'Family of user not found')],
             'effective_date' => 'nullable|date',
             'type' => ['nullable', Rule::enum(LoanType::class)],
             'installment' => 'required|integer',

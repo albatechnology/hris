@@ -88,7 +88,23 @@ class LoanController extends BaseController
     public function update(int $id, UpdateRequest $request)
     {
         $loan = Loan::findTenanted($id);
-        // $loan->update($request->validated());
+
+        $amountPaid = $loan->details->whereNotNull('run_payroll_user_id')->sum('basic_payment');
+        $newTotalAmount = collect($request->details)->sum('basic_payment');
+        if ($amountPaid + $newTotalAmount != $request->amount) {
+            return $this->errorResponse(message: 'Payments is not correct with total amount', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        DB::beginTransaction();
+        try {
+            $loan->update($request->validated());
+            $loan->details()->whereNull('run_payroll_user_id')->delete();
+            $loan->details()->createMany($request->details);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($loan))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
