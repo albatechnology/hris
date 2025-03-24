@@ -152,17 +152,17 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     public function columnFormats(): array
     {
         return [
-            'E' => NumberFormat::FORMAT_GENERAL,
-            'I' => NumberFormat::FORMAT_GENERAL,
-            'N' => NumberFormat::FORMAT_GENERAL,
-            'O' => NumberFormat::FORMAT_GENERAL,
-            'R' => NumberFormat::FORMAT_GENERAL,
-            'T' => NumberFormat::FORMAT_GENERAL,
-            'AD' => NumberFormat::FORMAT_GENERAL,
-            'AF' => NumberFormat::FORMAT_GENERAL,
-            'AL' => NumberFormat::FORMAT_GENERAL,
-            'AN' => NumberFormat::FORMAT_GENERAL,
-            'AO' => NumberFormat::FORMAT_GENERAL,
+            'E' => NumberFormat::FORMAT_TEXT,
+            'I' => NumberFormat::FORMAT_TEXT,
+            'N' => NumberFormat::FORMAT_TEXT,
+            'O' => NumberFormat::FORMAT_TEXT,
+            'R' => NumberFormat::FORMAT_TEXT,
+            'T' => NumberFormat::FORMAT_TEXT,
+            'AD' => NumberFormat::FORMAT_TEXT,
+            'AF' => NumberFormat::FORMAT_TEXT,
+            'AL' => NumberFormat::FORMAT_TEXT,
+            'AN' => NumberFormat::FORMAT_TEXT,
+            'AO' => NumberFormat::FORMAT_TEXT,
         ];
     }
 }
