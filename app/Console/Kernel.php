@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\AnnualLeave\NewEmployee;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -13,6 +14,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+
+        $schedule->job(new NewEmployee)->dailyAt('13:09');
 
         // cron untuk company yang punya timeoff regulation monthly
         // cron untuk company yang punya timeoff regulation user_period

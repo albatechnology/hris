@@ -59,8 +59,9 @@ class NewEmployee implements ShouldQueue
                         )
                 )
                 ->orderBy('join_date')
-                ->whereNotIn('id', [16, 82, 50])
-                ->get(['id', 'join_date']);
+                ->whereIn('id', [240, 235, 239])
+                ->get(['id', 'join_date', 'name']);
+            // dd($users->select('id', 'name')->toArray());
 
             foreach ($users as $user) {
                 DB::transaction(function () use ($user, $dataQuotas, $timeoffPolicyId) {
