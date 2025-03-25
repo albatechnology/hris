@@ -69,6 +69,11 @@ class TimeoffQuotaController extends BaseController
 
         $adjustments = TimeoffQuotaHistory::where('user_id', $userId)
             ->whereHas('timeoffQuota', fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId))
+            ->with(
+                'timeoffQuota',
+                fn($q) => $q->select('id', 'timeoff_policy_id')
+                    ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
+            )
             ->orderByDesc('id')
             ->get();
 
@@ -78,12 +83,14 @@ class TimeoffQuotaController extends BaseController
             ->where('timeoff_policy_id', $timeoffPolicyId)
             ->whereExpired()
             ->whereRaw('quota > used_quota')
+            ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
             ->orderByDesc('id')
             ->get();
 
         $timeoffTaken = Timeoff::where('user_id', $userId)
             ->where('timeoff_policy_id', $timeoffPolicyId)
             ->approved()
+            ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
             ->orderByDesc('id')
             ->get();
 
