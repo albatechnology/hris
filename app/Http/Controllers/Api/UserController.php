@@ -10,6 +10,7 @@ use App\Enums\ResignationType;
 use App\Enums\SettingKey;
 use App\Enums\UserType;
 use App\Exports\User\UserExport;
+use App\Exports\User\UsersImportTemplate;
 use App\Http\Requests\Api\User\DetailStoreRequest;
 use App\Http\Requests\Api\User\ExportRequest;
 use App\Http\Requests\Api\User\RegisterRequest;
@@ -805,6 +806,10 @@ class UserController extends BaseController
 
     public function import(Request $request, ?string $sample = null)
     {
+        if ($sample) {
+            return new UsersImportTemplate();
+        }
+
         (new UsersImport)->import($request->file);
 
         return $this->createdResponse();

@@ -56,6 +56,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
     public function rules(): array
     {
         return [
+            'supervisor_nik' => ['nullable', 'exists:users,nik'],
             'role_id' => ['required', new CompanyTenantedRule(Role::class, 'Role not found')],
             'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
@@ -167,6 +168,16 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'join_date' => date('Y-m-d', strtotime($row['join_date'])),
             'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
         ]);
+
+        if (isset($row['supervisor_nik']) && !empty($row['supervisor_nik'])) {
+            $supervisor = User::where('nik', trim($row['supervisor_nik']))->first(['id']);
+            if ($supervisor) {
+                $user->supervisors()->create([
+                    'supervisor_id' => $supervisor->id,
+                    'order' => 1,
+                ]);
+            }
+        }
 
         $user->roles()->syncWithPivotValues([$row['role_id']], ['group_id' => $user->group_id]);
 
