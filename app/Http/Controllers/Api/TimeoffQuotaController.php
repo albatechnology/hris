@@ -68,7 +68,11 @@ class TimeoffQuotaController extends BaseController
         }
 
         $adjustments = TimeoffQuotaHistory::where('user_id', $userId)
-            ->whereHas('timeoffQuota', fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId))
+            ->whereHas(
+                'timeoffQuota',
+                fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId)
+                    ->whereActive(withActiveQuota: false)
+            )
             ->with(
                 'timeoffQuota',
                 fn($q) => $q->select('id', 'timeoff_policy_id')

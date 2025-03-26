@@ -74,7 +74,7 @@ class TimeoffQuota extends BaseModel implements TenantedInterface
         $query->whereDate('effective_end_date', '<=', date('Y-m-d', strtotime($date)));
     }
 
-    public function scopeWhereActive($q, ?string $startDate = null, ?string $endDate = null)
+    public function scopeWhereActive($q, ?string $startDate = null, ?string $endDate = null, bool $withActiveQuota = true)
     {
         if ($startDate) {
             $startDate = date('Y-m-d', strtotime($startDate));
@@ -97,6 +97,6 @@ class TimeoffQuota extends BaseModel implements TenantedInterface
                     fn($q) => $q->whereDate('effective_start_date', '<=', $startDate)->whereNull('effective_end_date')
                 )
         )
-            ->whereRaw('quota > used_quota');
+            ->when($withActiveQuota, fn($q) => $q->whereRaw('quota > used_quota'));
     }
 }

@@ -62,7 +62,7 @@ class UserPatrolBatchController extends BaseController
 
             foreach ($request->tasks as $task) {
                 $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create($task);
-                foreach ($task['images'] as $image) {
+                foreach ($task['images'] ?? [] as $image) {
                     if ($image->isValid()) {
                         $userPatrolTask->addMedia($image)->toMediaCollection();
                     }
