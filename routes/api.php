@@ -64,6 +64,8 @@ use App\Http\Controllers\Api\UserCustomFieldController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\UserExperienceController;
+use App\Http\Controllers\Api\UserPatrolBatchController;
+use App\Http\Controllers\Api\UserPatrolMovementController;
 use App\Http\Controllers\Api\UserPatrolController;
 use App\Http\Controllers\Api\UserPatrolTaskController;
 use App\Http\Controllers\Api\UserScheduleController;
@@ -345,6 +347,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('patrols', PatrolController::class);
 
     Route::apiResource('user-patrols', UserPatrolController::class);
+
+    Route::post('user-patrol-batches/sync', [UserPatrolBatchController::class, 'sync']);
+    Route::apiResource('user-patrol-batches', UserPatrolBatchController::class);
+    Route::apiResource('user-patrol-movements', UserPatrolMovementController::class);
 
     Route::apiResource('npp', NppController::class);
 

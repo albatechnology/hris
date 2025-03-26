@@ -113,17 +113,34 @@ class Patrol extends BaseModel implements TenantedInterface
         if (!$user->is_user) {
             return $query->whereHas('client', fn($q) => $q->tenanted());
         }
-
+        // return $query;
         // $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleType: ScheduleType::PATROL->value);
+        $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleColumn: ['id'], shiftColumn: ['id', 'is_dayoff']);
+
+        if (!$schedule || $schedule->shift?->is_dayoff) {
+            // return no data
+            return $query->where('id', '<', 0);
+        }
+
         return $query->whereHas(
             'users',
             fn($q) => $q->where('user_id', $user->id)
-                ->whereHas('userPatrolSchedules.schedule', function ($q2) {
-                    $q2->where('schedules.type', ScheduleType::PATROL->value);
-                    $q2->whereDate('schedules.effective_date', '<=', date('Y-m-d'));
-                    // $q2->whereHas('shifts', fn($q3) => $q3->where('id', $schedule?->shift?->id));
-                })
+            // ->whereHas('userPatrolSchedules.schedule', function ($q2) {
+            //     $q2->where('schedules.type', ScheduleType::PATROL->value);
+            //     $q2->whereDate('schedules.effective_date', '<=', date('Y-m-d'));
+            //     // $q2->whereHas('shifts', fn($q3) => $q3->where('id', $schedule?->shift?->id));
+            // })
         );
+
+        // return $query->whereHas(
+        //     'users',
+        //     fn($q) => $q->where('user_id', $user->id)
+        //         ->whereHas('userPatrolSchedules.schedule', function ($q2) {
+        //             $q2->where('schedules.type', ScheduleType::PATROL->value);
+        //             $q2->whereDate('schedules.effective_date', '<=', date('Y-m-d'));
+        //             // $q2->whereHas('shifts', fn($q3) => $q3->where('id', $schedule?->shift?->id));
+        //         })
+        // );
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -149,6 +166,11 @@ class Patrol extends BaseModel implements TenantedInterface
     public function patrolLocations(): HasMany
     {
         return $this->hasMany(PatrolLocation::class);
+    }
+
+    public function patrolHours(): HasMany
+    {
+        return $this->hasMany(PatrolHour::class);
     }
 
     public function users(): HasMany

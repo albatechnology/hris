@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+// sekarang tidak dipake dulu, sebagai gantinya pake schedule shift attendance
 class UserPatrolSchedule extends BaseModel
 {
     protected $fillable = [

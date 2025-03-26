@@ -29,7 +29,6 @@ use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UsersImport;
-use App\Imports\UserSunImport;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\RunPayroll;

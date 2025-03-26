@@ -30,9 +30,9 @@ class UserPatrolTaskController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(UserPatrolTask::tenanted())
-            ->allowedIncludes(['patrolTask', 'schedule', 'shift', 'user', 'media'])
+            ->allowedIncludes(['patrolTask', 'schedule', 'shift', 'media'])
             ->allowedFilters([
-                AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('user_patrol_batch_id'),
                 AllowedFilter::exact('patrol_task_id'),
                 AllowedFilter::exact('schedule_id'),
                 AllowedFilter::exact('shift_id'),
@@ -51,7 +51,7 @@ class UserPatrolTaskController extends BaseController
             ])
             ->allowedSorts([
                 'id',
-                'user_id',
+                'user_patrol_batch_id',
                 'patrol_task_id',
                 'schedule_id',
                 'created_at',

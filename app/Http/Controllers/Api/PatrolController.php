@@ -63,7 +63,7 @@ class PatrolController extends BaseController
         return new DefaultResource($patrol->load([
             'users' => [
                 'user',
-                'userPatrolSchedules.schedule',
+                // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
                 'clientLocation',
@@ -87,6 +87,8 @@ class PatrolController extends BaseController
                 'description' => $request->description,
             ]);
 
+            $patrol->patrolHours()->createMany($request->hours);
+
             // user patrol
             if ($request->users) {
                 foreach ($request->users as $reqUser) {
@@ -94,11 +96,11 @@ class PatrolController extends BaseController
                         'user_id' => $reqUser['id'],
                     ]);
 
-                    foreach ($reqUser['schedules'] as $reqUserSchedule) {
-                        $userPatrol->userPatrolSchedules()->create([
-                            'schedule_id' => $reqUserSchedule['id'],
-                        ]);
-                    }
+                    // foreach ($reqUser['schedules'] as $reqUserSchedule) {
+                    //     $userPatrol->userPatrolSchedules()->create([
+                    //         'schedule_id' => $reqUserSchedule['id'],
+                    //     ]);
+                    // }
                 }
             }
 
@@ -127,7 +129,7 @@ class PatrolController extends BaseController
         return new DefaultResource($patrol->load([
             'users' => [
                 'user',
-                'userPatrolSchedules.schedule',
+                // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
                 'clientLocation',
@@ -152,8 +154,11 @@ class PatrolController extends BaseController
                 'description' => $request->description,
             ]);
 
+            $patrol->patrolHours()->delete();
+            $patrol->patrolHours()->createMany($request->hours);
+
             // user patrol
-            $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
+            // $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
             $patrol->users()->delete();
             if ($request->users) {
                 foreach ($request->users as $reqUser) {
@@ -161,11 +166,11 @@ class PatrolController extends BaseController
                         'user_id' => $reqUser['id'],
                     ]);
 
-                    foreach ($reqUser['schedules'] as $reqUserSchedule) {
-                        $userPatrol->userPatrolSchedules()->create([
-                            'schedule_id' => $reqUserSchedule['id'],
-                        ]);
-                    }
+                    // foreach ($reqUser['schedules'] as $reqUserSchedule) {
+                    //     $userPatrol->userPatrolSchedules()->create([
+                    //         'schedule_id' => $reqUserSchedule['id'],
+                    //     ]);
+                    // }
                 }
             }
 
@@ -196,7 +201,7 @@ class PatrolController extends BaseController
         return (new DefaultResource($patrol->load([
             'users' => [
                 'user',
-                'userPatrolSchedules.schedule',
+                // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
                 'clientLocation',
@@ -208,15 +213,20 @@ class PatrolController extends BaseController
     public function destroy(int $id)
     {
         $patrol = Patrol::findTenanted($id);
+
+        DB::beginTransaction();
         try {
             Schema::disableForeignKeyConstraints();
-            $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
+            // $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
             $patrol->users()->delete();
             $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->delete());
             $patrol->patrolLocations()->delete();
+            $patrol->patrolHours()->delete();
             $patrol->delete();
             Schema::enableForeignKeyConstraints();
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 

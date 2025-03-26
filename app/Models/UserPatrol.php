@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserPatrol extends BaseModel
 {
@@ -15,18 +14,13 @@ class UserPatrol extends BaseModel
         'patrol_id',
     ];
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function patrol(): BelongsTo
     {
         return $this->belongsTo(Patrol::class);
     }
 
-    public function userPatrolSchedules(): HasMany
-    {
-        return $this->hasMany(UserPatrolSchedule::class);
-    }
+    // public function userPatrolSchedules(): HasMany
+    // {
+    //     return $this->hasMany(UserPatrolSchedule::class);
+    // }
 }

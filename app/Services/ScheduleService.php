@@ -58,7 +58,7 @@ class ScheduleService
         }
 
         /** @var Schedule $schedule */
-        if ($scheduleType == ScheduleType::ATTENDANCE->value) {
+        // if ($scheduleType == ScheduleType::ATTENDANCE->value) {
             $schedule = $user->schedules()
                 ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
                 ->whereApproved()
@@ -67,19 +67,19 @@ class ScheduleService
                 ->withCount('shifts')
                 ->orderByDesc('schedules.effective_date')
                 ->orderByDesc('schedules.created_at')->first();
-        } else {
-            $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
-                $q->whereApproved();
-                $q->where('type', $scheduleType);
-                $q->whereDate('effective_date', '<=', $date);
-            })->first()?->schedule()
-                ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-                ->where('type', $scheduleType)
-                ->whereDate('effective_date', '<=', $date)
-                ->withCount('shifts')
-                ->orderByDesc('schedules.effective_date')
-                ->orderByDesc('schedules.created_at')->first();
-        }
+        // } else {
+        //     $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
+        //         $q->whereApproved();
+        //         $q->where('type', $scheduleType);
+        //         $q->whereDate('effective_date', '<=', $date);
+        //     })->first()?->schedule()
+        //         ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+        //         ->where('type', $scheduleType)
+        //         ->whereDate('effective_date', '<=', $date)
+        //         ->withCount('shifts')
+        //         ->orderByDesc('schedules.effective_date')
+        //         ->orderByDesc('schedules.created_at')->first();
+        // }
 
         if (!$schedule || $schedule->shifts_count === 0) return null;
 
