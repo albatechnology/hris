@@ -9,6 +9,7 @@ use App\Http\Resources\Schedule\ScheduleResource;
 use App\Http\Resources\Schedule\TodayScheduleResource;
 use App\Imports\ImportShiftsImport;
 use App\Models\Schedule;
+use App\Services\AttendanceService;
 use App\Services\ScheduleService;
 use Exception;
 use Illuminate\Http\Request;
@@ -144,8 +145,20 @@ class ScheduleController extends BaseController
             return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($request->include && $request->include == 'shifts') {
-            $schedule->load(['shifts' => fn($q) => $q->selectMinimalist()]);
+        if ($request->include) {
+            $includes = explode(',', $request->include);
+            if (in_array('shifts', $includes)) {
+                $schedule->load(['shifts' => fn($q) => $q->selectMinimalist()]);
+            }
+
+            if (in_array('attendance', $includes)) {
+                $select = fn($q) => $q->select('id', 'attendance_id', 'time');
+                $attendance = AttendanceService::getTodayAttendance($request->date);
+                if ($attendance) {
+                    $attendance->load(['clockIn' => $select, 'clockOut' => $select]);
+                    $schedule->attendance = $attendance;
+                }
+            }
         }
 
         return new TodayScheduleResource($schedule);
