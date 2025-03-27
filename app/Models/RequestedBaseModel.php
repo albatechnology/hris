@@ -36,7 +36,8 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
 
     public function scopeApproved(Builder $query)
     {
-        $query->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS]));
+        $query->has('approvals')
+            ->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS]));
     }
 
     public function scopeWhereApprovalStatus(Builder $query, string|ApprovalStatus $status = ApprovalStatus::PENDING->value): Builder
