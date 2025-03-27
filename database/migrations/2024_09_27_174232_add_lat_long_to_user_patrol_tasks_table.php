@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('user_patrol_tasks', function (Blueprint $table) {
-            $table->string('lat')->after('description')->nullable();
-            $table->string('lng')->after('lat')->nullable();
+            $table->string('lat', 50)->after('description')->nullable();
+            $table->string('lng', 50)->after('lat')->nullable();
         });
     }
 

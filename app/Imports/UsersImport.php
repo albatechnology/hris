@@ -197,15 +197,15 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'postal_code' => $row['postal_code'],
             'address' => $row['address'],
             'address_ktp' => $row['address_ktp'],
-            'employment_status' => strtolower($row['employment_status']),
+            'employment_status' => $row['employment_status'] ? strtolower($row['employment_status']) : null,
             'passport_no' => $row['passport_number'],
-            'passport_expired' => date('Y-m-d', strtotime($row['passport_expired'])),
+            'passport_expired' => $row['passport_expired'] ? date('Y-m-d', strtotime($row['passport_expired'])) : null,
             'birth_place' => $row['birth_place'],
-            'birthdate' => date('Y-m-d', strtotime($row['birthdate'])),
-            'marital_status' => strtolower($row['marital_status']),
-            'blood_type' => strtolower($row['blood_type']),
+            'birthdate' => $row['birthdate'] ? date('Y-m-d', strtotime($row['birthdate'])) : null,
+            'marital_status' => $row['marital_status'] ? strtolower($row['marital_status']) : null,
+            'blood_type' => $row['blood_type'] ? strtolower($row['blood_type']) : null,
             'rhesus' => $row['blood_rhesus'],
-            'religion' => strtolower($row['religion']),
+            'religion' => $row['religion'] ? strtolower($row['religion']) : null,
         ]);
 
         // create user_payroll_infos
@@ -220,8 +220,8 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'secondary_bank_account_holder' => $row['secondary_bank_account_holder'],
             'npwp' => $row['npwp'],
             'ptkp_status' => $row['ptkp_status'],
-            'tax_method' => strtolower($row['tax_method']),
-            'tax_salary' => strtolower($row['tax_salary']),
+            'tax_method' => str_replace(" ", "_", strtolower($row['tax_method'])),
+            'tax_salary' => str_replace(" ", "_", strtolower($row['tax_salary'])),
             'beginning_netto' => $row['beginning_netto'],
             'pph_21_paid' => $row['pph_21_paid'],
         ]);
@@ -230,7 +230,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
         $user->userBpjs()->create([
             'bpjs_ketenagakerjaan_no' => $row['bpjs_ketenagakerjaan_number'],
             'npp_bpjs_ketenagakerjaan' => $this->nppBpjsKetenagakerjaan,
-            'bpjs_ketenagakerjaan_date' => date('Y-m-d', strtotime($row['bpjs_ketenagakerjaan_date'])),
+            'bpjs_ketenagakerjaan_date' => $row['bpjs_ketenagakerjaan_date'] ? date('Y-m-d', strtotime($row['bpjs_ketenagakerjaan_date'])) : null,
             'bpjs_kesehatan_no' => $row['bpjs_kesehatan_number'],
             'bpjs_kesehatan_family_no' => $row['bpjs_kesehatan_family_number'],
             'bpjs_kesehatan_date' => $row['bpjs_kesehatan_date'] ? date('Y-m-d', strtotime($row['bpjs_kesehatan_date'])) : null,

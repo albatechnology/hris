@@ -24,8 +24,8 @@ return new class extends Migration
             $table->foreignIdFor(Schedule::class)->nullable();
             $table->foreignIdFor(Shift::class)->nullable();
             $table->timestamp('datetime');
-            $table->string('lat', 50)->nullable();
-            $table->string('lng', 50)->nullable();
+            // $table->string('lat', 50)->nullable();
+            // $table->string('lng', 50)->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
         });
