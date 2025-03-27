@@ -90,7 +90,11 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'passport_expired' => 'nullable|date',
             'birth_place' => 'nullable',
             'birthdate' => 'nullable|date',
-            'marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
+            'marital_status' => ['nullable', function ($attribute, $value, $fail) {
+                if (!in_array(strtolower($value), MaritalStatus::getValues())) {
+                    $fail('Invalid marital status value.');
+                }
+            }],
             'blood_type' => ['nullable', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), BloodType::getValues())) {
                     $fail('Invalid blood value.');
