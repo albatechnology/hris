@@ -15,6 +15,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class PatrolController extends BaseController
@@ -29,10 +30,29 @@ class PatrolController extends BaseController
         $this->middleware('permission:patrol_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    private function getAllowedIncludes()
+    {
+        return [
+            AllowedInclude::callback('client', function ($query) {
+                $query->selectMinimalist();
+            }),
+            AllowedInclude::callback('users', function ($query) {
+                $query->with('user', fn($q) => $q->select('id', 'name', 'last_name', 'nik'));
+            }),
+            AllowedInclude::callback('patrolLocations', function ($query) {
+                $query->select('id', 'patrol_id', 'client_location_id', 'description')
+                    ->with([
+                        'clientLocation' => fn($q) => $q->select('id', 'client_id', 'name', 'lat', 'lng', 'address', 'description'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description'),
+                    ]);
+            }),
+        ];
+    }
+
     public function index()
     {
         $data = QueryBuilder::for(Patrol::tenanted())
-            ->allowedIncludes(['client'])
+            ->allowedIncludes($this->getAllowedIncludes())
             ->allowedFilters([
                 AllowedFilter::callback('has_user_id', function ($query, $value) {
                     $query->whereHas('users', fn($q) => $q->where('user_id', $value));
@@ -59,17 +79,26 @@ class PatrolController extends BaseController
 
     public function show(int $id)
     {
-        $patrol = Patrol::findTenanted($id);
-        return new DefaultResource($patrol->load([
-            'users' => [
-                'user',
-                // 'userPatrolSchedules.schedule',
-            ],
-            'patrolLocations' => [
-                'clientLocation',
-                'tasks',
-            ],
-        ]));
+        $patrol = QueryBuilder::for(
+            Patrol::select('id', 'client_id', 'name', 'start_date', 'end_date', 'lat', 'lng', 'description', 'created_at')
+                ->tenanted()->where('id', $id)
+        )
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->firstOrFail();
+
+        return new DefaultResource($patrol);
+
+        // $patrol = Patrol::findTenanted($id);
+        // return new DefaultResource($patrol->load([
+        //     'users' => [
+        //         'user',
+        //         // 'userPatrolSchedules.schedule',
+        //     ],
+        //     'patrolLocations' => [
+        //         'clientLocation',
+        //         'tasks',
+        //     ],
+        // ]));
     }
 
     public function store(StoreRequest $request)

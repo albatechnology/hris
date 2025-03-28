@@ -35,4 +35,9 @@ class Client extends BaseModel implements TenantedInterface
     {
         return $this->hasMany(GuestBook::class);
     }
+
+    public function scopeSelectMinimalist($q)
+    {
+        $q->select('id', 'company_id', 'name', 'phone', 'address', 'pic_name', 'pic_email', 'pic_phone', 'created_at');
+    }
 }

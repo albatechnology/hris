@@ -2,12 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\PatrolTaskStatus;
-use App\Enums\ScheduleType;
 use App\Interfaces\TenantedInterface;
 use App\Services\ScheduleService;
 use App\Traits\Models\CustomSoftDeletes;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,69 +23,69 @@ class Patrol extends BaseModel implements TenantedInterface
         'description',
     ];
 
-    protected $appends = ['total_task', 'completed_task', 'status'];
+    // protected $appends = ['total_task', 'completed_task', 'status'];
 
-    public function getTotalTaskAttribute()
-    {
-        return $this->tasks()->count();
-    }
+    // public function getTotalTaskAttribute()
+    // {
+    //     return $this->tasks()->count();
+    // }
 
-    public function getCompletedTaskAttribute()
-    {
-        return $this->tasks()->where('status', PatrolTaskStatus::COMPLETE)->count();
-    }
+    // public function getCompletedTaskAttribute()
+    // {
+    //     return $this->tasks()->where('status', PatrolTaskStatus::COMPLETE)->count();
+    // }
 
-    public function getStatusAttribute()
-    {
-        // if (!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()) {
-        //     return null;
-        // }
-        // if ($this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && ($this->tasks()->where('status', PatrolTaskStatus::COMPLETE || $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first()))->first()) {
-        //     return 'progress';
-        // }
-        // if (!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && $this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()) {
-        //     return 'complete';
-        // }
-        // if (!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()) {
-        //     return 'cancel';
-        // }$schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
+    // public function getStatusAttribute()
+    // {
+    //     // if (!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()) {
+    //     //     return null;
+    //     // }
+    //     // if ($this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && ($this->tasks()->where('status', PatrolTaskStatus::COMPLETE || $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first()))->first()) {
+    //     //     return 'progress';
+    //     // }
+    //     // if (!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && $this->tasks()->where('status', PatrolTaskStatus::COMPLETE && !$this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()) {
+    //     //     return 'complete';
+    //     // }
+    //     // if (!$this->tasks()->where('status', PatrolTaskStatus::PENDING)->first() && !$this->tasks()->where('status', PatrolTaskStatus::COMPLETE && $this->tasks()->where('status', PatrolTaskStatus::CANCEL)->first())->first()) {
+    //     //     return 'cancel';
+    //     // }$schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
-        // Get current schedule
-        $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
+    //     // Get current schedule
+    //     $schedule = ScheduleService::getTodaySchedule(scheduleType: ScheduleType::PATROL->value);
 
-        if ($schedule?->shift) {
-            // Define start and end times based on shift clock_in and clock_out
-            $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
-            $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);
+    //     if ($schedule?->shift) {
+    //         // Define start and end times based on shift clock_in and clock_out
+    //         $start = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_in);
+    //         $end = Carbon::createFromFormat('H:i:s', $schedule->shift->clock_out);
 
-            $currentTime = Carbon::now(); // Current time
-            $currentPeriod = null;
+    //         $currentTime = Carbon::now(); // Current time
+    //         $currentPeriod = null;
 
-            // Generate 2-hour intervals within the shift time
-            while ($start->lt($end)) {
-                $nextPeriod = $start->copy()->addMinutes(5);
+    //         // Generate 2-hour intervals within the shift time
+    //         while ($start->lt($end)) {
+    //             $nextPeriod = $start->copy()->addMinutes(5);
 
-                // Check if the current time falls within this period
-                if ($currentTime->between($start, $nextPeriod)) {
-                    $currentPeriod = [$start, $nextPeriod];
-                    break;
-                }
+    //             // Check if the current time falls within this period
+    //             if ($currentTime->between($start, $nextPeriod)) {
+    //                 $currentPeriod = [$start, $nextPeriod];
+    //                 break;
+    //             }
 
-                // Move to the next period
-                $start->addMinutes(5);
-            }
+    //             // Move to the next period
+    //             $start->addMinutes(5);
+    //         }
 
-            return $this->tasks()->whereDoesntHave('userPatrolTasks', function ($q) use ($schedule, $currentPeriod) {
-                $q->where('schedule_id', $schedule->id);
-                $q->where('shift_id', $schedule->shift->id);
-                $q->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()]);
-                // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
-                $q->orderBy('id', 'DESC');
-            })->first() ? null : 'complete';
-        }
+    //         return $this->tasks()->whereDoesntHave('userPatrolTasks', function ($q) use ($schedule, $currentPeriod) {
+    //             $q->where('schedule_id', $schedule->id);
+    //             $q->where('shift_id', $schedule->shift->id);
+    //             $q->whereBetween('created_at', [$currentPeriod[0]->toDateTimeString(), $currentPeriod[1]->toDateTimeString()]);
+    //             // ->whereHas('patrolTask', fn($q) => $q->whereNotIn('status', [PatrolTaskStatus::CANCEL->value]))
+    //             $q->orderBy('id', 'DESC');
+    //         })->first() ? null : 'complete';
+    //     }
 
-        return null;
-    }
+    //     return null;
+    // }
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
