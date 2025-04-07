@@ -243,7 +243,7 @@ class TimeoffService
         if ($timeoff->timeoffPolicy->type->hasQuota() && $totalRequestDay > 0) {
 
             if ($timeoff->timeoffPolicy->type->is(TimeoffPolicyType::ANNUAL_LEAVE)) {
-                $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive($timeoff->start_at, $timeoff->end_at)->first();
+                $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive($timeoff->start_at, $timeoff->end_at)->orderBy('effective_end_date')->first();
 
                 if ($timeoffQuota) {
                     $oldBalance = $timeoffQuota->balance;
@@ -275,7 +275,7 @@ class TimeoffService
                     // Recursively call the function if the total request day is still greater than 0
                     if ($totalRequestDay > 0) self::applyTimeoffQuota($timeoff, $totalRequestDay);
                 } else {
-                    $timeoffQuotas = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive(date('Y-m-d', strtotime($timeoff->start_at . '+3 month')), date('Y-m-d', strtotime($timeoff->end_at . '+3 month')))->get();
+                    $timeoffQuotas = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive(date('Y-m-d', strtotime($timeoff->start_at . '+3 month')), date('Y-m-d', strtotime($timeoff->end_at . '+3 month')))->orderBy('effective_end_date')->get();
 
                     foreach ($timeoffQuotas as $timeoffQuota) {
                         // Check if the quota is exceeded
@@ -307,7 +307,7 @@ class TimeoffService
                     }
                 }
             } else {
-                $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive()->first();
+                $timeoffQuota = $timeoff->user->timeoffQuotas()->where('timeoff_policy_id', $timeoff->timeoff_policy_id)->whereActive($timeoff->start_at, $timeoff->end_at)->orderBy('effective_end_date')->first();
 
                 $oldBalance = $timeoffQuota->balance;
                 // Check if the quota is exceeded

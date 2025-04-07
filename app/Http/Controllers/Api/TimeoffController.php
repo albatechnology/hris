@@ -222,7 +222,7 @@ class TimeoffController extends BaseController
                 if ($timeoff->timeoffPolicy->type->is(TimeoffPolicyType::ANNUAL_LEAVE)) {
                     $isQuotaExceeded = TimeoffService::checkTotalBalanceQuotaAL($timeoff->user_id, $timeoff->timeoff_policy_id, $timeoff->total_days, $timeoff->start_at, $timeoff->end_at) === false;
                 } else {
-                    $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id);
+                    $remainingBalance = TimeoffService::getTotalBalanceQuota($timeoff->user_id, $timeoff->timeoff_policy_id, $timeoff->start_at, $timeoff->end_at);
 
                     $isQuotaExceeded = $remainingBalance <= 0 || $remainingBalance < $timeoff->total_days;
                 }
@@ -251,7 +251,6 @@ class TimeoffController extends BaseController
         //         return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         //     }
         // }
-
         DB::beginTransaction();
         try {
             $requestApproval->update($request->validated());
