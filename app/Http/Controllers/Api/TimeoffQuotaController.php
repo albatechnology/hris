@@ -31,7 +31,7 @@ class TimeoffQuotaController extends BaseController
     //     $this->middleware('permission:timeoff_policy_delete', ['only' => ['destroy', 'forceDelete']]);
     // }
 
-    public function getUserTimeoffPolicyQuota(int $userId)
+    public function getUserTimeoffPolicyQuota(Request $request, int $userId)
     {
         if ($userId != auth()->id()) {
             User::select('id')->tenanted(true)->where('id', $userId)->firstOrFail();
@@ -44,15 +44,18 @@ class TimeoffQuotaController extends BaseController
         //     ->groupBy('timeoff_policy_id')
         //     ->paginate();
 
+        $year = $request->filter['year'] ?? date('Y');
+
         $data = TimeoffPolicy::select('id', 'name', 'code')
             ->tenanted()
             ->whereIn('type', TimeoffPolicyType::hasQuotas())
             ->paginate()
-            ->through(function ($timeoffPolicy) use ($userId) {
+            ->through(function ($timeoffPolicy) use ($userId, $year) {
                 $remainingBalance = TimeoffQuota::select(DB::raw('SUM(quota - used_quota) as remaining_balance'))
                     ->where('user_id', $userId)
                     ->where('timeoff_policy_id', $timeoffPolicy->id)
                     ->whereActive()
+                    ->whereYear($year)
                     ->first();
                 $timeoffPolicy->remaining_balance = (float) $remainingBalance?->remaining_balance ?? 0;
                 return $timeoffPolicy;
@@ -61,17 +64,20 @@ class TimeoffQuotaController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    public function getUserTimeoffPolicyQuotaHistories(int $userId, int $timeoffPolicyId)
+    public function getUserTimeoffPolicyQuotaHistories(Request $request, int $userId, int $timeoffPolicyId)
     {
         if ($userId != auth()->id()) {
             User::select('id')->tenanted()->where('id', $userId)->firstOrFail();
         }
+
+        $year = $request->filter['year'] ?? date('Y');
 
         $adjustments = TimeoffQuotaHistory::where('user_id', $userId)
             ->where('is_increment', true)
             ->whereHas(
                 'timeoffQuota',
                 fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId)
+                    // ->whereYear($year)
                     ->whereActive(withActiveQuota: false)
             )
             ->with(
@@ -86,6 +92,7 @@ class TimeoffQuotaController extends BaseController
 
         $expired = TimeoffQuota::where('user_id', $userId)
             ->where('timeoff_policy_id', $timeoffPolicyId)
+            // ->whereYear($year)
             ->whereExpired()
             ->whereRaw('quota > used_quota')
             ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
@@ -94,6 +101,7 @@ class TimeoffQuotaController extends BaseController
 
         $timeoffTaken = Timeoff::where('user_id', $userId)
             ->where('timeoff_policy_id', $timeoffPolicyId)
+            // ->whereYear($year)
             ->approved()
             ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
             ->orderByDesc('id')
