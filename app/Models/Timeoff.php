@@ -74,6 +74,16 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         $query->whereDate('start_at', '<=', date('Y-m-d', strtotime($startDate)))->whereDate('end_at', '>=', date('Y-m-d', strtotime($endDate)));
     }
 
+    public function scopeWhereYearIs(Builder $query, ?string $year = null)
+    {
+        if (is_null($year)) {
+            $year = date('Y');
+        }
+
+        $query->where(fn($q) => $q->whereYear('start_at', $year)
+            ->orWhereYear('end_at', $year));
+    }
+
     public function timeoffPolicy(): BelongsTo
     {
         return $this->belongsTo(TimeoffPolicy::class);

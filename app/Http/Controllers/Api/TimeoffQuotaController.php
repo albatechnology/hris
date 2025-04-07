@@ -55,7 +55,7 @@ class TimeoffQuotaController extends BaseController
                     ->where('user_id', $userId)
                     ->where('timeoff_policy_id', $timeoffPolicy->id)
                     ->whereActive()
-                    ->whereYear($year)
+                    ->whereYearIs($year)
                     ->first();
                 $timeoffPolicy->remaining_balance = (float) $remainingBalance?->remaining_balance ?? 0;
                 return $timeoffPolicy;
@@ -77,8 +77,8 @@ class TimeoffQuotaController extends BaseController
             ->whereHas(
                 'timeoffQuota',
                 fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId)
-                    // ->whereYear($year)
-                    ->whereActive(withActiveQuota: false)
+                    ->whereYearIs($year)
+                // ->whereActive(withActiveQuota: false)
             )
             ->with(
                 'timeoffQuota',
@@ -92,7 +92,7 @@ class TimeoffQuotaController extends BaseController
 
         $expired = TimeoffQuota::where('user_id', $userId)
             ->where('timeoff_policy_id', $timeoffPolicyId)
-            // ->whereYear($year)
+            ->whereYearIs($year)
             ->whereExpired()
             ->whereRaw('quota > used_quota')
             ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
@@ -101,7 +101,7 @@ class TimeoffQuotaController extends BaseController
 
         $timeoffTaken = Timeoff::where('user_id', $userId)
             ->where('timeoff_policy_id', $timeoffPolicyId)
-            // ->whereYear($year)
+            ->whereYearIs($year)
             ->approved()
             ->with('timeoffPolicy', fn($q) => $q->select('id', 'name', 'code'))
             ->orderByDesc('id')
