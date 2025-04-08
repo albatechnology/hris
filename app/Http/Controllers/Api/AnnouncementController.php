@@ -91,14 +91,14 @@ class AnnouncementController extends BaseController
         });
       }
 
-      if ($request->job_levels) {
-        collect(explode(',', $request->job_levels))->each(function($jobLevel) use($announcement) {
-          $announcement->jobLevels()->create(['announcementable_type' => JobLevel::class, 'announcementable_id' => $jobLevel]);
-        });
-        $users = $users->whereHas('detail', function ($q) use ($request) {
-          $q->whereIn('job_level', explode(',', $request->job_levels));
-        });
-      }
+    //   if ($request->job_levels) {
+    //     collect(explode(',', $request->job_levels))->each(function($jobLevel) use($announcement) {
+    //       $announcement->jobLevels()->create(['announcementable_type' => JobLevel::class, 'announcementable_id' => $jobLevel]);
+    //     });
+    //     $users = $users->whereHas('detail', function ($q) use ($request) {
+    //       $q->whereIn('job_level', explode(',', $request->job_levels));
+    //     });
+    //   }
 
       $users = $users->get();
 

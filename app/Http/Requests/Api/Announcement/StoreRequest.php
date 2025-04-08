@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Announcement;
 
 use App\Enums\JobLevel;
 use App\Models\Branch;
+use App\Models\Position;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
@@ -46,9 +47,9 @@ class StoreRequest extends FormRequest
             'content' => 'required|string',
             'is_send_email' => 'required|boolean',
 
-            'branch_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($branchId) => Branch::find($branchId) ?? $fail('The selected branch ids is invalid (' . $branchId . ')'))],
-            'position_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($positionIds) => Branch::find($positionIds) ?? $fail('The selected position ids is invalid (' . $positionIds . ')'))],
-            'job_levels' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($jobLevel) => JobLevel::getValue($jobLevel) ?? $fail('The selected job levels is invalid (' . $jobLevel . ')'))],
+            'branch_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($branchId) => Branch::findTenanted($branchId) ?? $fail('The selected branch ids is invalid (' . $branchId . ')'))],
+            'position_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($positionIds) => Position::findTenanted($positionIds) ?? $fail('The selected position ids is invalid (' . $positionIds . ')'))],
+            // 'job_levels' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($jobLevel) => JobLevel::getValue($jobLevel) ?? $fail('The selected job levels is invalid (' . $jobLevel . ')'))],
         ];
     }
 }
