@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UpdatePayrollComponentType;
 use App\Traits\Models\CompanyTenanted;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -60,5 +61,23 @@ class UpdatePayrollComponent extends BaseModel
     public function firstDetail(): HasOne
     {
         return $this->hasOne(UpdatePayrollComponentDetail::class);
+    }
+
+    public function scopeWhereActive(Builder $q, $startDate = null, $endDate = null)
+    {
+        if ($startDate) {
+            $startDate = date('Y-m-d', strtotime($startDate));
+        } else {
+            $startDate = date('Y-m-d');
+        }
+
+        if ($endDate) {
+            $endDate = date('Y-m-d', strtotime($endDate));
+        } else {
+            $endDate = $startDate;
+        }
+
+        $q->where(fn($q2) => $q2->whereDate('end_date', '<=', $endDate)->orWhereNull('end_date'))
+            ->whereDate('effective_date', '>=', $startDate);
     }
 }

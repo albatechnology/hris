@@ -114,47 +114,48 @@ class RunPayrollService
         return max($wd, 0);
     }
 
-    public static function prorate(int|float $basicAmount, int|float $updatePayrollComponentAmount, int $totalWorkingDays, Carbon $cutOffStartDate, Carbon $cutOffEndDate, Carbon $startEffectiveDate, Carbon|null $endEffectiveDate, bool $isDebug = false): int|float
+    public static function prorate(int|float $basicAmount, int|float $updatePayrollComponentAmount, int $totalWorkingDays, Carbon $startDate, Carbon $endDate, Carbon $startEffectiveDate, Carbon|null $endEffectiveDate, bool $isDebug = false): int|float
     {
         // effective_date is between period
-        if ($startEffectiveDate->between($cutOffStartDate, $cutOffEndDate)) {
+        if ($startEffectiveDate->between($startDate, $endDate)) {
             // jika terdapat end_date
-            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($cutOffEndDate)) {
-                $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
-                $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
+            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($endDate)) {
+                $totalDaysFromStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startDate, $startEffectiveDate, true);
+                $startSalary = ($totalDaysFromStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
 
                 $totalDaysFromStartEffectiveDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $endEffectiveDate);
                 $middleSalary = ($totalDaysFromStartEffectiveDateToEndEffectiveDate / $totalWorkingDays) * $updatePayrollComponentAmount;
 
                 $endSalary = 0;
-                if ($endEffectiveDate->lessThan($cutOffEndDate)) {
-                    $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
-                    $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $basicAmount;
+                if ($endEffectiveDate->lessThan($endDate)) {
+                    $totalDaysFromEndEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $endDate, true);
+                    $endSalary = ($totalDaysFromEndEffectiveDateToEndDate / $totalWorkingDays) * $basicAmount;
                 }
 
                 $basicAmount = $startSalary + $middleSalary + $endSalary;
             } else {
                 // NORMAL CALCULATION
-                $totalDaysFromCutOffStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $startEffectiveDate, true);
-                $startSalary = ($totalDaysFromCutOffStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
-                $totalDaysFromStartEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $cutOffEndDate);
-                $endSalary = ($totalDaysFromStartEffectiveDateToCutOffEndDate / $totalWorkingDays) * $updatePayrollComponentAmount;
+                $totalDaysFromStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startDate, $startEffectiveDate, true);
+                $startSalary = ($totalDaysFromStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
+                $totalDaysFromStartEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $endDate);
+                $endSalary = ($totalDaysFromStartEffectiveDateToEndDate / $totalWorkingDays) * $updatePayrollComponentAmount;
 
                 $basicAmount = $startSalary + $endSalary;
             }
         } else {
-            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($cutOffEndDate)) {
-                $totalDaysFromCutOffStartDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $cutOffStartDate, $endEffectiveDate);
-                $startSalary = ($totalDaysFromCutOffStartDateToEndEffectiveDate / $totalWorkingDays) * $updatePayrollComponentAmount;
+            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($endDate)) {
+                $totalDaysFromStartDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startDate, $endEffectiveDate);
+                $startSalary = ($totalDaysFromStartDateToEndEffectiveDate / $totalWorkingDays) * $updatePayrollComponentAmount;
 
-                $totalDaysFromEndEffectiveDateToCutOffEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $cutOffEndDate, true);
-                $endSalary = ($totalDaysFromEndEffectiveDateToCutOffEndDate / $totalWorkingDays) * $basicAmount;
+                $totalDaysFromEndEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $endDate, true);
+                $endSalary = ($totalDaysFromEndEffectiveDateToEndDate / $totalWorkingDays) * $basicAmount;
 
                 $basicAmount = $startSalary + $endSalary;
             } else {
                 $basicAmount = $updatePayrollComponentAmount;
             }
         }
+
         return $basicAmount;
     }
 
@@ -170,6 +171,8 @@ class RunPayrollService
     {
         $cutOffStartDate = Carbon::parse($runPayroll->cut_off_start_date);
         $cutOffEndDate = Carbon::parse($runPayroll->cut_off_end_date);
+        $startDate = $cutOffStartDate->copy()->addMonth();
+        $endDate = $startDate->copy()->lastOfMonth();
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
         $company = $payrollSetting->company;
 
@@ -194,14 +197,12 @@ class RunPayrollService
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
                 ->where('user_id', $userId)
-                ->whereHas('updatePayrollComponent', function ($q) use ($request) {
-                    $q->whereCompany($request['company_id']);
-                    $q->where(function ($q2) {
-                        $q2->whereNull('end_date');
-                        $q2->orWhere('end_date', '>', now());
-                    });
-                    $q->where('effective_date', '<=', now());
-                })->orderByDesc('id')->get();
+                ->whereHas(
+                    'updatePayrollComponent',
+                    fn($q) => $q->whereCompany($request['company_id'])
+                        ->whereActive($startDate, $endDate)
+                )
+                ->orderByDesc('id')->get();
 
             /**
              * first, calculate basic salary. for now basic salary component is required
@@ -216,7 +217,7 @@ class RunPayrollService
                 $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
                 // calculate prorate
-                $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
+                $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
             }
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
