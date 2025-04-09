@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        // $schedule->job(new NewEmployee)->dailyAt('13:15');
+        $schedule->job(new NewEmployee)->dailyAt('17:35');
 
         // cron untuk company yang punya timeoff regulation monthly
         // cron untuk company yang punya timeoff regulation user_period

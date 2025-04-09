@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Announcement;
 
-use App\Enums\JobLevel;
 use App\Models\Branch;
 use App\Models\Position;
 use App\Rules\CompanyTenantedRule;

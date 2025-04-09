@@ -36,10 +36,11 @@ class NewEmployee implements ShouldQueue
          */
 
         // date to compare that the user should be working at least 3 months since join_date
-        $joinDate = Carbon::now()->setDay(15)->subMonths(3);
+        $joinDate = Carbon::now()->subMonths(3);
 
         $dataQuotas = $this->getQuotas($joinDate);
-
+        // dump($joinDate);
+        // dump($dataQuotas);
         $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
             $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
@@ -59,9 +60,8 @@ class NewEmployee implements ShouldQueue
                         )
                 )
                 ->orderBy('join_date')
-                ->whereIn('id', [240, 235, 239])
                 ->get(['id', 'join_date', 'name']);
-            // dd($users->select('id', 'name')->toArray());
+            // dd($users->select('id', 'name', 'join_date')->toArray());
 
             foreach ($users as $user) {
                 DB::transaction(function () use ($user, $dataQuotas, $timeoffPolicyId) {
@@ -88,10 +88,13 @@ class NewEmployee implements ShouldQueue
 
     private function getQuotas(Carbon $joinDate)
     {
+        if ($joinDate->format('d') > 15) {
+            $joinDate = $joinDate->copy()->addMonth();
+        }
+
         return collect(CarbonPeriod::create($joinDate, '1 month', date('Y-12-31')))
-            // ->filter(fn($joinDate) => $joinDate->format('Y') === date('Y'))
             ->filter(function ($joinDate) {
-                return $joinDate->format('Y') === date('Y') && $joinDate->format('m') !== '01';
+                return $joinDate->format('Y') === date('Y');
             })
             ->map(function ($joinDate) {
                 return [
