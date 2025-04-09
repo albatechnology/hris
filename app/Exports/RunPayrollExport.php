@@ -6,7 +6,6 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentType;
 use App\Models\PayrollComponent;
 use App\Models\RunPayroll;
-use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -109,6 +108,10 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             'AI' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
             'AJ' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
             'AK' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AL' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AM' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AN' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
+            'AO' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2,
         ];
     }
 
