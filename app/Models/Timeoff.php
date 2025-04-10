@@ -99,11 +99,6 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         return $this->hasMany(Attendance::class);
     }
 
-    public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
-    {
-        $query->select(['id', 'type', 'name', 'code', ...$additionalColumns]);
-    }
-
     public function getFilesAttribute()
     {
         $files = $this->getMedia(\App\Enums\MediaCollection::TIMEOFF->value);

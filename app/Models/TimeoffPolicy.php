@@ -89,4 +89,9 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
 
         $query->whereDate('effective_date', '>=', date('Y-m-d'))->orWhereDate('expired_date', '<=', date('Y-m-d'));
     }
+
+    public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
+    {
+        $query->select(['id', 'type', 'name', 'code', ...$additionalColumns]);
+    }
 }
