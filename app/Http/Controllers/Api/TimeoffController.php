@@ -16,6 +16,7 @@ use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class TimeoffController extends BaseController
@@ -43,7 +44,11 @@ class TimeoffController extends BaseController
                 'request_type',
                 'is_cancelled',
             ])
-            ->allowedIncludes(['user', 'timeoffPolicy', 'cancelledBy'])
+            ->allowedIncludes([
+                'user',
+                'cancelledBy',
+                AllowedInclude::callback('timeoffPolicy', fn($query) => $query->selectMinimalist()),
+            ])
             ->allowedSorts([
                 'id',
                 'user_id',
@@ -64,7 +69,12 @@ class TimeoffController extends BaseController
     public function show(int $id)
     {
         $timeoff = Timeoff::findTenanted($id);
-        $timeoff->load(['user', 'timeoffPolicy', 'cancelledBy', 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))]);
+        $timeoff->load([
+            'user',
+            'timeoffPolicy' => fn($query) => $query->selectMinimalist(),
+            'cancelledBy',
+            'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
+        ]);
 
         return new TimeoffResource($timeoff);
     }
@@ -298,7 +308,10 @@ class TimeoffController extends BaseController
                 'request_type',
                 'is_cancelled',
             ])
-            ->allowedIncludes(['timeoffPolicy', 'cancelledBy'])
+            ->allowedIncludes([
+                AllowedInclude::callback('timeoffPolicy', fn($query) => $query->selectMinimalist()),
+                'cancelledBy'
+            ])
             ->allowedSorts([
                 'id',
                 'user_id',

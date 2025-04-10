@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Announcement;
 
 use App\Models\Branch;
+use App\Models\Department;
 use App\Models\Position;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
@@ -48,6 +49,7 @@ class StoreRequest extends FormRequest
 
             'branch_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($branchId) => Branch::findTenanted($branchId) ?? $fail('The selected branch ids is invalid (' . $branchId . ')'))],
             'position_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($positionIds) => Position::findTenanted($positionIds) ?? $fail('The selected position ids is invalid (' . $positionIds . ')'))],
+            'department_ids' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($departmentIds) => Department::findTenanted($departmentIds) ?? $fail('The selected department ids is invalid (' . $departmentIds . ')'))],
             // 'job_levels' => ['nullable', fn(string $attr, string $value, Closure $fail) => collect(explode(',', $value))->map(fn($jobLevel) => JobLevel::getValue($jobLevel) ?? $fail('The selected job levels is invalid (' . $jobLevel . ')'))],
         ];
     }

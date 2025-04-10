@@ -6,6 +6,7 @@ use App\Enums\ScheduleType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CustomSoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Shift extends BaseModel implements TenantedInterface
@@ -91,9 +92,9 @@ class Shift extends BaseModel implements TenantedInterface
         });
     }
 
-    public function scopeSelectMinimalist($q, array $additionalColumns = [])
+    public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        $q->select(['id', 'is_dayoff', 'name', 'clock_in', 'clock_out', ...$additionalColumns]);
+        $query->select(['id', 'is_dayoff', 'name', 'clock_in', 'clock_out', ...$additionalColumns]);
     }
 
     public function schedules(): BelongsToMany
