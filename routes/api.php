@@ -71,6 +71,7 @@ use App\Http\Controllers\Api\UserPatrolTaskController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserPayrollInfoController;
 use App\Http\Controllers\Api\UserTransferController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
@@ -81,6 +82,12 @@ Route::post('notifications/test/{token}', [NotificationController::class, 'test'
 
 Route::post('auth/setup-password/resend', [AuthController::class, 'resendSetupPassword']);
 Route::post('auth/setup-password', [AuthController::class, 'setupPassword']);
+
+Route::group(['prefix' => 'auth/forgot-password/', 'controller' => ForgotPasswordController::class], function () {
+    Route::post('send-otp', 'sendOtp');
+    Route::post('verify-otp', 'verifyOtp');
+    Route::post('update-password', 'updatePassword');
+});
 
 Route::get('users/backupPhoto', [UserController::class, 'backupPhoto']);
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {

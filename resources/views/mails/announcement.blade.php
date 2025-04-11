@@ -206,7 +206,7 @@
                             <tbody>
                               <tr>
                                 <td style="line-height: 24px; font-size: 16px; padding-top: 50px; padding-bottom: 50px;" align="left">
-                                  <img src="https://hr-dev-alba.vercel.app/_next/image?url=%2Fhriscolorlogo.png&w=128&q=75" class="img-fluid" style="width: 180px; height: auto; line-height: 100%; outline: none; text-decoration: none; display: block; max-width: 100%; border-style: none; border-width: 0;" width="100%">
+                                  <img src="{{ asset(config('app.logo_location')) }}" class="img-fluid" style="width: 180px; height: auto; line-height: 100%; outline: none; text-decoration: none; display: block; max-width: 100%; border-style: none; border-width: 0;" width="100%">
                                 </td>
                               </tr>
                             </tbody>
@@ -219,16 +219,16 @@
                                     <table class="ax-center" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                                       <tbody>
                                         <tr>
-                                          <td style="line-height: 24px; font-size: 16px; margin: 0;">
-                                            <img src="https://i.imgur.com/7vjYqDi.png" class="img-fluid" style="border: 1px solid #000000">
-                                          </td>
-                                          <td style="line-height: 24px; font-size: 16px; margin: 0;">
-                                            <img src="https://i.imgur.com/7yUG1oo.png" class="img-fluid" style="width: 80px; height: 80px; top: 222px; left: 680px; padding: 9.13px 6.67px 0.62px 6.67px; gap: 0px; opacity: 0px;">
-                                          </td>
-                                          <td style="line-height: 24px; font-size: 16px; margin: 0;">
-                                            <img src="https://i.imgur.com/7vjYqDi.png" class="img-fluid" style="border: 1px solid #000000">
-                                          </td>
-                                        </tr>
+                                            <td style="line-height: 24px; font-size: 16px; margin: 0;">
+                                              <img src="{{ asset('img/icons/mail-line.png') }}" class="img-fluid" style="border: 1px solid #000000">
+                                            </td>
+                                            <td style="line-height: 24px; font-size: 16px; margin: 0;">
+                                              <img src="{{ asset('img/icons/fluent-mail.png') }}" class="img-fluid" style="width: 80px;height: 80px;top: 223px;left: 680px;padding: 0 6.67px 0 6.67px;gap: 0px;opacity: 0px;">
+                                            </td>
+                                            <td style="line-height: 24px; font-size: 16px; margin: 0;">
+                                              <img src="{{ asset('img/icons/mail-line.png') }}" class="img-fluid" style="border: 1px solid #000000">
+                                            </td>
+                                          </tr>
                                       </tbody>
                                     </table>
                                     <p style="line-height: 24px; text-align:center; font-size: 18px; width: 100%; margin: 0;" align="center">
@@ -285,7 +285,7 @@
                                     </table>
                                     <p style="line-height: 24px; text-align:center; font-size: 16px; width: 100%; margin: 0;" align="center">
                                       <b>Get it touch</b><br>
-                                      info@sunshine.com
+                                      {{ config('app.email_contact') }}
                                     </p>
                                     <table class="stack-row ax-center gap-6" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                                       <tbody>
@@ -295,7 +295,7 @@
                                               <tbody>
                                                 <tr>
                                                   <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 10px " align="left">
-                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="https://i.imgur.com/Y6aVKsI.png" width="100%">
+                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="{{ asset('img/icons/email-facebook.png') }}" width="100%">
                                                   </td>
                                                 </tr>
                                               </tbody>
@@ -304,7 +304,7 @@
                                               <tbody>
                                                 <tr>
                                                   <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 10px " align="left">
-                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="https://i.imgur.com/kcUcZF3.png" width="100%">
+                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="{{ asset('img/icons/email-instagram.png') }}" width="100%">
                                                   </td>
                                                 </tr>
                                               </tbody>
@@ -313,7 +313,7 @@
                                               <tbody>
                                                 <tr>
                                                   <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 10px " align="left">
-                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="https://i.imgur.com/8neoAP7.png" width="100%">
+                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="{{ asset('img/icons/email-linkedin.png') }}" width="100%">
                                                   </td>
                                                 </tr>
                                               </tbody>

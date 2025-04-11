@@ -216,16 +216,16 @@
                                     <table class="ax-center" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                                       <tbody>
                                         <tr>
-                                            <td style="line-height: 24px; font-size: 16px; margin: 0;">
-                                              <img src="{{ asset('img/icons/mail-line.png') }}" class="img-fluid" style="border: 1px solid #000000">
-                                            </td>
-                                            <td style="line-height: 24px; font-size: 16px; margin: 0;">
-                                              <img src="{{ asset('img/icons/fluent-mail.png') }}" class="img-fluid" style="width: 80px;height: 80px;top: 223px;left: 680px;padding: 0 6.67px 0 6.67px;gap: 0px;opacity: 0px;">
-                                            </td>
-                                            <td style="line-height: 24px; font-size: 16px; margin: 0;">
-                                              <img src="{{ asset('img/icons/mail-line.png') }}" class="img-fluid" style="border: 1px solid #000000">
-                                            </td>
-                                          </tr>
+                                          <td style="line-height: 24px; font-size: 16px; margin: 0;">
+                                            <img src="{{ asset('img/icons/mail-line.png') }}" class="img-fluid" style="border: 1px solid #000000">
+                                          </td>
+                                          <td style="line-height: 24px; font-size: 16px; margin: 0;">
+                                            <img src="{{ asset('img/icons/fluent-mail.png') }}" class="img-fluid" style="width: 80px;height: 80px;top: 223px;left: 680px;padding: 0 6.67px 0 6.67px;gap: 0px;opacity: 0px;">
+                                          </td>
+                                          <td style="line-height: 24px; font-size: 16px; margin: 0;">
+                                            <img src="{{ asset('img/icons/mail-line.png') }}" class="img-fluid" style="border: 1px solid #000000">
+                                          </td>
+                                        </tr>
                                       </tbody>
                                     </table>
                                     <p style="line-height: 24px; text-align:center; font-size: 18px; width: 100%; margin: 0;" align="center">
@@ -246,7 +246,7 @@
                                                 <td style="line-height: 24px; font-size: 16px; padding-top: 20px; padding-bottom: 20px; margin: 0;" align="left">
                                                   <div class="">
                                                     <p style="line-height: 24px; text-align:center; font-size: 16px; width: 100%; margin: 0;" align="center">
-                                                      Please click on the button below to set your password
+                                                      This is your OTP code to reset your password
                                                     </p>
                                                     <table class="s-10 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
                                                       <tbody>
@@ -260,10 +260,8 @@
                                                     <table class="btn ax-center" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="border-radius: 6px; border-collapse: separate !important; margin: 0 auto;">
                                                       <tbody>
                                                         <tr>
-                                                          <td style="line-height: 24px; font-size: 16px; border-radius: 6px; margin: 0;" align="center">
-                                                            <a href="{{ $url }}" target="_blank" style="background-color: #1D4076; color: #ffffff; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: bold; white-space: nowrap; padding: 13px 30px; border: 1px solid transparent;">
-                                                              Setup Password
-                                                            </a>
+                                                          <td style="line-height: 24px; font-size: 26px; border-radius: 6px; margin: 0; letter-spacing: 5px; font-weight: bold;" align="center">
+                                                           {{$code}}
                                                           </td>
                                                         </tr>
                                                       </tbody>
@@ -290,56 +288,6 @@
                                       </tr>
                                     </tbody>
                                   </table>
-                                  <div style="background-color: #D9D9D9; color: #212121; padding: 30px 10px;">
-                                    <table class="s-5 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%">
-                                      <tbody>
-                                        <tr>
-                                          <td style="line-height: 20px; font-size: 20px; width: 100%; height: 20px; margin: 0;" align="left" width="100%" height="20">
-                                            &#160;
-                                          </td>
-                                        </tr>
-                                      </tbody>
-                                    </table>
-                                    <p style="line-height: 24px; text-align:center; font-size: 16px; width: 100%; margin: 0;" align="center">
-                                      <b>Get it touch</b><br>
-                                      {{config('app.email_contact')}}
-                                    </p>
-                                    <table class="stack-row ax-center gap-6" role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-                                      <tbody>
-                                        <tr>
-                                          <td class="stack-cell" style="line-height: 24px; font-size: 16px; padding-right: 24px; margin: 0;" align="left" valign="top">
-                                            <table class="ax-right" role="presentation" align="right" border="0" cellpadding="0" cellspacing="0">
-                                              <tbody>
-                                                <tr>
-                                                  <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 10px " align="left">
-                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="{{ asset('img/icons/email-facebook.png') }}" width="100%">
-                                                  </td>
-                                                </tr>
-                                              </tbody>
-                                            </table>
-                                            <table class="ax-right" role="presentation" align="right" border="0" cellpadding="0" cellspacing="0">
-                                              <tbody>
-                                                <tr>
-                                                  <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 10px " align="left">
-                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="{{ asset('img/icons/email-instagram.png') }}" width="100%">
-                                                  </td>
-                                                </tr>
-                                              </tbody>
-                                            </table>
-                                            <table class="ax-right" role="presentation" align="right" border="0" cellpadding="0" cellspacing="0">
-                                              <tbody>
-                                                <tr>
-                                                  <td style="line-height: 24px; font-size: 16px; margin: 0; padding: 10px " align="left">
-                                                    <img class="img-fluid" style="width: 30px;height: 30px;top: 881px;left: 755px;padding: 2.5px;gap: 0px;opacity: 0px;" src="{{ asset('img/icons/email-linkedin.png') }}" width="100%">
-                                                  </td>
-                                                </tr>
-                                              </tbody>
-                                            </table>
-                                          </td>
-                                        </tr>
-                                      </tbody>
-                                    </table>
-                                  </div>
                                 </td>
                               </tr>
                             </tbody>
@@ -366,5 +314,4 @@
     </tbody>
   </table>
 </body>
-
 </html>

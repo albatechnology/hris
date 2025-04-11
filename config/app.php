@@ -191,4 +191,6 @@ return [
     'image_mimes_types' => 'jpg,jpeg,png,webp',
     'enable_face_rekognition' => env('ENABLE_FACE_REKOGNITION', true),
     'clock_out_tolerance' => env('CLOCK_OUT_TOLERANCE', 2),
+    'logo_location' => env('LOGO_LOCATION', "/img/logo/alba.webp"),
+    'email_contact' => env('EMAIL_CONTACT', env("MAIL_FROM_ADDRESS", "info@albatech.id")),
 ];
