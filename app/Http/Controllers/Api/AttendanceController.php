@@ -537,8 +537,11 @@ class AttendanceController extends BaseController
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
 
+        $date = $request->filter['date'];
+
         $users = QueryBuilder::for($query)
             ->allowedFilters([
+                AllowedFilter::callback('has_attendance', fn($query, $value) => $query->when($value == 1, fn($q) => $q->whereHas('attendance', fn($q) => $q->whereDate('date', $date)))),
                 AllowedFilter::scope('schedule_type'),
                 'nik',
                 'name',
@@ -549,7 +552,6 @@ class AttendanceController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        $date = $request->filter['date'];
 
         $users->map(function ($user) use ($date, $request) {
             $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
