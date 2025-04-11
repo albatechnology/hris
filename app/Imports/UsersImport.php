@@ -19,9 +19,14 @@ use App\Models\LiveAttendance;
 use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\UserBpjs;
+use App\Models\UserDetail;
+use App\Models\UserPayrollInfo;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithConditionalSheets;
@@ -64,7 +69,14 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'name' => 'required|min:2|max:100',
             'last_name' => 'nullable|min:2|max:100',
-            'email' => 'nullable|email|unique:users,email',
+            'email' => 'nullable|email',
+            // 'email' => 'nullable|email|unique:users,email',
+            // 'email' => ['nullable', 'email', function ($attribute, string $value, $fail) {
+            //     $user = User::where('nik', $this->nik)->first(['id', 'email']);
+            //     if ($user->email != $value && User::where('email', $value)->exists()) {
+            //         return $fail("The email has already been taken.");
+            //     }
+            // }],
             'password' => 'required|min:6|max:50',
             'nik' => 'required|max:50',
             'phone' => 'required|max:20',
@@ -153,29 +165,62 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
         }
 
         $branch = Branch::select('id', 'company_id')->firstWhere('id', $row['branch_id']);
-        $user = User::create([
-            'group_id' => $this->user->group_id,
-            'company_id' => $branch->company_id,
-            'branch_id' => $branch->id,
-            'live_attendance_id' => $row['live_attendance_id'],
-            // 'overtime_id',
-            'name' => $row['name'],
-            'last_name' => $row['last_name'],
-            'email' => $row['email'],
-            // 'work_email',
-            'password' => $row['password'],
-            'email_verified_at' => $this->emailVerifiedAt,
-            'type' => $this->userType,
-            'nik' => $row['nik'],
-            'phone' => $row['phone'],
-            'gender' => strtolower($row['gender']),
-            'join_date' => date('Y-m-d', strtotime($row['join_date'])),
-            'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
-        ]);
+
+        $user = User::where('nik', $row['nik'])->exists();
+        if (!$user && User::where('email', $row['email'])->exists()) {
+            $validator = Validator::make(
+                [
+                    'email' => $row['email']
+                ],
+                [
+                    'email' => 'required|email|unique:users,email'
+                ]
+            );
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            }
+        }
+
+        $user = User::updateOrCreate(
+            ['nik' => $row['nik']],
+            [
+                'group_id' => $this->user->group_id,
+                'company_id' => $branch->company_id,
+                'branch_id' => $branch->id,
+                'live_attendance_id' => $row['live_attendance_id'],
+                // 'overtime_id',
+                'name' => $row['name'],
+                'last_name' => $row['last_name'],
+                'email' => $row['email'],
+                // 'work_email',
+                'password' => $row['password'],
+                'email_verified_at' => $this->emailVerifiedAt,
+                'type' => $this->userType,
+                'nik' => $row['nik'],
+                'phone' => $row['phone'],
+                'gender' => strtolower($row['gender']),
+                'join_date' => date('Y-m-d', strtotime($row['join_date'])),
+                'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
+            ]
+        );
+
+        if ($branch) {
+            $user->branches()->delete();
+            $user->branches()->create([
+                'branch_id' => $branch->id,
+            ]);
+
+            $user->companies()->delete();
+            $user->companies()->create([
+                'company_id' => $branch->company_id,
+            ]);
+        }
 
         if (isset($row['supervisor_nik']) && !empty($row['supervisor_nik'])) {
             $supervisor = User::where('nik', trim($row['supervisor_nik']))->first(['id']);
             if ($supervisor) {
+                $user->supervisors()->delete();
                 $user->supervisors()->create([
                     'supervisor_id' => $supervisor->id,
                     'order' => 1,
@@ -185,59 +230,77 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
 
         $user->roles()->syncWithPivotValues([$row['role_id']], ['group_id' => $user->group_id]);
 
-        $user->positions()->create([
-            'department_id' => $row['department_id'],
-            'position_id' => $row['position_id'],
-        ]);
+        if (isset($row['department_id']) && !empty($row['department_id']) && isset($row['position_id']) && !empty($row['position_id'])) {
+            $user->positions()->delete();
+            $user->positions()->create([
+                'department_id' => $row['department_id'],
+                'position_id' => $row['position_id'],
+            ]);
+        }
 
         // create user_details
-        $user->detail()->create([
-            'no_ktp' => $row['ktp_number'],
-            'kk_no' => $row['kk_number'],
-            'postal_code' => $row['postal_code'],
-            'address' => $row['address'],
-            'address_ktp' => $row['address_ktp'],
-            'employment_status' => $row['employment_status'] ? strtolower($row['employment_status']) : null,
-            'passport_no' => $row['passport_number'],
-            'passport_expired' => $row['passport_expired'] ? date('Y-m-d', strtotime($row['passport_expired'])) : null,
-            'birth_place' => $row['birth_place'],
-            'birthdate' => $row['birthdate'] ? date('Y-m-d', strtotime($row['birthdate'])) : null,
-            'marital_status' => $row['marital_status'] ? strtolower($row['marital_status']) : null,
-            'blood_type' => $row['blood_type'] ? strtolower($row['blood_type']) : null,
-            'rhesus' => $row['blood_rhesus'],
-            'religion' => $row['religion'] ? strtolower($row['religion']) : null,
-        ]);
+        UserDetail::updateOrCreate(
+            [
+                'user_id' => $user->id
+            ],
+            [
+                'no_ktp' => $row['ktp_number'],
+                'kk_no' => $row['kk_number'],
+                'postal_code' => $row['postal_code'],
+                'address' => $row['address'],
+                'address_ktp' => $row['address_ktp'],
+                'employment_status' => $row['employment_status'] ? strtolower($row['employment_status']) : null,
+                'passport_no' => $row['passport_number'],
+                'passport_expired' => $row['passport_expired'] ? date('Y-m-d', strtotime($row['passport_expired'])) : null,
+                'birth_place' => $row['birth_place'],
+                'birthdate' => $row['birthdate'] ? date('Y-m-d', strtotime($row['birthdate'])) : null,
+                'marital_status' => $row['marital_status'] ? strtolower($row['marital_status']) : null,
+                'blood_type' => $row['blood_type'] ? strtolower($row['blood_type']) : null,
+                'rhesus' => $row['blood_rhesus'],
+                'religion' => $row['religion'] ? strtolower($row['religion']) : null,
+            ]
+        );
 
         // create user_payroll_infos
-        $user->payrollInfo()->create([
-            'basic_salary' => $row['basic_salary'],
-            'overtime_setting' => strtolower($row['overtime_setting']),
-            'bank_name' => $row['bank_name'],
-            'bank_account_no' => $row['bank_account_number'],
-            'bank_account_holder' => $row['bank_account_holder'],
-            'secondary_bank_name' => $row['secondary_bank_name'],
-            'secondary_bank_account_no' => $row['secondary_bank_account_number'],
-            'secondary_bank_account_holder' => $row['secondary_bank_account_holder'],
-            'npwp' => $row['npwp'],
-            'ptkp_status' => $row['ptkp_status'],
-            'tax_method' => str_replace(" ", "_", strtolower($row['tax_method'])),
-            'tax_salary' => str_replace(" ", "_", strtolower($row['tax_salary'])),
-            'beginning_netto' => $row['beginning_netto'],
-            'pph_21_paid' => $row['pph_21_paid'],
-        ]);
+        UserPayrollInfo::updateOrCreate(
+            [
+                'user_id' => $user->id
+            ],
+            [
+                'basic_salary' => $row['basic_salary'],
+                'overtime_setting' => strtolower($row['overtime_setting']),
+                'bank_name' => $row['bank_name'],
+                'bank_account_no' => $row['bank_account_number'],
+                'bank_account_holder' => $row['bank_account_holder'],
+                'secondary_bank_name' => $row['secondary_bank_name'],
+                'secondary_bank_account_no' => $row['secondary_bank_account_number'],
+                'secondary_bank_account_holder' => $row['secondary_bank_account_holder'],
+                'npwp' => $row['npwp'],
+                'ptkp_status' => $row['ptkp_status'],
+                'tax_method' => str_replace(" ", "_", strtolower($row['tax_method'])),
+                'tax_salary' => str_replace(" ", "_", strtolower($row['tax_salary'])),
+                'beginning_netto' => $row['beginning_netto'],
+                'pph_21_paid' => $row['pph_21_paid'],
+            ]
+        );
 
         // create user_bpjs
-        $user->userBpjs()->create([
-            'bpjs_ketenagakerjaan_no' => $row['bpjs_ketenagakerjaan_number'],
-            'npp_bpjs_ketenagakerjaan' => $this->nppBpjsKetenagakerjaan,
-            'bpjs_ketenagakerjaan_date' => $row['bpjs_ketenagakerjaan_date'] ? date('Y-m-d', strtotime($row['bpjs_ketenagakerjaan_date'])) : null,
-            'bpjs_kesehatan_no' => $row['bpjs_kesehatan_number'],
-            'bpjs_kesehatan_family_no' => $row['bpjs_kesehatan_family_number'],
-            'bpjs_kesehatan_date' => $row['bpjs_kesehatan_date'] ? date('Y-m-d', strtotime($row['bpjs_kesehatan_date'])) : null,
-            'bpjs_kesehatan_cost' => 'company',
-            'jht_cost' => 'company',
-            'jaminan_pensiun_cost' => 'company',
-            'jaminan_pensiun_date' => $row['jaminan_pensiun_date'] ? date('Y-m-d', strtotime($row['jaminan_pensiun_date'])) : null,
-        ]);
+        UserBpjs::updateOrCreate(
+            [
+                'user_id' => $user->id
+            ],
+            [
+                'bpjs_ketenagakerjaan_no' => $row['bpjs_ketenagakerjaan_number'],
+                'npp_bpjs_ketenagakerjaan' => $this->nppBpjsKetenagakerjaan,
+                'bpjs_ketenagakerjaan_date' => $row['bpjs_ketenagakerjaan_date'] ? date('Y-m-d', strtotime($row['bpjs_ketenagakerjaan_date'])) : null,
+                'bpjs_kesehatan_no' => $row['bpjs_kesehatan_number'],
+                'bpjs_kesehatan_family_no' => $row['bpjs_kesehatan_family_number'],
+                'bpjs_kesehatan_date' => $row['bpjs_kesehatan_date'] ? date('Y-m-d', strtotime($row['bpjs_kesehatan_date'])) : null,
+                'bpjs_kesehatan_cost' => 'company',
+                'jht_cost' => 'company',
+                'jaminan_pensiun_cost' => 'company',
+                'jaminan_pensiun_date' => $row['jaminan_pensiun_date'] ? date('Y-m-d', strtotime($row['jaminan_pensiun_date'])) : null,
+            ]
+        );
     }
 }

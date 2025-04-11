@@ -811,7 +811,7 @@ class UserController extends BaseController
 
         (new UsersImport)->import($request->file);
 
-        return $this->createdResponse();
+        return $this->createdResponse("Data imported successfully");
     }
 
     public function export(ExportRequest $request)
