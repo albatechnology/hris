@@ -51,7 +51,7 @@ class OvertimeService
         return $rate * $totalDurationInHours;
     }
 
-    public static function calculate(User $user, string $startPeriod = null, string $endPeriod = null, float $basicSalary): int|float
+    public static function calculate(User $user, ?string $startPeriod = null, ?string $endPeriod = null, float $basicSalary): int|float
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
