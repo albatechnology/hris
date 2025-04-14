@@ -10,13 +10,18 @@ class Otp extends Model
 {
     use BelongsToUser;
 
-    protected $fillable = [];
+    protected $guarded = [];
 
     protected static function booted(): void
     {
         static::creating(function (self $model) {
-            $model->code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $model->expires_at = now()->addHour();
+            if (!$model->code) {
+                $model->code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            }
+
+            if (!$model->expires_at) {
+                $model->expires_at = now()->addHour();
+            }
         });
     }
 

@@ -33,17 +33,18 @@ class ForgotPasswordController extends Controller
             'email' => 'required|email|exists:users,email'
         ]);
 
+        DB::beginTransaction();
         try {
-            $user = User::where('email', $request->email)->first(['id']);
+            $user = User::where('email', $request->email)->first(['id', 'email']);
 
             $otp = Otp::create([
                 'user_id' => $user->id
             ]);
 
-            $user->sendOtp();
-
             Mail::to($user)->send(new SendOtp($user, $otp->code));
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => $e->getMessage(),
             ], $e->getCode());
@@ -92,7 +93,7 @@ class ForgotPasswordController extends Controller
                     $otp->delete();
                 });
 
-                return response()->json(['message' => 'OTP verified successfully']);
+                return response()->json(['message' => 'Password updated successfully']);
             }
 
             Otp::where('code', $request->otp)->delete();
