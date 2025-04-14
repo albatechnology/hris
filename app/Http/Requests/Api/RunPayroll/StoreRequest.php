@@ -37,7 +37,7 @@ class StoreRequest extends FormRequest
             }],
             'payment_schedule' => 'required|date',
             'user_ids' => [
-                'required',
+                'nullable',
                 'string',
                 function (string $attr, string $value, Closure $fail) {
                     collect(explode(',', $value))->each(function ($id) use ($fail) {

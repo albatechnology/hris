@@ -179,8 +179,10 @@ class RunPayrollService
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
 
+        $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $request['company_id'])->pluck('id')->toArray();
+
         // calculate for each user
-        foreach (explode(',', $request['user_ids']) as $userId) {
+        foreach ($userIds as $userId) {
             /** @var \App\Models\User $user */
             $user = User::find($userId);
             if (!$user) continue;
