@@ -84,7 +84,7 @@ class ForgotPasswordController extends Controller
             if ($otp) {
                 DB::transaction(function () use ($request, $otp) {
                     $user = $otp->user;
-                    $user->password = bcrypt($request->password);
+                    $user->password = $request->password;
                     if (!$otp->user?->email_verified_at) {
                         $user->email_verified_at = now();
                     }
