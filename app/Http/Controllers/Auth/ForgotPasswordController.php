@@ -30,7 +30,11 @@ class ForgotPasswordController extends Controller
     public function sendOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email'
+            'email' => ['required', 'email', function ($attribute, string $value, $fail) {
+                if (User::withTrashed()->where('email', $value)->doesntExist()) {
+                    $fail('User not found');
+                }
+            }]
         ]);
 
         DB::beginTransaction();
