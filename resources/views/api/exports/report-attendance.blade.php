@@ -18,6 +18,8 @@
             <th style="font-weight: bold">Real Working Hour</th>
             <th style="font-weight: bold">Overtime Duration Before</th>
             <th style="font-weight: bold">Overtime Duration After</th>
+            <th style="font-weight: bold">Clock In Coordinate</th>
+            <th style="font-weight: bold">Clock Out Coordinate</th>
         </tr>
     </thead>
     <tbody>
@@ -100,6 +102,16 @@
                             {{ $attendance['attendance']['overtime_duration_after_shift'] }}
                         @endif
                     </td>
+                    <td>
+                        @if (isset($attendance['attendance']['clock_in']) && !is_null($attendance['attendance']['clock_in']))
+                            {{ $attendance['attendance']['clock_in']['lat'] .','.$attendance['attendance']['clock_in']['lng'] }}
+                        @endif
+                    </td>
+                    <td>
+                        @if (isset($attendance['attendance']['clock_out']) && !is_null($attendance['attendance']['clock_out']))
+                            {{ $attendance['attendance']['clock_out']['lat'] .','.$attendance['attendance']['clock_out']['lng'] }}
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr>
@@ -110,6 +122,8 @@
                     <td></td>
                     <td></td>
                     <td>A</td>
+                    <td></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
