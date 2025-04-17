@@ -7,6 +7,7 @@ enum NotificationType: string
     use BaseEnum;
 
     case ANNOUNCEMENT = 'announcement';
+    case REPRIMAND = 'reprimand';
 
     case REQUEST_ATTENDANCE = 'request_attendance';
     case ATTENDANCE_APPROVED = 'attendance_approved';
@@ -38,6 +39,7 @@ enum NotificationType: string
     {
         return match ($this) {
             self::ANNOUNCEMENT => \App\Notifications\Announcement\AnnouncementNotification::class,
+            self::REPRIMAND => \App\Notifications\Reprimand\ReprimandNotification::class,
             self::REQUEST_ATTENDANCE => \App\Notifications\Attendance\RequestAttendance::class,
             self::ATTENDANCE_APPROVED => \App\Notifications\Attendance\AttendanceApproved::class,
             self::REQUEST_TIMEOFF => \App\Notifications\Timeoff\RequestTimeoff::class,

@@ -306,6 +306,12 @@ class PermissionService
                 'setting_read',
                 'setting_edit',
             ],
+            'reprimand_access' => [
+                'reprimand_read',
+                'reprimand_create',
+                'reprimand_edit',
+                'reprimand_delete',
+            ],
             'bank_access' => [
                 'bank_read',
                 'bank_create',
@@ -571,6 +577,12 @@ class PermissionService
             'setting_access' => [
                 'setting_read',
                 // 'setting_edit',
+            ],
+            'reprimand_access' => [
+                'reprimand_read',
+                // 'reprimand_create',
+                // 'reprimand_edit',
+                // 'reprimand_delete',
             ],
             // 'bank_access' => [
             //     'bank_read',

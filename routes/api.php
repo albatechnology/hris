@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\PayrollProrateController;
 use App\Http\Controllers\Api\PayrollScheduleController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
+use App\Http\Controllers\Api\ReprimandController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
 use App\Http\Controllers\Api\RequestScheduleController;
@@ -368,4 +369,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
+    Route::apiResource('reprimands', ReprimandController::class);
 });
