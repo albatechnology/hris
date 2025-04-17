@@ -14,6 +14,7 @@ use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
 use App\Enums\UserType;
 use App\Models\Branch;
+use App\Models\Client;
 use App\Models\Department;
 use App\Models\LiveAttendance;
 use App\Models\Position;
@@ -65,9 +66,10 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'name' => 'required|min:2|max:100',
-            // 'last_name' => 'nullable|min:2|max:100',
+            'last_name' => 'nullable|max:100',
             'email' => 'nullable|email',
             // 'email' => 'nullable|email|unique:users,email',
             // 'email' => ['nullable', 'email', function ($attribute, string $value, $fail) {
@@ -181,15 +183,21 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             }
         }
 
+        $name = $row['name'];
+        if (isset($row['last_name']) && !empty($row['last_name'])) {
+            $name .= ' ' . $row['last_name'];
+        }
+
         $user = User::updateOrCreate(
             ['nik' => $row['nik']],
             [
                 'group_id' => $this->user->group_id,
                 'company_id' => $branch->company_id,
                 'branch_id' => $branch->id,
+                'client_id' => $row['client_id'] ?? null,
                 'live_attendance_id' => $row['live_attendance_id'],
                 // 'overtime_id',
-                'name' => $row['name'],
+                'name' => $name,
                 // // 'last_name' => $row['last_name'],
                 'email' => $row['email'],
                 // 'work_email',

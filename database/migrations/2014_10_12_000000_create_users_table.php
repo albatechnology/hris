@@ -21,9 +21,9 @@ return new class extends Migration
             $table->foreignId('overtime_id')->nullable();
             // $table->foreignId('approval_id')->nullable();
             // $table->nestedSet(); // parent_id as manager_id
-            // $table->foreignId('manager_id')->nullableid()->constrained('users');
+            // $table->foreignId('manager_id')->nullable()->constrained('users');
             $table->string('name');
-            $table->string('last_name')->nullable();
+            // $table->string('last_name')->nullable();
             $table->string('email')->unique();
             $table->string('work_email')->nullable();
             $table->timestamp('email_verified_at')->nullable();
