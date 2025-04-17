@@ -90,7 +90,7 @@ class NotificationController extends BaseController
         dd($token);
         // $title = $request->title ?? "Test Notification";
         // $body = $request->body ?? "This is a test notification";
-        // $users = User::whereIn('id', $request->user_ids ?? [])->get(['id', 'name', 'last_name', 'fcm_token']);
+        // $users = User::whereIn('id', $request->user_ids ?? [])->get(['id', 'name', 'fcm_token']);
         // foreach ($users as $user) {
         //     $user->notify(new TestNotification($title, $body));
         // }

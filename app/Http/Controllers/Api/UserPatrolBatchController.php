@@ -33,7 +33,7 @@ class UserPatrolBatchController extends BaseController
         }
 
         $data = QueryBuilder::for(
-            UserPatrolBatch::with(['user' => fn($q) => $q->select('id', 'name', 'last_name', 'nik')])
+            UserPatrolBatch::with(['user' => fn($q) => $q->select('id', 'name', 'nik')])
                 ->when($date, fn($q) => $q->whereDate('datetime', $date))
         )
             ->allowedIncludes([
@@ -95,7 +95,7 @@ class UserPatrolBatchController extends BaseController
 
         $userPatrolBatch->load([
             'patrol',
-            'user' => fn($q) => $q->select('id', 'name', 'last_name', 'nik')
+            'user' => fn($q) => $q->select('id', 'name', 'nik')
         ]);
 
         return new DefaultResource($userPatrolBatch);

@@ -19,7 +19,7 @@ class SettingResource extends JsonResource
         $valueData = $this->value;
 
         if ($this->value_type->is(SettingValueType::MODEL)) {
-            $valueData = User::select('id', 'name', 'last_name')->firstWhere('id', $this->value);
+            $valueData = User::select('id', 'name')->firstWhere('id', $this->value);
         }
 
         return [

@@ -61,7 +61,7 @@ class AttendanceController extends BaseController
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->get(['id', 'company_id', 'name', 'last_name', 'nik']);
+            ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
         foreach ($users as $user) {
@@ -394,7 +394,7 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
-        $query = User::select('id', 'branch_id', 'name', 'last_name', 'nik')
+        $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
@@ -531,7 +531,7 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $query = User::select('id', 'company_id', 'branch_id', 'name', 'last_name', 'nik')
+        $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')

@@ -29,7 +29,6 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithConditionalSheets;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -68,7 +67,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'name' => 'required|min:2|max:100',
-            'last_name' => 'nullable|min:2|max:100',
+            // 'last_name' => 'nullable|min:2|max:100',
             'email' => 'nullable|email',
             // 'email' => 'nullable|email|unique:users,email',
             // 'email' => ['nullable', 'email', function ($attribute, string $value, $fail) {
@@ -191,7 +190,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'live_attendance_id' => $row['live_attendance_id'],
                 // 'overtime_id',
                 'name' => $row['name'],
-                'last_name' => $row['last_name'],
+                // // 'last_name' => $row['last_name'],
                 'email' => $row['email'],
                 // 'work_email',
                 'password' => $row['password'],

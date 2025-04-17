@@ -88,7 +88,7 @@ class UserController extends BaseController
                 $query->select('id', 'user_id', 'type', 'resignation_date', 'reason', 'merit_pay_amount', 'severance_amount', 'compensation_amount', 'total_day_timeoff_compensation', 'timeoff_amount_per_day', 'total_timeoff_compensation', 'description');
             }),
             AllowedInclude::callback('supervisors', function ($query) {
-                $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name', 'last_name'));
+                $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
             }),
             'detail',
             'payrollInfo',
@@ -654,7 +654,7 @@ class UserController extends BaseController
 
         if (!is_null($order)) {
             $name = $request->filter['name'] ?? null;
-            $users = User::select('id', 'name', 'last_name')->tenanted()->where('id', '!=', $user->id)
+            $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
                 ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
 
             if ($name) {

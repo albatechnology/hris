@@ -39,7 +39,7 @@ class LoanController extends BaseController
             ])
             ->allowedIncludes([
                 AllowedInclude::callback('user', function ($query) {
-                    $query->select('id', 'name', 'last_name', 'nik', 'email');
+                    $query->select('id', 'name', 'nik', 'email');
                 }),
             ])
             ->allowedSorts([
@@ -66,7 +66,7 @@ class LoanController extends BaseController
                 'runPayrollUser' => fn($q) => $q->select('id', 'run_payroll_id')->with('runPayroll'),
                 'userContact'
             ]),
-            'user' => fn($q) => $q->select('id', 'name', 'last_name', 'nik', 'email'),
+            'user' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
         ]));
     }
 

@@ -139,7 +139,7 @@ class ShiftController extends BaseController
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
-            ->get(['id', 'company_id', 'name', 'last_name', 'nik']);
+            ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
         $companyId = null;

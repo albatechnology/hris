@@ -139,7 +139,7 @@ class UsersImportTemplate implements FromArray, WithHeadings, WithStyles, Respon
             'Live Attendance ID',
             'NIK',
             'Name',
-            'Last Name',
+            // 'Last Name',
             'Email',
             'Password',
             'Phone',

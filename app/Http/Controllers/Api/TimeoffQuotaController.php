@@ -146,7 +146,7 @@ class TimeoffQuotaController extends BaseController
     {
 
         $data = QueryBuilder::for(
-            User::select(['id', 'branch_id', 'name', 'last_name', 'nik'])
+            User::select(['id', 'branch_id', 'name', 'nik'])
                 ->tenanted()
                 ->with('branch', fn($q) => $q->select('id', 'name'))
             // ->with('timeoffQuotas', function ($q) {

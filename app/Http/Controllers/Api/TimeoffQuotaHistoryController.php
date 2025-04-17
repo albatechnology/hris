@@ -25,9 +25,9 @@ class TimeoffQuotaHistoryController extends BaseController
             TimeoffQuotaHistory::tenanted()
                 ->with([
                     'timeoffQuota' => fn($q) => $q->withTrashed()->select('id', 'timeoff_policy_id')->with('timeoffPolicy', fn($q) => $q->withTrashed()->select('id', 'name')),
-                    'user' => fn($q) => $q->select('id', 'name', 'last_name'),
-                    'createdBy' => fn($q) => $q->select('id', 'name', 'last_name'),
-                    'updatedBy' => fn($q) => $q->select('id', 'name', 'last_name')
+                    'user' => fn($q) => $q->select('id', 'name'),
+                    'createdBy' => fn($q) => $q->select('id', 'name'),
+                    'updatedBy' => fn($q) => $q->select('id', 'name')
                 ])
         )
             ->allowedFilters([
@@ -53,9 +53,9 @@ class TimeoffQuotaHistoryController extends BaseController
         $data =  TimeoffQuotaHistory::tenanted()->where('id', $id)
             ->with([
                 'timeoffQuota' => fn($q) => $q->withTrashed()->select('id', 'timeoff_policy_id')->with('timeoffPolicy', fn($q) => $q->withTrashed()->select('id', 'name')),
-                'user' => fn($q) => $q->select('id', 'name', 'last_name'),
-                'createdBy' => fn($q) => $q->select('id', 'name', 'last_name'),
-                'updatedBy' => fn($q) => $q->select('id', 'name', 'last_name')
+                'user' => fn($q) => $q->select('id', 'name'),
+                'createdBy' => fn($q) => $q->select('id', 'name'),
+                'updatedBy' => fn($q) => $q->select('id', 'name')
             ])->firstOrFail();
 
         return new DefaultResource($data);

@@ -30,13 +30,13 @@ class UserTransferController extends BaseController
     {
         return [
             AllowedInclude::callback('user', function ($q) {
-                $q->select('id', 'name', 'last_name', 'nik');
+                $q->select('id', 'name', 'nik');
             }),
             AllowedInclude::callback('approval', function ($q) {
-                $q->select('id', 'name', 'last_name');
+                $q->select('id', 'name');
             }),
             // AllowedInclude::callback('manager', function ($q) {
-            //     $q->select('id', 'name', 'last_name');
+            //     $q->select('id', 'name');
             // }),
         ];
     }

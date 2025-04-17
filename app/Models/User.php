@@ -41,12 +41,13 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'group_id',
         'company_id',
         'branch_id',
+        'client_id',
         'live_attendance_id',
         'overtime_id',
         // 'approval_id',
         // 'parent_id',
         'name',
-        'last_name',
+        // 'last_name',
         'email',
         'work_email',
         'password',
@@ -87,7 +88,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'gender' => Gender::class,
     ];
 
-    protected $appends = ['image'];
+    protected $appends = [
+        'image',
+    ];
 
     public function scopeTenanted(Builder $query, bool $isDescendant = false): Builder
     {
@@ -184,7 +187,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function scopeWhereName(Builder $query, string $value)
     {
-        $query->where(fn($q) => $q->where('name', 'like', '%' . $value . '%')->orWhere('last_name', 'like', '%' . $value . '%'));
+        $query->where(fn($q) => $q->where('name', 'like', '%' . $value . '%'));
     }
 
     public function scopeScheduleType(Builder $query)
@@ -192,9 +195,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query;
     }
 
-    public function getFullNameAttribute()
+    public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        return sprintf('%s%s', $this->name, ' ' . $this->last_name);
+        $query->select(['id', 'group_id', 'company_id', 'branch_id', 'name', 'email', 'type', 'nik', ...$additionalColumns]);
     }
 
     protected function serializeDate(\DateTimeInterface $date): string
@@ -242,6 +245,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function detail(): HasOne

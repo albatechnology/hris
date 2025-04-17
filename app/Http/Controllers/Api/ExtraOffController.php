@@ -49,7 +49,7 @@ class ExtraOffController extends BaseController
 
         $dateRange = CarbonPeriod::create($startDate, $today);
 
-        $users = User::select('id', 'name', 'last_name', 'nik', 'company_id', 'branch_id', 'join_date')
+        $users = User::select('id', 'name', 'nik', 'company_id', 'branch_id', 'join_date')
             ->with('branch', fn($q) => $q->select('id', 'name'))
             ->tenanted()->get();
 
@@ -201,7 +201,7 @@ class ExtraOffController extends BaseController
     {
         $data = ExtraOff::findTenanted($id);
 
-        $users = User::select('id', 'name', 'last_name', 'nik', 'branch_id')
+        $users = User::select('id', 'name', 'nik', 'branch_id')
             ->with('branch', fn($q) => $q->select('id', 'name'))
             ->whereIn('id', $data->user_ids)
             ->get();

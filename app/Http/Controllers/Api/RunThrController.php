@@ -152,7 +152,7 @@ class RunThrController extends BaseController
         $runThr = RunThr::findTenanted($id);
         $runThr->load([
             'users.user' => function ($q) {
-                $q->select('id', 'nik', 'name', 'last_name', 'company_id', 'branch_id', 'join_date', 'resign_date')
+                $q->select('id', 'nik', 'name', 'company_id', 'branch_id', 'join_date', 'resign_date')
                     ->with('branch', fn($q) => $q->select('id', 'name'))
                     ->with('payrollInfo', function ($q) {
                         $q->select('user_id', 'bank_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'secondary_bank_name', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'ptkp_status')
@@ -181,7 +181,7 @@ class RunThrController extends BaseController
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
-                    $q->withTrashed()->select('id', 'name', 'last_name', 'join_date')
+                    $q->withTrashed()->select('id', 'name', 'join_date')
                         ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency', 'ptkp_status'));
                 }
             ])
@@ -260,7 +260,7 @@ class RunThrController extends BaseController
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->with([
                 'user' => function ($q) {
-                    $q->withTrashed()->select('id', 'name', 'last_name', 'join_date', 'nik')
+                    $q->withTrashed()->select('id', 'name', 'join_date', 'nik')
                         ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'ptkp_status'));
                 }
             ])

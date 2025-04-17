@@ -62,8 +62,8 @@ class SupervisorRequestScheduleController extends BaseController
         $requestSchedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
         $requestSchedule->load([
             'shifts' => fn($q) => $q->orderBy('order'),
-            'created_by' => fn($q) => $q->select('id', 'name', 'last_name'),
-            'approved_by' => fn($q) => $q->select('id', 'name', 'last_name'),
+            'created_by' => fn($q) => $q->select('id', 'name'),
+            'approved_by' => fn($q) => $q->select('id', 'name'),
         ]);
         return new DefaultResource($requestSchedule);
     }

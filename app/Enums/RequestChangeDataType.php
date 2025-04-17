@@ -9,7 +9,7 @@ enum RequestChangeDataType: string
     use BaseEnum;
 
     case NAME = 'name';
-    case LAST_NAME = 'last_name';
+    // case LAST_NAME = 'last_name';
     case EMAIL = 'email';
     case WORK_EMAIL = 'work_email';
     case NIK = 'nik';
@@ -68,7 +68,7 @@ enum RequestChangeDataType: string
         return match ($self) {
             // self::PHOTO_PROFILE, updated in controller
             self::NAME,
-            self::LAST_NAME,
+            // self::LAST_NAME,
             self::EMAIL,
             self::WORK_EMAIL,
             self::NIK,
@@ -112,7 +112,7 @@ enum RequestChangeDataType: string
             self::PHOTO_PROFILE => \App\Models\User::where('id', $userId)->first(['id'])->getFirstMediaUrl(MediaCollection::USER->value),
 
             self::NAME,
-            self::LAST_NAME,
+            // self::LAST_NAME,
             self::EMAIL,
             self::WORK_EMAIL,
             self::NIK,

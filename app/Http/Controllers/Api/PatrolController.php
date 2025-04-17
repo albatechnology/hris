@@ -37,7 +37,7 @@ class PatrolController extends BaseController
                 $query->selectMinimalist();
             }),
             AllowedInclude::callback('users', function ($query) {
-                $query->with('user', fn($q) => $q->select('id', 'name', 'last_name', 'nik'));
+                $query->with('user', fn($q) => $q->select('id', 'name', 'nik'));
             }),
             AllowedInclude::callback('patrolLocations', function ($query) {
                 $query->select('id', 'patrol_id', 'client_location_id', 'description')
@@ -357,7 +357,7 @@ class PatrolController extends BaseController
                             ->select('id', 'patrol_location_id', 'name', 'description')
                             ->with('userPatrolTasks', function ($q) use ($date) {
                                 $q->whereDate('created_at', $date)
-                                    ->with('user', fn($q) => $q->select('id', 'name', 'last_name'))
+                                    ->with('user', fn($q) => $q->select('id', 'name'))
                                     ->with('schedule', fn($q) => $q->select('id', 'name'))
                                     ->with('shift', fn($q) => $q->select('id', 'name'));
                             });

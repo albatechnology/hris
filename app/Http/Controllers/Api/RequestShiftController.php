@@ -40,7 +40,7 @@ class RequestShiftController extends BaseController
         $data = QueryBuilder::for(
             RequestShift::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')))
                 ->with([
-                    'user' => fn($q) => $q->select('id', 'name', 'last_name'),
+                    'user' => fn($q) => $q->select('id', 'name'),
                     'oldShift' => fn($q) => $q->selectMinimalist(),
                     'newShift' => fn($q) => $q->selectMinimalist(),
                 ])
@@ -68,7 +68,7 @@ class RequestShiftController extends BaseController
     public function show(int $id): DefaultResource
     {
         $requestShift = RequestShift::with([
-            'user' => fn($q) => $q->select('id', 'name', 'last_name'),
+            'user' => fn($q) => $q->select('id', 'name'),
             'oldShift' => fn($q) => $q->selectMinimalist(),
             'newShift' => fn($q) => $q->selectMinimalist(),
         ])->findTenanted($id);
@@ -188,7 +188,7 @@ class RequestShiftController extends BaseController
     {
         $query = RequestShift::myApprovals()
             ->with([
-                'user' => fn($q) => $q->select('id', 'name', 'last_name'),
+                'user' => fn($q) => $q->select('id', 'name'),
                 'oldShift' => fn($q) => $q->selectMinimalist(),
                 'newShift' => fn($q) => $q->selectMinimalist(),
             ]);

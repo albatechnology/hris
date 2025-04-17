@@ -33,10 +33,10 @@ class GuestBookController extends BaseController
                     $query->select('id', 'name');
                 }),
                 AllowedInclude::callback('user', function ($query) {
-                    $query->select('id', 'name', 'last_name');
+                    $query->select('id', 'name');
                 }),
                 AllowedInclude::callback('checkOutBy', function ($query) {
-                    $query->select('id', 'name', 'last_name');
+                    $query->select('id', 'name');
                 })
             ])
             ->allowedFilters([
@@ -76,8 +76,8 @@ class GuestBookController extends BaseController
 
         return new DefaultResource($guestBook->load([
             'client' => fn($q) => $q->select('id', 'name'),
-            'user' => fn($q) => $q->select('id', 'name', 'last_name'),
-            'checkOutBy' => fn($q) => $q->select('id', 'name', 'last_name'),
+            'user' => fn($q) => $q->select('id', 'name'),
+            'checkOutBy' => fn($q) => $q->select('id', 'name'),
         ]));
     }
 
