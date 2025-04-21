@@ -91,7 +91,7 @@ class AttendanceController extends BaseController
                     $attendance->clock_out = $attendance?->clockOut;
                 }
                 if ($attendance?->timeoff) {
-                    $attendance->clock_out = $attendance?->timeoff;
+                    $attendance->timeoff = $attendance?->timeoff;
                     if ($attendance->timeoff->timeoffPolicy) {
                         $attendance->timeoff->timeoffPolicy = $attendance?->timeoff->timeoffPolicy;
                     }
@@ -172,7 +172,7 @@ class AttendanceController extends BaseController
 
                     $dataAttendance[] = [
                         // 'user' => $user,
-                        'date' => $date,
+                        'date' => $date->format('Y-m-d'),
                         'shift_type' => $shiftType,
                         'shift' => $shift,
                         'attendance' => $attendance
@@ -195,6 +195,7 @@ class AttendanceController extends BaseController
             ];
         }
 
+        if ($export == 'export-2') return Excel::download(new \App\Exports\Attendance\AttendanceHorizontalReport($dateRange, $data), 'attendances.xlsx');
         if ($export) return Excel::download(new AttendanceReport($data), 'attendances.xlsx');
 
         return DefaultResource::collection($data);
