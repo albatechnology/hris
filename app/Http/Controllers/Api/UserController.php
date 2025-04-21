@@ -90,6 +90,7 @@ class UserController extends BaseController
             AllowedInclude::callback('supervisors', function ($query) {
                 $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
             }),
+            'client',
             'detail',
             'payrollInfo',
             'schedules',
@@ -106,6 +107,7 @@ class UserController extends BaseController
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
+                AllowedFilter::exact('client_id'),
                 // AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
@@ -125,9 +127,9 @@ class UserController extends BaseController
                         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
                     });
                 }),
-                AllowedFilter::callback('client_id', function ($query, $value) {
-                    $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
-                }),
+                // AllowedFilter::callback('client_id', function ($query, $value) {
+                //     $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
+                // }),
                 AllowedFilter::callback('religion', function ($query, $value) {
                     $value = is_array($value) ? $value : [$value];
                     $query->whereHas('detail', fn($q) => $q->whereIn('religion', $value));
@@ -142,6 +144,7 @@ class UserController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
+                'client_id',
                 // 'approval_id',
                 'name',
                 'email',
