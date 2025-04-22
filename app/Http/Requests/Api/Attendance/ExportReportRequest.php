@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\Client;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Closure;
@@ -42,6 +43,7 @@ class ExportReportRequest extends FormRequest
     {
         return [
             'filter' => 'required|array',
+            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',
             'filter.user_ids' => [

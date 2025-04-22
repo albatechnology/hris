@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\Client;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ChildrenRequest extends FormRequest
@@ -38,6 +40,7 @@ class ChildrenRequest extends FormRequest
     {
         return [
             'filter' => 'nullable|array',
+            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.date' => 'nullable|date',
             'sort' => 'nullable|string',
         ];
