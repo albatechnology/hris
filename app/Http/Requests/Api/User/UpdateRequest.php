@@ -39,7 +39,11 @@ class UpdateRequest extends FormRequest
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
-            'nik' => 'nullable|unique:users,nik,' . $user->id,
+            'nik' => ['nullable', function ($attribute, $value, $fail) use ($user) {
+                if ($value && User::where('nik', $value)->where('id', '!=', $user->id)->exists()) {
+                    $fail("NIK already taken");
+                }
+            }],
             'phone' => 'nullable',
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',
