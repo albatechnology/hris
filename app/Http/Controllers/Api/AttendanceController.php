@@ -14,6 +14,7 @@ use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
+use App\Http\Requests\Api\BulkApproveRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Resources\Attendance\AttendanceResource;
@@ -36,6 +37,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class AttendanceController extends BaseController
 {
@@ -968,36 +971,59 @@ class AttendanceController extends BaseController
         return new AttendanceDetailResource($attendanceDetail);
     }
 
-    public function approve(AttendanceDetail $attendanceDetail, NewApproveRequest $request)
+    public function approveValidate(int $id, ?int $approverId = null)
     {
-        // if (!$attendanceDetail->approval_status->is(ApprovalStatus::PENDING)) {
-        //     return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
-        // }
+        $attendanceDetail = AttendanceDetail::findOrFail($id);
+        $requestApproval = $attendanceDetail->approvals()->where('user_id', $approverId ?? auth()->id())->first();
 
-        $requestApproval = $attendanceDetail->approvals()->where('user_id', auth()->id())->first();
-
-        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
-
-        if (!$attendanceDetail->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-
-        if ($attendanceDetail->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
-            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (!$requestApproval) {
+            throw new NotFoundHttpException('You are not registered as approved');
         }
 
+        if (!$attendanceDetail->isDescendantApproved()) {
+            throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
+        }
+
+        if ($attendanceDetail->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            throw new UnprocessableEntityHttpException('Status can not be changed');
+        }
+
+        return $requestApproval;
+    }
+
+    public function bulkApprove(BulkApproveRequest $request)
+    {
+        $approverId = auth('sanctum')->id();
+        $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId));
+
+        $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
         DB::beginTransaction();
         try {
-            $requestApproval->update($request->validated());
+            $requestApprovals->each(fn($requestApproval) => $requestApproval->update($data));
 
-            // $notificationType = NotificationType::ATTENDANCE_APPROVED;
-            // $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, auth()->user(), $requestApproval->approval_status, $attendanceDetail));
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
-        // return new AttendanceDetailResource($attendanceDetail);
-        return $this->updatedResponse();
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
+    }
+
+    public function approve(NewApproveRequest $request, int $id)
+    {
+        $requestApproval = $this->approveValidate($id);
+
+        DB::beginTransaction();
+        try {
+            $requestApproval->update($request->validated());
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
     }
 
     public function clear()

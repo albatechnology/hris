@@ -179,7 +179,7 @@ class RequestShiftController extends BaseController
         ];
     }
 
-    public function bulkApprove(BulkApproveRequest $request): DefaultResource|JsonResponse
+    public function bulkApprove(BulkApproveRequest $request)
     {
         $approverId = auth('sanctum')->id();
         $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId)['request_approval']);
