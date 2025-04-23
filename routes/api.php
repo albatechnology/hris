@@ -188,6 +188,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('approvals', [AttendanceController::class, 'approvals']);
         Route::get('approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
         Route::get('approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
+        Route::put('bulk-approve', [AttendanceController::class, 'bulkApprove']);
         Route::put('approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
         Route::put('{attendance}/restore', [AttendanceController::class, 'restore']);
         Route::delete('{attendance}/force-delete', [AttendanceController::class, 'forceDelete']);
