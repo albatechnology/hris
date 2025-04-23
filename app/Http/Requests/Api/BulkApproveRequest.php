@@ -3,14 +3,11 @@
 namespace App\Http\Requests\Api;
 
 use App\Enums\ApprovalStatus;
-use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class BulkApproveRequest extends FormRequest
 {
-    use RequestToBoolean;
-
     /**
      * Determine if the user is authorized to make this request.
      */

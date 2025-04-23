@@ -31,7 +31,6 @@ use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -745,20 +744,24 @@ class AttendanceController extends BaseController
         }
 
         $attendance = AttendanceService::getTodayAttendance(date: $request->date, user: $user, isCheckByDetails: false);
-        // dump($request->validated());
-        // dd($attendance);
+
+        $shiftId = $request->shift_id;
+        if ($request->is_offline_mode == true) {
+            $shiftId = $schedule->shift->id;
+        }
+
         DB::beginTransaction();
         try {
             if (!$attendance) {
                 $attendance = $user->attendances()->create([
                     'schedule_id' => $schedule->id,
-                    'shift_id' => $request->shift_id,
+                    'shift_id' => $shiftId,
                     'date' => $request->date,
                 ]);
             } else {
                 $attendance->update([
                     'schedule_id' => $schedule->id,
-                    'shift_id' => $request->shift_id,
+                    'shift_id' => $shiftId,
                 ]);
             }
 
