@@ -58,11 +58,16 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
+        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->when($request['branch_id'], fn($q) => $q->where('branch_id', $request['branch_id']))
-            ->when($request['client_id'], fn($q) => $q->where('client_id', $request['client_id']))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
@@ -397,10 +402,15 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
+        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
-            ->when($request['branch_id'], fn($q) => $q->where('branch_id', $request['branch_id']))
-            ->when($request['client_id'], fn($q) => $q->where('client_id', $request['client_id']))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
@@ -538,8 +548,9 @@ class AttendanceController extends BaseController
     {
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
-            ->when($request['branch_id'], fn($q) => $q->where('branch_id', $request['branch_id']))
-            ->when($request['client_id'], fn($q) => $q->where('client_id', $request['client_id']))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
@@ -558,7 +569,6 @@ class AttendanceController extends BaseController
                 'name',
             ])
             ->paginate($this->per_page);
-
 
         $users->map(function ($user) use ($date, $request) {
             $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();

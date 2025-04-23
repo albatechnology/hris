@@ -51,14 +51,14 @@ class ExportReportRequest extends FormRequest
             'filter.user_ids' => [
                 'nullable',
                 'string',
-                function (string $attr, string $value, Closure $fail) {
-                    collect(explode(',', $value))->each(function ($id) use ($fail) {
-                        $user = User::tenanted()->select('id')->firstWHere('id', $id);
-                        if (!$user) {
-                            $fail('The selected user ids is invalid (' . $id . ')');
-                        }
-                    });
-                },
+                // function (string $attr, string $value, Closure $fail) {
+                //     collect(explode(',', $value))->each(function ($id) use ($fail) {
+                //         $user = User::tenanted()->select('id')->firstWHere('id', $id);
+                //         if (!$user) {
+                //             $fail('The selected user ids is invalid (' . $id . ')');
+                //         }
+                //     });
+                // },
             ],
         ];
     }
