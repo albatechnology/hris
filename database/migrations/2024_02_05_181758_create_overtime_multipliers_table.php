@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('overtime_id')->constrained();
             $table->boolean('is_weekday')->default(0);
-            $table->unsignedSmallInteger('start_hour');
-            $table->unsignedSmallInteger('end_hour');
-            $table->unsignedSmallInteger('multiply')->comment('Used to multiply overtime payroll');
+            $table->smallInteger('start_hour')->unsigned();
+            $table->smallInteger('end_hour')->unsigned();
+            $table->float('multiply')->unsigned()->comment('Used to multiply overtime payroll');
             $table->timestamps();
         });
     }

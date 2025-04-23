@@ -15,11 +15,11 @@ class OvertimeMultiplier extends BaseModel
     ];
 
     protected $casts = [
-        'overtime_id' => 'integer',
         'is_weekday' => 'boolean',
-        'start_hour' => 'integer',
-        'end_hour' => 'integer',
-        'multiply' => 'integer',
+        // 'overtime_id' => 'integer',
+        // 'start_hour' => 'integer',
+        // 'end_hour' => 'integer',
+        // 'multiply' => 'integer',
     ];
 
     public function overtime(): BelongsTo

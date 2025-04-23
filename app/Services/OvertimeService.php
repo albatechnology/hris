@@ -71,9 +71,9 @@ class OvertimeService
             }
         }
 
-        $overtimeRequests = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
+        $overtimeRequestGroups = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get()->groupBy(['overtime_id', fn($data) => $data->date]);
 
-        if ($overtimeRequests->count() <= 0) return 0;
+        if ($overtimeRequestGroups->count() <= 0) return 0;
 
         $userOvertimes = $user->overtimes->load([
             'formulas.formulaComponents',
@@ -82,55 +82,55 @@ class OvertimeService
         ]);
 
         $amount = 0;
-        foreach ($overtimeRequests as $overtimeRequest) {
-            $overtime = $userOvertimes->where('id', $overtimeRequest->overtime_id)->first();
-            if (!$overtime) continue;
-            $overtimeDate = Carbon::parse($overtimeRequest->date);
+        foreach ($overtimeRequestGroups as $overtimeId => $overtimeRequestGroupDates) {
+            foreach ($overtimeRequestGroupDates as $overtimeDate => $overtimeRequests) {
 
-            // set overtime duration to minutes. 02:00:00 become 120
-            $overtimeDuration = Carbon::parse($overtimeRequest->duration)->diffInMinutes(Carbon::parse('00:00:00'));
-            if ($overtimeRounding = $overtime->overtimeRoundings->where('start_minute', '<=', $overtimeDuration)->where('end_minute', '>=', $overtimeDuration)->first()) {
-                $overtimeDuration = $overtimeRounding->rounded;
-            }
+                $overtime = $userOvertimes->where('id', $overtimeId)->first();
+                if (!$overtime) continue;
 
-            // set overtime duration to hour. 120 become 2
-            $overtimeDuration = round($overtimeDuration / 60);
+                $overtimeDate = Carbon::parse($overtimeDate);
 
+                // set overtime duration to minutes. 02:00:00 become 120
+                // $overtimeDuration = Carbon::parse($overtimeRequest->duration)->diffInMinutes(Carbon::parse('00:00:00'), true);
+                $overtimeDuration = $overtimeRequests->sum(fn($d) => Carbon::parse($d->duration)->diffInMinutes(Carbon::parse('00:00:00'), true));
 
-            $multiply = 1;
-            if ($overtime->overtimeMultipliers->count()) {
-                $multiply = 0;
-
-                if ($overtimeDate->isWeekday()) {
-                    $overtimeMultiplier = $overtime->overtimeMultipliers->where('is_weekday', true)->sortByDesc('start_hour')->where('start_hour', '<=', $overtimeDuration)->first();
-                } else {
-                    $overtimeMultiplier = $overtime->overtimeMultipliers->where('is_weekday', false)->sortByDesc('start_hour')->where('start_hour', '<=', $overtimeDuration)->first();
+                if ($overtimeRounding = $overtime->overtimeRoundings->where('start_minute', '<=', $overtimeDuration)->where('end_minute', '>=', $overtimeDuration)->first()) {
+                    $overtimeDuration = $overtimeRounding->rounded;
                 }
 
-                if ($overtimeMultiplier) {
-                    if ($overtimeDuration <= $overtimeMultiplier->end_hour) {
-                        $multiply = $overtimeMultiplier->multiply;
+                // set overtime duration to hour. 120 become 2
+                $overtimeDuration = round($overtimeDuration / 60);
+
+                // dd($overtime->overtimeMultipliers?->toArray());
+                $overtimeMultipliers = collect([
+                    [
+                        'duration' => 1,
+                        'multiply' => 1,
+                    ]
+                ]);
+                if ($overtime->overtimeMultipliers->count()) {
+                    if ($overtimeDate->isWeekday()) {
+                        $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
                     } else {
-                        $overtimeDuration = $overtimeMultiplier->end_hour;
-                        $multiply = $overtimeMultiplier->multiply;
+                        $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
                     }
+                    $overtimeMultipliers = self::calculateOvertimeBreakdown($overtimeDuration, $overtimeMultipliers);
                 }
-            }
 
-            $overtimeAmountMultiply = 0;
-            // if overtime paid per day. else paid per hour
-            if (!is_null($overtime->compensation_rate_per_day) && $overtime->compensation_rate_per_day > 0) {
-                $overtimeAmountMultiply = $overtime->compensation_rate_per_day;
-                $amount += $multiply * $overtimeAmountMultiply;
-            } else {
-                switch ($overtime->rate_type) {
-                    case RateType::AMOUNT:
-                        $overtimeAmountMultiply = $overtime->rate_amount;
+                $overtimeAmountMultiply = 0;
+                // if overtime paid per day. else paid per hour
+                if (!is_null($overtime->compensation_rate_per_day) && $overtime->compensation_rate_per_day > 0) {
+                    $overtimeAmountMultiply = $overtime->compensation_rate_per_day;
+                    // $amount += $multiply * $overtimeAmountMultiply;
+                } else {
+                    switch ($overtime->rate_type) {
+                        case RateType::AMOUNT:
+                            $overtimeAmountMultiply = $overtime->rate_amount;
 
-                        break;
-                    case RateType::BASIC_SALARY:
-                        $overtimeAmountMultiply = $basicSalary / $overtime->rate_amount;
-                        break;
+                            break;
+                        case RateType::BASIC_SALARY:
+                            $overtimeAmountMultiply = $basicSalary / $overtime->rate_amount;
+                            break;
                         // case RateType::ALLOWANCES:
                         //     $overtimeAmountMultiply = 0;
 
@@ -139,24 +139,56 @@ class OvertimeService
                         //     }
 
                         //     break;
-                    case RateType::FORMULA:
-                        // dump('OKEE');
-                        // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
+                        // case RateType::FORMULA:
+                        //     // dump('OKEE');
+                        //     // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
 
 
-                        $overtimeAmountMultiply = self::calculateFormula($user, $overtimeRequest, $overtime, $overtime->formulas, $startPeriod, $endPeriod);
-                        break;
-                    default:
-                        $overtimeAmountMultiply = 0;
+                        //     $overtimeAmountMultiply = self::calculateFormula($user, $overtimeRequest, $overtime, $overtime->formulas, $startPeriod, $endPeriod);
+                        //     break;
+                        default:
+                            $overtimeAmountMultiply = 0;
 
-                        break;
+                            break;
+                    }
+                    // $amount += ($overtimeDuration * $multiply) * $overtimeAmountMultiply;
                 }
 
-                $amount += ($overtimeDuration * $multiply) * $overtimeAmountMultiply;
+                if ($overtimeMultipliers->count()) {
+                    $overtimeAmountMultiply = $overtimeMultipliers->sum(function ($om) use ($overtimeAmountMultiply) {
+                        return ($om['duration'] * $om['multiply']) * $overtimeAmountMultiply;
+                    });
+                }
+
+                $amount += $overtimeAmountMultiply;
             }
         }
 
         return $amount;
+    }
+
+    public static function calculateOvertimeBreakdown(float $totalOvertimeHours, Collection $rules)
+    {
+        return $rules
+            ->reduce(function ($carry, $rule, $key) use (&$totalOvertimeHours) {
+                if ($totalOvertimeHours <= 0) {
+                    return $carry;
+                }
+
+                $rangeDuration = $rule['end_hour'] - $rule['start_hour'] + 1;
+                $applicableDuration = min($totalOvertimeHours, $rangeDuration);
+
+                if ($rangeDuration > 0 && $applicableDuration > 0) {
+                    $carry[$key] = [
+                        'duration' => $applicableDuration,
+                        'multiply' => $rule['multiply'],
+                    ];
+
+                    $totalOvertimeHours -= $applicableDuration;
+                }
+
+                return $carry;
+            }, collect());
     }
 
     public static function calculateFormula(User $user, OvertimeRequest $overtimeRequest, Overtime $model, Collection $formulas, string|DateTime $startPeriod = null, string|DateTime $endPeriod = null): int|float
