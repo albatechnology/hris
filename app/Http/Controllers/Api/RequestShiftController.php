@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
+use App\Http\Requests\Api\BulkApproveRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\RequestShift\StoreRequest;
 use App\Http\Resources\DefaultResource;
@@ -21,6 +22,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class RequestShiftController extends BaseController
 {
@@ -149,20 +152,70 @@ class RequestShiftController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function approve(NewApproveRequest $request, int $id): DefaultResource|JsonResponse
+    public function approveValidate(int $id, ?int $approverId = null)
     {
         $requestShift = RequestShift::findTenanted($id);
-        $requestApproval = $requestShift->approvals()->where('user_id', auth()->id())->first();
+        $requestApproval = $requestShift->approvals()->where('user_id', $approverId ?? auth()->id())->first();
 
-        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+        if (!$requestApproval) {
+            throw new NotFoundHttpException('You are not registered as approved');
+        }
 
-        if ($requestShift->approval_status == ApprovalStatus::REJECTED->value) return $this->errorResponse(message: 'Request has been rejected', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if ($requestShift->approval_status == ApprovalStatus::REJECTED->value) {
+            throw new UnprocessableEntityHttpException('Request has been rejected');
+        }
 
-        if (!$requestShift->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (!$requestShift->isDescendantApproved()) {
+            throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
+        }
 
         if ($requestShift->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
-            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            throw new UnprocessableEntityHttpException('Status can not be changed');
         }
+
+        return [
+            'request_shift' => $requestShift,
+            'request_approval' => $requestApproval,
+        ];
+    }
+
+    public function bulkApprove(BulkApproveRequest $request): DefaultResource|JsonResponse
+    {
+        $approverId = auth('sanctum')->id();
+        $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId)['request_approval']);
+
+        $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
+        DB::beginTransaction();
+        try {
+            $requestApprovals->each(fn($requestApproval) => $requestApproval->update($data));
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
+    }
+
+    public function approve(NewApproveRequest $request, int $id): DefaultResource|JsonResponse
+    {
+        // $requestShift = RequestShift::findTenanted($id);
+        // $requestApproval = $requestShift->approvals()->where('user_id', auth()->id())->first();
+
+        // if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+
+        // if ($requestShift->approval_status == ApprovalStatus::REJECTED->value) return $this->errorResponse(message: 'Request has been rejected', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        // if (!$requestShift->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        // if ($requestShift->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+        //     return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
+
+        $data = $this->approveValidate($id);
+        $requestApproval = $data['request_approval'];
+        $requestShift = $data['request_shift'];
 
         DB::beginTransaction();
         try {
