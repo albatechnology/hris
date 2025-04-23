@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\Branch;
 use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -41,6 +42,7 @@ class ChildrenRequest extends FormRequest
         return [
             'filter' => 'nullable|array',
             'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'filter.cranch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.date' => 'nullable|date',
             'sort' => 'nullable|string',
         ];

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Overtime;
 
 use App\Enums\RateType;
+use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
@@ -29,6 +30,7 @@ class UpdateRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'company_id' => $this->company_id ? $this->company_id : auth('sanctum')->user()->company_id,
             'is_rounding' => $this->toBoolean($this->is_rounding),
         ]);
     }
@@ -41,7 +43,8 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'company_id' => ['required', new CompanyTenantedRule()],
+            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'name' => 'required|string',
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',

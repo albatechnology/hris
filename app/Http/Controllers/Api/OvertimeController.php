@@ -9,6 +9,7 @@ use App\Http\Resources\Overtime\OvertimeResource;
 use App\Models\Overtime;
 use App\Models\User;
 use App\Services\FormulaService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -35,11 +36,13 @@ class OvertimeController extends BaseController
         $data = QueryBuilder::for(Overtime::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('client_id'),
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['company', 'client'])
             ->allowedSorts([
                 'id',
                 'company_id',
+                'client_id',
                 'is_rounding',
                 'compensation_rate_per_day',
                 'rate_type',
@@ -86,10 +89,10 @@ class OvertimeController extends BaseController
 
             FormulaService::sync($overtime, $request->formulas);
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return new OvertimeResource($overtime->refresh());
@@ -109,10 +112,10 @@ class OvertimeController extends BaseController
             FormulaService::sync($overtime, $request->formulas);
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return (new OvertimeResource($overtime->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
@@ -134,10 +137,10 @@ class OvertimeController extends BaseController
             $overtime->delete();
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return $this->deletedResponse();

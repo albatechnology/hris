@@ -61,6 +61,7 @@ class AttendanceController extends BaseController
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            ->when($request['branch_id'], fn($q) => $q->where('branch_id', $request['branch_id']))
             ->when($request['client_id'], fn($q) => $q->where('client_id', $request['client_id']))
             ->get(['id', 'company_id', 'name', 'nik']);
 
@@ -398,6 +399,7 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when($request['branch_id'], fn($q) => $q->where('branch_id', $request['branch_id']))
             ->when($request['client_id'], fn($q) => $q->where('client_id', $request['client_id']))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
@@ -536,6 +538,7 @@ class AttendanceController extends BaseController
     {
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when($request['branch_id'], fn($q) => $q->where('branch_id', $request['branch_id']))
             ->when($request['client_id'], fn($q) => $q->where('client_id', $request['client_id']))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
