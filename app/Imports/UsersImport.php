@@ -241,8 +241,8 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 ];
             });
 
+        $user->supervisors()->delete();
         if ($supervisorsData->count()) {
-            $user->supervisors()->delete();
             $user->supervisors()->createMany($supervisorsData);
         }
 
