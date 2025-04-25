@@ -160,9 +160,9 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     {
         return [
             // 'E' => 30,
-            'I' => 30,
-            'N' => 30,
-            'O' => 30,
+            // 'I' => 30,
+            // 'N' => 30,
+            // 'O' => 30,
             // 'R' => 30,
             // 'T' => 30,
             // 'AD' => 30,
@@ -176,17 +176,22 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     public function columnFormats(): array
     {
         return [
-            'E' => NumberFormat::FORMAT_GENERAL,
-            'I' => NumberFormat::FORMAT_GENERAL,
-            'N' => NumberFormat::FORMAT_GENERAL,
+            'A' => NumberFormat::FORMAT_GENERAL,
+            'B' => NumberFormat::FORMAT_GENERAL,
+            'C' => NumberFormat::FORMAT_GENERAL,
+            'D' => NumberFormat::FORMAT_GENERAL,
+            'K' => NumberFormat::FORMAT_GENERAL,
             'O' => NumberFormat::FORMAT_GENERAL,
-            'R' => NumberFormat::FORMAT_GENERAL,
             'T' => NumberFormat::FORMAT_GENERAL,
-            'AD' => NumberFormat::FORMAT_GENERAL,
-            'AF' => NumberFormat::FORMAT_GENERAL,
-            'AL' => NumberFormat::FORMAT_GENERAL,
+            'U' => NumberFormat::FORMAT_GENERAL,
+            'X' => NumberFormat::FORMAT_GENERAL,
+            'Z' => NumberFormat::FORMAT_GENERAL,
+            'AK' => NumberFormat::FORMAT_GENERAL,
             'AN' => NumberFormat::FORMAT_GENERAL,
-            'AO' => NumberFormat::FORMAT_GENERAL,
+            'AP' => NumberFormat::FORMAT_GENERAL,
+            'AV' => NumberFormat::FORMAT_GENERAL,
+            'AX' => NumberFormat::FORMAT_GENERAL,
+            'AY' => NumberFormat::FORMAT_GENERAL,
         ];
     }
 }
