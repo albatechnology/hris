@@ -72,7 +72,7 @@
                     </tr>
                 </table>
             </td>
-            <td class="w-100 vertical-align-top">
+            <td class="vertical-align-top" style="width: 70%">
                 <table>
                     <tr>
                         <th class="text-left">Grade / Level</th>
