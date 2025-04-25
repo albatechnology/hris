@@ -824,13 +824,13 @@ class UserController extends BaseController
             'userBpjs',
             'payrollInfo',
             'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
-            'roles' => fn($q) => $q->select('id', 'name')->limit(1),
+            'roles' => fn($q) => $q->select('id', 'name'),
             'branch' => fn($q) => $q->select('id', 'company_id', 'name')->with('company', fn($q) => $q->select('id', 'name')),
-            // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->limit(1)
-            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
-                'position' => fn($q) => $q->select('id'),
-                'department' => fn($q) => $q->select('id'),
-            ])
+            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
+            // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+            //     'position' => fn($q) => $q->select('id'),
+            //     'department' => fn($q) => $q->select('id'),
+            // ])
         ]);
 
         if ($request->is_json == true) {
