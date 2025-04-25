@@ -826,7 +826,11 @@ class UserController extends BaseController
             'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
             'roles' => fn($q) => $q->select('id', 'name')->limit(1),
             'branch' => fn($q) => $q->select('id', 'company_id', 'name')->with('company', fn($q) => $q->select('id', 'name')),
-            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->limit(1)
+            // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->limit(1)
+            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+                'position' => fn($q) => $q->select('id'),
+                'department' => fn($q) => $q->select('id'),
+            ])
         ]);
 
         if ($request->is_json == true) {
