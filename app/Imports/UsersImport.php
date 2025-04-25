@@ -61,7 +61,10 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
     public function rules(): array
     {
         return [
-            'supervisor_nik' => ['nullable', 'exists:users,nik'],
+            'supervisor_nik_1' => ['nullable', 'exists:users,nik'],
+            'supervisor_nik_2' => ['nullable', 'exists:users,nik'],
+            'supervisor_nik_3' => ['nullable', 'exists:users,nik'],
+            'supervisor_nik_4' => ['nullable', 'exists:users,nik'],
             'role_id' => ['required', new CompanyTenantedRule(Role::class, 'Role not found')],
             'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
@@ -78,7 +81,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             //         return $fail("The email has already been taken.");
             //     }
             // }],
-            'password' => 'required|min:6|max:50',
+            'password' => 'nullable|min:6|max:50',
             'nik' => 'required|max:50',
             'phone' => 'required|max:20',
             'gender' => ['required', function ($attribute, $value, $fail) {
@@ -201,7 +204,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 // // 'last_name' => $row['last_name'],
                 'email' => $row['email'],
                 // 'work_email',
-                'password' => $row['password'],
+                'password' => $row['password'] ?? 'secret',
                 'email_verified_at' => $this->emailVerifiedAt,
                 'type' => $this->userType,
                 'nik' => $row['nik'],
@@ -224,15 +227,23 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             ]);
         }
 
-        if (isset($row['supervisor_nik']) && !empty($row['supervisor_nik'])) {
-            $supervisor = User::where('nik', trim($row['supervisor_nik']))->first(['id']);
-            if ($supervisor) {
-                $user->supervisors()->delete();
-                $user->supervisors()->create([
+        $supervisorsData = collect([
+            $row['supervisor_nik_1'],
+            $row['supervisor_nik_2'],
+            $row['supervisor_nik_3'],
+            $row['supervisor_nik_4'],
+        ])->filter()->values()
+            ->map(function ($nik, $order) {
+                $supervisor = User::where('nik', $nik)->first(['id']);
+                return [
                     'supervisor_id' => $supervisor->id,
-                    'order' => 1,
-                ]);
-            }
+                    'order' => $order,
+                ];
+            });
+
+        if ($supervisorsData->count()) {
+            $user->supervisors()->delete();
+            $user->supervisors()->createMany($supervisorsData);
         }
 
         $user->roles()->syncWithPivotValues([$row['role_id']], ['group_id' => $user->group_id]);

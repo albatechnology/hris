@@ -682,9 +682,26 @@ class AttendanceController extends BaseController
     public function store(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
-        $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
 
-        if (config('app.enable_face_rekognition') === true) {
+        if ($request->is_offline_mode) {
+            $attendance = AttendanceService::getTodayAttendance(date: $request->time, user: $user, isCheckByDetails: false);
+            if ($attendance) {
+                $request->merge([
+                    'schedule_id' => $attendance->schedule_id,
+                    'shift_id' => $attendance->shift_id
+                ]);
+            } else {
+                $schedule = ScheduleService::getTodaySchedule($user, $request->time);
+                $request->merge([
+                    'schedule_id' => $schedule->id,
+                    'shift_id' => $schedule->shift->id
+                ]);
+            }
+        } else {
+            $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
+        }
+
+        if (config('app.enable_face_rekognition') === true && !$request->is_offline_mode) {
             try {
                 $compareFace = Rekognition::compareFace($user, $request->file('file'));
                 if (!$compareFace) {
@@ -701,7 +718,8 @@ class AttendanceController extends BaseController
                 $attendance = Attendance::create([
                     'user_id' => $user->id,
                     'date' => date('Y-m-d', strtotime($request->time)),
-                    ...$request->validated(),
+                    'schedule_id' => $request->schedule_id,
+                    'shift_id' => $request->shift_id,
                 ]);
             }
 
@@ -737,7 +755,7 @@ class AttendanceController extends BaseController
          */
         $user = User::find($request->user_id);
 
-        $schedule = ScheduleService::getTodaySchedule($user, $request->date, scheduleType: ScheduleType::ATTENDANCE->value);
+        $schedule = ScheduleService::getTodaySchedule($user, $request->date);
 
         if (!$schedule) {
             return $this->errorResponse(message: 'Schedule not found!', code: 404);

@@ -35,7 +35,7 @@ class ManualAttendanceRequest extends FormRequest
         }
 
         $isOfflineMode = $this->toBoolean($this->is_offline_mode ?? 0);
-        if (!$isOfflineMode) {
+        if ($isOfflineMode) {
             $type = AttendanceType::MANUAL->value;
         }
 
@@ -55,7 +55,7 @@ class ManualAttendanceRequest extends FormRequest
         return [
             'user_id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
             'date' => 'required|date',
-            'shift_id' => ['required_if:is_offline_mode,1', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'), fn($q) => $q->withTrashed())],
+            'shift_id' => ['required_if:is_offline_mode,false', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'), fn($q) => $q->withTrashed())],
             'clock_in' => 'nullable|date_format:H:i',
             'clock_out' => 'nullable|date_format:H:i',
             'type' => ['required', Rule::enum(AttendanceType::class)],

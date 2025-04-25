@@ -23,6 +23,9 @@ class UsersImportTemplate implements FromArray, WithHeadings, WithStyles, Respon
         return [
             [
                 'SWSJS001',
+                'SWSJS002',
+                null,
+                null,
                 '9',
                 '1',
                 '6',
@@ -75,6 +78,9 @@ class UsersImportTemplate implements FromArray, WithHeadings, WithStyles, Respon
             ],
             [
                 'SWSJS001',
+                'SWSJS002',
+                'SWSJS003',
+                'SWSJS004',
                 '9',
                 '1',
                 '6',
@@ -131,7 +137,10 @@ class UsersImportTemplate implements FromArray, WithHeadings, WithStyles, Respon
     public function headings(): array
     {
         return [
-            'Supervisor NIK',
+            'Supervisor NIK 1',
+            'Supervisor NIK 2',
+            'Supervisor NIK 3',
+            'Supervisor NIK 4',
             'Role ID',
             'Client ID',
             'Branch ID',
