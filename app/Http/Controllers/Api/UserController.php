@@ -720,11 +720,13 @@ class UserController extends BaseController
 
         $cutoffDate = date('Y', strtotime($runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date));
 
+        $payrollPeriod = date('F Y', strtotime("01-" . $runPayroll->period));
+
         $earnings = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE)->values();
         $deductions = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION)->values();
         $benefits = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::BENEFIT)->values();
 
-        $data = ['user' => $user, 'runPayroll' => $runPayroll, 'runPayrollUser' => $runPayroll->users[0], 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
+        $data = ['user' => $user, 'runPayroll' => $runPayroll, 'runPayrollUser' => $runPayroll->users[0], 'cutoffDate' => $cutoffDate, 'payrollPeriod' => $payrollPeriod, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
 
         if ($request->is_json == true) {
             return response()->json($data);

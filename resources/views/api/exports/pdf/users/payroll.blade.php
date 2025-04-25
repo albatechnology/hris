@@ -56,7 +56,7 @@
                 <table>
                     <tr>
                         <th class="text-left">Payroll cut off</th>
-                        <td>: {{ $cutoffDate }}</td>
+                        <td>: {{ $payrollPeriod }}</td>
                     </tr>
                     <tr>
                         <th class="text-left">ID/Name</th>
