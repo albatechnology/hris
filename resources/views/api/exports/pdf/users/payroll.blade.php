@@ -39,7 +39,7 @@
     </style>
 </head>
 <body>
-    <h4 class="text-center" style="color: red">*CONFIDENTIAL</h4>
+    <h4 class="text-center" style="color: red; margin: 0;">*CONFIDENTIAL</h4>
     <table class="w-100">
         <tr>
             <td class="w-50">
