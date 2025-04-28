@@ -28,6 +28,38 @@ use Illuminate\Support\Facades\DB;
 
 class RunPayrollService
 {
+    public static function generateDate(string $startDate, string $endDate, string $period, bool $isSubMonth = false): array
+    {
+        $start = Carbon::parse($startDate . '-' . $period);
+        $end = Carbon::parse($endDate . '-' . $period);
+        if ($start->greaterThan($end)) {
+            $start->subMonth();
+        }
+
+        $endBase = Carbon::parse("01-{$period}"); // ambil awal bulan
+        $daysInMonth = $endBase->daysInMonth;
+
+        if ((int) $endDate > $daysInMonth) {
+            $end = $endBase->endOfMonth();
+        } else {
+            $end = Carbon::parse("{$endDate}-{$period}");
+        }
+
+        if ($isSubMonth) {
+            $start->subMonth();
+            $end->subMonth();
+
+            if ((int) $endDate > $daysInMonth) {
+                $end->endOfMonth();
+            }
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+        ];
+    }
+
     /**
      * execute run payroll
      *
@@ -42,13 +74,14 @@ class RunPayrollService
         //         'data' => 'Please set your Payroll cut off date before submit Run Payroll',
         //     ]);
         // }
-
-        $cutOffStartDate = Carbon::parse($payrollSetting->cut_off_attendance_start_date . '-' . $request['period'])->subMonth();
-        $cutOffEndDate = $cutOffStartDate->clone()->lastOfMonth();
+        $cutOffAttendance = self::generateDate($payrollSetting->cut_off_attendance_start_date, $payrollSetting->cut_off_attendance_end_date, $request['period'], $payrollSetting->is_attendance_pay_last_month);
+        $payrollDate = self::generateDate($payrollSetting->payroll_start_date, $payrollSetting->payroll_end_date, $request['period']);
 
         $request = array_merge($request, [
-            'cut_off_start_date' => $cutOffStartDate->toDateString(),
-            'cut_off_end_date' => $cutOffEndDate->toDateString(),
+            'cut_off_start_date' => $cutOffAttendance['start'],
+            'cut_off_end_date' => $cutOffAttendance['end'],
+            'payroll_start_date' => $payrollDate['start'],
+            'payroll_end_date' => $payrollDate['end'],
         ]);
 
         DB::beginTransaction();
@@ -87,6 +120,8 @@ class RunPayrollService
             'status' => RunPayrollStatus::REVIEW,
             'cut_off_start_date' => $request['cut_off_start_date'],
             'cut_off_end_date' => $request['cut_off_end_date'],
+            'payroll_start_date' => $request['payroll_start_date'],
+            'payroll_end_date' => $request['payroll_end_date'],
         ]);
     }
 
@@ -169,10 +204,12 @@ class RunPayrollService
      */
     public static function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, array $request): JsonResponse
     {
-        $cutOffStartDate = Carbon::parse($runPayroll->cut_off_start_date);
-        $cutOffEndDate = Carbon::parse($runPayroll->cut_off_end_date);
-        $startDate = $cutOffStartDate->copy()->addMonth();
-        $endDate = $startDate->copy()->lastOfMonth();
+        $cutOffStartDate = $runPayroll->cut_off_start_date;
+        $cutOffEndDate = $runPayroll->cut_off_end_date;
+
+        $startDate = $runPayroll->payroll_start_date;
+        $endDate = $runPayroll->payroll_end_date;
+
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
         $company = $payrollSetting->company;
 

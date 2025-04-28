@@ -21,6 +21,8 @@ class RunPayroll extends BaseModel
         'status',
         'cut_off_start_date',
         'cut_off_end_date',
+        'payroll_start_date',
+        'payroll_end_date',
     ];
 
     protected $casts = [
