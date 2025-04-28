@@ -181,8 +181,6 @@ class FormulaService
 
                                     break;
                                 default:
-                                    //
-
                                     break;
                             }
                         }

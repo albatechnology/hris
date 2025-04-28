@@ -184,7 +184,7 @@ class RunThrService
 
             $runThrUser = self::assignUser($runThr, $userId);
             $userBasicSalary = $user->payrollInfo?->basic_salary;
-            $totalWorkingDays = $user->payrollInfo?->total_working_days;
+            $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
                 ->where('user_id', $userId)

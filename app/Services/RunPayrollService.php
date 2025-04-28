@@ -194,7 +194,7 @@ class RunPayrollService
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
             $userBasicSalary = $user->payrollInfo?->basic_salary;
-            $totalWorkingDays = $user->payrollInfo?->total_working_days;
+            $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
@@ -237,8 +237,10 @@ class RunPayrollService
                 } else {
                     $amount = $payrollComponent->amount;
                 }
+                // dump($amount);
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+                // dump($updatePayrollComponentDetail?->toArray());
                 if ($updatePayrollComponentDetail) {
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -247,6 +249,7 @@ class RunPayrollService
 
                     // calculate prorate
                     // $amount = self::prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
+                    // dump($amount);
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser);
                 } else {
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
@@ -473,8 +476,8 @@ class RunPayrollService
         switch ($payrollComponent->period_type) {
             case PayrollComponentPeriodType::DAILY:
                 // rate_amount * cutoff diff days
-                if (!$payrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
-
+                // if (!$payrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
+                $amount = $amount * $cutoffDiffDay;
                 break;
             case PayrollComponentPeriodType::MONTHLY:
                 $amount = $amount;
