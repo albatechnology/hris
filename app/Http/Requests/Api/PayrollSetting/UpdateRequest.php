@@ -3,10 +3,12 @@
 namespace App\Http\Requests\Api\PayrollSetting;
 
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
 {
+    use RequestToBoolean;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -14,6 +16,19 @@ class UpdateRequest extends FormRequest
     {
         return true;
     }
+
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_attendance_pay_last_month' => $this->toBoolean($this->is_attendance_pay_last_month ?? 0),
+        ]);
+    }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -27,6 +42,7 @@ class UpdateRequest extends FormRequest
             // 'cut_off_date' => 'required|date_format:d',
             'cut_off_attendance_start_date' => 'required|date_format:d',
             'cut_off_attendance_end_date' => 'required|date_format:d',
+            'is_attendance_pay_last_month' => 'required|boolean',
             'payroll_start_date' => 'required|date_format:d',
             'payroll_end_date' => 'required|date_format:d',
             // 'default_employee_tax_setting' => ['required', Rule::enum(TaxMethod::class)],
