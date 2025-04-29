@@ -7,6 +7,7 @@ use App\Http\Requests\Api\PayrollComponent\UpdateRequest;
 use App\Http\Resources\PayrollComponent\PayrollComponentResource;
 use App\Models\PayrollComponent;
 use App\Services\FormulaService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
@@ -32,6 +33,7 @@ class PayrollComponentController extends BaseController
         $data = QueryBuilder::for(PayrollComponent::tenanted()->where('is_hidden', false))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('client_id'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::scope('has_formulas'),
             ])
@@ -39,6 +41,7 @@ class PayrollComponentController extends BaseController
             ->allowedSorts([
                 'id',
                 'company_id',
+                'client_id',
                 'name',
                 'type',
                 'amount',
@@ -80,10 +83,10 @@ class PayrollComponentController extends BaseController
             FormulaService::sync($payrollComponent, $request->formulas);
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return new PayrollComponentResource($payrollComponent->refresh());
@@ -109,10 +112,10 @@ class PayrollComponentController extends BaseController
             FormulaService::sync($payrollComponent, $request->formulas);
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return (new PayrollComponentResource($payrollComponent->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
@@ -128,10 +131,10 @@ class PayrollComponentController extends BaseController
 
             // delete payroll component
             $payrollComponent->delete();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return $this->deletedResponse();

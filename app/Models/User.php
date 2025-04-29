@@ -9,6 +9,7 @@ use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Services\UserService;
+use App\Traits\Models\BelongsToClient;
 use App\Traits\Models\CreatedUpdatedInfo;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -30,7 +31,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
 {
-    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, SoftDeletes, CreatedUpdatedInfo;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, SoftDeletes, CreatedUpdatedInfo, BelongsToClient;
 
     /**
      * The attributes that are mass assignable.
@@ -245,11 +246,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
-    }
-
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
     }
 
     public function detail(): HasOne

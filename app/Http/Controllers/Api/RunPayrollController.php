@@ -42,12 +42,14 @@ class RunPayrollController extends BaseController
         $data = QueryBuilder::for(RunPayroll::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('client_id'),
                 AllowedFilter::exact('period'),
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['company', 'client'])
             ->allowedSorts([
                 'id',
                 'company_id',
+                'client_id',
                 'period',
                 'payment_schedule',
                 'created_at',
