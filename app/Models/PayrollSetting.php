@@ -22,14 +22,9 @@ class PayrollSetting extends Model implements TenantedInterface
         'payroll_end_date',
         'cut_off_date',
         'is_attendance_pay_last_month',
-        // 'cutoff_attendance_start_date',
-        // 'cutoff_attendance_end_date',
         'default_employee_tax_setting',
         'default_employee_salary_tax_setting',
         'default_oas_setting',
-        // 'is_default_cutoff',
-        // 'cutoff_payroll_end_date',
-        // 'cutoff_payroll_end_date',
         'prorate_setting',
         'is_count_national_holiday_as_working_day',
     ];
@@ -40,5 +35,6 @@ class PayrollSetting extends Model implements TenantedInterface
         'default_oas_setting' => JhtCost::class,
         'prorate_setting' => ProrateSetting::class,
         'is_count_national_holiday_as_working_day' => 'boolean',
+        'is_attendance_pay_last_month' => 'boolean',
     ];
 }
