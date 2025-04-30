@@ -129,16 +129,20 @@ class ShiftController extends BaseController
 
     public function reportShiftUsers(ExportReportRequest $request, ?string $export = null)
     {
-        $userIds = $request->filter['user_ids'] ?? null;
-
         $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
+        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
