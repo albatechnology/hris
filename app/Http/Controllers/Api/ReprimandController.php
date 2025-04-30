@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MediaCollection;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\Reprimand\StoreRequest;
 use App\Http\Requests\Api\Reprimand\UpdateRequest;
@@ -31,7 +32,6 @@ class ReprimandController extends BaseController
         $data = QueryBuilder::for(Reprimand::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('assign_to'),
                 'type',
                 'effective_date',
                 'end_date',
@@ -40,14 +40,13 @@ class ReprimandController extends BaseController
                 AllowedInclude::callback('user', function ($query) {
                     $query->select('id', 'name', 'nik', 'email');
                 }),
-                AllowedInclude::callback('assignTo', function ($query) {
+                AllowedInclude::callback('watchers', function ($query) {
                     $query->select('id', 'name', 'nik', 'email');
                 }),
             ])
             ->allowedSorts([
                 'id',
                 'user_id',
-                'assign_to',
                 'type',
                 'effective_date',
                 'end_date',
@@ -63,7 +62,7 @@ class ReprimandController extends BaseController
         $reprimand = Reprimand::findTenanted($id);
         return new DefaultResource($reprimand->loadMissing([
             'user' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
-            'assignTo' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
+            'watchers' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
         ]));
     }
 
@@ -72,6 +71,12 @@ class ReprimandController extends BaseController
         DB::beginTransaction();
         try {
             $reprimand = Reprimand::create($request->validated());
+            $reprimand->watchers()->sync($request->watcher_ids);
+
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::REPRIMAND->value;
+                $reprimand->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
 
             $notificationType = NotificationType::REPRIMAND;
             $reprimand->user->notify(new ($notificationType->getNotificationClass())($notificationType, $reprimand));
@@ -88,7 +93,21 @@ class ReprimandController extends BaseController
     {
         $reprimand = Reprimand::findTenanted($id);
 
-        $reprimand->update($request->validated());
+        DB::beginTransaction();
+        try {
+            $reprimand->update($request->validated());
+            $reprimand->watchers()->sync($request->watcher_ids);
+
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::REPRIMAND->value;
+                $reprimand->clearMediaCollection($mediaCollection);
+                $reprimand->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
 
         return (new DefaultResource($reprimand))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }

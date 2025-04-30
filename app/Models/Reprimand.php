@@ -9,15 +9,17 @@ use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Reprimand extends BaseModel implements TenantedInterface
+class Reprimand extends BaseModel implements TenantedInterface, HasMedia
 {
-    use BelongsToUser, CreatedUpdatedInfo, CustomSoftDeletes, TenantedThroughUser;
+    use BelongsToUser, CreatedUpdatedInfo, CustomSoftDeletes, TenantedThroughUser, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
-        'assign_to',
+        // 'assign_to',
         'type',
         'effective_date',
         'end_date',
@@ -32,6 +34,15 @@ class Reprimand extends BaseModel implements TenantedInterface
         'status'
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function (self $model) {
+            if ($model->isDirty('approval_status')) {
+                $model->approved_at = now();
+            }
+        });
+    }
+
     protected function status(): Attribute
     {
         return new Attribute(
@@ -41,8 +52,8 @@ class Reprimand extends BaseModel implements TenantedInterface
         );
     }
 
-    public function assignTo(): BelongsTo
+    public function watchers(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'assign_to');
+        return $this->belongsToMany(User::class, 'reprimand_watchers');
     }
 }

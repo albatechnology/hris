@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::create('reprimands', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
-            $table->foreignId('assign_to')->constrained('users');
             $table->string('type');
             $table->date('effective_date');
             $table->date('end_date');
