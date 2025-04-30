@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\MediaCollection;
+use App\Enums\NotificationType;
 use App\Enums\ReprimandType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
@@ -31,17 +33,9 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     ];
 
     protected $appends = [
-        'status'
+        'status',
+        'file'
     ];
-
-    protected static function booted(): void
-    {
-        static::created(function (self $model) {
-            if ($model->isDirty('approval_status')) {
-                $model->approved_at = now();
-            }
-        });
-    }
 
     protected function status(): Attribute
     {
@@ -50,6 +44,23 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
                 return date('Y-m-d') >= $this->effective_date && date('Y-m-d') <= $this->end_date ? 'active' : 'inactive';
             },
         );
+    }
+
+    public function getFileAttribute()
+    {
+        $file = $this->getFirstMedia(MediaCollection::REPRIMAND->value);
+        if ($file) {
+            $url = $file->getUrl();
+            // $preview = $file->getUrl('preview');
+        } else {
+            $url = null;
+            // $preview = asset('img/user-icon.png');
+        }
+
+        return [
+            'url' => $url,
+            // 'preview' => $preview
+        ];
     }
 
     public function watchers(): BelongsToMany

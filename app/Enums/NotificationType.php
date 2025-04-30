@@ -8,6 +8,7 @@ enum NotificationType: string
 
     case ANNOUNCEMENT = 'announcement';
     case REPRIMAND = 'reprimand';
+    case REPRIMAND_WATCHER = 'reprimand_watcher';
 
     case REQUEST_ATTENDANCE = 'request_attendance';
     case ATTENDANCE_APPROVED = 'attendance_approved';
@@ -39,7 +40,7 @@ enum NotificationType: string
     {
         return match ($this) {
             self::ANNOUNCEMENT => \App\Notifications\Announcement\AnnouncementNotification::class,
-            self::REPRIMAND => \App\Notifications\Reprimand\ReprimandNotification::class,
+            self::REPRIMAND, self::REPRIMAND_WATCHER => \App\Notifications\Reprimand\ReprimandNotification::class,
             self::REQUEST_ATTENDANCE => \App\Notifications\Attendance\RequestAttendance::class,
             self::ATTENDANCE_APPROVED => \App\Notifications\Attendance\AttendanceApproved::class,
             self::REQUEST_TIMEOFF => \App\Notifications\Timeoff\RequestTimeoff::class,
@@ -63,6 +64,8 @@ enum NotificationType: string
     public function getMessage(): string
     {
         return match ($this) {
+            self::REPRIMAND => 'You have received a reprimand %s', // You have received a reprimand SP1
+            self::REPRIMAND_WATCHER => '%s have received a reprimand %s', // Sianu have received a reprimand SP1
             self::REQUEST_ATTENDANCE => 'Requesting attendance (%s) for %s', // Monday, 01 Jan 2024
             self::ATTENDANCE_APPROVED => 'Your attendance (%s) request at %s on %s, has been %s.', // 09:00:00, Monday, 01 Jan 2024, approved/rejected
             self::REQUEST_TIMEOFF => 'Requesting time off (%s) for %s', // 01 feb - 12 feb 2024

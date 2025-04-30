@@ -80,6 +80,9 @@ class ReprimandController extends BaseController
 
             $notificationType = NotificationType::REPRIMAND;
             $reprimand->user->notify(new ($notificationType->getNotificationClass())($notificationType, $reprimand));
+
+            $warcherNotificationType = NotificationType::REPRIMAND_WATCHER;
+            $reprimand->watchers->each(fn($user) => $user->notify(new ($warcherNotificationType->getNotificationClass())($warcherNotificationType, $reprimand)));
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
