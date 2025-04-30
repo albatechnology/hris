@@ -6,6 +6,7 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentType;
 use App\Models\PayrollComponent;
 use App\Models\RunPayroll;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -31,13 +32,13 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
 
         $runPayrollUsers = $this->runPayroll->users;
 
-        // $cutOffStartDate = Carbon::parse($this->runPayroll->cut_off_start_date);
-        // $cutOffEndDate = Carbon::parse($this->runPayroll->cut_off_end_date);
+        $cutOffStartDate = Carbon::parse($this->runPayroll->cut_off_start_date);
+        $cutOffEndDate = Carbon::parse($this->runPayroll->cut_off_end_date);
 
-        // $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($cutOffStartDate, $cutOffEndDate) {
-        //     return $item->user->resign_date && Carbon::parse($item->user->resign_date)->between($cutOffStartDate, $cutOffEndDate) ? 'resign' : (Carbon::parse($item->user->join_date)->between($cutOffStartDate, $cutOffEndDate) ? 'new' : 'active');
-        // });
-        $runPayrollUsers = $this->runPayroll->users->groupBy(fn($item, $key) => 'active');
+        $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($cutOffStartDate, $cutOffEndDate) {
+            return $item->user->resign_date && Carbon::parse($item->user->resign_date)->between($cutOffStartDate, $cutOffEndDate) ? 'resign' : (Carbon::parse($item->user->join_date)->between($cutOffStartDate, $cutOffEndDate) ? 'new' : 'active');
+        });
+        // $runPayrollUsers = $this->runPayroll->users->groupBy(fn($item, $key) => 'active');
 
         $activeUsers = $runPayrollUsers->get('active')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
         $resignUsers = $runPayrollUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
