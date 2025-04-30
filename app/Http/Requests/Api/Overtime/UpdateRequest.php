@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Overtime;
 
 use App\Enums\RateType;
+use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
@@ -29,6 +30,7 @@ class UpdateRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'company_id' => $this->company_id ? $this->company_id : auth('sanctum')->user()->company_id,
             'is_rounding' => $this->toBoolean($this->is_rounding),
         ]);
     }
@@ -41,7 +43,8 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'company_id' => ['required', new CompanyTenantedRule()],
+            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'name' => 'required|string',
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',
@@ -75,7 +78,7 @@ class UpdateRequest extends FormRequest
                 }
             ],
             'overtime_multipliers.*.end_hour' => 'required_with:overtime_multipliers|integer|gt:overtime_multipliers.*.start_hour',
-            'overtime_multipliers.*.multiply' => 'required_with:overtime_multipliers|integer',
+            'overtime_multipliers.*.multiply' => 'required_with:overtime_multipliers|numeric',
 
             'overtime_allowances' => 'required_if:rate_type,allowances|array',
             'overtime_allowances.*.payroll_component_id' => 'required_with:overtime_allowances|exists:payroll_components,id|distinct',

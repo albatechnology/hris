@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RunPayrollStatus;
+use App\Traits\Models\BelongsToClient;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunPayroll extends BaseModel
 {
-    use BelongsToUser, CompanyTenanted;
+    use BelongsToUser, CompanyTenanted, BelongsToClient;
 
     protected $fillable = [
         'company_id',
+        'client_id',
         'user_id',
         'code',
         'period',
@@ -21,6 +23,8 @@ class RunPayroll extends BaseModel
         'status',
         'cut_off_start_date',
         'cut_off_end_date',
+        'payroll_start_date',
+        'payroll_end_date',
     ];
 
     protected $casts = [

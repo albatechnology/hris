@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\Api\Attendance;
+namespace App\Http\Requests\Api\PayrollSetting;
 
-use App\Models\Branch;
 use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class ChildrenRequest extends FormRequest
+class IndexRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,11 +24,18 @@ class ChildrenRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        // client_id is for SMART
+        $clientId = $this->filter['client_id'] ?? null;
+        $companyId = $this->filter['company_id'] ?? null;
+        if ($clientId) {
+            $companyId = Client::tenanted()->where('id', $clientId)->first(['company_id'])->company_id;
+        }
+
         $this->merge([
             'filter' => [
-                ...($this->filter ?? []),
-                'date' => !empty($this->filter['date']) ? $this->filter['date'] : date('Y-m-d'),
-            ],
+                'client_id' => $clientId,
+                'company_id' => $companyId,
+            ]
         ]);
     }
 
@@ -39,12 +46,10 @@ class ChildrenRequest extends FormRequest
      */
     public function rules(): array
     {
+        // 'filter.company_id' => 'required',
         return [
-            'filter' => 'nullable|array',
-            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
-            'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'filter.date' => 'nullable|date',
-            'sort' => 'nullable|string',
+            'filter.client_id' => Rule::requiredIf(config('app.name') === "SMART"),
+            'filter.company_id' => ['required', new CompanyTenantedRule()],
         ];
     }
 }

@@ -96,7 +96,7 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
 
     public function scopeWhereDateBetween($query, string $dateFrom, string $dateTo)
     {
-        $query->whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo);
+        $query->where(fn($q) => $q->whereDate('date', '>=', $dateFrom)->whereDate('date', '<=', $dateTo));
     }
 
     // public function approvedBy(): BelongsTo

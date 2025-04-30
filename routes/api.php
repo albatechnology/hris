@@ -189,6 +189,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('approvals', [AttendanceController::class, 'approvals']);
         Route::get('approvals/count-total', [AttendanceController::class, 'countTotalapprovals']);
         Route::get('approvals/{attendance_detail}', [AttendanceController::class, 'showApproval']);
+        Route::put('bulk-approve', [AttendanceController::class, 'bulkApprove']);
         Route::put('approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
         Route::put('{attendance}/restore', [AttendanceController::class, 'restore']);
         Route::delete('{attendance}/force-delete', [AttendanceController::class, 'forceDelete']);
@@ -298,6 +299,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('request-shifts/available-shifts', [RequestShiftController::class, 'availableShifts']);
     Route::get('request-shifts/approvals', [RequestShiftController::class, 'approvals']);
     Route::get('request-shifts/approvals/count-total', [RequestShiftController::class, 'countTotalApprovals']);
+    Route::put('request-shifts/bulk-approve', [RequestShiftController::class, 'bulkApprove']);
     Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);
     Route::apiResource('request-shifts', RequestShiftController::class);
 

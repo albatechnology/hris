@@ -6,14 +6,16 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles
+class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles, ShouldAutoSize, WithColumnWidths
 {
     use Exportable;
 
@@ -28,6 +30,9 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
     {
         return [
             'ID',
+            'Company',
+            'Branch',
+            'Department & Position',
             'NIK',
             'Name',
             // 'Last Name',
@@ -51,7 +56,7 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
             'Blood Type',
             'Blood Rhesus',
             'Religion',
-            'Basic Salary',
+            // 'Basic Salary',
             'Overtime Setting',
             'Bank Name',
             'Bank Account Number',
@@ -62,11 +67,11 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
             'Tax Salary',
             'Beginning Netto',
             'PPH 21 Paid',
-            'BPJS Kesehatan Plafond',
+            // 'BPJS Kesehatan Plafond',
             'BPJS Kesehatan Number',
             'BPJS Kesehatan Date',
             'BPJS Kesehatan Family Number',
-            'BPJS Ketenagakerjaan Plafond',
+            // 'BPJS Ketenagakerjaan Plafond',
             'BPJS Ketenagakerjaan Number',
             'BPJS Ketenagakerjaan Date',
             'BPJS Kesehatan Paid By',
@@ -87,8 +92,17 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
      */
     public function map($user): array
     {
+        $positions = "";
+        foreach ($user->positions as $p) {
+            $positions .= $p->department->name . '/' . $p->position->name . ', ';
+        }
+        $positions = rtrim($positions, ', ');
+
         return [
             $user->id,
+            $user->branch?->company?->name ?? '',
+            $user->branch?->name ?? '',
+            $positions,
             $user->nik,
             $user->name,
             // $user->last_name,
@@ -112,7 +126,7 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
             $user->detail?->blood_type?->value ?? '',
             $user->detail?->blood_rhesus?->value ?? '',
             $user->detail?->religion?->value ?? '',
-            $user->payrollInfo?->basic_salary,
+            // $user->payrollInfo?->basic_salary,
             $user->payrollInfo?->overtime_setting?->value ?? '',
             $user->payrollInfo?->bank_name,
             $user->payrollInfo?->bank_account_number,
@@ -123,11 +137,11 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
             $user->payrollInfo?->tax_salary?->value ?? '',
             $user->payrollInfo?->beginning_netto,
             $user->payrollInfo?->pph21_paid,
-            $user->userBpjs?->upah_bpjs_kesehatan,
+            // $user->userBpjs?->upah_bpjs_kesehatan,
             $user->userBpjs?->bpjs_kesehatan_no,
             $user->userBpjs?->bpjs_kesehatan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_kesehatan_date)) : '',
             $user->userBpjs?->bpjs_kesehatan_family_no,
-            $user->userBpjs?->upah_bpjs_ketenagakerjaan,
+            // $user->userBpjs?->upah_bpjs_ketenagakerjaan,
             $user->userBpjs?->bpjs_ketenagakerjaan_no,
             $user->userBpjs?->bpjs_ketenagakerjaan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_ketenagakerjaan_date)) : '',
             $user->userBpjs?->bpjs_kesehatan_cost?->value ?? '',
@@ -136,19 +150,36 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
         ];
     }
 
+    public function columnWidths(): array
+    {
+        return [
+            // 'E' => 30,
+            'I' => 30,
+            'N' => 30,
+            'O' => 30,
+            // 'R' => 30,
+            // 'T' => 30,
+            // 'AD' => 30,
+            // 'AF' => 30,
+            // 'AL' => 30,
+            // 'AN' => 30,
+            // 'AO' => 30,
+        ];
+    }
+
     public function columnFormats(): array
     {
         return [
-            'B' => NumberFormat::FORMAT_GENERAL,
-            'K' => NumberFormat::FORMAT_GENERAL,
-            'L' => NumberFormat::FORMAT_GENERAL,
+            'E' => NumberFormat::FORMAT_GENERAL,
+            'I' => NumberFormat::FORMAT_GENERAL,
+            'N' => NumberFormat::FORMAT_GENERAL,
             'O' => NumberFormat::FORMAT_GENERAL,
-            'Y' => NumberFormat::FORMAT_NUMBER,
+            'R' => NumberFormat::FORMAT_GENERAL,
+            'T' => NumberFormat::FORMAT_GENERAL,
             'AD' => NumberFormat::FORMAT_GENERAL,
-            'AJ' => NumberFormat::FORMAT_NUMBER,
-            'AK' => NumberFormat::FORMAT_GENERAL,
-            'AM' => NumberFormat::FORMAT_GENERAL,
-            'AN' => NumberFormat::FORMAT_NUMBER,
+            'AF' => NumberFormat::FORMAT_GENERAL,
+            'AL' => NumberFormat::FORMAT_GENERAL,
+            'AN' => NumberFormat::FORMAT_GENERAL,
             'AO' => NumberFormat::FORMAT_GENERAL,
         ];
     }

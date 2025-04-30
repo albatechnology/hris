@@ -90,6 +90,7 @@ class UserController extends BaseController
             AllowedInclude::callback('supervisors', function ($query) {
                 $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
             }),
+            'client',
             'detail',
             'payrollInfo',
             'schedules',
@@ -106,6 +107,7 @@ class UserController extends BaseController
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
+                AllowedFilter::exact('client_id'),
                 // AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
@@ -125,9 +127,9 @@ class UserController extends BaseController
                         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
                     });
                 }),
-                AllowedFilter::callback('client_id', function ($query, $value) {
-                    $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
-                }),
+                // AllowedFilter::callback('client_id', function ($query, $value) {
+                //     $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
+                // }),
                 AllowedFilter::callback('religion', function ($query, $value) {
                     $value = is_array($value) ? $value : [$value];
                     $query->whereHas('detail', fn($q) => $q->whereIn('religion', $value));
@@ -142,6 +144,7 @@ class UserController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
+                'client_id',
                 // 'approval_id',
                 'name',
                 'email',
@@ -717,11 +720,13 @@ class UserController extends BaseController
 
         $cutoffDate = date('Y', strtotime($runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date));
 
+        $payrollPeriod = date('F Y', strtotime("01-" . $runPayroll->period));
+
         $earnings = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE)->values();
         $deductions = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION)->values();
         $benefits = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::BENEFIT)->values();
 
-        $data = ['user' => $user, 'runPayroll' => $runPayroll, 'runPayrollUser' => $runPayroll->users[0], 'cutoffDate' => $cutoffDate, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
+        $data = ['user' => $user, 'runPayroll' => $runPayroll, 'runPayrollUser' => $runPayroll->users[0], 'cutoffDate' => $cutoffDate, 'payrollPeriod' => $payrollPeriod, 'earnings' => $earnings, 'deductions' => $deductions, 'benefits' => $benefits];
 
         if ($request->is_json == true) {
             return response()->json($data);
@@ -820,18 +825,20 @@ class UserController extends BaseController
             'detail',
             'userBpjs',
             'payrollInfo',
-            'branch' => fn($q) => $q->select('id', 'company_id', 'name')->with('company', fn($q) => $q->select('id', 'name')),
-            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
-                'position' => fn($q) => $q->select('id', 'name'),
-                'department' => fn($q) => $q->select('id', 'name'),
-            ])
+            'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
+            'roles' => fn($q) => $q->select('id'),
+            'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
+            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
+            // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+            //     'position' => fn($q) => $q->select('id'),
+            //     'department' => fn($q) => $q->select('id'),
+            // ])
         ]);
 
         if ($request->is_json == true) {
             $users = $query->paginate($this->per_page);
             return DefaultResource::collection($users);
         }
-
         return (new UserExport($query))->download('users.xlsx');
     }
 

@@ -28,6 +28,38 @@ use Illuminate\Support\Facades\DB;
 
 class RunPayrollService
 {
+    public static function generateDate(string $startDate, string $endDate, string $period, bool $isSubMonth = false): array
+    {
+        $start = Carbon::parse($startDate . '-' . $period);
+        $end = Carbon::parse($endDate . '-' . $period);
+        if ($start->greaterThan($end)) {
+            $start->subMonth();
+        }
+
+        $endBase = Carbon::parse("01-{$period}"); // ambil awal bulan
+        $daysInMonth = $endBase->daysInMonth;
+
+        if ((int) $endDate > $daysInMonth) {
+            $end = $endBase->endOfMonth();
+        } else {
+            $end = Carbon::parse("{$endDate}-{$period}");
+        }
+
+        if ($isSubMonth) {
+            $start->subMonth();
+            $end->subMonth();
+
+            if ((int) $endDate > $daysInMonth) {
+                $end->endOfMonth();
+            }
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+        ];
+    }
+
     /**
      * execute run payroll
      *
@@ -35,20 +67,24 @@ class RunPayrollService
      */
     public static function execute(array $request): RunPayroll | Exception | JsonResponse
     {
-        $payrollSetting = PayrollSetting::with('company')->whereCompany($request['company_id'])->first();
+        $payrollSetting = PayrollSetting::with('company')
+            ->whereCompany($request['company_id'])
+            ->whenClient($request['client_id'] ?? null)
+            ->first();
         // if (!$payrollSetting->cut_off_attendance_start_date || !$payrollSetting->cut_off_attendance_end_date) {
         //     return response()->json([
         //         'success' => false,
         //         'data' => 'Please set your Payroll cut off date before submit Run Payroll',
         //     ]);
         // }
-
-        $cutOffStartDate = Carbon::parse($payrollSetting->cut_off_attendance_start_date . '-' . $request['period'])->subMonth();
-        $cutOffEndDate = $cutOffStartDate->clone()->lastOfMonth();
+        $cutOffAttendance = self::generateDate($payrollSetting->cut_off_attendance_start_date, $payrollSetting->cut_off_attendance_end_date, $request['period'], $payrollSetting->is_attendance_pay_last_month);
+        $payrollDate = self::generateDate($payrollSetting->payroll_start_date, $payrollSetting->payroll_end_date, $request['period']);
 
         $request = array_merge($request, [
-            'cut_off_start_date' => $cutOffStartDate->toDateString(),
-            'cut_off_end_date' => $cutOffEndDate->toDateString(),
+            'cut_off_start_date' => $cutOffAttendance['start'],
+            'cut_off_end_date' => $cutOffAttendance['end'],
+            'payroll_start_date' => $payrollDate['start'],
+            'payroll_end_date' => $payrollDate['end'],
         ]);
 
         DB::beginTransaction();
@@ -81,12 +117,15 @@ class RunPayrollService
     public static function createRunPayroll(array $request): RunPayroll
     {
         return auth('sanctum')->user()->runPayrolls()->create([
+            'client_id' => $request['client_id'] ?? null,
             'company_id' => $request['company_id'],
             'period' => $request['period'],
             'payment_schedule' => $request['payment_schedule'],
             'status' => RunPayrollStatus::REVIEW,
             'cut_off_start_date' => $request['cut_off_start_date'],
             'cut_off_end_date' => $request['cut_off_end_date'],
+            'payroll_start_date' => $request['payroll_start_date'],
+            'payroll_end_date' => $request['payroll_end_date'],
         ]);
     }
 
@@ -169,17 +208,19 @@ class RunPayrollService
      */
     public static function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, array $request): JsonResponse
     {
-        $cutOffStartDate = Carbon::parse($runPayroll->cut_off_start_date);
-        $cutOffEndDate = Carbon::parse($runPayroll->cut_off_end_date);
-        $startDate = $cutOffStartDate->copy()->addMonth();
-        $endDate = $startDate->copy()->lastOfMonth();
+        $cutOffStartDate = $runPayroll->cut_off_start_date;
+        $cutOffEndDate = $runPayroll->cut_off_end_date;
+
+        $startDate = $runPayroll->payroll_start_date;
+        $endDate = $runPayroll->payroll_end_date;
+
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
         $company = $payrollSetting->company;
 
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
 
-        $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $request['company_id'])->pluck('id')->toArray();
+        $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $runPayroll->company_id)->whenClient($runPayroll->client_id)->pluck('id')->toArray();
 
         // calculate for each user
         foreach ($userIds as $userId) {
@@ -194,14 +235,15 @@ class RunPayrollService
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
             $userBasicSalary = $user->payrollInfo?->basic_salary;
-            $totalWorkingDays = $user->payrollInfo?->total_working_days;
+            $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
                 ->where('user_id', $userId)
                 ->whereHas(
                     'updatePayrollComponent',
-                    fn($q) => $q->whereCompany($request['company_id'])
+                    fn($q) => $q->whereCompany($runPayroll->company_id)
+                        ->whenClient($runPayroll->client_id)
                         ->whereActive($startDate, $endDate)
                 )
                 ->orderByDesc('id')->get();
@@ -209,7 +251,11 @@ class RunPayrollService
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
-            $basicSalaryComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+            $basicSalaryComponent = PayrollComponent::tenanted()
+                ->where('company_id', $runPayroll->company_id)
+                ->whenClient($runPayroll->client_id)
+                ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
 
             if ($updatePayrollComponentDetail) {
@@ -229,7 +275,11 @@ class RunPayrollService
             /**
              * second, calculate payroll component where not default
              */
-            $payrollComponents = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->whereNotDefault()->get();
+            $payrollComponents = PayrollComponent::tenanted()
+                ->where('company_id', $runPayroll->company_id)
+                ->whenClient($runPayroll->client_id)
+                ->whereNotDefault()->get();
+
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -237,8 +287,10 @@ class RunPayrollService
                 } else {
                     $amount = $payrollComponent->amount;
                 }
+                // dump($amount);
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+                // dump($updatePayrollComponentDetail?->toArray());
                 if ($updatePayrollComponentDetail) {
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -247,6 +299,7 @@ class RunPayrollService
 
                     // calculate prorate
                     // $amount = self::prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
+                    // dump($amount);
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser);
                 } else {
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
@@ -260,7 +313,11 @@ class RunPayrollService
              * third, calculate alpa
              */
             if ($user->payrollInfo?->is_ignore_alpa == false) {
-                $alpaComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::ALPA)->first();
+                $alpaComponent = PayrollComponent::tenanted()
+                    ->where('company_id', $runPayroll->company_id)
+                    ->whenClient($runPayroll->client_id)
+                    ->where('category', PayrollComponentCategory::ALPA)->first();
+
                 if ($alpaComponent) {
                     $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
                     if ($alpaUpdateComponent) {
@@ -283,7 +340,11 @@ class RunPayrollService
             /**
              * calculate LOAN
              */
-            $loanComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::LOAN)->first();
+            $loanComponent = PayrollComponent::tenanted()
+                ->where('company_id', $runPayroll->company_id)
+                ->whenClient($runPayroll->client_id)
+                ->where('category', PayrollComponentCategory::LOAN)->first();
+
             if ($loanComponent) {
                 $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $cutOffStartDate->format('Y'))->where('payment_period_month', $cutOffStartDate->format('m'));
                 $loans = Loan::where('user_id', $user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
@@ -300,7 +361,11 @@ class RunPayrollService
             /**
              * calculate INSURANCE
              */
-            $insuranceComponent = PayrollComponent::tenanted()->where('company_id', $runPayroll->company_id)->where('category', PayrollComponentCategory::INSURANCE)->first();
+            $insuranceComponent = PayrollComponent::tenanted()
+                ->where('company_id', $runPayroll->company_id)
+                ->whenClient($runPayroll->client_id)
+                ->where('category', PayrollComponentCategory::INSURANCE)->first();
+
             if ($insuranceComponent) {
                 $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $cutOffStartDate->format('Y'))->where('payment_period_month', $cutOffStartDate->format('m'));
                 $insurances = Loan::where('user_id', $user->id)->whereInsurance()->whereHas('details', $whereHas)->get(['id']);
@@ -318,7 +383,10 @@ class RunPayrollService
              * fourth, calculate bpjs
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs) {
-                $bpjsPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
+                $bpjsPayrollComponents = PayrollComponent::tenanted()
+                    ->whereCompany($runPayroll->company_id)
+                    ->whenClient($runPayroll->client_id)
+                    ->whereBpjs()->get();
                 // calculate bpjs
                 // init bpjs variable
                 $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
@@ -392,7 +460,10 @@ class RunPayrollService
             /**
              * five, calculate overtime
              */
-            $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
+            $overtimePayrollComponent = PayrollComponent::tenanted()
+                ->whereCompany($runPayroll->company_id)
+                ->whenClient($runPayroll->client_id)
+                ->where('category', PayrollComponentCategory::OVERTIME)->first();
 
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
 
@@ -406,7 +477,11 @@ class RunPayrollService
             /**
              * six, calculate task overtime
              */
-            $taskOvertimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
+            $taskOvertimePayrollComponent = PayrollComponent::tenanted()
+                ->whereCompany($runPayroll->company_id)
+                ->whenClient($runPayroll->client_id)
+                ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
+
             if ($taskOvertimePayrollComponent) {
                 $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
 
@@ -473,8 +548,8 @@ class RunPayrollService
         switch ($payrollComponent->period_type) {
             case PayrollComponentPeriodType::DAILY:
                 // rate_amount * cutoff diff days
-                if (!$payrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
-
+                // if (!$payrollComponent->formulas) $amount = $amount * $cutoffDiffDay;
+                $amount = $amount * $cutoffDiffDay;
                 break;
             case PayrollComponentPeriodType::MONTHLY:
                 $amount = $amount;
@@ -839,56 +914,3 @@ class RunPayrollService
         return $taxPercentage;
     }
 }
-// // calculate bpjs
-// if ($runPayrollUser->user->userBpjs) {
-//     // init bpjs variable
-//     $current_upahBpjsKesehatan = $runPayrollUser->user->userBpjs->upah_bpjs_kesehatan;
-//     $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
-//     if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
-
-
-//     $current_upahBpjsKetenagakerjaan = $runPayrollUser->user->userBpjs->upah_bpjs_ketenagakerjaan;
-//     $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
-//     if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
-
-//     // bpjs kesehatan
-//     $company_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
-//     $employee_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
-
-//     $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
-//     $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
-
-//     // jkk
-//     $company_percentageJkk = $company->npp?->jkk ?? 0;
-//     $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
-
-//     // jkm
-//     $company_percentageJkm = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
-//     $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
-
-//     // jht
-//     $company_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
-//     $employee_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
-//     $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
-//     $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
-
-//     // jp
-//     $company_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
-//     $employee_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
-
-//     $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
-//     $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
-
-//     // company = benefit (tidak perlu kalkulasi, hanya catat)
-//     // employee = deduction (kalkulasi)
-//         'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
-//         'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
-//         'company_totalJkk' => $company_totalJkk,
-//         'company_totalJkm' => $company_totalJkm,
-//         'company_totalJht' => $company_totalJht,
-//         'employee_totalJht' => $employee_totalJht,
-//         'company_totalJp' => $company_totalJp,
-//         'employee_totalJp' => $employee_totalJp,
-//     ]);
-// }
-// // end calculate bpjs

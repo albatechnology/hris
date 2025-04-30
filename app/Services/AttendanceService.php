@@ -173,6 +173,50 @@ class AttendanceService
         // return abs($totalAttendance - $totalWorkingDays);
     }
 
+    public static function getTotalWorkingDays(User|int $user, $startDate, $endDate): int
+    {
+        if (!$user instanceof User) {
+            $user = User::find($user, ['id', 'type', 'group_id']);
+        }
+
+        if ($user->payrollInfo?->total_working_days > 0) {
+            return $user->payrollInfo->total_working_days;
+        }
+
+        $startDate = Carbon::createFromDate($startDate);
+        $endDate = Carbon::createFromDate($endDate);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+
+        $totalWorkingDays = 0;
+        foreach ($dateRange as $date) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+
+            if (!$schedule || !$schedule->shift || $schedule->shift->is_dayoff) {
+                continue;
+            }
+
+            if (!$schedule->shift->is_dayoff && !$schedule->is_overide_national_holiday && !$schedule->is_overide_company_holiday) {
+                $totalWorkingDays++;
+                continue;
+            };
+
+            if ($schedule->is_overide_national_holiday) {
+                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                });
+
+                if ($nationalHoliday) {
+                    $totalWorkingDays++;
+                }
+            }
+        }
+
+        return $totalWorkingDays;
+    }
+
     // public static function getTotalAlpa(User|int $user, $startDate, $endDate): int
     // {
     //     if (!$user instanceof User) {

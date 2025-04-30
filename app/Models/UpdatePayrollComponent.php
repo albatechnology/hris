@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UpdatePayrollComponentType;
+use App\Traits\Models\BelongsToClient;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class UpdatePayrollComponent extends BaseModel
 {
-    use CompanyTenanted;
+    use CompanyTenanted, BelongsToClient;
 
     protected $fillable = [
         'company_id',
+        'client_id',
         'transaction_id',
         'type',
         'description',

@@ -277,7 +277,7 @@
                                                     </table>
                                                     <p style="line-height: 24px; text-align:center; font-size: 16px; width: 100%; margin: 0;" align="center">
                                                       Thanks,<br>
-                                                      <b>{{ $user->company?->name ?? $user->name }}</b>
+                                                      <b>{{ $user->company?->name }}</b>
                                                     </p>
                                                   </div>
                                                 </td>

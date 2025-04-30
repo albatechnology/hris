@@ -3,9 +3,6 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\AttendanceType;
-use App\Models\Schedule;
-use App\Models\Shift;
-use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,8 +26,17 @@ class StoreRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        $isOfflineMode = $this->toBoolean($this->is_offline_mode ?? 0);
+
+        $type = $this->type;
+        if ($isOfflineMode) {
+            $type = AttendanceType::MANUAL->value;
+        }
+
         $this->merge([
             'is_clock_in' => $this->toBoolean($this->is_clock_in),
+            'type' => $type,
+            'is_offline_mode' => $isOfflineMode,
         ]);
     }
 
@@ -42,9 +48,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'schedule_id' => ['required', 'exists:schedules,id'],
+            'schedule_id' => ['required_if:is_offline_mode,false', 'exists:schedules,id'],
             // 'schedule_id' => ['required', new CompanyTenantedRule(model: Schedule::class, message: 'Schedule not found', outsideQuery: fn($q) => $q->withTrashed())],
-            'shift_id' => ['required', 'exists:shifts,id'],
+            'shift_id' => ['required_if:is_offline_mode,false', 'exists:shifts,id'],
             // 'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'), fn($q) => $q->withTrashed())],
             'is_clock_in' => 'required|boolean',
             'time' => 'required|date_format:Y-m-d H:i:s',
@@ -52,8 +58,9 @@ class StoreRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'note' => 'nullable|string',
+            'is_offline_mode' => 'required|boolean',
 
-            'file' => 'required|mimes:' . config('app.file_mimes_types'),
+            'file' => 'required_if:is_offline_mode,false|mimes:' . config('app.file_mimes_types'),
             // 'file' => 'required_if:type,' . AttendanceType::AUTOMATIC->value . '|mimes:' . config('app.file_mimes_types'),
         ];
     }

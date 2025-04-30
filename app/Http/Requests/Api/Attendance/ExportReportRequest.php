@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Attendance;
 
+use App\Models\Branch;
+use App\Models\Client;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Closure;
@@ -42,19 +44,21 @@ class ExportReportRequest extends FormRequest
     {
         return [
             'filter' => 'required|array',
+            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',
             'filter.user_ids' => [
                 'nullable',
                 'string',
-                function (string $attr, string $value, Closure $fail) {
-                    collect(explode(',', $value))->each(function ($id) use ($fail) {
-                        $user = User::tenanted()->select('id')->firstWHere('id', $id);
-                        if (!$user) {
-                            $fail('The selected user ids is invalid (' . $id . ')');
-                        }
-                    });
-                },
+                // function (string $attr, string $value, Closure $fail) {
+                //     collect(explode(',', $value))->each(function ($id) use ($fail) {
+                //         $user = User::tenanted()->select('id')->firstWHere('id', $id);
+                //         if (!$user) {
+                //             $fail('The selected user ids is invalid (' . $id . ')');
+                //         }
+                //     });
+                // },
             ],
         ];
     }

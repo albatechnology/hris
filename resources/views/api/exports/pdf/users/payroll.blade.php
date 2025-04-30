@@ -39,7 +39,7 @@
     </style>
 </head>
 <body>
-    <h4 class="text-center" style="color: red">*CONFIDENTIAL</h4>
+    <h4 class="text-center" style="color: red; margin: 0;">*CONFIDENTIAL</h4>
     <table class="w-100">
         <tr>
             <td class="w-50">
@@ -56,7 +56,7 @@
                 <table>
                     <tr>
                         <th class="text-left">Payroll cut off</th>
-                        <td>: {{ $cutoffDate }}</td>
+                        <td>: {{ $payrollPeriod }}</td>
                     </tr>
                     <tr>
                         <th class="text-left">ID/Name</th>
@@ -72,7 +72,7 @@
                     </tr>
                 </table>
             </td>
-            <td class="w-100 vertical-align-top">
+            <td class="vertical-align-top" style="width: 70%">
                 <table>
                     <tr>
                         <th class="text-left">Grade / Level</th>

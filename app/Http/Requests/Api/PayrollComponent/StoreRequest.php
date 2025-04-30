@@ -3,10 +3,9 @@
 namespace App\Http\Requests\Api\PayrollComponent;
 
 use App\Enums\PayrollComponentCategory;
-use App\Enums\PayrollComponentDailyMaximumAmountType;
 use App\Enums\PayrollComponentPeriodType;
-// use App\Enums\PayrollComponentSetting;
 use App\Enums\PayrollComponentType;
+use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,7 +30,16 @@ class StoreRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        // client_id is for SMART
+        $clientId = $this->client_id ?? null;
+        $companyId = $this->company_id ?? null;
+        if ($clientId) {
+            $companyId = Client::tenanted()->where('id', $clientId)->firstOrFail(['company_id'])->company_id;
+        }
+
         $this->merge([
+            'client_id' => $clientId,
+            'company_id' => $companyId,
             'is_taxable' => $this->toBoolean($this->is_taxable),
             'is_monthly_prorate' => $this->toBoolean($this->is_monthly_prorate),
             // 'is_daily_default' => $this->toBoolean($this->is_daily_default),
@@ -48,6 +56,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'client_id' => Rule::requiredIf(config('app.name') === "SMART"),
             'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
             'type' => ['required', Rule::enum(PayrollComponentType::class)],

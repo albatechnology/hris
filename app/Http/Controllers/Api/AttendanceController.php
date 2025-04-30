@@ -14,6 +14,7 @@ use App\Http\Requests\Api\Attendance\IndexRequest;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
+use App\Http\Requests\Api\BulkApproveRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Resources\Attendance\AttendanceResource;
@@ -30,12 +31,13 @@ use App\Services\TaskService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class AttendanceController extends BaseController
 {
@@ -58,9 +60,16 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
+        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
@@ -91,7 +100,7 @@ class AttendanceController extends BaseController
                     $attendance->clock_out = $attendance?->clockOut;
                 }
                 if ($attendance?->timeoff) {
-                    $attendance->clock_out = $attendance?->timeoff;
+                    $attendance->timeoff = $attendance?->timeoff;
                     if ($attendance->timeoff->timeoffPolicy) {
                         $attendance->timeoff->timeoffPolicy = $attendance?->timeoff->timeoffPolicy;
                     }
@@ -172,7 +181,7 @@ class AttendanceController extends BaseController
 
                     $dataAttendance[] = [
                         // 'user' => $user,
-                        'date' => $date,
+                        'date' => $date->format('Y-m-d'),
                         'shift_type' => $shiftType,
                         'shift' => $shift,
                         'attendance' => $attendance
@@ -195,6 +204,7 @@ class AttendanceController extends BaseController
             ];
         }
 
+        if ($export == 'export-2') return Excel::download(new \App\Exports\Attendance\AttendanceHorizontalReport($dateRange, $data), 'attendances.xlsx');
         if ($export) return Excel::download(new AttendanceReport($data), 'attendances.xlsx');
 
         return DefaultResource::collection($data);
@@ -394,8 +404,15 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
+        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
@@ -531,8 +548,15 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
+        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
+        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
@@ -551,7 +575,6 @@ class AttendanceController extends BaseController
                 'name',
             ])
             ->paginate($this->per_page);
-
 
         $users->map(function ($user) use ($date, $request) {
             $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
@@ -659,9 +682,26 @@ class AttendanceController extends BaseController
     public function store(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
-        $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
 
-        if (config('app.enable_face_rekognition') === true) {
+        if ($request->is_offline_mode) {
+            $attendance = AttendanceService::getTodayAttendance(date: $request->time, user: $user, isCheckByDetails: false);
+            if ($attendance) {
+                $request->merge([
+                    'schedule_id' => $attendance->schedule_id,
+                    'shift_id' => $attendance->shift_id
+                ]);
+            } else {
+                $schedule = ScheduleService::getTodaySchedule($user, $request->time);
+                $request->merge([
+                    'schedule_id' => $schedule->id,
+                    'shift_id' => $schedule->shift->id
+                ]);
+            }
+        } else {
+            $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
+        }
+
+        if (config('app.enable_face_rekognition') === true && !$request->is_offline_mode) {
             try {
                 $compareFace = Rekognition::compareFace($user, $request->file('file'));
                 if (!$compareFace) {
@@ -678,7 +718,8 @@ class AttendanceController extends BaseController
                 $attendance = Attendance::create([
                     'user_id' => $user->id,
                     'date' => date('Y-m-d', strtotime($request->time)),
-                    ...$request->validated(),
+                    'schedule_id' => $request->schedule_id,
+                    'shift_id' => $request->shift_id,
                 ]);
             }
 
@@ -714,27 +755,31 @@ class AttendanceController extends BaseController
          */
         $user = User::find($request->user_id);
 
-        $schedule = ScheduleService::getTodaySchedule($user, $request->date, scheduleType: ScheduleType::ATTENDANCE->value);
+        $schedule = ScheduleService::getTodaySchedule($user, $request->date);
 
         if (!$schedule) {
             return $this->errorResponse(message: 'Schedule not found!', code: 404);
         }
 
         $attendance = AttendanceService::getTodayAttendance(date: $request->date, user: $user, isCheckByDetails: false);
-        // dump($request->validated());
-        // dd($attendance);
+
+        $shiftId = $request->shift_id;
+        if ($request->is_offline_mode == true) {
+            $shiftId = $schedule->shift->id;
+        }
+
         DB::beginTransaction();
         try {
             if (!$attendance) {
                 $attendance = $user->attendances()->create([
                     'schedule_id' => $schedule->id,
-                    'shift_id' => $request->shift_id,
+                    'shift_id' => $shiftId,
                     'date' => $request->date,
                 ]);
             } else {
                 $attendance->update([
                     'schedule_id' => $schedule->id,
-                    'shift_id' => $request->shift_id,
+                    'shift_id' => $shiftId,
                 ]);
             }
 
@@ -947,36 +992,59 @@ class AttendanceController extends BaseController
         return new AttendanceDetailResource($attendanceDetail);
     }
 
-    public function approve(AttendanceDetail $attendanceDetail, NewApproveRequest $request)
+    public function approveValidate(int $id, ?int $approverId = null)
     {
-        // if (!$attendanceDetail->approval_status->is(ApprovalStatus::PENDING)) {
-        //     return $this->errorResponse(message: 'Status can not be changed', code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
-        // }
+        $attendanceDetail = AttendanceDetail::findOrFail($id);
+        $requestApproval = $attendanceDetail->approvals()->where('user_id', $approverId ?? auth()->id())->first();
 
-        $requestApproval = $attendanceDetail->approvals()->where('user_id', auth()->id())->first();
-
-        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
-
-        if (!$attendanceDetail->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-
-        if ($attendanceDetail->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
-            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (!$requestApproval) {
+            throw new NotFoundHttpException('You are not registered as approved');
         }
 
+        if (!$attendanceDetail->isDescendantApproved()) {
+            throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
+        }
+
+        if ($attendanceDetail->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            throw new UnprocessableEntityHttpException('Status can not be changed');
+        }
+
+        return $requestApproval;
+    }
+
+    public function bulkApprove(BulkApproveRequest $request)
+    {
+        $approverId = auth('sanctum')->id();
+        $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId));
+
+        $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
         DB::beginTransaction();
         try {
-            $requestApproval->update($request->validated());
+            $requestApprovals->each(fn($requestApproval) => $requestApproval->update($data));
 
-            // $notificationType = NotificationType::ATTENDANCE_APPROVED;
-            // $attendanceDetail->attendance->user->notify(new ($notificationType->getNotificationClass())($notificationType, auth()->user(), $requestApproval->approval_status, $attendanceDetail));
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
-        // return new AttendanceDetailResource($attendanceDetail);
-        return $this->updatedResponse();
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
+    }
+
+    public function approve(NewApproveRequest $request, int $id)
+    {
+        $requestApproval = $this->approveValidate($id);
+
+        DB::beginTransaction();
+        try {
+            $requestApproval->update($request->validated());
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
     }
 
     public function clear()
