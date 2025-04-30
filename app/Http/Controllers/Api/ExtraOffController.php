@@ -214,7 +214,7 @@ class ExtraOffController extends BaseController
     public function store(StoreRequest $request)
     {
         $userIds = array_values($request->user_ids);
-        $description = "Extra off quota added by " . auth()->user()->full_name;
+        $description = "Extra off quota added by " . auth()->user()->name;
         $timeoffPolicyId = TimeoffPolicy::tenanted()->where('type', TimeoffPolicyType::EXTRA_OFF)->firstOrFail(['id'])->id;
 
         DB::beginTransaction();

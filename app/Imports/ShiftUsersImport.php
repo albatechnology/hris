@@ -60,7 +60,7 @@ class ShiftUsersImport implements ToCollection
     {
         $todaySchedule = ScheduleService::getTodaySchedule($user, $value, ['id'], ['id']);
         if ($todaySchedule && $todaySchedule->shift) {
-            $description = 'Import Shift by ' . $this->user->full_name . ' - AUTO APPROVED';
+            $description = 'Import Shift by ' . $this->user->name . ' - AUTO APPROVED';
             try {
                 // delete request existing request shift
                 RequestShift::where('user_id', $user->id)->where('date', $value)->delete();

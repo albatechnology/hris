@@ -733,7 +733,7 @@ class UserController extends BaseController
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.payroll', $data)->setPaper('a4');
-        return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
+        return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->name));
     }
 
     public function thr(int $id, PayrollRequest $request)
@@ -767,7 +767,7 @@ class UserController extends BaseController
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.users.thr', $data)->setPaper('a4');
-        return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->full_name));
+        return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->name));
     }
 
     public function resign(ResignRequest $request, int $id)

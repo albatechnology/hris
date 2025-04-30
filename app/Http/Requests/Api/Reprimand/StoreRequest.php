@@ -35,9 +35,9 @@ class StoreRequest extends FormRequest
                     $fail("End date must be greater than Effective date");
                 }
             }],
+            'notes' => 'nullable|string',
             'watcher_ids' => 'nullable|array',
             'watcher_ids.*' => ['required', new CompanyTenantedRule(User::class, 'Watcher not found')],
-            'notes' => 'nullable|string',
             'file' => 'nullable|mimes:' . config('app.file_mimes_types'),
         ];
     }

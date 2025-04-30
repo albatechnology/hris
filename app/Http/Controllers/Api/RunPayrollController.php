@@ -188,14 +188,14 @@ class RunPayrollController extends BaseController
             }
 
             if (!$runPayrollUser->user->payrollInfo) {
-                throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
+                throw new Exception($runPayrollUser->user->name . "'s payroll info not found");
             }
 
             if (
                 !$runPayrollUser->user->payrollInfo?->bank_account_no ||
                 !$runPayrollUser->user->payrollInfo?->bank_account_holder
             ) {
-                throw new Exception($runPayrollUser->user->full_name . "'s bank account not found");
+                throw new Exception($runPayrollUser->user->name . "'s bank account not found");
             }
 
             $body .= PHP_EOL;
@@ -266,14 +266,14 @@ class RunPayrollController extends BaseController
             }
 
             if (!$runPayrollUser->user->payrollInfo) {
-                throw new Exception($runPayrollUser->user->full_name . "'s payroll info not found");
+                throw new Exception($runPayrollUser->user->name . "'s payroll info not found");
             }
 
             if (
                 !$runPayrollUser->user->payrollInfo?->secondary_bank_account_no ||
                 !$runPayrollUser->user->payrollInfo?->secondary_bank_account_holder
             ) {
-                throw new Exception($runPayrollUser->user->full_name . "'s bank account not found");
+                throw new Exception($runPayrollUser->user->name . "'s bank account not found");
             }
 
             $body .= PHP_EOL;
