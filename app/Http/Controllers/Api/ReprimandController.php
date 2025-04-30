@@ -40,6 +40,9 @@ class ReprimandController extends BaseController
                 AllowedInclude::callback('user', function ($query) {
                     $query->select('id', 'name', 'nik', 'email');
                 }),
+                AllowedInclude::callback('assignTo', function ($query) {
+                    $query->select('id', 'name', 'nik', 'email');
+                }),
             ])
             ->allowedSorts([
                 'id',
