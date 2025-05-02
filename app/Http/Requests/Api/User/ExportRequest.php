@@ -27,6 +27,8 @@ class ExportRequest extends FormRequest
             'is_json' => ['nullable', 'boolean'],
             'user_ids' => ['nullable', 'array'],
             'user_ids.*' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
+            'filter.start_date' => 'nullable|date',
+            'filter.end_date' => 'nullable|date',
         ];
     }
 }

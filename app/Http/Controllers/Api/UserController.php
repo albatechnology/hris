@@ -821,19 +821,24 @@ class UserController extends BaseController
 
     public function export(ExportRequest $request)
     {
-        $query = User::tenanted()->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
-            'detail',
-            'userBpjs',
-            'payrollInfo',
-            'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
-            'roles' => fn($q) => $q->select('id'),
-            'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
-            'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
-            // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
-            //     'position' => fn($q) => $q->select('id'),
-            //     'department' => fn($q) => $q->select('id'),
-            // ])
-        ]);
+        $startDate = $request->filter['start_date'] ?? null;
+        $endDate = $request->filter['end_date'] ?? null;
+
+        $query = User::tenanted()
+            ->when($startDate && $endDate, fn($q) => $q->whereDateBetween('join_date', $startDate, $endDate))
+            ->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
+                'detail',
+                'userBpjs',
+                'payrollInfo',
+                'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
+                'roles' => fn($q) => $q->select('id'),
+                'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
+                'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
+                // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+                //     'position' => fn($q) => $q->select('id'),
+                //     'department' => fn($q) => $q->select('id'),
+                // ])
+            ]);
 
         if ($request->is_json == true) {
             $users = $query->paginate($this->per_page);

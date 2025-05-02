@@ -216,6 +216,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         $query->orWhere($column, 'LIKE', '%' . $value . '%');
     }
 
+    public function scopeWhereDateBetween(Builder $query, $column, string $startDate, string $endDate)
+    {
+        $query->where(fn($q) => $q->whereDate($column, '>=', $startDate)->whereDate($column, '<=', $endDate));
+    }
+
     protected function password(): Attribute
     {
         return Attribute::make(
