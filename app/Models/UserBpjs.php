@@ -38,13 +38,13 @@ class UserBpjs extends BaseModel
     {
         static::creating(function (self $model) {
             if (empty($model->upah_bpjs_kesehatan)) {
-                $upah_bpjs_kesehatan = $model->user->payrollInfo->basic_salary > 12000000 ? 12000000 : $model->user->payrollInfo->basic_salary;
-                $model->upah_bpjs_kesehatan = $upah_bpjs_kesehatan;
+                // $upah_bpjs_kesehatan = $model->user->payrollInfo->basic_salary > 12000000 ? 12000000 : $model->user->payrollInfo->basic_salary;
+                $model->upah_bpjs_kesehatan = $model->user->payrollInfo->basic_salary;
             }
 
             if (empty($model->upah_bpjs_ketenagakerjaan)) {
-                $upah_bpjs_ketenagakerjaan = $model->user->payrollInfo->basic_salary > 10547400 ? 10547400 : $model->user->payrollInfo->basic_salary;
-                $model->upah_bpjs_ketenagakerjaan = $upah_bpjs_ketenagakerjaan;
+                // $upah_bpjs_ketenagakerjaan = $model->user->payrollInfo->basic_salary > 10547400 ? 10547400 : $model->user->payrollInfo->basic_salary;
+                $model->upah_bpjs_ketenagakerjaan = $model->user->payrollInfo->basic_salary;
             }
 
             if (empty($model->bpjs_kesehatan_cost)) {
