@@ -20,8 +20,8 @@ class ReprimandController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->middleware('permission:reprimand_access', ['only' => ['restore']]);
-        $this->middleware('permission:reprimand_read', ['only' => ['index', 'show']]);
+        // $this->middleware('permission:reprimand_access', ['only' => ['restore']]);
+        // $this->middleware('permission:reprimand_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:reprimand_create', ['only' => 'store']);
         $this->middleware('permission:reprimand_edit', ['only' => 'update']);
         $this->middleware('permission:reprimand_delete', ['only' => ['destroy', 'forceDelete']]);
