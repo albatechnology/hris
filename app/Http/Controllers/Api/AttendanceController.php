@@ -16,6 +16,7 @@ use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Requests\Api\BulkApproveRequest;
 use App\Http\Requests\Api\NewApproveRequest;
+use App\Http\Resources\Attendance\AttendanceApprovalsResource;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Http\Resources\DefaultResource;
@@ -972,7 +973,7 @@ class AttendanceController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return AttendanceResource::collection($attendances);
+        return AttendanceApprovalsResource::collection($attendances);
     }
 
     public function showApproval(AttendanceDetail $attendanceDetail)
