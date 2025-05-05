@@ -1,7 +1,6 @@
 <?php
 
-use App\Models\RunReprimand;
-use App\Models\User;
+use App\Models\Company;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,21 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reprimands', function (Blueprint $table) {
+        Schema::create('run_reprimands', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->constrained();
-            $table->foreignIdFor(RunReprimand::class)->nullable()->constrained()->cascadeOnDelete();
-            $table->string('type');
-            $table->date('effective_date');
+            $table->foreignIdFor(Company::class)->constrained();
+            $table->string('status');
+            $table->date('start_date');
             $table->date('end_date');
-            $table->text('notes')->nullable();
             $table->timestamps();
 
             // created/updated/deleted info
             $table->unsignedInteger('created_by')->nullable();
             $table->unsignedInteger('updated_by')->nullable();
-            $table->unsignedInteger('deleted_by')->nullable();
-            $table->softDeletes();
         });
     }
 
@@ -36,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reprimands');
+        Schema::dropIfExists('run_reprimands');
     }
 };

@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\RequestScheduleController;
 use App\Http\Controllers\Api\RequestShiftController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
+use App\Http\Controllers\Api\RunReprimandController;
 use App\Http\Controllers\Api\RunThrController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SettingController;
@@ -371,5 +372,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
+    Route::apiResource('run-reprimands', RunReprimandController::class);
     Route::apiResource('reprimands', ReprimandController::class);
 });

@@ -81,7 +81,7 @@ class AttendanceController extends BaseController
             $user->setAppends([]);
             $attendances = Attendance::where('user_id', $user->id)
                 ->with([
-                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'clock_in_dispensation', 'clock_out_dispensation', 'time_dispensation']),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'time_dispensation']),
                     'timeoff.timeoffPolicy',
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),

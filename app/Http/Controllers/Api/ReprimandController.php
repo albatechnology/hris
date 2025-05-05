@@ -32,11 +32,13 @@ class ReprimandController extends BaseController
         $data = QueryBuilder::for(Reprimand::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('run_reprimand_id'),
                 'type',
                 'effective_date',
                 'end_date',
             ])
             ->allowedIncludes([
+                'runReprimand',
                 AllowedInclude::callback('user', function ($query) {
                     $query->select('id', 'name', 'nik', 'email');
                 }),
@@ -61,6 +63,7 @@ class ReprimandController extends BaseController
     {
         $reprimand = Reprimand::findTenanted($id);
         return new DefaultResource($reprimand->loadMissing([
+            'runReprimand',
             'user' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
             'watchers' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
         ]));

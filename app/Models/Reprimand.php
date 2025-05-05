@@ -3,25 +3,26 @@
 namespace App\Models;
 
 use App\Enums\MediaCollection;
-use App\Enums\NotificationType;
 use App\Enums\ReprimandType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
-use App\Traits\Models\TenantedThroughUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Reprimand extends BaseModel implements TenantedInterface, HasMedia
 {
-    use BelongsToUser, CreatedUpdatedInfo, CustomSoftDeletes, TenantedThroughUser, InteractsWithMedia;
+    use BelongsToUser, CreatedUpdatedInfo, CustomSoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
-        // 'assign_to',
+        'run_reprimand_id',
         'type',
         'effective_date',
         'end_date',
@@ -36,6 +37,44 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
         'status',
         'file'
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $model) {
+            $model->records()->create([
+                'user_id' => $model->user_id,
+            ]);
+        });
+    }
+
+    public function scopeTenanted(Builder $query, ?User $user = null): Builder
+    {
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
+
+        if ($user->is_super_admin) return $query;
+
+        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        $query->whereHas('user', fn($q) => $q->whereIn('company_id', $companyIds));
+
+        if ($user->is_admin) {
+            return $query;
+        }
+
+        return $query->where('user_id', $user->id);
+    }
+
+    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
+    {
+        $query->tenanted()->where('id', $id);
+        if ($fail) {
+            return $query->firstOrFail();
+        }
+
+        return $query->first();
+    }
 
     protected function status(): Attribute
     {
@@ -66,5 +105,15 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     public function watchers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'reprimand_watchers');
+    }
+
+    public function runReprimand(): BelongsTo
+    {
+        return $this->belongsTo(RunReprimand::class);
+    }
+
+    public function records(): HasMany
+    {
+        return $this->hasMany(ReprimandRecord::class);
     }
 }

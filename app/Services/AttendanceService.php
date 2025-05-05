@@ -375,7 +375,7 @@ class AttendanceService
         return $totalAttendance;
     }
 
-    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
+    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = 0): array
     {
         /**
          *
@@ -395,7 +395,6 @@ class AttendanceService
          *
          */
 
-
         $tolerance = $shift->time_dispensation;
         $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
 
@@ -409,7 +408,6 @@ class AttendanceService
             }
         } else {
             $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
-
             if ($endTime->lessThanOrEqualTo($startTime)) {
                 $diffInSeconds = $endTime->diffInSeconds($startTime);
             } else {
@@ -417,7 +415,6 @@ class AttendanceService
             }
         }
 
-        $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
         // $remainingTimeInSeconds = $remainingTime * 60;
         $diffInTime = "00:00:00";
         $realDiffInMinute = floor($diffInSeconds / 60);
