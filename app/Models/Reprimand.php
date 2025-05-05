@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use App\Enums\MediaCollection;
-use App\Enums\NotificationType;
 use App\Enums\ReprimandType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
-use App\Traits\Models\TenantedThroughUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
@@ -17,7 +16,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Reprimand extends BaseModel implements TenantedInterface, HasMedia
 {
-    use BelongsToUser, CreatedUpdatedInfo, CustomSoftDeletes, TenantedThroughUser, InteractsWithMedia;
+    use BelongsToUser, CreatedUpdatedInfo, CustomSoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
@@ -36,6 +35,36 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
         'status',
         'file'
     ];
+
+
+    public function scopeTenanted(Builder $query, ?User $user = null): Builder
+    {
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
+
+        if ($user->is_super_admin) return $query;
+
+        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        $query->whereHas('user', fn($q) => $q->whereIn('company_id', $companyIds));
+
+        if ($user->is_admin) {
+            return $query;
+        }
+
+        return $query->where('user_id', $user->id);
+    }
+
+    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
+    {
+        $query->tenanted()->where('id', $id);
+        if ($fail) {
+            return $query->firstOrFail();
+        }
+
+        return $query->first();
+    }
 
     protected function status(): Attribute
     {
