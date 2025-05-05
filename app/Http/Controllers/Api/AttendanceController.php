@@ -585,8 +585,7 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
-                // ->whereHas('details', fn($q) => $q->approved())
+                // ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
                     'timeoff.timeoffPolicy',
