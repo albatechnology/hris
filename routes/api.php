@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AbsenceReminderController;
 use App\Http\Controllers\Api\AdvancedLeaveRequestController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -372,4 +373,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
     Route::apiResource('reprimands', ReprimandController::class);
+    Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
 });
