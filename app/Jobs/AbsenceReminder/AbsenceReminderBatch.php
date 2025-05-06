@@ -2,6 +2,7 @@
 
 namespace App\Jobs\AbsenceReminder;
 
+use App\Mail\TestEmail;
 use App\Models\AbsenceReminder;
 use App\Models\Shift;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Mail;
 
 class AbsenceReminderBatch implements ShouldQueue
 {
@@ -25,6 +27,8 @@ class AbsenceReminderBatch implements ShouldQueue
      */
     public function handle(): void
     {
+        $user = User::where('id', 20)->select('id', 'email')->first();
+        Mail::to($user)->send(new TestEmail());
         $now = Carbon::now();
 
         $absenceReminders = AbsenceReminder::query()->has('company')
