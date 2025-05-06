@@ -18,7 +18,10 @@ class AbsenceReminderBatch implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct() {}
+    public function __construct()
+    {
+        //
+    }
 
     /**
      * Execute the job.

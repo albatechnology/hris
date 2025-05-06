@@ -12,10 +12,13 @@ class DispatchAbsenceReminder implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * Create a new job instance.
+     */
     public function __construct(
-        private array $shiftIds = [],
-        private int $offset,
-        private int $limit = 50
+        public array $shiftIds = [],
+        public int $offset,
+        public int $limit = 50
     ) {}
 
     /**
