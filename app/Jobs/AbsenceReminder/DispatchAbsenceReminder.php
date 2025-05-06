@@ -39,7 +39,7 @@ class DispatchAbsenceReminder implements ShouldQueue
             ->each(function ($user) {
                 $schedule = ScheduleService::getTodaySchedule($user, date('Y-m-d'), ['id'], ['id', 'is_dayoff', 'name', 'clock_in']);
                 if ($schedule && !$schedule->shift?->is_dayoff && in_array($schedule->shift->id, $this->shiftIds)) {
-                    $user->notify(new AbsenceReminder("Reminder for " . $schedule->shift->name . " at " . $schedule->shift->clock_in));
+                    $user->notify(new AbsenceReminder("Jangan lupa masuk kerja " . $schedule->shift->name . " pukul " . $schedule->shift->clock_in . " dan lakukan absensi ya!"));
                 }
             });
     }

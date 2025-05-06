@@ -36,7 +36,7 @@ class AbsenceReminder extends Notification implements ShouldQueue
         return [
             'token' => $notifiable->fcm_token,
             'notification' => [
-                'title' => "Absence Reminder",
+                'title' => "Pengingat Absensi",
                 'body' => $this->message,
             ],
             'data' => [
