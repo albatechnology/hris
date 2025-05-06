@@ -22,8 +22,8 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'minutes_before' => 'required|numeric',
-            'minutes_repeat' => 'required|numeric',
+            'minutes_before' => 'required|numeric|min:0',
+            'minutes_repeat' => 'required|numeric|min:0',
         ];
     }
 }
