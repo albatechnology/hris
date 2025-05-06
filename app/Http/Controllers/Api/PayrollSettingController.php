@@ -20,7 +20,7 @@ class PayrollSettingController extends BaseController
 
     public function index(IndexRequest $request)
     {
-        // client_id is for SMART
+        // client_id is for Syntegra
         $payrollSetting = PayrollSetting::tenanted()
             ->where('company_id', $request->filter['company_id'])
             ->when($request->filter['client_id'] ?? null, fn($q) => $q->where('client_id', $request->filter['client_id']))
@@ -31,7 +31,7 @@ class PayrollSettingController extends BaseController
 
     public function update(PayrollSetting $payrollSetting, UpdateRequest $request)
     {
-        // client_id is for SMART
+        // client_id is for Syntegra
         $payrollSetting = PayrollSetting::tenanted()
             ->where('company_id', $request->company_id)
             ->when($request->client_id, fn($q) => $q->where('client_id', $request->client_id))

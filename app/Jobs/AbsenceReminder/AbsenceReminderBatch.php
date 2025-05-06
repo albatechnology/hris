@@ -33,7 +33,7 @@ class AbsenceReminderBatch implements ShouldQueue
 
         $absenceReminders = AbsenceReminder::query()->has('company')
             ->where('is_active', 1)
-            ->when(config('app.name') == 'SMART', fn($q) => $q->has('client'))
+            ->when(config('app.name') == 'Syntegra', fn($q) => $q->has('client'))
             ->get();
 
         $shiftIds = [];

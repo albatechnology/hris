@@ -24,7 +24,7 @@ class IndexRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // client_id is for SMART
+        // client_id is for Syntegra
         $clientId = $this->filter['client_id'] ?? null;
         $companyId = $this->filter['company_id'] ?? null;
         if ($clientId) {
@@ -48,7 +48,7 @@ class IndexRequest extends FormRequest
     {
         // 'filter.company_id' => 'required',
         return [
-            'filter.client_id' => Rule::requiredIf(config('app.name') === "SMART"),
+            'filter.client_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'filter.company_id' => ['required', new CompanyTenantedRule()],
         ];
     }

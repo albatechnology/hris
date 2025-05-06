@@ -26,7 +26,7 @@ class UpdateRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // client_id is for SMART
+        // client_id is for Syntegra
         $clientId = $this->client_id ?? null;
         $companyId = $this->company_id ?? null;
         if ($clientId) {
@@ -49,7 +49,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => Rule::requiredIf(config('app.name') === "SMART"),
+            'client_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'company_id' => ['required', new CompanyTenantedRule()],
             // 'cut_off_date' => 'required|date_format:d',
             'cut_off_attendance_start_date' => 'required|date_format:d',
