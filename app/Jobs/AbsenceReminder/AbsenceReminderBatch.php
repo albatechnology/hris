@@ -2,12 +2,10 @@
 
 namespace App\Jobs\AbsenceReminder;
 
-use App\Mail\TestEmail;
 use App\Models\AbsenceReminder;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -31,13 +29,10 @@ class AbsenceReminderBatch implements ShouldQueue
      */
     public function handle(): void
     {
-        $user = User::where('id', 20)->select('id', 'email')->first();
-        Mail::to($user)->send(new TestEmail());
         $now = Carbon::now();
 
         $absenceReminders = AbsenceReminder::query()->has('company')
-            ->where('company_id', 3)
-            ->where('minutes_before', '>', 0)
+            ->where('is_active', 1)
             ->when(config('app.name') == 'SMART', fn($q) => $q->has('client'))
             ->get();
 
@@ -45,7 +40,6 @@ class AbsenceReminderBatch implements ShouldQueue
         foreach ($absenceReminders as $absenceReminder) {
             $end = $now->copy()->addMinutes($absenceReminder->minutes_before);
             $shifts = Shift::select('id')
-                ->where('company_id', 3)
                 ->where('is_dayoff', 0)
                 ->where('company_id', $absenceReminder->company_id);
 

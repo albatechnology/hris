@@ -312,6 +312,12 @@ class PermissionService
                 'reprimand_edit',
                 'reprimand_delete',
             ],
+            'absence_reminder_access' => [
+                // 'absence_reminder_read',
+                // 'absence_reminder_create',
+                'absence_reminder_edit',
+                // 'absence_reminder_delete',
+            ],
             'bank_access' => [
                 'bank_read',
                 'bank_create',

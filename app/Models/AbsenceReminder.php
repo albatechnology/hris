@@ -13,8 +13,13 @@ class AbsenceReminder extends BaseModel implements TenantedInterface
     protected $fillable = [
         'company_id',
         'client_id',
+        'is_active',
         'minutes_before',
         'minutes_repeat',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     protected static function booted(): void

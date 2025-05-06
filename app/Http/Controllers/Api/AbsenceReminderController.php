@@ -24,12 +24,14 @@ class AbsenceReminderController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('client_id'),
+                'is_active'
             ])
             ->allowedIncludes(['company', 'client'])
             ->allowedSorts([
                 'id',
                 'company_id',
                 'client_id',
+                'is_active',
                 'created_at',
             ])
             ->paginate($this->per_page);

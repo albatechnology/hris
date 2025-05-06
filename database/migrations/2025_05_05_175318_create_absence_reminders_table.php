@@ -18,8 +18,9 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Company::class)->constrained();
             $table->foreignIdFor(Client::class)->nullable()->constrained();
-            $table->smallInteger('minutes_before')->unsigned()->default(0);
-            $table->smallInteger('minutes_repeat')->unsigned()->default(0);
+            $table->boolean('is_active')->default(0);
+            $table->smallInteger('minutes_before')->unsigned()->default(60);
+            $table->smallInteger('minutes_repeat')->unsigned()->default(10);
             $table->timestamps();
             $table->unsignedInteger('updated_by')->nullable();
         });

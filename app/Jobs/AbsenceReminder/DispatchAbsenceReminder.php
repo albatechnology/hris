@@ -31,7 +31,6 @@ class DispatchAbsenceReminder implements ShouldQueue
     public function handle(): void
     {
         User::select('id', 'name', 'fcm_token')
-            ->where('company_id', 3)
             ->whereHas('schedules', fn($q) => $q->whereHas('shifts', fn($q) => $q->whereIn('shift_id', $this->shiftIds)))
             ->limit($this->limit)
             ->offset($this->offset)
