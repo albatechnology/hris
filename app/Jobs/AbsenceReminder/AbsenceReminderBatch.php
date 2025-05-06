@@ -6,8 +6,6 @@ use App\Mail\TestEmail;
 use App\Models\AbsenceReminder;
 use App\Models\Shift;
 use App\Models\User;
-use App\Notifications\AbsenceReminder\AbsenceReminder as AbsenceReminderAbsenceReminder;
-use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;

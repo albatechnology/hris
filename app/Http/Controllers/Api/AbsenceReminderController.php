@@ -21,7 +21,7 @@ class AbsenceReminderController extends BaseController
 
     public function index()
     {
-        AbsenceReminderBatch::dispatchSync();
+        AbsenceReminderBatch::dispatch();
         $data = QueryBuilder::for(AbsenceReminder::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
