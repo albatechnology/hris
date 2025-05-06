@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\AbsenceReminder\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Jobs\AbsenceReminder\AbsenceReminderBatch;
+use App\Jobs\Announcement\NotifyAnnouncement;
 use App\Mail\TestEmail;
 use App\Models\AbsenceReminder;
+use App\Models\Announcement;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
@@ -24,9 +26,13 @@ class AbsenceReminderController extends BaseController
 
     public function index()
     {
-        AbsenceReminderBatch::dispatch();
-        $user = User::where('id', 20)->select('id', 'name', 'email')->first();
-        Mail::to($user)->send(new TestEmail());
+        // AbsenceReminderBatch::dispatch();
+
+        $announcement = Announcement::where('company_id', 3)->first();
+        $users = User::where('id', 20)->select('id', 'name', 'email')->get();
+
+        NotifyAnnouncement::dispatch($announcement, $users);
+        Mail::to($users[0])->send(new TestEmail());
         $data = QueryBuilder::for(AbsenceReminder::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
