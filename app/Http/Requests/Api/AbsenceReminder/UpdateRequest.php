@@ -15,6 +15,18 @@ class UpdateRequest extends FormRequest
     }
 
     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'minutes_repeat' => $this->minutes_repeat && $this->minutes_repeat > 5 ? $this->minutes_repeat : 5,
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -23,7 +35,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'minutes_before' => 'required|numeric|min:0',
-            'minutes_repeat' => 'required|numeric|min:0',
+            'minutes_repeat' => 'required|numeric|min:5',
         ];
     }
 }
