@@ -24,8 +24,8 @@ class AbsenceReminderController extends BaseController
 
     public function index()
     {
-        // AbsenceReminderBatch::dispatch();
-        $user = User::where('id', 20)->select('id', 'email')->first();
+        AbsenceReminderBatch::dispatch();
+        $user = User::where('id', 20)->select('id', 'name', 'email')->first();
         Mail::to($user)->send(new TestEmail());
         $data = QueryBuilder::for(AbsenceReminder::tenanted())
             ->allowedFilters([
