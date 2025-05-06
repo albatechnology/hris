@@ -39,9 +39,11 @@ class AuthController extends BaseController
 
         // $user->tokens()->delete();
 
-        $user->update([
-            'fcm_token' => $request->fcm_token
-        ]);
+        if ($request->fcm_token) {
+            $user->update([
+                'fcm_token' => $request->fcm_token
+            ]);
+        }
 
         return response()->json([
             'data' => ['token' => $user->createToken('default')->plainTextToken],

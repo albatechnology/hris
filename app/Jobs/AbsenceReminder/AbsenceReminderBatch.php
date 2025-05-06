@@ -43,7 +43,7 @@ class AbsenceReminderBatch implements ShouldQueue
                 ->where('is_dayoff', 0)
                 ->where('company_id', $absenceReminder->company_id);
 
-            if ($now->gt($end)) {
+            if ($end->gt($now)) {
                 // crossing midnight
                 $shifts = $shifts->where(function ($q) use ($now, $end) {
                     $q->whereBetween('clock_in', [$now->format('H:i:s'), '23:59:59'])
