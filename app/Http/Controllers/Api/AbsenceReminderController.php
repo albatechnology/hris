@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\AbsenceReminder\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Jobs\AbsenceReminder\AbsenceReminderBatch;
+use App\Mail\TestEmail;
 use App\Models\AbsenceReminder;
+use App\Models\User;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Mail;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
