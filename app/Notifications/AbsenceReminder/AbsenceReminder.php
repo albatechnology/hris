@@ -2,13 +2,11 @@
 
 namespace App\Notifications\AbsenceReminder;
 
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AbsenceReminder extends Notification
+class AbsenceReminder extends Notification implements ShouldQueue
 {
     use Queueable;
 

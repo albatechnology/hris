@@ -14,7 +14,7 @@ class AbsenceReminderController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->middleware('permission:absence_reminder_read', ['only' => ['index', 'show']]);
+        // $this->middleware('permission:absence_reminder_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:absence_reminder_edit', ['only' => 'update']);
     }
 
