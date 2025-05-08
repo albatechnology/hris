@@ -117,7 +117,9 @@ class PatrolController extends BaseController
             ]);
 
             $patrol->patrolHours()->createMany($request->hours);
-            $patrol->users()->createMany($request->users);
+            $patrol->users()->createMany(collect($request->users)->map(fn($id) => [
+                'user_id' => $id,
+            ]));
 
             // user patrol
             // if ($request->users) {
