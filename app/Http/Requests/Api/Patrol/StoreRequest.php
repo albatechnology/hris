@@ -46,9 +46,11 @@ class StoreRequest extends FormRequest
             // 'users.*.schedules.*.id' => 'required|exists:schedules,id',
 
             'locations' => 'required|array',
+            'locations.*.id' => ['nullable', 'exists:patrol_locations,id'],
             'locations.*.client_location_id' => ['required', new CompanyTenantedRule(ClientLocation::class, 'Location not found')],
             // 'locations.*.client_location_id' => 'required|exists:client_locations,id',
             'locations.*.tasks' => 'required|array',
+            'locations.*.tasks.*.id' => ['nullable', 'exists:patrol_tasks,id'],
             'locations.*.tasks.*.name' => 'required|string',
             'locations.*.tasks.*.description' => 'required|string',
         ];

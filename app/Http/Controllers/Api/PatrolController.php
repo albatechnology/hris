@@ -8,6 +8,8 @@ use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Patrol;
+use App\Models\PatrolLocation;
+use App\Models\PatrolTask;
 use App\Models\UserPatrol;
 use Exception;
 use Illuminate\Http\Request;
@@ -174,6 +176,7 @@ class PatrolController extends BaseController
     public function update(int $id, StoreRequest $request)
     {
         $patrol = Patrol::findTenanted($id);
+
         DB::beginTransaction();
         try {
             // patrol
@@ -212,25 +215,52 @@ class PatrolController extends BaseController
             //     }
             // }
 
-            // patrol location
-            $patrolLocationIds = $patrol->patrolLocations->pluck('id')->toArray();
-
-            $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->whereIn('patrol_location_id', $patrolLocationIds)->delete());
-            $patrol->patrolLocations()->delete();
-            if ($request->locations) {
-                foreach ($request->locations as $reqLocation) {
-                    $patrolLocation = $patrol->patrolLocations()->create([
-                        'client_location_id' => $reqLocation['client_location_id'],
+            $patrolLocationIds = $patrol->patrolLocations->pluck('id');
+            $patrolTaskIds = $patrol->patrolLocations->pluck('tasks')->flatten(1)->pluck('id');
+            $updatedPatrolLocationIds = [];
+            $updatedPatrolTaskIds = [];
+            foreach ($request->locations ?? [] as $location) {
+                if (!empty($location['id'])) {
+                    $updatedPatrolLocationIds[] = $location['id'];
+                    $patrolLocation = PatrolLocation::findOrFail($location['id']);
+                    $patrolLocation->update([
+                        'client_location_id' => $location['client_location_id'],
                     ]);
+                } else {
+                    $patrolLocation = $patrol->patrolLocations()->create([
+                        'client_location_id' => $location['client_location_id'],
+                    ]);
+                }
 
-                    foreach ($reqLocation['tasks'] as $reqLocationTask) {
+                foreach ($location['tasks'] ?? [] as $task) {
+                    if (!empty($task['id'])) {
+                        $updatedPatrolTaskIds[] = $task['id'];
+                        $patrolTask = PatrolTask::findOrFail($task['id']);
+                        $patrolTask->update([
+                            'name' => $task['name'],
+                            'description' => $task['description'],
+                        ]);
+                    } else {
+
                         $patrolLocation->tasks()->create([
-                            'name' => $reqLocationTask['name'],
-                            'description' => $reqLocationTask['description'],
+                            'name' => $task['name'],
+                            'description' => $task['description'],
                         ]);
                     }
                 }
             }
+
+            // dd($patrolLocation->load('tasks')->toArray());
+            $patrol->patrolLocations()->each(
+                fn($patrolLocation) => $patrolLocation->tasks()
+                    ->whereIn('id', $patrolTaskIds)
+                    ->whereNotIn('id', $updatedPatrolTaskIds)
+                    ->delete()
+            );
+            $patrol->patrolLocations()
+                ->whereIn('id', $patrolLocationIds)
+                ->whereNotIn('id', $updatedPatrolLocationIds)
+                ->delete();
 
             DB::commit();
         } catch (Exception $e) {
