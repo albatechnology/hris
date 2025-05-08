@@ -190,25 +190,32 @@ class PatrolController extends BaseController
             $patrol->patrolHours()->delete();
             $patrol->patrolHours()->createMany($request->hours);
 
+            $patrol->users()->delete();
+            $patrol->users()->createMany(collect($request->users)->map(fn($id) => [
+                'user_id' => $id,
+            ]));
+
             // user patrol
             // $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
-            $patrol->users()->delete();
-            if ($request->users) {
-                foreach ($request->users as $reqUser) {
-                    $userPatrol = $patrol->users()->create([
-                        'user_id' => $reqUser['id'],
-                    ]);
+            // $patrol->users()->delete();
+            // if ($request->users) {
+            //     foreach ($request->users as $reqUser) {
+            //         $userPatrol = $patrol->users()->create([
+            //             'user_id' => $reqUser['id'],
+            //         ]);
 
-                    // foreach ($reqUser['schedules'] as $reqUserSchedule) {
-                    //     $userPatrol->userPatrolSchedules()->create([
-                    //         'schedule_id' => $reqUserSchedule['id'],
-                    //     ]);
-                    // }
-                }
-            }
+            //         // foreach ($reqUser['schedules'] as $reqUserSchedule) {
+            //         //     $userPatrol->userPatrolSchedules()->create([
+            //         //         'schedule_id' => $reqUserSchedule['id'],
+            //         //     ]);
+            //         // }
+            //     }
+            // }
 
             // patrol location
-            $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->delete());
+            $patrolLocationIds = $patrol->patrolLocations->pluck('id')->toArray();
+
+            $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->whereIn('patrol_location_id', $patrolLocationIds)->delete());
             $patrol->patrolLocations()->delete();
             if ($request->locations) {
                 foreach ($request->locations as $reqLocation) {
