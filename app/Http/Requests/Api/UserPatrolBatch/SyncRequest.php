@@ -34,7 +34,7 @@ class SyncRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'exists:patrols,id'],
+            'user_id' => ['required', 'exists:users,id'],
             // 'patrol_id' => ['required', new CompanyTenantedRule(Patrol::class, 'Patrol not found')],
             'patrol_id' => ['required', 'exists:patrols,id'],
             'datetime' => 'required|date_format:Y-m-d H:i:s',
