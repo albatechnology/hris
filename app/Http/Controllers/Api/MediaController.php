@@ -52,7 +52,10 @@ class MediaController extends BaseController
     public function bulkDestroy(Request $request)
     {
         $ids = explode(',', $request->ids);
-        Media::whereIn('id', $ids)->delete();
+        foreach ($ids as $id) {
+            $media = Media::find($id);
+            $media?->delete();
+        }
 
         return $this->deletedResponse();
     }
