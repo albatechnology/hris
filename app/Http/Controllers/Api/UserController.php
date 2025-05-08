@@ -103,12 +103,12 @@ class UserController extends BaseController
     {
         $users = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
-                ->with(['roles' => fn($q) => $q->select('id', 'name'), 'patrols.client'])
+                ->with(['roles' => fn($q) => $q->select('id', 'name')])
+                ->when(config('app.name') == 'Syntegra', fn($q) => $q->with('patrols.client'))
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('client_id'),
-                // AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
@@ -145,7 +145,6 @@ class UserController extends BaseController
                 'id',
                 'branch_id',
                 'client_id',
-                // 'approval_id',
                 'name',
                 'email',
                 'type',

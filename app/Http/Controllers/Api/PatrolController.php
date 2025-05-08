@@ -33,6 +33,7 @@ class PatrolController extends BaseController
     private function getAllowedIncludes()
     {
         return [
+            'patrolHours',
             AllowedInclude::callback('client', function ($query) {
                 $query->selectMinimalist();
             }),
