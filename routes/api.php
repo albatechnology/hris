@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\LoanController;
+use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NppController;
@@ -374,4 +375,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('loans', LoanController::class);
     Route::apiResource('reprimands', ReprimandController::class);
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
+    Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
+    Route::apiResource('media', MediaController::class)->only(['index', 'show', 'destroy']);
 });

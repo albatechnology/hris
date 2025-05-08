@@ -39,9 +39,9 @@ class UserPatrolTaskController extends BaseController
                 AllowedFilter::callback('patrol_location_id', function ($query, $value) {
                     $query->whereHas('patrolTask', fn($q) => $q->where('patrol_location_id', $value));
                 }),
-                AllowedFilter::callback('search', function ($query, $value) {
-                    $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
-                }),
+                // AllowedFilter::callback('search', function ($query, $value) {
+                //     $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
+                // }),
                 AllowedFilter::callback('date', function ($query, $value) {
                     $query->whereDate('created_at', $value);
                 }),
@@ -64,7 +64,7 @@ class UserPatrolTaskController extends BaseController
     public function show(int $id)
     {
         $userPatrolTask = UserPatrolTask::findTenanted($id);
-        $userPatrolTask->load(['patrolTask', 'schedule', 'shift', 'user', 'media']);
+        $userPatrolTask->load(['patrolTask', 'schedule', 'shift', 'media']);
 
         return new DefaultResource($userPatrolTask);
     }
