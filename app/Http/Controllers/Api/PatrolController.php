@@ -117,21 +117,22 @@ class PatrolController extends BaseController
             ]);
 
             $patrol->patrolHours()->createMany($request->hours);
+            $patrol->users()->createMany($request->users);
 
             // user patrol
-            if ($request->users) {
-                foreach ($request->users as $reqUser) {
-                    $userPatrol = $patrol->users()->create([
-                        'user_id' => $reqUser['id'],
-                    ]);
+            // if ($request->users) {
+            //     foreach ($request->users as $reqUser) {
+            //         $userPatrol = $patrol->users()->create([
+            //             'user_id' => $reqUser['id'],
+            //         ]);
 
-                    // foreach ($reqUser['schedules'] as $reqUserSchedule) {
-                    //     $userPatrol->userPatrolSchedules()->create([
-                    //         'schedule_id' => $reqUserSchedule['id'],
-                    //     ]);
-                    // }
-                }
-            }
+            //         // foreach ($reqUser['schedules'] as $reqUserSchedule) {
+            //         //     $userPatrol->userPatrolSchedules()->create([
+            //         //         'schedule_id' => $reqUserSchedule['id'],
+            //         //     ]);
+            //         // }
+            //     }
+            // }
 
             // patrol location
             if ($request->locations) {
