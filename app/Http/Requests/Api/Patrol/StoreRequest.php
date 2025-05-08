@@ -40,7 +40,7 @@ class StoreRequest extends FormRequest
             'hours.*.description' => 'nullable|string',
 
             'users' => 'required|array',
-            'users.*.id' => ['required', 'integer', new CompanyTenantedRule(User::class, 'User not found')],
+            'users.*' => ['required', 'integer', new CompanyTenantedRule(User::class, 'User not found')],
             // 'users.*.id' => 'required|integer|exists:users,id',
             // 'users.*.schedules' => 'required|array',
             // 'users.*.schedules.*.id' => 'required|exists:schedules,id',
