@@ -112,15 +112,16 @@ class UserController extends BaseController
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
-                    $query->whereHas('patrols', function ($q) {
-                        $q->whereDate('patrols.start_date', '<=', now());
-                        $q->whereDate('patrols.end_date', '>=', now());
+                    $query;
+                    // $query->whereHas('patrols', function ($q) {
+                    //     $q->whereDate('patrols.start_date', '<=', now());
+                    //     $q->whereDate('patrols.end_date', '>=', now());
 
-                        $q->whereHas('client', fn($q2) => $q2->tenanted());
-                        // $q->whereDoesntHave('tasks', function($q2){
-                        //   $q2->where('status', PatrolTaskStatus::PENDING);
-                        // });
-                    });
+                    //     $q->whereHas('client', fn($q2) => $q2->tenanted());
+                    //     // $q->whereDoesntHave('tasks', function($q2){
+                    //     //   $q2->where('status', PatrolTaskStatus::PENDING);
+                    //     // });
+                    // });
                 }),
                 AllowedFilter::callback('last_detected', function ($query, $value) {
                     $query->whereHas('detail', function ($q) use ($value) {
