@@ -111,6 +111,9 @@ class UserController extends BaseController
                 AllowedFilter::exact('client_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
+                AllowedFilter::callback('client_id', function ($query, $value) {
+                    $query->where(fn($q) => $q->whereNull('client_id')->orWhereNotNull('client_id'));
+                }),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
                     $query;
                     // $query->whereHas('patrols', function ($q) {
