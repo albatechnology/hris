@@ -7,6 +7,7 @@ use App\Http\Resources\LiveAttendance\LiveAttendanceResource;
 use App\Http\Resources\User\UserResource;
 use App\Models\LiveAttendance;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -63,10 +64,10 @@ class LiveAttendanceController extends BaseController
                 User::whereIn('id', $request->user_ids)->update(['live_attendance_id' => $liveAttendance->id]);
             }
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return new LiveAttendanceResource($liveAttendance);
@@ -75,6 +76,9 @@ class LiveAttendanceController extends BaseController
     public function update(int $id, StoreRequest $request)
     {
         $liveAttendance = LiveAttendance::findTenanted($id);
+        // $userIds =
+        $userIds = $liveAttendance->users()->select('id')->get()->pluck('id')->toArray();
+
         DB::beginTransaction();
         try {
             $liveAttendance->update($request->validated());
@@ -86,12 +90,15 @@ class LiveAttendanceController extends BaseController
 
             if ($request->user_ids && count($request->user_ids) > 0) {
                 User::whereIn('id', $request->user_ids)->update(['live_attendance_id' => $liveAttendance->id]);
+                User::whereIn('id', $userIds)->whereNotIn('id', $request->user_ids)->update(['live_attendance_id' => null]);
+            } else {
+                User::whereIn('id', $userIds)->update(['live_attendance_id' => null]);
             }
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return (new LiveAttendanceResource($liveAttendance))->response()->setStatusCode(Response::HTTP_ACCEPTED);
@@ -105,10 +112,10 @@ class LiveAttendanceController extends BaseController
             $liveAttendance->locations()->delete();
             $liveAttendance->delete();
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->errorResponse($th->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return $this->deletedResponse();
