@@ -108,7 +108,7 @@ class UserController extends BaseController
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::exact('client_id'),
+                // AllowedFilter::exact('client_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
                 AllowedFilter::callback('client_id', function ($query, $value) {
