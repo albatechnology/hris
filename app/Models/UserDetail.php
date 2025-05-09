@@ -42,6 +42,9 @@ class UserDetail extends BaseModel
     ];
 
     protected $casts = [
+        'no_ktp' => 'string',
+        'kk_no' => 'string',
+        'passport_no' => 'string',
         'employment_status' => EmploymentStatus::class,
         'job_level' => JobLevel::class,
         'blood_type' => BloodType::class,

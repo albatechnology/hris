@@ -28,6 +28,9 @@ class UserBpjs extends BaseModel
     ];
 
     protected $casts = [
+        'bpjs_ketenagakerjaan_no' => 'string',
+        'bpjs_kesehatan_no' => 'string',
+        'bpjs_kesehatan_family_no' => 'string',
         'bpjs_kesehatan_cost' => PaidBy::class,
         'jht_cost' => PaidBy::class,
         'jaminan_pensiun_cost' => PaidBy::class,

@@ -49,6 +49,9 @@ class UserPayrollInfo extends BaseModel
     ];
 
     protected $casts = [
+        'bank_account_no' => 'string',
+        'secondary_bank_account_no' => 'string',
+        'npwp' => 'string',
         'total_working_days' => 'integer',
         'is_ignore_alpa' => 'boolean',
         'basic_salary' => 'float',

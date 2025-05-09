@@ -147,8 +147,8 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             $user->payrollInfo?->tax_salary?->value ?? null,
             $user->payrollInfo?->beginning_netto,
             $user->payrollInfo?->pph21_paid,
-            (string)$user->userBpjs?->bpjs_kesehatan_no,
             $user->userBpjs?->bpjs_kesehatan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_kesehatan_date)) : null,
+            // (string)$user->userBpjs?->bpjs_kesehatan_no,
             (string)$user->userBpjs?->bpjs_kesehatan_family_no,
             (string)$user->userBpjs?->bpjs_ketenagakerjaan_no,
             $user->userBpjs?->bpjs_ketenagakerjaan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_ketenagakerjaan_date)) : null,
@@ -189,7 +189,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'AK' => NumberFormat::FORMAT_GENERAL,
             'AN' => NumberFormat::FORMAT_GENERAL,
             'AP' => NumberFormat::FORMAT_GENERAL,
-            'AV' => NumberFormat::FORMAT_GENERAL,
+            // 'AV' => NumberFormat::FORMAT_GENERAL,
             'AX' => NumberFormat::FORMAT_GENERAL,
             'AY' => NumberFormat::FORMAT_GENERAL,
         ];
