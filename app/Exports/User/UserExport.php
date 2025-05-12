@@ -154,7 +154,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             (string)$user->userBpjs?->bpjs_ketenagakerjaan_no,
             $user->userBpjs?->bpjs_ketenagakerjaan_date ? date('d-m-Y', strtotime($user->userBpjs?->bpjs_ketenagakerjaan_date)) : null,
             $user->userBpjs?->jaminan_pensiun_date,
-            $user->image?->url,
+            $user->image ? $user->image['url'] : null,
         ];
     }
 
