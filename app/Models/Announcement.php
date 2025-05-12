@@ -6,16 +6,18 @@ use App\Enums\JobLevel;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CreatedUpdatedInfo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Announcement extends BaseModel implements TenantedInterface
+class Announcement extends BaseModel implements TenantedInterface, HasMedia
 {
-    use BelongsToUser, CompanyTenanted;
+    use CompanyTenanted, InteractsWithMedia, CreatedUpdatedInfo;
 
     protected $fillable = [
         'company_id',
-        'user_id',
         'subject',
         'content',
         'is_send_email',
