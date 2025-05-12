@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('speed')->nullable()->after('lng');
             $table->string('battery')->nullable()->after('speed');
             $table->dateTime('detected_at')->nullable()->after('battery');
+            $table->dateTime('last_absence_reminder_at')->nullable()->after('detected_at');
         });
     }
 
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->dropColumn('speed');
             $table->dropColumn('battery');
             $table->dropColumn('detected_at');
+            $table->dropColumn('last_absence_reminder_at');
         });
     }
 };

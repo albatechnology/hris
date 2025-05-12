@@ -39,6 +39,7 @@ class UserDetail extends BaseModel
         'speed',
         'battery',
         'detected_at',
+        'last_absence_reminder_at',
     ];
 
     protected $casts = [
