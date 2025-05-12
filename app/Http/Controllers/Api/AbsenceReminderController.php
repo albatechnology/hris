@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\AbsenceReminder\UpdateRequest;
 use App\Http\Resources\DefaultResource;
+use App\Jobs\AbsenceReminder\AbsenceReminderBatch;
 use App\Models\AbsenceReminder;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;

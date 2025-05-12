@@ -19,7 +19,7 @@ class AbsenceReminderBatch implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct(private ?int $companyId = null)
     {
         //
     }
@@ -33,6 +33,7 @@ class AbsenceReminderBatch implements ShouldQueue
 
         $absenceReminders = AbsenceReminder::query()->has('company')
             ->where('is_active', 1)
+            ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->when(config('app.name') == 'Syntegra', fn($q) => $q->has('client'))
             ->get();
 
@@ -63,7 +64,7 @@ class AbsenceReminderBatch implements ShouldQueue
         $totalUsers = User::whereHas('schedules', fn($q) => $q->whereHas('shifts', fn($q) => $q->whereIn('shift_id', $shiftIds)))->count();
 
         for ($offset = 0; $offset < $totalUsers; $offset += $batchSize) {
-            DispatchAbsenceReminder::dispatch($shiftIds, $offset, $batchSize)->delay(now()->addSeconds(($offset / $batchSize) * 15));
+            DispatchAbsenceReminder::dispatch($offset, $batchSize, $shiftIds)->delay(now()->addSeconds(($offset / $batchSize) * 15));
         }
     }
 }

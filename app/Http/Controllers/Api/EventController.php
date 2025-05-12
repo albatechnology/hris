@@ -101,6 +101,7 @@ class EventController extends BaseController
         // }
 
         $companyId = $request->company_id ?? auth()->user()->company_id;
+        $clientId = $request->filter['client_id'] ?? null;
 
         $events = Event::tenanted()
             ->when($companyId, fn($q) => $q->where('company_id', $companyId))
@@ -147,6 +148,7 @@ class EventController extends BaseController
 
         $birthdays = User::tenanted()
             ->whereHas('detail', fn($q) => $q->whereMonth('birthdate', $request->filter['month']))
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
             ->with('detail', fn($q) => $q->select('user_id', 'birthdate'))
             ->get(['id', 'name']);
 
@@ -160,6 +162,7 @@ class EventController extends BaseController
         }
 
         $timeoffs = Timeoff::tenanted()->approved()
+            ->when($clientId, fn($q) => $q->whereHas('user', fn($q) => $q->where('client_id', $clientId)))
             ->whereYear('start_at', $request->filter['year'])
             ->where(fn($q) => $q->whereMonth('start_at', $request->filter['month'])->orWhereMonth('end_at', $request->filter['month']))
             ->with([

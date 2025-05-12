@@ -20,9 +20,9 @@ class DispatchAbsenceReminder implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        public array $shiftIds = [],
         public int $offset,
-        public int $limit = 50
+        public int $limit = 50,
+        public ?array $shiftIds = [],
     ) {}
 
     /**
@@ -37,7 +37,11 @@ class DispatchAbsenceReminder implements ShouldQueue
             ->lazy()
             ->each(function ($user) {
                 $schedule = ScheduleService::getTodaySchedule($user, date('Y-m-d'), ['id'], ['id', 'is_dayoff', 'name', 'clock_in']);
-                if ($schedule && !$schedule->shift?->is_dayoff && in_array($schedule->shift->id, $this->shiftIds)) {
+                if (
+                    $schedule
+                    && !$schedule->shift?->is_dayoff
+                    && in_array($schedule->shift->id, $this->shiftIds)
+                ) {
                     $user->notify(new AbsenceReminder("Jangan lupa masuk kerja " . $schedule->shift->name . " pukul " . $schedule->shift->clock_in . " dan lakukan absensi ya!"));
                 }
             });
