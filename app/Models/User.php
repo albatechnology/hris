@@ -198,7 +198,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        $query->select(['id', 'group_id', 'company_id', 'branch_id', 'name', 'email', 'type', 'nik', ...$additionalColumns]);
+        $query->select(['id', 'group_id', 'company_id', 'branch_id', 'client_id', 'name', 'email', 'type', 'nik', ...$additionalColumns]);
     }
 
     protected function serializeDate(\DateTimeInterface $date): string

@@ -25,11 +25,14 @@ class IncidentController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Incident::tenanted()->with(['user.company', 'incidentType', 'media']))
+        $data = QueryBuilder::for(Incident::tenanted()->with(['user' => fn($q) => $q->selectMinimalist()->with('client', fn($q) => $q->selectMinimalist()), 'incidentType', 'media']))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('incident_type_id'),
+                AllowedFilter::callback('client_id', function ($query, $value) {
+                    $query->whereHas('user', fn($q) => $q->where('client_id', $value));
+                }),
             ])
             ->allowedSorts([
                 'id',
@@ -46,7 +49,7 @@ class IncidentController extends BaseController
     public function show(int $id)
     {
         $incident = Incident::findTenanted($id);
-        $incident->load(['user', 'incidentType', 'media']);
+        $incident->load(['user' => fn($q) => $q->selectMinimalist()->with('client', fn($q) => $q->selectMinimalist()), 'incidentType', 'media']);
         return new DefaultResource($incident);
     }
 
