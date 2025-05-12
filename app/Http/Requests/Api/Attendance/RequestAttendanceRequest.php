@@ -59,6 +59,8 @@ class RequestAttendanceRequest extends FormRequest
             'date' => 'required|date_format:Y-m-d',
             'type' => ['required', Rule::enum(AttendanceType::class)],
             'note' => 'nullable|string',
+            'lat' => 'nullable|string',
+            'lng' => 'nullable|string',
         ];
     }
 }

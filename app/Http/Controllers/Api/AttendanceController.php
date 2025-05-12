@@ -789,6 +789,8 @@ class AttendanceController extends BaseController
                     'is_clock_in' => true,
                     'time' => $request->date . ' ' . $request->clock_in,
                     'type' => $request->type,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                     // 'approval_status' => ApprovalStatus::APPROVED,
                     // 'approved_at' => now(),
                     // 'approved_by' => auth('sanctum')->id(),
@@ -801,6 +803,8 @@ class AttendanceController extends BaseController
                     'is_clock_in' => false,
                     'time' => $request->date . ' ' . $request->clock_out,
                     'type' => $request->type,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                     // 'approval_status' => ApprovalStatus::APPROVED,
                     // 'approved_at' => now(),
                     // 'approved_by' => auth('sanctum')->id(),
@@ -896,6 +900,8 @@ class AttendanceController extends BaseController
                     'time' => $request->date . ' ' . $request->clock_in_hour,
                     'type' => $request->type,
                     'note' => $request->note,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                 ]);
                 // AttendanceRequested::dispatchIf($attendanceDetailClockIn->type->is(AttendanceType::MANUAL), $attendanceDetailClockIn);
             }
@@ -906,6 +912,8 @@ class AttendanceController extends BaseController
                     'time' => $request->date . ' ' . $request->clock_out_hour,
                     'type' => $request->type,
                     'note' => $request->note,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                 ]);
                 // AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
