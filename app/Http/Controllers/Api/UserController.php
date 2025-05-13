@@ -854,6 +854,7 @@ class UserController extends BaseController
             $users = $query->paginate($this->per_page);
             return DefaultResource::collection($users);
         }
+
         return (new UserExport($query))->download('users.xlsx');
     }
 

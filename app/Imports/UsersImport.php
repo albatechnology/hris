@@ -191,6 +191,11 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             $name .= ' ' . $row['last_name'];
         }
 
+        $password = [];
+        if ($row['password']) {
+            $password['password'] = $row['password'];
+        }
+
         $user = User::updateOrCreate(
             ['nik' => $row['nik']],
             [
@@ -204,7 +209,6 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 // // 'last_name' => $row['last_name'],
                 'email' => $row['email'],
                 // 'work_email',
-                'password' => $row['password'] ?? 'secret',
                 'email_verified_at' => $this->emailVerifiedAt,
                 'type' => $this->userType,
                 'nik' => $row['nik'],
@@ -212,6 +216,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'gender' => strtolower($row['gender']),
                 'join_date' => date('Y-m-d', strtotime($row['join_date'])),
                 'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
+                ...$password
             ]
         );
 
