@@ -150,6 +150,11 @@ class Patrol extends BaseModel implements TenantedInterface
         return $query->first();
     }
 
+    public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
+    {
+        $query->select(['patrols.id', 'patrols.client_id', 'patrols.name', 'patrols.start_date', 'patrols.end_date', 'patrols.lat', 'patrols.lng', 'patrols.description', ...$additionalColumns]);
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

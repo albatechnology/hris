@@ -39,6 +39,6 @@ class Client extends BaseModel implements TenantedInterface
 
     public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        $query->select(['id', 'company_id', 'name', 'phone', 'address', 'pic_name', 'pic_email', 'pic_phone', 'created_at', ...$additionalColumns]);
+        $query->select(['clients.id', 'clients.company_id', 'clients.name', 'clients.phone', 'clients.address', 'clients.pic_name', 'clients.pic_email', 'clients.pic_phone', 'clients.created_at', ...$additionalColumns]);
     }
 }

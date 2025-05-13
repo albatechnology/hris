@@ -90,7 +90,12 @@ class UserController extends BaseController
             AllowedInclude::callback('supervisors', function ($query) {
                 $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
             }),
-            'client',
+            AllowedInclude::callback('patrols', function ($query) {
+                $query->selectMinimalist();
+            }),
+            AllowedInclude::callback('client', function ($query) {
+                $query->selectMinimalist();
+            }),
             'detail',
             'payrollInfo',
             'schedules',
@@ -104,29 +109,31 @@ class UserController extends BaseController
         $users = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
                 ->with(['roles' => fn($q) => $q->select('id', 'name')])
-                ->when(config('app.name') == 'Syntegra', fn($q) => $q->with('patrols.client'))
+                // ->when(config('app.name') == 'Syntegra', fn($q) => $q->with('patrols.client'))
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
-                // AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('client_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
                 AllowedFilter::callback('client_id', function ($query, $value) {
-                    $query->where(fn($q) => $q->whereNull('client_id')->orWhereNotNull('client_id'));
+                    if (!empty($value) || $value > 0) {
+                        $query->where('client_id', $value);
+                    }
                 }),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
-                    $query;
-                    // $query->whereHas('patrols', function ($q) {
-                    //     $q->whereDate('patrols.start_date', '<=', now());
-                    //     $q->whereDate('patrols.end_date', '>=', now());
+                    $query->whereHas('patrols', function ($q) {
+                        $q->whereDate('patrols.start_date', '<=', now());
+                        $q->whereDate('patrols.end_date', '>=', now());
 
-                    //     $q->whereHas('client', fn($q2) => $q2->tenanted());
-                    //     // $q->whereDoesntHave('tasks', function($q2){
-                    //     //   $q2->where('status', PatrolTaskStatus::PENDING);
-                    //     // });
-                    // });
+                        // $q->whereHas('client', fn($q2) => $q2->tenanted());
+                        // $q->whereDoesntHave('tasks', function($q2){
+                        //   $q2->where('status', PatrolTaskStatus::PENDING);
+                        // });
+                    });
                 }),
                 AllowedFilter::callback('last_detected', function ($query, $value) {
+                    $query->selectMinimalist();
                     $query->whereHas('detail', function ($q) use ($value) {
                         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
                     });
