@@ -20,6 +20,8 @@
             <th style="font-weight: bold">Overtime Duration After</th>
             <th style="font-weight: bold">Clock In Coordinate</th>
             <th style="font-weight: bold">Clock Out Coordinate</th>
+            <th style="font-weight: bold">Check In Image</th>
+            <th style="font-weight: bold">Check Out Image</th>
         </tr>
     </thead>
     <tbody>
@@ -104,13 +106,19 @@
                     </td>
                     <td>
                         @if (isset($attendance['attendance']['clock_in']) && !is_null($attendance['attendance']['clock_in']))
-                            {{ $attendance['attendance']['clock_in']['lat'] .','.$attendance['attendance']['clock_in']['lng'] }}
+                            {{ $attendance['attendance']['clock_in']['lat'] . ',' . $attendance['attendance']['clock_in']['lng'] }}
                         @endif
                     </td>
                     <td>
                         @if (isset($attendance['attendance']['clock_out']) && !is_null($attendance['attendance']['clock_out']))
-                            {{ $attendance['attendance']['clock_out']['lat'] .','.$attendance['attendance']['clock_out']['lng'] }}
+                            {{ $attendance['attendance']['clock_out']['lat'] . ',' . $attendance['attendance']['clock_out']['lng'] }}
                         @endif
+                    </td>
+                    <td>
+                        <img src="{{ $attendance['attendance']->clock_in->image['url'] ?? '' }}" width="50">
+                    </td>
+                    <td>
+                        <img src="{{ $attendance['attendance']->clock_out->image['url'] ?? '' }}" width="50">
                     </td>
                 </tr>
             @empty
@@ -122,6 +130,8 @@
                     <td></td>
                     <td></td>
                     <td>A</td>
+                    <td></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

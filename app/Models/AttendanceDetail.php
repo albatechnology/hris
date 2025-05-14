@@ -73,7 +73,7 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
             ->onlyKeepLatest(1)
             ->registerMediaConversions(function (\Spatie\MediaLibrary\MediaCollections\Models\Media $media) {
                 $this->addMediaConversion('preview')
-                    ->fit(\Spatie\Image\Enums\Fit::Contain, 250, 250)
+                    ->fit(\Spatie\Image\Enums\Fit::Contain, 100, 100)
                     ->nonQueued();
             });
     }
