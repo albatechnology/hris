@@ -49,7 +49,7 @@
                 @foreach ($task->userPatrolTasks as $userPatrolTask)
                     <tbody>
                         <tr>
-                            <th>{{ $userPatrolTask->user->full_name }}</th>
+                            <th>{{ $userPatrolTask->user->name }}</th>
                             <th>{{ $userPatrolTask->schedule->name }}</th>
                             <th>{{ $userPatrolTask->shift->name }}</th>
                             <th>{{ date('d-M-Y H:i', strtotime($userPatrolTask->created_at)) }}</th>

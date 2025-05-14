@@ -67,7 +67,7 @@
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
-                    <td>{{ $runPayrollUser->user?->full_name ?? '' }}</td>
+                    <td>{{ $runPayrollUser->user?->name ?? '' }}</td>
                     <td>{{ $runPayroll->company?->name }}</td>
                     <td>{{ $runPayrollUser->user?->branch?->name }}</td>
                     <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
@@ -181,7 +181,7 @@
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
-                    <td>{{ $runPayrollUser->user?->full_name ?? '' }}</td>
+                    <td>{{ $runPayrollUser->user?->name ?? '' }}</td>
                     <td>{{ $runPayroll->company?->name }}</td>
                     <td>{{ $runPayrollUser->user?->branch?->name }}</td>
                     <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
@@ -295,7 +295,7 @@
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
-                    <td>{{ $runPayrollUser->user?->full_name ?? '' }}</td>
+                    <td>{{ $runPayrollUser->user?->name ?? '' }}</td>
                     <td>{{ $runPayroll->company?->name }}</td>
                     <td>{{ $runPayrollUser->user?->branch?->name }}</td>
                     <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}

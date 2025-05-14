@@ -28,6 +28,8 @@ class NewEmployee implements ShouldQueue
      */
     public function handle(): void
     {
+        if(config('app.name') != 'SUNSHINE') return;
+
         /**
          * 1. get users yang masa kerjanya < 1 tahun
          * 2. where belum dapet jatah cuti di tahun ini

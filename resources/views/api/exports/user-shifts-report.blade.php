@@ -12,7 +12,7 @@
         @foreach ($data['users'] as $user)
             <tr>
                 <td>{{ $user['user']->nik }}</td>
-                <td>{{ $user['user']->full_name }}</td>
+                <td>{{ $user['user']->name }}</td>
                 @foreach ($user['shifts'] as $shift)
                     <td>{{ $shift['shift'] }}</td>
                 @endforeach

@@ -86,7 +86,7 @@
                 @endphp
                 <tr>
                     <td>{{ $runThrUser->user?->nik ?? '' }}</td>
-                    <td>{{ $runThrUser->user?->full_name ?? '' }}</td>
+                    <td>{{ $runThrUser->user?->name ?? '' }}</td>
                     <td>{{ $runThr->company?->name }}</td>
                     <td>{{ $runThrUser->user?->branch?->name }}</td>
                     <td>{{ $runThrUser->user?->join_date ? date('d-M-Y', strtotime($runThrUser->user->join_date)) : '' }}
@@ -218,7 +218,7 @@
                 @endphp
                 <tr>
                     <td>{{ $runThrUser->user?->nik ?? '' }}</td>
-                    <td>{{ $runThrUser->user?->full_name ?? '' }}</td>
+                    <td>{{ $runThrUser->user?->name ?? '' }}</td>
                     <td>{{ $runThr->company?->name }}</td>
                     <td>{{ $runThrUser->user?->branch?->name }}</td>
                     <td>{{ $runThrUser->user?->join_date ? date('d-M-Y', strtotime($runThrUser->user->join_date)) : '' }}
@@ -350,7 +350,7 @@
                 @endphp
                 <tr>
                     <td>{{ $runThrUser->user?->nik ?? '' }}</td>
-                    <td>{{ $runThrUser->user?->full_name ?? '' }}</td>
+                    <td>{{ $runThrUser->user?->name ?? '' }}</td>
                     <td>{{ $runThr->company?->name }}</td>
                     <td>{{ $runThrUser->user?->branch?->name }}</td>
                     <td>{{ $runThrUser->user?->join_date ? date('d-M-Y', strtotime($runThrUser->user->join_date)) : '' }}
