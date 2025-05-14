@@ -83,7 +83,7 @@ class PatrolController extends BaseController
     public function show(int $id)
     {
         $patrol = QueryBuilder::for(
-            Patrol::select('id', 'client_id', 'name', 'start_date', 'end_date', 'lat', 'lng', 'description', 'created_at')
+            Patrol::selectMinimalist()
                 ->tenanted()->where('id', $id)
         )
             ->allowedIncludes($this->getAllowedIncludes())
@@ -123,21 +123,6 @@ class PatrolController extends BaseController
             $patrol->users()->createMany(collect($request->users)->map(fn($id) => [
                 'user_id' => $id,
             ]));
-
-            // user patrol
-            // if ($request->users) {
-            //     foreach ($request->users as $reqUser) {
-            //         $userPatrol = $patrol->users()->create([
-            //             'user_id' => $reqUser['id'],
-            //         ]);
-
-            //         // foreach ($reqUser['schedules'] as $reqUserSchedule) {
-            //         //     $userPatrol->userPatrolSchedules()->create([
-            //         //         'schedule_id' => $reqUserSchedule['id'],
-            //         //     ]);
-            //         // }
-            //     }
-            // }
 
             // patrol location
             if ($request->locations) {
@@ -198,23 +183,6 @@ class PatrolController extends BaseController
                 'user_id' => $id,
             ]));
 
-            // user patrol
-            // $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
-            // $patrol->users()->delete();
-            // if ($request->users) {
-            //     foreach ($request->users as $reqUser) {
-            //         $userPatrol = $patrol->users()->create([
-            //             'user_id' => $reqUser['id'],
-            //         ]);
-
-            //         // foreach ($reqUser['schedules'] as $reqUserSchedule) {
-            //         //     $userPatrol->userPatrolSchedules()->create([
-            //         //         'schedule_id' => $reqUserSchedule['id'],
-            //         //     ]);
-            //         // }
-            //     }
-            // }
-
             $patrolLocationIds = $patrol->patrolLocations->pluck('id');
             $patrolTaskIds = $patrol->patrolLocations->pluck('tasks')->flatten(1)->pluck('id');
             $updatedPatrolLocationIds = [];
@@ -250,13 +218,18 @@ class PatrolController extends BaseController
                 }
             }
 
-            // dd($patrolLocation->load('tasks')->toArray());
-            $patrol->patrolLocations()->each(
-                fn($patrolLocation) => $patrolLocation->tasks()
+            $patrol->patrolLocations->each(function ($patrolLocation) use ($patrolTaskIds, $updatedPatrolTaskIds) {
+                $patrolLocation->tasks
                     ->whereIn('id', $patrolTaskIds)
                     ->whereNotIn('id', $updatedPatrolTaskIds)
-                    ->delete()
-            );
+                    ->each(fn(PatrolTask $patrolTask) => $patrolTask->userPatrolTasks()->delete());
+
+                $patrolLocation->tasks()
+                    ->whereIn('id', $patrolTaskIds)
+                    ->whereNotIn('id', $updatedPatrolTaskIds)
+                    ->delete();
+            });
+
             $patrol->patrolLocations()
                 ->whereIn('id', $patrolLocationIds)
                 ->whereNotIn('id', $updatedPatrolLocationIds)
