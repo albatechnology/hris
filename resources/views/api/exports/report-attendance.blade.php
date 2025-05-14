@@ -20,8 +20,8 @@
             <th style="font-weight: bold">Overtime Duration After</th>
             <th style="font-weight: bold">Clock In Coordinate</th>
             <th style="font-weight: bold">Clock Out Coordinate</th>
-            <th style="font-weight: bold">Check In Image</th>
-            <th style="font-weight: bold">Check Out Image</th>
+            {{-- <th style="font-weight: bold">Check In Image</th>
+            <th style="font-weight: bold">Check Out Image</th> --}}
         </tr>
     </thead>
     <tbody>
@@ -114,12 +114,12 @@
                             {{ $attendance['attendance']['clock_out']['lat'] . ',' . $attendance['attendance']['clock_out']['lng'] }}
                         @endif
                     </td>
-                    <td>
+                    {{-- <td>
                         <img src="{{ $attendance['attendance']->clock_in->image['url'] ?? '' }}" width="50">
                     </td>
                     <td>
                         <img src="{{ $attendance['attendance']->clock_out->image['url'] ?? '' }}" width="50">
-                    </td>
+                    </td> --}}
                 </tr>
             @empty
                 <tr>
@@ -141,8 +141,8 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td></td>
-                    <td></td>
+                    {{-- <td></td>
+                    <td></td> --}}
                 </tr>
             @endforelse
             <tr>

@@ -8,14 +8,13 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles, ShouldAutoSize, WithColumnWidths
+class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles, ShouldAutoSize
 {
     use Exportable;
 
@@ -156,22 +155,22 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
         ];
     }
 
-    public function columnWidths(): array
-    {
-        return [
-            // 'E' => 30,
-            // 'I' => 30,
-            // 'N' => 30,
-            // 'O' => 30,
-            // 'R' => 30,
-            // 'T' => 30,
-            // 'AD' => 30,
-            // 'AF' => 30,
-            // 'AL' => 30,
-            // 'AN' => 30,
-            // 'AO' => 30,
-        ];
-    }
+    // public function columnWidths(): array
+    // {
+    //     return [
+    //         // 'E' => 30,
+    //         // 'I' => 30,
+    //         // 'N' => 30,
+    //         // 'O' => 30,
+    //         // 'R' => 30,
+    //         // 'T' => 30,
+    //         // 'AD' => 30,
+    //         // 'AF' => 30,
+    //         // 'AL' => 30,
+    //         // 'AN' => 30,
+    //         // 'AO' => 30,
+    //     ];
+    // }
 
     public function columnFormats(): array
     {
