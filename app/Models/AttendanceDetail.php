@@ -67,20 +67,23 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
         // );
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(\App\Enums\MediaCollection::ATTENDANCE->value)
+            ->onlyKeepLatest(1)
+            ->registerMediaConversions(function (\Spatie\MediaLibrary\MediaCollections\Models\Media $media) {
+                $this->addMediaConversion('preview')
+                    ->fit(\Spatie\Image\Enums\Fit::Contain, 250, 250)
+                    ->nonQueued();
+            });
+    }
+
     public function getImageAttribute()
     {
         $file = $this->getFirstMedia(\App\Enums\MediaCollection::ATTENDANCE->value);
-        if ($file) {
-            $url = $file->getUrl();
-            // $preview = $file->getUrl('preview');
-        } else {
-            $url = null;
-            // $preview = asset('img/user-icon.png');
-        }
-
         return [
-            'url' => $url,
-            // 'preview' => $preview
+            'url' => $file?->getUrl() ?? null,
+            'preview' => $file?->getUrl('preview') ?? null
         ];
     }
 }
