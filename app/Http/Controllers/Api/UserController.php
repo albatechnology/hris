@@ -29,7 +29,6 @@ use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UsersImport;
-use App\Mail\TestEmail;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\RunPayroll;
@@ -240,7 +239,7 @@ class UserController extends BaseController
                 })->all();
             $user->branches()->createMany($branchIds);
 
-            if (!empty($user->password)) {
+            if (empty($request->password)) {
                 $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
                 $user->notify(new ($notificationType->getNotificationClass())($notificationType));
             }

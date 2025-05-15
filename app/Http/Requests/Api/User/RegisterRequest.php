@@ -53,11 +53,15 @@ class RegisterRequest extends FormRequest
             }
         }
 
+        $emailVerifiedAt = null;
+        if ($this->password) $emailVerifiedAt = date('Y-m-d H:i:s');
+        if ($this->email_verified_at) $emailVerifiedAt = date('Y-m-d H:i:s', strtotime($this->email_verified_at));
+
         $data = [
             'email' => $email,
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
-            'email_verified_at' => $this->email_verified_at ? date('Y-m-d H:i:s', strtotime($this->email_verified_at)) : null,
+            'email_verified_at' => $emailVerifiedAt,
             'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
 
@@ -86,6 +90,7 @@ class RegisterRequest extends FormRequest
             'name' => 'required|string',
             // 'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
+            'work_email' => 'nullable|email',
             'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
@@ -127,6 +132,9 @@ class RegisterRequest extends FormRequest
             'bank_name' => 'nullable|string',
             'bank_account_no' => 'nullable|string',
             'bank_account_holder' => 'nullable|string',
+            'secondary_bank_name' => 'nullable|string',
+            'secondary_bank_account_no' => 'nullable|string',
+            'secondary_bank_account_holder' => 'nullable|string',
             'npwp' => 'nullable|string',
             'ptkp_status' => ['nullable', Rule::enum(PtkpStatus::class)],
             'tax_method' => ['nullable', Rule::enum(TaxMethod::class)],

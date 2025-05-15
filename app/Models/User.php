@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use App\Enums\Gender;
 use App\Enums\ScheduleType;
 use App\Enums\UserType;
@@ -11,6 +9,7 @@ use App\Interfaces\TenantedInterface;
 use App\Services\UserService;
 use App\Traits\Models\BelongsToClient;
 use App\Traits\Models\CreatedUpdatedInfo;
+use App\Traits\Models\CustomSoftDeletes;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,11 +18,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
-// use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
@@ -31,7 +28,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
 {
-    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, SoftDeletes, CreatedUpdatedInfo, BelongsToClient;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToClient;
 
     /**
      * The attributes that are mass assignable.
