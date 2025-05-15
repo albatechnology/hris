@@ -29,6 +29,7 @@ use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UsersImport;
+use App\Mail\TestEmail;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\RunPayroll;
@@ -42,6 +43,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -109,7 +111,7 @@ class UserController extends BaseController
         $users = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
                 ->with(['roles' => fn($q) => $q->select('id', 'name')])
-                // ->when(config('app.name') == 'Syntegra', fn($q) => $q->with('patrols.client'))
+            // ->when(config('app.name') == 'Syntegra', fn($q) => $q->with('patrols.client'))
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
@@ -181,6 +183,14 @@ class UserController extends BaseController
 
     public function show(int $id)
     {
+        // Mail::to([
+        //     'albaprogrammer2@gmail.com',
+        //     'raveldy@suneducationgroup.com',
+        //     'angeline@suneducationgroup.com',
+        //     'jeremiah@suneducationgroup.com',
+        //     'recruitment@suneducationgroup.com',
+        // ])->send(new TestEmail());
+
         if (auth()->id() == $id) {
             $query = User::tenanted()->where('id', $id);
         } else {
@@ -340,6 +350,11 @@ class UserController extends BaseController
         if ($user->id == 1) {
             return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
         }
+        $user->update([
+            'email' => 'deleted-' . $user->email,
+            'nik' => 'deleted-' . $user->nik,
+            'fcm_token' => null,
+        ]);
         $user->delete();
 
         return $this->deletedResponse();
@@ -408,7 +423,11 @@ class UserController extends BaseController
 
     public function companies(int $id)
     {
-        $user = User::findTenanted($id);
+        $user = auth()->user();
+        if ($user->id != $id) {
+            $user = User::findTenanted($id);
+        }
+
         if ($user->type->is(UserType::SUPER_ADMIN)) {
             $companies = Company::all();
         } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
@@ -425,7 +444,11 @@ class UserController extends BaseController
 
     public function branches(int $id)
     {
-        $user = User::findTenanted($id);
+        $user = auth()->user();
+        if ($user->id != $id) {
+            $user = User::findTenanted($id);
+        }
+
         if ($user->type->is(UserType::SUPER_ADMIN)) {
             $branches = Branch::all();
         } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
