@@ -346,8 +346,8 @@ class UserController extends BaseController
     public function destroy(int $id)
     {
         $user = User::findTenanted($id);
-        if ($user->id == 1) {
-            return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
+        if ($user->id == 1 || $user->id == auth('sanctum')->id()) {
+            return response()->json(['message' => 'User can not be deleted!']);
         }
         $user->update([
             'email' => 'deleted-' . $user->email,
