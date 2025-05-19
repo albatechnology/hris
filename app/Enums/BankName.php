@@ -10,4 +10,5 @@ enum BankName: string
     case BCA = 'BCA';
     case MANDIRI = 'MANDIRI';
     case BRI = 'BRI';
+    case BNI = 'BNI';
 }

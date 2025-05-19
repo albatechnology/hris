@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Enums\PanicStatus;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\CompanyTenanted;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\TenantedThroughClient;
 
 class Panic extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted;
+    use TenantedThroughClient, BelongsToUser;
 
     protected $fillable = [
-        'company_id',
+        'client_id',
         'user_id',
         'lat',
         'lng',
@@ -22,9 +22,4 @@ class Panic extends BaseModel implements TenantedInterface
     protected $casts = [
         'status' => PanicStatus::class,
     ];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 }

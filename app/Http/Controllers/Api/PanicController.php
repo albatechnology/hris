@@ -11,6 +11,10 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Enums\PanicStatus;
 use App\Http\Requests\Api\Panic\UpdateRequest;
+use App\Models\User;
+use App\Notifications\Panic\PanicNotification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PanicController extends BaseController
 {
@@ -28,13 +32,13 @@ class PanicController extends BaseController
     {
         $data = QueryBuilder::for(Panic::tenanted()->with('user'))
             ->allowedFilters([
-                AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('client_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('status'),
             ])
             ->allowedSorts([
                 'id',
-                'company_id',
+                'client_id',
                 'user_id',
                 'status',
                 'created_at',
@@ -47,19 +51,25 @@ class PanicController extends BaseController
     public function show(int $id)
     {
         $panic = Panic::findTenanted($id);
-        return new DefaultResource($panic->load('user'));
+        return new DefaultResource($panic->load('user', 'client'));
     }
 
     public function store(StoreRequest $request)
     {
+        DB::beginTransaction();
         try {
             $panic = auth('sanctum')->user()->panics()->create([
-                'company_id' => $request->company_id,
+                'client_id' => $request->client_id,
                 'lat' => $request->lat,
                 'lng' => $request->lng,
                 'status' => PanicStatus::PANIC,
             ]);
+
+            $supervisors = User::whereIn('id', $panic->user->supervisors?->pluck('supervisor_id'))->get();
+            Notification::sendNow($supervisors, new PanicNotification($panic));
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
