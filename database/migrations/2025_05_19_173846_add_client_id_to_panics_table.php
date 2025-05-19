@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('panics', function (Blueprint $table) {
             $table->foreignIdFor(Client::class)->constrained();
 
-            $table->dropConstrainedForeignIdFor(Company::class);
+            $table->dropColumn(Company::class);
         });
     }
 
