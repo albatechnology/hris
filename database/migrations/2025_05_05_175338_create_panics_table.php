@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('panics', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Client::class)->constrained();
+            $table->foreignIdFor(Client::class)->nullable()->constrained();
             $table->foreignIdFor(User::class)->constrained();
             $table->string('lat');
             $table->string('lng');

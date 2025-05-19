@@ -11,6 +11,7 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Enums\PanicStatus;
 use App\Http\Requests\Api\Panic\UpdateRequest;
+use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\Panic\PanicNotification;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,13 @@ class PanicController extends BaseController
             ]);
 
             $supervisors = User::whereIn('id', $panic->user->supervisors?->pluck('supervisor_id'))->get();
-            Notification::sendNow($supervisors, new PanicNotification($panic));
+            if ($supervisors->count() == 0) {
+                $supervisors = User::where('id', Setting::where('key', 'request_approver')->where('company_id', $panic->user?->company_id)->first()?->value)->get();
+            }
+
+            if ($supervisors->count()) {
+                Notification::sendNow($supervisors, new PanicNotification($panic));
+            }
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
