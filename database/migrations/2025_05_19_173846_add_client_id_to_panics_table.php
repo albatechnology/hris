@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Client;
-use App\Models\Company;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +15,7 @@ return new class extends Migration
         Schema::table('panics', function (Blueprint $table) {
             $table->foreignIdFor(Client::class)->constrained();
 
-            $table->dropColumn(Company::class);
+            $table->dropColumn('company_id');
         });
     }
 
