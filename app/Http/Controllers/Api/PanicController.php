@@ -57,18 +57,14 @@ class PanicController extends BaseController
 
     public function store(StoreRequest $request)
     {
+        $user = auth('sanctum')->user();
         DB::beginTransaction();
         try {
-            $panic = auth('sanctum')->user()->panics()->create([
-                'client_id' => $request->client_id,
-                'lat' => $request->lat,
-                'lng' => $request->lng,
-                'status' => PanicStatus::PANIC,
-            ]);
+            $panic = $user->panics()->create($request->validated());
 
-            $supervisors = User::whereIn('id', $panic->user->supervisors?->pluck('supervisor_id'))->get();
+            $supervisors = User::whereIn('id', $user->supervisors?->pluck('supervisor_id'))->get();
             if ($supervisors->count() == 0) {
-                $supervisors = User::where('id', Setting::where('key', 'request_approver')->where('company_id', $panic->user?->company_id)->first()?->value)->get();
+                $supervisors = User::where('id', Setting::where('key', 'request_approver')->where('company_id', $user->company_id)->first()?->value)->get();
             }
 
             if ($supervisors->count()) {

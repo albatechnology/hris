@@ -17,6 +17,18 @@ class StoreRequest extends FormRequest
     }
 
     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'client_id' => $this->client_id ?? auth('sanctum')->user()->client_id
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -24,7 +36,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
         ];
