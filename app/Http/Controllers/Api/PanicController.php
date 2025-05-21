@@ -62,10 +62,14 @@ class PanicController extends BaseController
         try {
             $panic = $user->panics()->create($request->validated());
 
-            $supervisors = User::whereIn('id', $user->supervisors?->pluck('supervisor_id'))->get();
+            $supervisors = User::select('id', 'fcm_token', 'name')->whereIn('id', $user->supervisors?->pluck('supervisor_id'))->get();
             if ($supervisors->count() == 0) {
                 $supervisors = User::where('id', Setting::where('key', 'request_approver')->where('company_id', $user->company_id)->first()?->value)->get();
             }
+
+            $users = User::select('id', 'fcm_token', 'name')->permission('allow_get_emergency_notification')->get();
+
+            $supervisors->push(...$users);
 
             if ($supervisors->count()) {
                 Notification::sendNow($supervisors, new PanicNotification($panic));
