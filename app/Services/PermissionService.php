@@ -330,6 +330,7 @@ class PermissionService
                 // 'extra_off_edit',
                 // 'extra_off_delete',
             ],
+            'allow_get_emergency_notification' => []
         ];
     }
 
