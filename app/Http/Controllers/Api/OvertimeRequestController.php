@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
+use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
@@ -159,5 +160,10 @@ class OvertimeRequestController extends BaseController
             ->paginate($this->per_page);
 
         return OvertimeRequestResource::collection($data);
+    }
+
+    public function report(ExportReportRequest $request)
+    {
+        return (new \App\Exports\Overtime\ExportOvertimeRequest($request))->download('overtime-requests.xlsx');
     }
 }

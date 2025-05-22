@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Api\Attendance;
+namespace App\Http\Requests\Api\OvertimeRequest;
 
 use App\Models\Branch;
 use App\Models\Client;
+use App\Models\Company;
 use App\Rules\CompanyTenantedRule;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ExportReportRequest extends FormRequest
@@ -42,7 +44,17 @@ class ExportReportRequest extends FormRequest
     {
         return [
             'filter' => 'required|array',
-            'filter.company_id' => ['nullable', new CompanyTenantedRule()],
+            'filter.company_ids' => [
+                'nullable',
+                function (string $attr, string $value, Closure $fail) {
+                    collect(explode(',', $value))->each(function ($id) use ($fail) {
+                        $company = Company::tenanted()->exists();
+                        if (!$company) {
+                            $fail('The selected company ids is invalid (' . $id . ')');
+                        }
+                    });
+                },
+            ],
             'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.start_date' => 'required|date',

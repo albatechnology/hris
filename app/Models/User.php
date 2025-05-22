@@ -408,6 +408,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsToMany(Patrol::class, UserPatrol::class);
     }
 
+    public function patrolBatches(): HasMany
+    {
+        return $this->hasMany(UserPatrolBatch::class);
+    }
+
     // public function userPatrolSchedules(): BelongsToMany
     // {
     //     return $this->belongsToMany(UserPatrolSchedule::class, UserPatrol::class, 'user_id', 'id');
