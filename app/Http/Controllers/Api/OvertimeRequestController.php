@@ -64,21 +64,24 @@ class OvertimeRequestController extends BaseController
     {
         $user = User::findOrFail($request->user_id);
 
-        // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
-        // if (!$attendance) {
-        //     return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        // }
+        if (config('app.name') != 'LUMORA') {
+            $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
+            if (!$attendance) {
+                return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
-        // if ($attendance->clockIn()->doesntExist()) {
-        //     return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        // }
+            if ($attendance->clockIn()->doesntExist()) {
+                return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
-        // if ($attendance->clockOut()->doesntExist()) {
-        //     return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        // }
+            if ($attendance->clockOut()->doesntExist()) {
+                return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
 
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
+
             // $notificationType = NotificationType::REQUEST_OVERTIME;
             // $overtimeRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $overtimeRequest->user, $overtimeRequest));
         } catch (Exception $th) {

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\IncidentTypeController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\LoanController;
+use App\Http\Controllers\Api\LockAttendanceController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\NotificationController;
@@ -378,4 +379,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
     Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
     Route::apiResource('media', MediaController::class)->only(['index', 'show', 'destroy']);
+    Route::apiResource('lock-attendances', LockAttendanceController::class);
 });
