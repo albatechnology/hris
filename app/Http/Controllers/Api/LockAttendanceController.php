@@ -101,14 +101,13 @@ class LockAttendanceController extends BaseController
             $attendances = Attendance::where('user_id', $user->id)
                 ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
                 ->with([
-                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                    'timeoff.timeoffPolicy',
+                    'shift' => fn($q) => $q->select('id', 'is_dayoff', 'clock_in', 'clock_out')->withTrashed(),
+                    'timeoff' => fn($q) => $q->select('id')->approved(),
                     'clockIn' => fn($q) => $q->select('id', 'attendance_id', 'time')->approved(),
                     'clockOut' => fn($q) => $q->select('id', 'attendance_id', 'time')->approved(),
                     // 'details' => fn($q) => $q->approved()->orderBy('created_at')
                 ])
                 ->whereDateBetween($lockAttendance->start_date, $lockAttendance->end_date)
-                ->groupBy('id')
                 ->get();
 
             foreach ($dateRange as $date) {
