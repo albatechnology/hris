@@ -5,6 +5,8 @@ namespace App\Exports\Overtime;
 use App\Enums\RateType;
 use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 use App\Models\Company;
+use App\Models\Event;
+use App\Models\NationalHoliday;
 use App\Models\Overtime;
 use App\Models\OvertimeRequest;
 use App\Services\OvertimeService;
@@ -24,6 +26,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
     use Exportable;
     public Collection $overtimes;
     public Collection $companies;
+    public Collection $nationalHolidays;
     public string $startDate;
     public string $endDate;
 
@@ -50,6 +53,12 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
 
         $this->startDate = $request->filter['start_date'];
         $this->endDate = $request->filter['end_date'];
+
+        $this->nationalHolidays = Event::select('id', 'company_id', 'start_at', 'end_at')
+            ->whereNationalHoliday()
+            ->whereIn('company_id', $companyIds)
+            ->whereDateBetween($this->startDate, $this->endDate)
+            ->get();
     }
 
     public function collection()
@@ -121,8 +130,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         // set overtime duration to minutes. 02:00:00 become 120
         $overtimeDuration = Carbon::parse($overtimeRequest->duration)->diffInMinutes(Carbon::parse('00:00:00'), true);
 
-        // dump($overtime->toArray());
-        // dump($overtimeDuration);
         if ($overtimeRounding = $overtime->overtimeRoundings->where('start_minute', '<=', $overtimeDuration)->where('end_minute', '>=', $overtimeDuration)->first()) {
             $overtimeDuration = $overtimeRounding->rounded;
         }
@@ -130,23 +137,27 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         // set overtime duration to hour. 120 become 2
         $overtimeDuration = round($overtimeDuration / 60);
 
-        // dump($overtimeDuration);
         $overtimeMultipliers = collect([
             [
                 'duration' => 1,
                 'multiply' => 1,
             ]
         ]);
-        // dump($overtimeMultipliers);
+
         if ($overtime->overtimeMultipliers->count()) {
-            if ($overtimeDate->isWeekday()) {
+            $inNationalHoliday = $this->nationalHolidays->where('company_id', $overtimeRequest->user->company_id)->contains(function ($nh) use ($overtimeDate) {
+                $start = Carbon::parse($nh->start_at)->startOfDay();
+                $end = Carbon::parse($nh->end_at)->endOfDay();
+                return $overtimeDate->between($start, $end);
+            });
+
+            if ($overtimeDate->isWeekday() || $inNationalHoliday) {
                 $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
             } else {
                 $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
             }
             $overtimeMultipliers = OvertimeService::calculateOvertimeBreakdown($overtimeDuration, $overtimeMultipliers);
         }
-        // dump($overtimeMultipliers);
 
         $overtimeAmountMultiply = 0;
         // if overtime paid per day. else paid per hour
@@ -172,7 +183,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
 
                 //     break;
                 // case RateType::FORMULA:
-                // dump('OKEE');
                 //     // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
 
 
@@ -186,7 +196,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             // $amount += ($overtimeDuration * $multiply) * $overtimeAmountMultiply;
         }
         $overtimeRate = $overtimeAmountMultiply;
-        // dump($overtimeAmountMultiply);
 
         $overtimeMultiplier = 0;
         $totalPayment = $overtimeAmountMultiply;
@@ -253,10 +262,11 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('A2')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-
                 // Bold seluruh baris ke-3 (A3 sampai K3)
                 $sheet->getStyle('A3:K3')->getFont()->setBold(true);
                 $sheet->getRowDimension(3)->setRowHeight(30);
+                $sheet->getRowDimension(2)->setRowHeight(20);
+                $sheet->getRowDimension(1)->setRowHeight(20);
             },
         ];
     }

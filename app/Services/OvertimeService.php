@@ -7,6 +7,7 @@ use App\Enums\EventType;
 use App\Enums\FormulaAmountType;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\RateType;
+use App\Models\Event;
 use App\Models\Formula;
 use App\Models\Overtime;
 use App\Models\OvertimeRequest;
@@ -109,7 +110,19 @@ class OvertimeService
                     ]
                 ]);
                 if ($overtime->overtimeMultipliers->count()) {
-                    if ($overtimeDate->isWeekday()) {
+                    $nationalHolidays = Event::select('id', 'company_id', 'start_at', 'end_at')
+                        ->whereNationalHoliday()
+                        ->whereIn('company_id', $user->company_id)
+                        ->whereDateBetween($startPeriod, $endPeriod)
+                        ->get();
+
+                    $inNationalHoliday = $nationalHolidays->contains(function ($nh) use ($overtimeDate) {
+                        $start = Carbon::parse($nh->start_at)->startOfDay();
+                        $end = Carbon::parse($nh->end_at)->endOfDay();
+                        return $overtimeDate->between($start, $end);
+                    });
+
+                    if ($overtimeDate->isWeekday() || $inNationalHoliday) {
                         $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
                     } else {
                         $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
