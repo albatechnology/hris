@@ -379,5 +379,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
     Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
     Route::apiResource('media', MediaController::class)->only(['index', 'show', 'destroy']);
+
+    Route::get('lock-attendances/{lock_attendance}/details', [LockAttendanceController::class, 'details']);
     Route::apiResource('lock-attendances', LockAttendanceController::class);
 });

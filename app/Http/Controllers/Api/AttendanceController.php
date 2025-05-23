@@ -370,14 +370,7 @@ class AttendanceController extends BaseController
                 'shift' => $shift,
                 'attendance' => $attendance
             ];
-
-            // if (($orderKey + 1) === $totalShifts) {
-            //     $orderKey = 0;
-            // } else {
-            //     $orderKey++;
-            // }
         }
-        // }
 
         return response()->json([
             'summary' => [

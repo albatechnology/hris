@@ -38,10 +38,9 @@ class Panic extends BaseModel implements TenantedInterface
         return $query->whereHas(
             'client',
             fn($q) => $q->tenanted()
-                ->when(
-                    !$user->is_admin && !$hasPermission,
-                    fn($q) => $q->whereHas('user', fn($q) => $q->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id)))->orWhere('user_id', $user->id)
-                )
+        )->when(
+            !$user->is_admin && !$hasPermission,
+            fn($q) => $q->whereHas('user', fn($q) => $q->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id)))->orWhere('user_id', $user->id)
         );
     }
 }
