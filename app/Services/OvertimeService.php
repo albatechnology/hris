@@ -112,7 +112,7 @@ class OvertimeService
                 if ($overtime->overtimeMultipliers->count()) {
                     $nationalHolidays = Event::select('id', 'company_id', 'start_at', 'end_at')
                         ->whereNationalHoliday()
-                        ->whereIn('company_id', $user->company_id)
+                        ->where('company_id', $user->company_id)
                         ->whereDateBetween($startPeriod, $endPeriod)
                         ->get();
 
