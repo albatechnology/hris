@@ -28,5 +28,6 @@ class TestEmail extends Command
     public function handle()
     {
         Mail::to($this->argument('emails'))->send(new MailTestEmail());
+        $this->info('Email sent');
     }
 }
