@@ -29,6 +29,8 @@ class LiveAttendanceController extends BaseController
     {
         $data = QueryBuilder::for(LiveAttendance::tenanted())
             ->allowedFilters([
+                AllowedFilter::exact('id'),
+                AllowedFilter::exact('company_id'),
                 'name',
                 'is_flexible',
             ])
