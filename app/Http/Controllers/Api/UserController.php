@@ -27,6 +27,7 @@ use App\Http\Requests\Api\User\UpdatePasswordRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
+use App\Http\Resources\User\UserMeResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UsersImport;
 use App\Models\Branch;
@@ -42,7 +43,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -177,7 +177,7 @@ class UserController extends BaseController
             ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 
-        return new UserResource($user);
+        return new UserMeResource($user);
     }
 
     public function show(int $id)

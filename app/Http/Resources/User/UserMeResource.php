@@ -7,7 +7,7 @@ use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+class UserMeResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -20,6 +20,9 @@ class UserResource extends JsonResource
         $data['roles'] = RoleResource::collection($this->whenLoaded('roles'));
         $data['image'] = $this->image;
 
-        return $data;
+        return [
+            ...$data,
+            'permissions' => PermissionService::getMyPermissions(),
+        ];
     }
 }
