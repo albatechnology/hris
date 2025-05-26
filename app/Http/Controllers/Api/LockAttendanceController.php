@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\LockAttendance\SearchRequest;
 use App\Http\Requests\Api\LockAttendance\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Attendance;
@@ -59,7 +60,7 @@ class LockAttendanceController extends BaseController
         return new DefaultResource($lockAttendance);
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(StoreRequest $request, int $id)
     {
         $lockAttendance = LockAttendance::findTenanted($id);
         $lockAttendance->update($request->validated());
@@ -75,13 +76,16 @@ class LockAttendanceController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function details(int $id)
+    public function details(SearchRequest $request, int $id)
     {
         $lockAttendance = LockAttendance::findTenanted($id);
 
+        $search = $request->filter['search'] ?? null;
         $users = User::select('id', 'name', 'nik')
+            ->where('company_id', $lockAttendance->company_id)
+            ->when($search, fn($q) => $q->where(fn($q) => $q->whereLike('name', $search)->orWhereLike('nik', $search)))
             ->with('payrollInfo', fn($q) => $q->select('user_id', 'total_working_days'))
-            ->where('company_id', $lockAttendance->company_id)->paginate($this->per_page);
+            ->paginate($this->per_page);
 
         $dateRange = CarbonPeriod::create($lockAttendance->start_date, $lockAttendance->end_date);
         $companyHolidays = Event::selectMinimalist()->whereCompany($lockAttendance->company_id)->whereDateBetween($lockAttendance->start_date, $lockAttendance->end_date)->whereCompanyHoliday()->get();
