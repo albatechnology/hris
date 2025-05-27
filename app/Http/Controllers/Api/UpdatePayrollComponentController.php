@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\PayrollComponentCategory;
 use App\Http\Requests\Api\UpdatePayrollComponent\StoreRequest;
 use App\Http\Requests\Api\UpdatePayrollComponent\UpdateRequest;
 use App\Http\Resources\UpdatePayrollComponent\UpdatePayrollComponentResource;
-use App\Models\PayrollComponent;
 use App\Models\UpdatePayrollComponent;
-use App\Models\User;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UpdatePayrollComponentController extends BaseController
@@ -44,7 +43,14 @@ class UpdatePayrollComponentController extends BaseController
             AllowedFilter::exact('effective_date'),
             AllowedFilter::exact('end_date'),
         ])
-            ->allowedIncludes(['details.user', 'details.payrollComponent'])
+            ->allowedIncludes([
+                AllowedInclude::callback('details', function ($query) {
+                    return $query->with([
+                        'user' => fn($q) => $q->withTrashed(),
+                        'payrollComponent',
+                    ]);
+                }),
+            ])
             ->allowedSorts([
                 'company_id',
                 'client_id',
@@ -65,7 +71,10 @@ class UpdatePayrollComponentController extends BaseController
     public function show(int $id): UpdatePayrollComponentResource
     {
         $updatePayrollComponent = UpdatePayrollComponent::findTenanted($id);
-        return new UpdatePayrollComponentResource($updatePayrollComponent->load(['details.user', 'details.payrollComponent']));
+        return new UpdatePayrollComponentResource($updatePayrollComponent->load([
+            'details' => fn($q) => $q->with('user', fn($q) => $q->withTrashed()),
+            'details.payrollComponent'
+        ]));
     }
 
     public function store(StoreRequest $request): UpdatePayrollComponentResource|JsonResponse
@@ -85,7 +94,7 @@ class UpdatePayrollComponentController extends BaseController
             // }
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -114,7 +123,7 @@ class UpdatePayrollComponentController extends BaseController
             // }
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
@@ -132,7 +141,7 @@ class UpdatePayrollComponentController extends BaseController
             $updatePayrollComponent->delete();
 
             DB::commit();
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             DB::rollBack();
 
             return $this->errorResponse($th->getMessage());
