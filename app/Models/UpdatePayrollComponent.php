@@ -80,6 +80,11 @@ class UpdatePayrollComponent extends BaseModel
         }
 
         $q->where(fn($q2) => $q2->whereDate('end_date', '>=', $endDate)->orWhereNull('end_date'))
-            ->whereDate('effective_date', '<=', $startDate);
+            ->where(
+                fn($q2) => $q2->whereDate('effective_date', '<=', $startDate)
+                    ->orWhere(
+                        fn($q) => $q->where('effective_date', '>=', $startDate)->where('effective_date', '<=', $endDate)
+                    )
+            );
     }
 }

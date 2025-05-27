@@ -556,10 +556,13 @@ class RunPayrollService
 
                 break;
             case PayrollComponentPeriodType::ONE_TIME:
-                if ($runPayrollUser->user->oneTimePayrollComponents()->firstWhere('payroll_component_id', $payrollComponent->id)) {
+                if ($runPayrollUser->user->oneTimePayrollComponents()->where('payroll_component_id', $payrollComponent->id)->whereHas('runPayroll', fn($q) => $q->release())->exists()) {
                     $amount = 0;
                 } else {
-                    $runPayrollUser->user->oneTimePayrollComponents()->create(['payroll_component_id' => $payrollComponent->id]);
+                    $runPayrollUser->user->oneTimePayrollComponents()->create([
+                        'payroll_component_id' => $payrollComponent->id,
+                        'run_payroll_id' => $runPayrollUser->run_payroll_id,
+                    ]);
                     $amount = $amount;
                 }
 
