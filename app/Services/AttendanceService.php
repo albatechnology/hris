@@ -7,7 +7,6 @@ use App\Enums\EventType;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
-use App\Models\RunPayrollUser;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -167,14 +166,13 @@ class AttendanceService
         return $totalAttendance;
     }
 
-    public static function getTotalWorkingDays(User|int $user, $startDate, $endDate, bool $isFirsTimePayroll = false): int
+    public static function getTotalWorkingDays(User|int $user, $startDate, $endDate): int
     {
         if (!$user instanceof User) {
             $user = User::find($user, ['id', 'type', 'group_id']);
         }
 
-        // isFirsTimePayroll used in sunshine for new employee
-        if ($user->payrollInfo?->total_working_days > 0 && (config('app.name') == 'Sunshine' && !$isFirsTimePayroll)) {
+        if ($user->payrollInfo?->total_working_days > 0) {
             return $user->payrollInfo->total_working_days;
         }
 
@@ -189,23 +187,87 @@ class AttendanceService
         foreach ($dateRange as $date) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
 
-            if (!$schedule || !$schedule->shift || $schedule->shift->is_dayoff) {
+            if (!$schedule || !$schedule->shift) {
                 continue;
             }
 
-            if (!$schedule->shift->is_dayoff && !$schedule->is_overide_national_holiday && !$schedule->is_overide_company_holiday) {
-                $totalWorkingDays++;
+            $totalWorkingDays++;
+
+            if ($schedule->shift->is_dayoff) {
+                $totalWorkingDays--;
                 continue;
             };
 
-            if ($schedule->is_overide_national_holiday) {
+
+            if (!$schedule->is_overide_national_holiday) {
+                $date = $date->format('Y-m-d');
                 $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
                     return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
                 });
 
                 if ($nationalHoliday) {
-                    $totalWorkingDays++;
+                    $totalWorkingDays--;
                 }
+            }
+
+            // if (!$schedule->shift->is_dayoff && !$schedule->is_overide_national_holiday && !$schedule->is_overide_company_holiday) {
+            //     $totalWorkingDays++;
+            //     continue;
+            // };
+
+            // if ($schedule->is_overide_national_holiday) {
+            //     $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+            //         return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+            //     });
+
+            //     if ($nationalHoliday) {
+            //         $totalWorkingDays++;
+            //     }
+            // }
+        }
+
+        return $totalWorkingDays;
+    }
+
+    public static function getTotalWorkingDaysNewUser(User|int $user, $startDate, $endDate): int
+    {
+        if (!$user instanceof User) {
+            $user = User::find($user, ['id', 'type', 'group_id']);
+        }
+
+        $startDate = Carbon::createFromDate($startDate);
+        $endDate = Carbon::createFromDate($endDate);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+
+        $totalWorkingDays = 0;
+        foreach ($dateRange as $date) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+
+            if (!$schedule || !$schedule->shift) {
+                continue;
+            }
+
+            $totalWorkingDays++;
+
+            $date = $date->format('Y-m-d');
+            if (!$schedule->is_overide_national_holiday) {
+                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                });
+
+                if ($nationalHoliday) {
+                    continue;
+                }
+            }
+
+            if (
+                $schedule->shift->is_dayoff
+                && (!isset($schedule->shift->is_request_shift))
+            ) {
+                $totalWorkingDays--;
             }
         }
 

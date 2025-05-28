@@ -212,7 +212,6 @@ class RunPayrollService
         $cutOffEndDate = $runPayroll->cut_off_end_date;
         $startDate = $runPayroll->payroll_start_date;
         $endDate = $runPayroll->payroll_end_date;
-
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
         $company = $payrollSetting->company;
 
@@ -231,21 +230,19 @@ class RunPayrollService
             }
 
             $isFirstTimePayroll = self::isFirstTimePayroll($user);
-            if ($isFirstTimePayroll) {
-                $joinDate = Carbon::parse($user->join_date);
-                if ($joinDate->between($startDate, $endDate)) {
-                    $cutOffStartDate = $joinDate;
-                    $cutOffEndDate = $runPayroll->payment_schedule;
-                }
+            $joinDate = Carbon::parse($user->join_date);
+            if ($isFirstTimePayroll && $joinDate->between($startDate, $endDate)) {
+                $cutOffStartDate = $joinDate;
+                $cutOffEndDate = $endDate;
+                $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
+            } else {
+                $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
             }
-
-
 
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
             $userBasicSalary = $user->payrollInfo?->basic_salary;
 
-            $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate, $isFirstTimePayroll);
 
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
@@ -269,6 +266,10 @@ class RunPayrollService
 
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
 
+            if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+                $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
+            }
+
             if ($updatePayrollComponentDetail) {
                 $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -281,7 +282,7 @@ class RunPayrollService
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
             self::createComponent($runPayrollUser, $basicSalaryComponent, $amount);
-            // END
+            //
 
             /**
              * second, calculate payroll component where not default
@@ -320,7 +321,7 @@ class RunPayrollService
             /**
              * third, calculate alpa
              */
-            if ($user->payrollInfo?->is_ignore_alpa == false) {
+            if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate)) {
                 $alpaComponent = PayrollComponent::tenanted()
                     ->where('company_id', $runPayroll->company_id)
                     ->whenClient($runPayroll->client_id)

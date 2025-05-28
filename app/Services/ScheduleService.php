@@ -52,6 +52,9 @@ class ScheduleService
 
             $shift = Shift::withTrashed()->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id)->first();
 
+            // digunakan untuk by pass di AttendanceService::getTotalWorkingDays untuk new employee
+            $shift->is_request_shift = true;
+
             $schedule?->setRelation('shift', $shift);
 
             return $schedule;
@@ -59,14 +62,14 @@ class ScheduleService
 
         /** @var Schedule $schedule */
         // if ($scheduleType == ScheduleType::ATTENDANCE->value) {
-            $schedule = $user->schedules()
-                ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-                ->whereApproved()
-                ->where('type', $scheduleType)
-                ->whereDate('effective_date', '<=', $date)
-                ->withCount('shifts')
-                ->orderByDesc('schedules.effective_date')
-                ->orderByDesc('schedules.created_at')->first();
+        $schedule = $user->schedules()
+            ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+            ->whereApproved()
+            ->where('type', $scheduleType)
+            ->whereDate('effective_date', '<=', $date)
+            ->withCount('shifts')
+            ->orderByDesc('schedules.effective_date')
+            ->orderByDesc('schedules.created_at')->first();
         // } else {
         //     $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
         //         $q->whereApproved();
