@@ -165,21 +165,16 @@ class AttendanceService
             ->count();
 
         return $totalAttendance;
-
-        // if ($dailyAttendance == DailyAttendance::PRESENT) return $totalAttendance;
-
-        // $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
-
-        // return abs($totalAttendance - $totalWorkingDays);
     }
 
-    public static function getTotalWorkingDays(User|int $user, $startDate, $endDate): int
+    public static function getTotalWorkingDays(User|int $user, $startDate, $endDate, bool $isFirsTimePayroll = false): int
     {
         if (!$user instanceof User) {
             $user = User::find($user, ['id', 'type', 'group_id']);
         }
 
-        if ($user->payrollInfo?->total_working_days > 0) {
+        // isFirsTimePayroll used in sunshine for new employee
+        if ($user->payrollInfo?->total_working_days > 0 && (config('app.name') == 'Sunshine' && !$isFirsTimePayroll)) {
             return $user->payrollInfo->total_working_days;
         }
 
@@ -217,18 +212,6 @@ class AttendanceService
         return $totalWorkingDays;
     }
 
-    // public static function getTotalAlpa(User|int $user, $startDate, $endDate): int
-    // {
-    //     if (!$user instanceof User) {
-    //         $user = User::find($user, ['id', 'type', 'group_id']);
-    //     }
-
-    //     $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
-    //     $totalPresent = self::getTotalPresent($user, $startDate, $endDate);
-
-    //     return max($totalWorkingDays - $totalPresent, 0);
-    // }
-
     public static function getTotalAlpa(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
     {
         $userId = $user;
@@ -244,10 +227,8 @@ class AttendanceService
             $endDate = Carbon::parse($endDate)->startOfDay();
         }
 
-        $hasPayroll = RunPayrollUser::query()->where('user_id', $user->id)
-            ->whereHas('runPayroll', fn($q) => $q->release())
-            ->exists();
-        if ($hasPayroll) {
+        $isFirstTimePayroll = RunPayrollService::isFirstTimePayroll($user);
+        if (!$isFirstTimePayroll) {
             $joinDate = Carbon::parse($user->join_date);
             if ($joinDate->between($startDate, $endDate)) {
                 $startDate = $joinDate;

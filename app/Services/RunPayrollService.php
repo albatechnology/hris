@@ -33,7 +33,7 @@ class RunPayrollService
         $start = Carbon::parse($startDate . '-' . $period);
         $end = Carbon::parse($endDate . '-' . $period);
         if ($start->greaterThan($end)) {
-            $start->subMonth();
+            $start->subMonthNoOverflow();
         }
 
         $endBase = Carbon::parse("01-{$period}"); // ambil awal bulan
@@ -46,8 +46,8 @@ class RunPayrollService
         }
 
         if ($isSubMonth) {
-            $start->subMonth();
-            $end->subMonth();
+            $start->subMonthNoOverflow();
+            $end->subMonthNoOverflow();
 
             if ((int) $endDate > $daysInMonth) {
                 $end->endOfMonth();
@@ -210,7 +210,6 @@ class RunPayrollService
     {
         $cutOffStartDate = $runPayroll->cut_off_start_date;
         $cutOffEndDate = $runPayroll->cut_off_end_date;
-
         $startDate = $runPayroll->payroll_start_date;
         $endDate = $runPayroll->payroll_end_date;
 
@@ -221,7 +220,6 @@ class RunPayrollService
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
 
         $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $runPayroll->company_id)->whenClient($runPayroll->client_id)->pluck('id')->toArray();
-
         // calculate for each user
         foreach ($userIds as $userId) {
             /** @var \App\Models\User $user */
@@ -232,10 +230,23 @@ class RunPayrollService
                 if ($resignDate->lessThan($cutOffStartDate)) continue;
             }
 
+            $isFirstTimePayroll = self::isFirstTimePayroll($user);
+            if ($isFirstTimePayroll) {
+                $joinDate = Carbon::parse($user->join_date);
+                if ($joinDate->between($startDate, $endDate)) {
+                    $cutOffStartDate = $joinDate;
+                    $cutOffEndDate = $runPayroll->payment_schedule;
+                }
+            }
+
+
+
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
             $userBasicSalary = $user->payrollInfo?->basic_salary;
-            $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
+
+            $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate, $isFirstTimePayroll);
+
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
@@ -287,10 +298,8 @@ class RunPayrollService
                 } else {
                     $amount = $payrollComponent->amount;
                 }
-                // dump($amount);
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-                // dump($updatePayrollComponentDetail?->toArray());
                 if ($updatePayrollComponentDetail) {
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -299,7 +308,6 @@ class RunPayrollService
 
                     // calculate prorate
                     // $amount = self::prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
-                    // dump($amount);
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser);
                 } else {
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
@@ -915,5 +923,14 @@ class RunPayrollService
         }
 
         return $taxPercentage;
+    }
+
+    public static function isFirstTimePayroll(User|int $user): bool
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+        return RunPayrollUser::query()->where('user_id', $userId)
+            ->whereHas('runPayroll', fn($q) => $q->release())
+            ->limit(1)
+            ->doesntExist();
     }
 }
