@@ -349,9 +349,12 @@ class UserController extends BaseController
         if ($user->id == 1 || $user->id == auth('sanctum')->id()) {
             return response()->json(['message' => 'User can not be deleted!']);
         }
+
+        $time = time();
+
         $user->update([
-            'email' => 'deleted-' . $user->email,
-            'nik' => 'deleted-' . $user->nik,
+            'email' => sprintf('deleted-%d-%s', $time, $user->email),
+            'nik' => sprintf('deleted-%d-%s', $time, $user->nik),
             'fcm_token' => null,
         ]);
         $user->delete();
