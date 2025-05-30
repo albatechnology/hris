@@ -497,7 +497,7 @@ class AttendanceService
         }
 
         return LockAttendance::whereCompany($user->company_id)
-            ->scopeWhereDate($date)
+            ->whereDateIn($date)
             ->exists();
     }
 

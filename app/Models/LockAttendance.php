@@ -16,7 +16,7 @@ class LockAttendance extends BaseModel
         'end_date',
     ];
 
-    public function scopeWhereDate(Builder $query, string $date)
+    public function scopeWhereDateIn(Builder $query, string $date)
     {
         $query->whereDate('start_date', '<=', date('Y-m-d', strtotime($date)))->whereDate('end_date', '>=', date('Y-m-d', strtotime($date)));
     }
