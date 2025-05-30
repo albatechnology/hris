@@ -752,7 +752,7 @@ class AttendanceController extends BaseController
          */
         $user = User::find($request->user_id);
 
-        if (AttendanceService::inLockAttendance($request->time, $user)) {
+        if (AttendanceService::inLockAttendance($request->date, $user)) {
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
@@ -894,7 +894,7 @@ class AttendanceController extends BaseController
             $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
         }
 
-        if (AttendanceService::inLockAttendance($request->time, $user ?? null)) {
+        if (AttendanceService::inLockAttendance($request->date, $user ?? null)) {
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 

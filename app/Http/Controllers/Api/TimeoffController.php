@@ -84,7 +84,8 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        if (AttendanceService::inLockAttendance($request->time, User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail())) {
+        $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
+        if (AttendanceService::inLockAttendance($request->start_at, $user) || AttendanceService::inLockAttendance($request->end_at, $user)) {
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 

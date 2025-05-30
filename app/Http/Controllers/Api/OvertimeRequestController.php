@@ -65,7 +65,7 @@ class OvertimeRequestController extends BaseController
     {
         $user = User::findOrFail($request->user_id);
 
-        if (AttendanceService::inLockAttendance($request->time, $user)) {
+        if (AttendanceService::inLockAttendance($request->date, $user)) {
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
