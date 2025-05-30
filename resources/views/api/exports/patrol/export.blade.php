@@ -78,7 +78,7 @@
                             <td></td>
                             <td></td>
                             <td style="height: 100px">{{ $userPatrolTask->description }}</td>
-                            <td>{{ $userPatrolTask->created_at }}</td>
+                            <td>{{ $userPatrolTask->datetime }}</td>
                             <td><a
                                     href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat
                                     Lokasi</a>
