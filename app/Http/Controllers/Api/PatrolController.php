@@ -360,27 +360,56 @@ class PatrolController extends BaseController
     public function export(Request $request, int $id)
     {
         $date = $request->filter['date'] ?? date('Y-m-d');
-        $patrol = Patrol::findTenanted($id);
+        $patrol = Patrol::selectMinimalist(['created_at'])->findTenanted($id);
         $patrol->load([
-            'patrolLocations' => function ($q) use ($date) {
+            'patrolLocations' => function ($q) {
                 $q
                     ->select('id', 'patrol_id', 'client_location_id', 'description')
-                    ->with('clientLocation', fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'))
-                    ->with('tasks', function ($q) use ($date) {
-                        $q
-                            ->select('id', 'patrol_location_id', 'name', 'description')
-                            ->with('userPatrolTasks', function ($q) use ($date) {
-                                $q->whereDate('created_at', $date)
-                                    ->with('user', fn($q) => $q->select('id', 'name'))
-                                    ->with('schedule', fn($q) => $q->select('id', 'name'))
-                                    ->with('shift', fn($q) => $q->select('id', 'name'));
-                            });
-                    });
-            }
+                    ->with([
+                        'clientLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
+                    ]);
+            },
+            'users' => fn($q) => $q->with(
+                'user',
+                fn($q) => $q->select('id', 'name', 'nik')
+                    ->with('patrolBatches', function ($q) use ($id, $date) {
+                        $q->where('patrol_id', $id)
+                            ->whereDate('datetime', $date)
+                            ->with('userPatrolTasks.media');
+                    })
+            ),
         ]);
 
-        return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
+        return (new PatrolTaskExport($patrol, $date))->download('report-patroli.xlsx');
 
         return $patrol;
     }
+
+    // public function export(Request $request, int $id)
+    // {
+    //     $date = $request->filter['date'] ?? date('Y-m-d');
+    //     $patrol = Patrol::findTenanted($id);
+    //     $patrol->load([
+    //         'patrolLocations' => function ($q) use ($date) {
+    //             $q
+    //                 ->select('id', 'patrol_id', 'client_location_id', 'description')
+    //                 ->with('clientLocation', fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'))
+    //                 ->with('tasks', function ($q) use ($date) {
+    //                     $q
+    //                         ->select('id', 'patrol_location_id', 'name', 'description')
+    //                         ->with('userPatrolTasks', function ($q) use ($date) {
+    //                             $q->whereDate('created_at', $date)
+    //                                 // ->with('user', fn($q) => $q->select('id', 'name'))
+    //                                 ->with('schedule', fn($q) => $q->select('id', 'name'))
+    //                                 ->with('shift', fn($q) => $q->select('id', 'name'));
+    //                         });
+    //                 });
+    //         }
+    //     ]);
+
+    //     return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
+
+    //     return $patrol;
+    // }
 }

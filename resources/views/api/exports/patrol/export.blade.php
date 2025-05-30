@@ -1,68 +1,127 @@
 <div>
     <table>
         <tr>
-            <th>Nama Patroli</th>
-            <th>{{ $patrol->name }}</th>
+            <th style="font-weight: bold; background: #b4c7dc;">Nama Patroli</th>
+            <th style="background: #b4c7dc;">{{ $patrol->name }}</th>
+        </tr>
+        <tr>
+            <th style="font-weight: bold; background: #b4c7dc;">Map Lokasi</th>
+            <th style="background: #b4c7dc;"><a
+                    href="https://www.google.com/maps/search/{{ $patrol->lat . ',' . $patrol->lng }}">Lihat Lokasi</a>
+            </th>
+        </tr>
+        <tr>
+            <th style="font-weight: bold; background: #b4c7dc;">Tanggal</th>
+            <th style="background: #b4c7dc;">{{ $date }}</th>
         </tr>
     </table>
+    <table>
+        <thead>
+            <tr>
+                <th style="font-weight: bold; background: #b4c7dc;">Lokasi Patroli</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Map Lokasi</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Alamat</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Task</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($patrol->patrolLocations as $patrolLocation)
+                <tr>
+                    <td style="background: #b4c7dc;">{{ $patrolLocation->clientLocation->name }}</td>
+                    <td style="background: #b4c7dc;"><a
+                            href="https://www.google.com/maps/search/{{ $patrolLocation->clientLocation->lat . ',' . $patrolLocation->clientLocation->lng }}">Lihat
+                            Lokasi</a>
+                    </td>
+                    <td style="background: #b4c7dc; height: 100px;">{{ $patrolLocation->clientLocation->address }}</td>
+                    <td style="background: #b4c7dc; height: {{ max($patrolLocation->tasks->count() * 23, 100) }}px;">
+                        <ol>
+                            @foreach ($patrolLocation->tasks as $task)
+                                <li>{{ $task->name }}</li>
+                            @endforeach
+                        </ol>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 
-    @foreach ($patrol->patrolLocations as $patrolLocation)
-        <table>
+    <table>
+        <thead>
             <tr>
-                <th>Nama Lokasi</th>
-                <th>{{ $patrolLocation->clientLocation->name }}</th>
+                <th style="font-weight: bold; background: #b4c7dc;">User</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Patroli Batch</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Task</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Waktu Pengerjaan</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Map Lokasi</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Bukti Foto</th>
             </tr>
-            <tr>
-                <th>Latitude</th>
-                <th>{{ $patrolLocation->clientLocation->lat }}</th>
-            </tr>
-            <tr>
-                <th>Longitude</th>
-                <th>{{ $patrolLocation->clientLocation->lng }}</th>
-            </tr>
-            <tr>
-                <th>Alamat</th>
-                <th>{{ $patrolLocation->clientLocation->address }}</th>
-            </tr>
-        </table>
-        @foreach ($patrolLocation->tasks as $task)
-            <table>
+        </thead>
+        <tbody>
+            @foreach ($patrol->users as $userPatrol)
                 <tr>
-                    <th>Nama Task</th>
-                    <th>{{ $task->name }}</th>
+                    <td style="font-weight: bold; background: #ffdbb6;">{{ $userPatrol->user->name }}</td>
+                    <td style="background: #ffdbb6;"></td>
+                    <td style="background: #ffdbb6;"></td>
+                    <td style="background: #ffdbb6;"></td>
+                    <td style="background: #ffdbb6;"></td>
                 </tr>
-                <tr>
-                    <th>Deskripsi</th>
-                    <th>{{ $task->description }}</th>
-                </tr>
-            </table>
-            <table>
-                <thead>
+                @foreach ($userPatrol->user->patrolBatches as $patrolBatch)
                     <tr>
-                        <th>Nama User</th>
-                        <th>Schedule</th>
-                        <th>Shift</th>
-                        <th>Jam</th>
-                        <th>Deskripsi</th>
+                        <td></td>
+                        <td style="font-weight: bold; background: #ffb66c;">{{ $patrolBatch->datetime }}</td>
+                        <td style="background: #ffb66c;"></td>
+                        <td style="background: #ffb66c;"></td>
+                        <td style="background: #ffb66c;"></td>
                     </tr>
-                </thead>
-                @foreach ($task->userPatrolTasks as $userPatrolTask)
-                    <tbody>
+                    @foreach ($patrolBatch->userPatrolTasks as $userPatrolTask)
                         <tr>
-                            <th>{{ $userPatrolTask->user->name }}</th>
-                            <th>{{ $userPatrolTask->schedule->name }}</th>
-                            <th>{{ $userPatrolTask->shift->name }}</th>
-                            <th>{{ date('d-M-Y H:i', strtotime($userPatrolTask->created_at)) }}</th>
-                            <th>{{ $task->description }}</th>
+                            <td></td>
+                            <td></td>
+                            <td style="height: 100px">{{ $userPatrolTask->description }}</td>
+                            <td>{{ $userPatrolTask->created_at }}</td>
+                            <td><a
+                                    href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat
+                                    Lokasi</a>
+                            </td>
+                            @foreach ($userPatrolTask->media as $media)
+                                <td>
+                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
+                                </td>
+                            @endforeach
                         </tr>
-                    </tbody>
+                    @endforeach
+                    <tr>
+                        <td></td>
+                    </tr>
                 @endforeach
+                <tr>
+                    <td></td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+    {{-- @foreach ($patrol->users as $userPatrol)
+        <table>
+            <tbody>
+                <tr>
+                    <td>{{ $userPatrol->user->name }}</td>
+                </tr>
+            </tbody>
+        </table>
+        @foreach ($userPatrol->user->patrolBatches as $patrolBatch)
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>{{ $patrolBatch->datetime }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         @endforeach
-        <table>
-            <tr>
-                <td></td>
-            </tr>
-        </table>
-    @endforeach
+    @endforeach --}}
 </div>
