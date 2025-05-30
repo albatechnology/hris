@@ -489,6 +489,8 @@ class AttendanceService
 
     public static function inLockAttendance(string $date, ?User $user = null): bool
     {
+        if (config('app.name') != 'SUNSHINE') return false;
+
         if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
