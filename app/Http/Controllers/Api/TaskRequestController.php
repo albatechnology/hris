@@ -9,6 +9,8 @@ use App\Http\Requests\Api\TaskRequest\StoreRequest;
 use App\Http\Requests\Api\TaskRequest\ApproveRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\TaskRequest;
+use App\Models\User;
+use App\Services\AttendanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class TaskRequestController extends BaseController
 {
@@ -57,6 +60,10 @@ class TaskRequestController extends BaseController
 
     public function store(StoreRequest $request): DefaultResource|JsonResponse
     {
+        if (AttendanceService::inLockAttendance($request->time, User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail())) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         DB::beginTransaction();
         try {
             $taskRequest = TaskRequest::create($request->validated());

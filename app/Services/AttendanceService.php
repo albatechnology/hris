@@ -7,6 +7,7 @@ use App\Enums\EventType;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
+use App\Models\LockAttendance;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -484,6 +485,18 @@ class AttendanceService
             $diffInTime,
             $remainingTime,
         ];
+    }
+
+    public static function inLockAttendance(string $date, ?User $user = null): bool
+    {
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
+
+        return LockAttendance::whereCompany($user->company_id)
+            ->scopeWhereDate($date)
+            ->exists();
     }
 
     // public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, bool $isFormatTime = true, ?int $remainingTime = null): array

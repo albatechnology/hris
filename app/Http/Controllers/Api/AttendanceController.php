@@ -676,6 +676,10 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         if ($request->is_offline_mode) {
             $attendance = AttendanceService::getTodayAttendance(date: $request->time, user: $user, isCheckByDetails: false);
             if ($attendance) {
@@ -748,6 +752,10 @@ class AttendanceController extends BaseController
          */
         $user = User::find($request->user_id);
 
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         $schedule = ScheduleService::getTodaySchedule($user, $request->date);
 
         if (!$schedule) {
@@ -816,6 +824,11 @@ class AttendanceController extends BaseController
     public function update(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
+
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user);
 
         if (config('app.enable_face_rekognition') === true) {
@@ -876,6 +889,10 @@ class AttendanceController extends BaseController
          * masalah nya ada disitu. kalo schedule_id atau shift_id nya beda, maka akan membuat attendance baru.
          *
          */
+
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
 
         // pemeriksaan kehadiran hri ini
         $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('sanctum')->user(), false);

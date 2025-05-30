@@ -10,6 +10,8 @@ use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
 use App\Models\Timeoff;
 use App\Models\TimeoffQuota;
+use App\Models\User;
+use App\Services\AttendanceService;
 use App\Services\ScheduleService;
 use App\Services\TimeoffService;
 use Exception;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class TimeoffController extends BaseController
 {
@@ -81,6 +84,10 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
+        if (AttendanceService::inLockAttendance($request->time, User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail())) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         $request = TimeoffService::requestTimeoffValidation($request);
 
         DB::beginTransaction();

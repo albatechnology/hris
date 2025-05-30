@@ -16,6 +16,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class OvertimeRequestController extends BaseController
 {
@@ -63,6 +64,10 @@ class OvertimeRequestController extends BaseController
     public function store(StoreRequest $request): OvertimeRequestResource|JsonResponse
     {
         $user = User::findOrFail($request->user_id);
+
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
 
         if (config('app.name') != 'LUMORA') {
             $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
