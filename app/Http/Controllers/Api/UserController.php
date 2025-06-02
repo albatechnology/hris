@@ -616,11 +616,8 @@ class UserController extends BaseController
         $user->update([
             'fcm_token' => $request->fcm_token,
         ]);
-        // $user = QueryBuilder::for(User::where('id', $user->id))
-        //     ->allowedIncludes($this->getAllowedIncludes())
-        //     ->firstOrFail();
 
-        return new UserResource($user);
+        return $this->updatedResponse();
     }
 
     public function verifyPassword(Request $request)
