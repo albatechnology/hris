@@ -24,10 +24,10 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->integer('umk')->default(0);
 
-            $table->string('phone', 20)->nullable();
-            $table->string('pic_name')->nullable();
-            $table->string('pic_email')->nullable();
-            $table->string('pic_phone')->nullable();
+            // $table->string('phone', 20)->nullable();
+            // $table->string('pic_name')->nullable();
+            // $table->string('pic_email')->nullable();
+            // $table->string('pic_phone')->nullable();
 
             $table->timestamps();
 
