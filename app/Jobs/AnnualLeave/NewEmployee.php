@@ -33,8 +33,34 @@ class NewEmployee implements ShouldQueue
             return;
         }
 
-        if (config('app.name') != 'SUNSHINE') return;
+        if (config('app.name') != 'SUNSHINE') {
+            $this->sunshineTimeoff();
+            return;
+        }
+    }
 
+    private function getQuotas(Carbon $joinDate)
+    {
+        if ($joinDate->format('d') > 15) {
+            $joinDate = $joinDate->copy()->addMonth();
+        }
+
+        return collect(CarbonPeriod::create($joinDate, '1 month', date('Y-12-31')))
+            ->filter(function ($joinDate) {
+                return $joinDate->format('Y') === date('Y');
+            })
+            ->map(function ($joinDate) {
+                return [
+                    'quota' => 1,
+                    'effective_start_date' => $joinDate->format('Y-m-01'),
+                    'effective_end_date' => $joinDate->format('Y') . '-12-31',
+                    'description' => sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $joinDate->format('Y-m-01'))
+                ];
+            })->values();
+    }
+
+    private function sunshineTimeoff()
+    {
         /**
          * 1. get users yang masa kerjanya < 1 tahun
          * 2. where belum dapet jatah cuti di tahun ini
@@ -90,27 +116,6 @@ class NewEmployee implements ShouldQueue
             }
         }
     }
-
-    private function getQuotas(Carbon $joinDate)
-    {
-        if ($joinDate->format('d') > 15) {
-            $joinDate = $joinDate->copy()->addMonth();
-        }
-
-        return collect(CarbonPeriod::create($joinDate, '1 month', date('Y-12-31')))
-            ->filter(function ($joinDate) {
-                return $joinDate->format('Y') === date('Y');
-            })
-            ->map(function ($joinDate) {
-                return [
-                    'quota' => 1,
-                    'effective_start_date' => $joinDate->format('Y-m-01'),
-                    'effective_end_date' => $joinDate->format('Y') . '-12-31',
-                    'description' => sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $joinDate->format('Y-m-01'))
-                ];
-            })->values();
-    }
-
     private function lumoraTimeoff()
     {
         $today = date('Y-m-d');
