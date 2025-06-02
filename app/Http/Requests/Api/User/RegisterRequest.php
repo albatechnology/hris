@@ -59,6 +59,7 @@ class RegisterRequest extends FormRequest
 
         $data = [
             'email' => $email,
+            'bank_id' => $this->bank_id ?? Bank::where('company_id', $this->company_id)->first(['id'])?->id,
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
             'email_verified_at' => $emailVerifiedAt,
