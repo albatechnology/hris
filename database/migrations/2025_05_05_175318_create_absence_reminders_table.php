@@ -25,26 +25,26 @@ return new class extends Migration
             $table->unsignedInteger('updated_by')->nullable();
         });
 
-        Client::get()->each(function ($client) {
-            if (AbsenceReminder::where('client_id', $client->id)->doesntExist()) {
-                AbsenceReminder::create([
-                    'company_id' => $client->company_id,
-                    'client_id' => $client->id,
-                    'minutes_before' => 60,
-                    'minutes_repeat' => 60,
-                ]);
-            }
-        });
+        // Client::get()->each(function ($client) {
+        //     if (AbsenceReminder::where('client_id', $client->id)->doesntExist()) {
+        //         AbsenceReminder::create([
+        //             'company_id' => $client->company_id,
+        //             'client_id' => $client->id,
+        //             'minutes_before' => 60,
+        //             'minutes_repeat' => 60,
+        //         ]);
+        //     }
+        // });
 
-        Company::get()->each(function ($company) {
-            if (AbsenceReminder::where('company_id', $company->id)->doesntExist()) {
-                AbsenceReminder::create([
-                    'company_id' => $company->id,
-                    'minutes_before' => 60,
-                    'minutes_repeat' => 60,
-                ]);
-            }
-        });
+        // Company::get()->each(function ($company) {
+        //     if (AbsenceReminder::where('company_id', $company->id)->doesntExist()) {
+        //         AbsenceReminder::create([
+        //             'company_id' => $company->id,
+        //             'minutes_before' => 60,
+        //             'minutes_repeat' => 60,
+        //         ]);
+        //     }
+        // });
     }
 
     /**

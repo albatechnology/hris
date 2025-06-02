@@ -27,12 +27,12 @@
         <tbody>
             @foreach ($patrol->patrolLocations as $patrolLocation)
                 <tr>
-                    <td style="background: #b4c7dc;">{{ $patrolLocation->clientLocation->name }}</td>
+                    <td style="background: #b4c7dc;">{{ $patrolLocation->branchLocation->name }}</td>
                     <td style="background: #b4c7dc;"><a
-                            href="https://www.google.com/maps/search/{{ $patrolLocation->clientLocation->lat . ',' . $patrolLocation->clientLocation->lng }}">Lihat
+                            href="https://www.google.com/maps/search/{{ $patrolLocation->branchLocation->lat . ',' . $patrolLocation->branchLocation->lng }}">Lihat
                             Lokasi</a>
                     </td>
-                    <td style="background: #b4c7dc; height: 100px;">{{ $patrolLocation->clientLocation->address }}</td>
+                    <td style="background: #b4c7dc; height: 100px;">{{ $patrolLocation->branchLocation->address }}</td>
                     <td style="background: #b4c7dc; height: {{ max($patrolLocation->tasks->count() * 23, 100) }}px;">
                         <ol>
                             @foreach ($patrolLocation->tasks as $task)

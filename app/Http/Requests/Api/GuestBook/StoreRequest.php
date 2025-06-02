@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\GuestBook;
 
-use App\Models\Client;
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +24,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            // 'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
             // 'is_check_out' => 'nullable|boolean',
             'name' => 'required|string|min:2|max:100',
             'address' => 'required|string|min:2|max:200',

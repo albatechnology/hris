@@ -3,16 +3,18 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AbsenceReminder extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted;
+    use CompanyTenanted, BelongsToBranch;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        'branch_id',
+        // 'client_id',
         'is_active',
         'minutes_before',
         'minutes_repeat',
@@ -39,8 +41,8 @@ class AbsenceReminder extends BaseModel implements TenantedInterface
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
-    }
+    // public function client(): BelongsTo
+    // {
+    //     return $this->belongsTo(Client::class);
+    // }
 }

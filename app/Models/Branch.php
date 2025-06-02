@@ -22,12 +22,26 @@ class Branch extends BaseModel implements TenantedInterface
         'lat',
         'lng',
         'address',
-        'bank_name',
-        'bank_account_no',
-        'bank_account_holder',
-        'bank_code',
-        'bank_branch',
+        'umk',
+
+        'pic_name',
+        'pic_email',
+        'pic_phone',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $model) {
+            if (AbsenceReminder::where('branch_id', $model->id)->doesntExist()) {
+                AbsenceReminder::create([
+                    'company_id' => $model->company_id,
+                    'branch_id' => $model->id,
+                    'minutes_before' => 60,
+                    'minutes_repeat' => 60,
+                ]);
+            }
+        });
+    }
 
     public function scopeTenanted(Builder $query): Builder
     {
@@ -68,5 +82,21 @@ class Branch extends BaseModel implements TenantedInterface
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
+    {
+        $query->select([
+            'branches.id',
+            'branches.company_id',
+            'branches.name',
+            'branches.phone',
+            'branches.address',
+            'branches.pic_name',
+            'branches.pic_email',
+            'branches.pic_phone',
+            'branches.created_at',
+            ...$additionalColumns
+        ]);
     }
 }

@@ -29,7 +29,10 @@ class GuestBookController extends BaseController
     {
         $data = QueryBuilder::for(GuestBook::tenanted())
             ->allowedIncludes([
-                AllowedInclude::callback('client', function ($query) {
+                // AllowedInclude::callback('client', function ($query) {
+                //     $query->select('id', 'name');
+                // }),
+                AllowedInclude::callback('branch', function ($query) {
                     $query->select('id', 'name');
                 }),
                 AllowedInclude::callback('user', function ($query) {
@@ -41,7 +44,8 @@ class GuestBookController extends BaseController
             ])
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('branch_id'),
+                // AllowedFilter::exact('client_id'),
                 AllowedFilter::scope('created_at_start', 'createdAtStart'),
                 AllowedFilter::scope('created_at_end', 'createdAtEnd'),
                 'is_check_out',
@@ -55,7 +59,8 @@ class GuestBookController extends BaseController
             ->allowedSorts([
                 'id',
                 'user_id',
-                'client_id',
+                'branch_id',
+                // 'client_id',
                 'is_check_out',
                 'name',
                 'address',
@@ -75,7 +80,8 @@ class GuestBookController extends BaseController
         $guestBook = GuestBook::findTenanted($id);
 
         return new DefaultResource($guestBook->load([
-            'client' => fn($q) => $q->select('id', 'name'),
+            // 'client' => fn($q) => $q->select('id', 'name'),
+            'branch' => fn($q) => $q->select('id', 'name'),
             'user' => fn($q) => $q->select('id', 'name'),
             'checkOutBy' => fn($q) => $q->select('id', 'name'),
         ]));

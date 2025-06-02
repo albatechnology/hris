@@ -1,0 +1,20 @@
+AbsenceReminder
+Event
+GuestBook
+Incident
+Overtime
+Panic
+patrol
+PayrollComponent
+PayrollSetting
+RunPayroll
+Shift
+UpdatePayrollComponent
+User
+Calender
+
+
+create BranchLocation
+
+
+branch & branchLocation controller cek request nya

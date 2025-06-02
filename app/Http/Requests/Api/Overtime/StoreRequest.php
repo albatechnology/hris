@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Overtime;
 
 use App\Enums\FormulaComponentEnum;
 use App\Enums\RateType;
-use App\Models\Client;
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -44,7 +44,8 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            // 'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'name' => 'required|string',
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',

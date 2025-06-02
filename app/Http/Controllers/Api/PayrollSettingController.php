@@ -23,7 +23,8 @@ class PayrollSettingController extends BaseController
         // client_id is for Syntegra
         $payrollSetting = PayrollSetting::tenanted()
             ->where('company_id', $request->filter['company_id'])
-            ->when($request->filter['client_id'] ?? null, fn($q) => $q->where('client_id', $request->filter['client_id']))
+            ->when($request->filter['branch_id'] ?? null, fn($q) => $q->where('branch_id', $request->filter['branch_id']))
+            // ->when($request->filter['client_id'] ?? null, fn($q) => $q->where('client_id', $request->filter['client_id']))
             ->firstOrFail();
 
         return new DefaultResource($payrollSetting);
@@ -34,7 +35,8 @@ class PayrollSettingController extends BaseController
         // client_id is for Syntegra
         $payrollSetting = PayrollSetting::tenanted()
             ->where('company_id', $request->company_id)
-            ->when($request->client_id, fn($q) => $q->where('client_id', $request->client_id))
+            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
+            // ->when($request->client_id, fn($q) => $q->where('client_id', $request->client_id))
             ->firstOrFail();
 
         $payrollSetting->update($request->validated());

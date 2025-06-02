@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Models\Branch;
-use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -43,7 +42,7 @@ class ExportReportRequest extends FormRequest
         return [
             'filter' => 'required|array',
             'filter.company_id' => ['nullable', new CompanyTenantedRule()],
-            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            // 'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',

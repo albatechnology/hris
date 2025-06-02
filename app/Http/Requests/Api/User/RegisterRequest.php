@@ -21,7 +21,6 @@ use App\Enums\TaxSalary;
 use App\Enums\UserType;
 use App\Models\Bank;
 use App\Models\Branch;
-use App\Models\Client;
 use App\Models\Overtime;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -82,7 +81,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'group_id' => 'nullable|exists:groups,id',
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            // 'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'overtime_id' => ['nullable', new CompanyTenantedRule(Overtime::class, 'Overtime data not found')],

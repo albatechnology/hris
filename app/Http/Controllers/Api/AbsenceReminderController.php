@@ -23,14 +23,20 @@ class AbsenceReminderController extends BaseController
         $data = QueryBuilder::for(AbsenceReminder::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('branch_id'),
+                // AllowedFilter::exact('client_id'),
                 'is_active'
             ])
-            ->allowedIncludes(['company', 'client'])
+            ->allowedIncludes([
+                'company',
+                'branch'
+                // 'client'
+            ])
             ->allowedSorts([
                 'id',
                 'company_id',
-                'client_id',
+                'branch_id',
+                // 'client_id',
                 'is_active',
                 'created_at',
             ])
@@ -44,7 +50,8 @@ class AbsenceReminderController extends BaseController
         $absenceReminder = AbsenceReminder::findTenanted($id);
         return new DefaultResource($absenceReminder->loadMissing([
             'company',
-            'client',
+            'branch',
+            // 'client',
         ]));
     }
 

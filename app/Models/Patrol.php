@@ -4,17 +4,18 @@ namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
 use App\Services\ScheduleService;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Patrol extends BaseModel implements TenantedInterface
 {
-    use CustomSoftDeletes;
+    use CustomSoftDeletes, BelongsToBranch;
 
     protected $fillable = [
-        'client_id',
+        // 'client_id',
+        'branch_id',
         'name',
         'start_date',
         'end_date',
@@ -99,16 +100,16 @@ class Patrol extends BaseModel implements TenantedInterface
         // }
 
         // if ($user->is_administrator) {
-        //     return $query->whereHas('client', fn($q) => $q->whereHas('company', fn($q) => $q->where('group_id', $user->group_id)));
+        //     return $query->whereHas('branch', fn($q) => $q->whereHas('company', fn($q) => $q->where('group_id', $user->group_id)));
         // }
 
         // if ($user->is_admin) {
         //     $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-        //     return $query->whereHas('client', fn($q) => $q->whereIn('company_id', $companyIds));
+        //     return $query->whereHas('branch', fn($q) => $q->whereIn('company_id', $companyIds));
         // }
 
         if (!$user->is_user) {
-            return $query->whereHas('client', fn($q) => $q->tenanted());
+            return $query->whereHas('branch', fn($q) => $q->tenanted());
         }
         // return $query;
         // $schedule = ScheduleService::getTodaySchedule(user: $user, scheduleType: ScheduleType::PATROL->value);
@@ -152,12 +153,7 @@ class Patrol extends BaseModel implements TenantedInterface
 
     public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        $query->select(['patrols.id', 'patrols.client_id', 'patrols.name', 'patrols.start_date', 'patrols.end_date', 'patrols.lat', 'patrols.lng', 'patrols.description', ...$additionalColumns]);
-    }
-
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
+        $query->select(['patrols.id', 'patrols.branch_id', 'patrols.name', 'patrols.start_date', 'patrols.end_date', 'patrols.lat', 'patrols.lng', 'patrols.description', ...$additionalColumns]);
     }
 
     public function tasks()

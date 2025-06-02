@@ -23,11 +23,15 @@ class UserPatrolController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(
-            UserPatrol::with('user.detail', 'patrol.client')->whereHas('patrol', function ($q) {
+            UserPatrol::with([
+                'user.detail',
+                'patrol.branch'
+                // 'patrol.client'
+            ])->whereHas('patrol', function ($q) {
                 $q->whereDate('patrols.start_date', '<=', now());
                 $q->whereDate('patrols.end_date', '>=', now());
-
-                $q->whereHas('client', fn($q2) => $q2->tenanted());
+                $q->whereHas('branch', fn($q2) => $q2->tenanted());
+                // $q->whereHas('client', fn($q2) => $q2->tenanted());
                 // $q->whereDoesntHave('tasks', function($q2){
                 //   $q2->where('status', PatrolTaskStatus::PENDING);
                 // });
@@ -41,9 +45,12 @@ class UserPatrolController extends BaseController
                     $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
                 });
             }),
-            AllowedFilter::callback('client_id', function ($query, $value) {
-                $query->whereHas('patrol', fn($q) => $q->where('client_id', $value));
+            AllowedFilter::callback('branch_id', function ($query, $value) {
+                $query->whereHas('patrol', fn($q) => $q->where('branch_id', $value));
             }),
+            // AllowedFilter::callback('client_id', function ($query, $value) {
+            //     $query->whereHas('patrol', fn($q) => $q->where('client_id', $value));
+            // }),
         ])->allowedSorts([
             'id',
             'patrol_id',

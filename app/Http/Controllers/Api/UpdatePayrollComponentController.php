@@ -37,7 +37,8 @@ class UpdatePayrollComponentController extends BaseController
             }
         ]))->allowedFilters([
             AllowedFilter::exact('company_id'),
-            AllowedFilter::exact('client_id'),
+            AllowedFilter::exact('branch_id'),
+            // AllowedFilter::exact('client_id'),
             AllowedFilter::exact('transaction_id'),
             AllowedFilter::exact('description'),
             AllowedFilter::exact('effective_date'),
@@ -53,7 +54,8 @@ class UpdatePayrollComponentController extends BaseController
             ])
             ->allowedSorts([
                 'company_id',
-                'client_id',
+                'branch_id',
+                // 'client_id',
                 'transaction_id',
                 'type',
                 'description',

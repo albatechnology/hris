@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\Panic;
 
-use App\Models\Client;
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +24,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'client_id' => $this->client_id ?? auth('sanctum')->user()->client_id
+            'branch_id' => $this->branch_id ?? auth('sanctum')->user()->branch_id
         ]);
     }
 
@@ -36,7 +36,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            // 'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
         ];

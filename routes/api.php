@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankController;
 use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\BranchLocationController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ClientLocationController;
 use App\Http\Controllers\Api\CompanyController;
@@ -157,7 +158,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('companies', CompanyController::class)->except('destroy');
 
+    Route::get('branches/summaries', [BranchController::class, 'summary']);
     Route::apiResource('branches', BranchController::class);
+    Route::get('branch-locations/generate-qr-code', [BranchLocationController::class, 'generateQrCode']);
+    Route::apiResource('branch-locations', BranchLocationController::class);
+
     Route::apiResource('positions', PositionController::class);
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('departments', DepartmentController::class);
