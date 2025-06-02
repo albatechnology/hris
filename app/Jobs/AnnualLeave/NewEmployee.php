@@ -28,7 +28,12 @@ class NewEmployee implements ShouldQueue
      */
     public function handle(): void
     {
-        if(config('app.name') != 'SUNSHINE') return;
+        if (config('app.name') == 'LUMORA') {
+            $this->lumoraTimeoff();
+            return;
+        }
+
+        if (config('app.name') != 'SUNSHINE') return;
 
         /**
          * 1. get users yang masa kerjanya < 1 tahun
@@ -60,9 +65,7 @@ class NewEmployee implements ShouldQueue
                             'timeoffQuotaHistories',
                             fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinDate->format('Y'))
                         )
-                )
-                ->orderBy('join_date')
-                ->get(['id', 'join_date', 'name']);
+                )->get(['id']);
             // dd($users->select('id', 'name', 'join_date')->toArray());
 
             foreach ($users as $user) {
@@ -106,5 +109,51 @@ class NewEmployee implements ShouldQueue
                     'description' => sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $joinDate->format('Y-m-01'))
                 ];
             })->values();
+    }
+
+    private function lumoraTimeoff()
+    {
+        $today = date('Y-m-d');
+        $todayNextYear = date('Y-m-d', strtotime('+1 year'));
+        $year = date('Y');
+
+        $companies = Company::select('id')->get();
+        foreach ($companies as $company) {
+            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])?->id;
+
+            if (!$timeoffPolicyId) continue;
+
+            $users = User::where('company_id', $company->id)
+                ->whereDate('join_date', $today)->whereYear('join_date', '<', $year)
+                ->whereDoesntHave(
+                    'timeoffQuotas',
+                    fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
+                        ->whereHas(
+                            'timeoffQuotaHistories',
+                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $year)
+                        )
+                )
+                ->orderBy('join_date')
+                ->get(['id', 'join_date', 'name']);
+
+            foreach ($users as $user) {
+                DB::transaction(function () use ($user, $timeoffPolicyId, $today, $todayNextYear) {
+                    $timeoffQuota = $user->timeoffQuotas()->create([
+                        'timeoff_policy_id' => $timeoffPolicyId,
+                        'effective_start_date' => $today,
+                        'effective_end_date' => $todayNextYear,
+                        'quota' => 12,
+                    ]);
+
+                    $timeoffQuota->timeoffQuotaHistories()->create([
+                        'user_id' => $timeoffQuota->user_id,
+                        'is_increment' => true,
+                        'is_automatic' => true,
+                        'new_balance' => $timeoffQuota->quota,
+                        'description' => "AUTOMATICALLY GENERATED FROM THE SYSTEM AT " . $today,
+                    ]);
+                });
+            }
+        }
     }
 }
