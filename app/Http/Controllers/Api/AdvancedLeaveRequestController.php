@@ -9,7 +9,6 @@ use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Resources\AdvancedLeaveRequest\AdvancedLeaveRequestResource;
 use App\Models\AdvancedLeaveRequest;
 use App\Models\User;
-use App\Models\UserTimeoffHistory;
 use App\Services\AdvancedLeaveRequestService;
 use App\Services\AttendanceService;
 use Exception;
@@ -96,14 +95,14 @@ class AdvancedLeaveRequestController extends BaseController
             $advancedLeaveRequest->update($request->validated());
             if ($advancedLeaveRequest->approval_status->is(ApprovalStatus::APPROVED)) {
                 AdvancedLeaveRequestService::updateMonths($advancedLeaveRequest);
-                UserTimeoffHistory::create([
-                    'is_for_total_timeoff' => true,
-                    'user_id' => $advancedLeaveRequest->user->id,
-                    'is_increment' => true,
-                    'value' => $advancedLeaveRequest->amount,
-                    'properties' => ['user' => $advancedLeaveRequest->user],
-                    'description' => UserTimeoffHistory::DESCRIPTION['ADVANCED_LEAVE'],
-                ]);
+                // UserTimeoffHistory::create([
+                //     'is_for_total_timeoff' => true,
+                //     'user_id' => $advancedLeaveRequest->user->id,
+                //     'is_increment' => true,
+                //     'value' => $advancedLeaveRequest->amount,
+                //     'properties' => ['user' => $advancedLeaveRequest->user],
+                //     'description' => UserTimeoffHistory::DESCRIPTION['ADVANCED_LEAVE'],
+                // ]);
             }
 
             $notificationType = NotificationType::ADVANCED_LEAVE_APPROVED;

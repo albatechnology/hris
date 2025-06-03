@@ -60,7 +60,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'end_contract_date',
         'resign_date',
         'rehire_date',
-        'total_timeoff',
         'total_remaining_timeoff',
     ];
 
@@ -441,11 +440,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function timeoffQuotas(): HasMany
     {
         return $this->hasMany(TimeoffQuota::class);
-    }
-
-    public function timeoffHistories(): HasMany
-    {
-        return $this->hasMany(UserTimeoffHistory::class);
     }
 
     public function requestSchedules(): HasMany

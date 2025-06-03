@@ -251,24 +251,6 @@ class TimeoffController extends BaseController
             }
         }
 
-        // if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
-        //     // untuk history timeoff
-        //     $value = 0.5;
-        //     if ($timeoff->request_type->is(TimeoffRequestType::FULL_DAY)) {
-        //         $startDate = new \DateTime($timeoff->start_at);
-        //         $endDate = new \DateTime($timeoff->end_at);
-        //         if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')) {
-        //             $value = 1;
-        //         } else {
-        //             $interval = $startDate->diff($endDate);
-        //             $value = $interval->days;
-        //         }
-        //     }
-
-        //     if ($value > $timeoff->user->total_timeoff) {
-        //         return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        //     }
-        // }
         DB::beginTransaction();
         try {
             $requestApproval->update($request->validated());
