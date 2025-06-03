@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Bank\StoreRequest;
 use App\Http\Requests\Api\Bank\UpdateRequest;
 use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\BankServiceInterface;
 use App\Models\Bank;
-use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class BankController extends BaseController
 {
-    public function __construct()
+    public function __construct(protected BankServiceInterface $service)
     {
         parent::__construct();
         $this->middleware('permission:bank_access', ['only' => ['restore']]);
@@ -50,46 +50,44 @@ class BankController extends BaseController
 
     public function show(int $id)
     {
-        $bank = Bank::findTenanted($id);
+        $bank = $this->service->findById($id);
         return new DefaultResource($bank);
     }
 
     public function store(StoreRequest $request)
     {
-        $bank = Bank::create($request->validated());
+        $bank = $this->service->create($request->validated());
 
         return new DefaultResource($bank);
     }
 
     public function update(int $id, UpdateRequest $request)
     {
-        $bank = Bank::findTenanted($id);
-        $bank->update($request->validated());
+        $this->service->findById($id);
+        $this->service->update($id, $request->validated());
 
-        return (new DefaultResource($bank))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $bank = Bank::findTenanted($id);
-        $bank->delete();
+        $this->service->findById($id);
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $bank = Bank::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $bank->forceDelete();
+        $this->service->forceDelete($id);
 
         return $this->deletedResponse();
     }
 
     public function restore(int $id)
     {
-        $bank = Bank::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $bank->restore();
+        $this->service->restore($id);
 
-        return new DefaultResource($bank);
+        return $this->okResponse();
     }
 }

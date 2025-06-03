@@ -370,6 +370,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('settings', SettingController::class);
     Route::apiResource('banks', BankController::class);
+    Route::group(['prefix' => 'banks/{bank}'], function () {
+        Route::put('restore', [BankController::class, 'restore']);
+        Route::delete('force-delete', [BankController::class, 'forceDelete']);
+    });
 
     Route::get('extra-offs/users', [ExtraOffController::class, 'users']);
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
