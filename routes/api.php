@@ -339,12 +339,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 
     Route::apiResource('incident-types', IncidentTypeController::class);
+
+    Route::get('incidents/export', [IncidentController::class, 'export']);
     Route::apiResource('incidents', IncidentController::class);
 
     Route::get('clients/summaries', [ClientController::class, 'summary']);
     Route::apiResource('clients', ClientController::class);
     Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
     Route::apiResource('client-locations', ClientLocationController::class);
+
+    Route::get('guest-books/export', [GuestBookController::class, 'export']);
     Route::apiResource('guest-books', GuestBookController::class);
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);

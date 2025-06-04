@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Enums\MediaCollection;
 use App\Http\Requests\Api\BranchLocation\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\Branch;
 use App\Models\BranchLocation;
 use Exception;
 use Illuminate\Http\Request;

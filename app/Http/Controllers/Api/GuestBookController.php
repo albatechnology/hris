@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\MediaCollection;
 use App\Http\Requests\Api\GuestBook\StoreRequest;
 use App\Http\Requests\Api\GuestBook\UpdateRequest;
+use App\Http\Requests\Api\GuestBook\ExportRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\GuestBook;
 use Exception;
@@ -144,6 +145,11 @@ class GuestBookController extends BaseController
         $guestBook->delete();
 
         return $this->deletedResponse();
+    }
+
+    public function export(ExportRequest $request)
+    {
+        return (new \App\Exports\GuestBook\ExportGuestBook($request))->download('guest-books.xlsx');
     }
 
     // public function forceDelete(int $id)

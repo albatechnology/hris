@@ -45,6 +45,11 @@ return new class extends Migration
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
 
+        Schema::table('incidents', function (Blueprint $table) {
+            // $table->dropColumn('client_id');
+            $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
+        });
+
         Schema::table('overtimes', function (Blueprint $table) {
             // $table->dropColumn('client_id');
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
@@ -100,6 +105,12 @@ return new class extends Migration
         });
 
         Schema::table('guest_books', function (Blueprint $table) {
+            $table->dropColumn([
+                'branch_id',
+            ]);
+        });
+
+        Schema::table('incidents', function (Blueprint $table) {
             $table->dropColumn([
                 'branch_id',
             ]);

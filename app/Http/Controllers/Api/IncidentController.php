@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Enums\MediaCollection;
+use App\Http\Requests\Api\Incident\ExportRequest;
 
 class IncidentController extends BaseController
 {
@@ -141,5 +142,10 @@ class IncidentController extends BaseController
         }
 
         return new DefaultResource($incident);
+    }
+
+    public function export(ExportRequest $request)
+    {
+        return (new \App\Exports\Incident\ExportIncident($request))->download('incidents.xlsx');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class GuestBook extends BaseModel implements HasMedia, TenantedInterface
 {
-    use BelongsToUser, InteractsWithMedia, BelongsToBranch;
+    use BelongsToUser, InteractsWithMedia, BelongsToBranch, CustomSoftDeletes;
 
     protected $fillable = [
         'user_id',
