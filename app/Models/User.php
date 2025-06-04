@@ -168,7 +168,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
         })->whereHas('patrols.branch', function ($q) use ($branchId) {
             $q->tenanted();
-            $q->where('branchs.id', $branchId);
+            $q->where('branches.id', $branchId);
         });
     }
 
