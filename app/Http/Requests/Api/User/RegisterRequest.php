@@ -54,8 +54,8 @@ class RegisterRequest extends FormRequest
         }
 
         $emailVerifiedAt = null;
-        if ($this->password) $emailVerifiedAt = now();
-        if ($this->email_verified_at) $emailVerifiedAt = Carbon::parse($this->email_verified_at);
+        if ($this->password) $emailVerifiedAt = date('Y-m-d H:i:s');
+        if ($this->email_verified_at) $emailVerifiedAt = date('Y-m-d H:i:s', strtotime($this->email_verified_at));
 
         $data = [
             'email' => $email,
