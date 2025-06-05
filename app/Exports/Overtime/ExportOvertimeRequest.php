@@ -84,7 +84,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         $overtimeRequests = OvertimeRequest::whereDateBetween($this->startDate, $this->endDate)
             ->approved()
             ->whereHas('user', fn($q) => $q->whereIn('company_id', $this->companies->pluck('id')))
-            ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
+            ->when($userIds, fn($q) => $q->whereIn('user_id', explode(',', $userIds)))
             ->when($branchId, fn($q) => $q->whereHas('user', fn($q) => $q->where('branch_id', $branchId)))
             ->when($clientId, fn($q) => $q->whereHas('user', fn($q) => $q->where('client_id', $clientId)))
             ->with(
