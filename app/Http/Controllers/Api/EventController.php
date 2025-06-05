@@ -109,6 +109,7 @@ class EventController extends BaseController
 
         $events = Event::tenanted()
             ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             // ->orWhere(fn($q) => $q->whereNationalHoliday())
             // ->when(
             //     $fullDate,
