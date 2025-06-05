@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\EventType;
 use App\Interfaces\TenantedInterface;
+use App\Services\EventService;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,6 +41,20 @@ class Branch extends BaseModel implements TenantedInterface
                     'minutes_before' => 60,
                     'minutes_repeat' => 60,
                 ]);
+            }
+
+            $syntegra = config('app.name') == 'Syntegra';
+            if ($syntegra) {
+                $dates = EventService::getCalendarDate();
+
+                collect($dates)->each(function ($date) use ($model) {
+                    $date['company_id'] = $model->company_id;
+                    $date['branch_id'] = $model->id;
+                    $date['start_at'] = $date['date'];
+                    $date['type'] = EventType::NATIONAL_HOLIDAY->value;
+                    unset($date['date']);
+                    Event::create($date);
+                });
             }
         });
     }

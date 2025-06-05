@@ -48,7 +48,7 @@ return new class extends Migration
         });
 
         Schema::table('events', function (Blueprint $table) {
-            $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
+            $table->foreignIdFor(Branch::class)->after('company_id')->nullable()->constrained()->cascadeOnDelete();
         });
 
         Schema::table('guest_books', function (Blueprint $table) {
