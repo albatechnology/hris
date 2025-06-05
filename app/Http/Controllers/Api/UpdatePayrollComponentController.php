@@ -52,6 +52,7 @@ class UpdatePayrollComponentController extends BaseController
                 }),
             ])
             ->allowedSorts([
+                'id',
                 'company_id',
                 'client_id',
                 'transaction_id',
