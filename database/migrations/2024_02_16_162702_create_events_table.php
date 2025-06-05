@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('events', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained();
-            $table->foreignId('client_id')->nullable(); // fix
+            // $table->foreignId('client_id')->nullable(); // fix
             $table->string('type');
             $table->string('name');
             $table->datetime('start_at');

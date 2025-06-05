@@ -4,6 +4,7 @@ use App\Models\Branch;
 use App\Models\BranchLocation;
 use App\Models\PatrolLocation;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -15,12 +16,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('patrols', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            try {
+                $table->dropForeign(['client_id']);
+            } catch (QueryException $e) {
+                // Foreign key nggak ada, skip
+            }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->default(1)->constrained()->cascadeOnDelete();
         });
 
         Schema::table('patrol_locations', function (Blueprint $table) {
-            // $table->dropColumn('client_location_id');
+            $table->dropForeign(['client_location_id']);
+            $table->integer('client_location_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(BranchLocation::class)->after('patrol_id')->default(1)->constrained();
         });
 
@@ -31,52 +38,90 @@ return new class extends Migration
         });
 
         Schema::table('absence_reminders', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            try {
+                $table->dropForeign(['client_id']);
+            } catch (QueryException $e) {
+                // Foreign key nggak ada, skip
+            }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('company_id')->nullable()->constrained();
         });
 
         Schema::table('events', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
         Schema::table('guest_books', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            try {
+                $table->dropForeign(['client_id']);
+            } catch (QueryException $e) {
+                // Foreign key nggak ada, skip
+            }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
 
         Schema::table('incidents', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
 
         Schema::table('overtimes', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            // try {
+            //     $table->dropForeign(['client_id']);
+            // } catch (QueryException $e) {
+            //     // Foreign key nggak ada, skip
+            // }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
         Schema::table('panics', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            try {
+                $table->dropForeign(['client_id']);
+            } catch (QueryException $e) {
+                // Foreign key nggak ada, skip
+            }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('id')->unsigned()->nullable();
         });
 
         Schema::table('payroll_components', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            // try {
+            //     $table->dropForeign(['client_id']);
+            // } catch (QueryException $e) {
+            //     // Foreign key nggak ada, skip
+            // }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
         Schema::table('payroll_settings', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            // try {
+            //     $table->dropForeign(['client_id']);
+            // } catch (QueryException $e) {
+            //     // Foreign key nggak ada, skip
+            // }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
         Schema::table('run_payrolls', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            // try {
+            //     $table->dropForeign(['client_id']);
+            // } catch (QueryException $e) {
+            //     // Foreign key nggak ada, skip
+            // }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
         Schema::table('update_payroll_components', function (Blueprint $table) {
-            // $table->dropColumn('client_id');
+            // try {
+            //     $table->dropForeign(['client_id']);
+            // } catch (QueryException $e) {
+            //     // Foreign key nggak ada, skip
+            // }
+            $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 

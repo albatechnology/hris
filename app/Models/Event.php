@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EventType;
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -12,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model implements TenantedInterface
 {
-    use CompanyTenanted;
+    use CompanyTenanted, BelongsToBranch;
 
     protected $fillable = [
         'company_id',
+        'branch_id',
         'type',
         'name',
         'start_at',
@@ -59,6 +61,10 @@ class Event extends Model implements TenantedInterface
         }
 
         // return $query->whereIn('company_id', $user->companies()->get(['company_id'])?->pluck('company_id'));
+        if (config('app.name' == 'Syntegra')) {
+            return $query->where('branch_id', $user->branch_id);
+        }
+
         return $query->where('company_id', $user->company_id);
     }
 

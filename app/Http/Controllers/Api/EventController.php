@@ -29,11 +29,14 @@ class EventController extends BaseController
         $event = QueryBuilder::for(Event::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('branch_id'),
                 AllowedFilter::scope('where_year_month', 'whereYearMonth')
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['company', 'branch'])
             ->allowedSorts([
                 'id',
+                'company_id',
+                'branch_id',
                 'name',
                 'type',
                 'start_at',
