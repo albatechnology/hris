@@ -23,11 +23,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('patrols', function (Blueprint $table) {
-            // try {
-            //     $table->dropForeign(['client_id']);
-            // } catch (QueryException $e) {
-            //     // Foreign key nggak ada, skip
-            // }
+            if (Schema::hasColumn('patrols', 'client_id')) {
+                $table->dropForeign(['client_id']);
+            }
+
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->default(1)->constrained()->cascadeOnDelete();
         });
@@ -45,11 +44,10 @@ return new class extends Migration
         });
 
         Schema::table('absence_reminders', function (Blueprint $table) {
-            // try {
-            //     $table->dropForeign(['client_id']);
-            // } catch (QueryException $e) {
-            //     // Foreign key nggak ada, skip
-            // }
+            if (Schema::hasColumn('patrols', 'client_id')) {
+                $table->dropForeign(['client_id']);
+            }
+
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('company_id')->nullable()->constrained();
         });
@@ -59,11 +57,10 @@ return new class extends Migration
         });
 
         Schema::table('guest_books', function (Blueprint $table) {
-            // try {
-            //     $table->dropForeign(['client_id']);
-            // } catch (QueryException $e) {
-            //     // Foreign key nggak ada, skip
-            // }
+            if (Schema::hasColumn('patrols', 'client_id')) {
+                $table->dropForeign(['client_id']);
+            }
+
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
@@ -83,11 +80,10 @@ return new class extends Migration
         });
 
         Schema::table('panics', function (Blueprint $table) {
-            // try {
-            //     $table->dropForeign(['client_id']);
-            // } catch (QueryException $e) {
-            //     // Foreign key nggak ada, skip
-            // }
+            if (Schema::hasColumn('patrols', 'client_id')) {
+                $table->dropForeign(['client_id']);
+            }
+
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('id')->unsigned()->nullable();
         });
