@@ -39,6 +39,7 @@ class IncidentController extends BaseController
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('incident_type_id'),
                 AllowedFilter::callback('branch_id', function ($query, $value) {
@@ -51,6 +52,7 @@ class IncidentController extends BaseController
             ->allowedSorts([
                 'id',
                 'company_id',
+                'branch_id',
                 'user_id',
                 'incident_type_id',
                 'created_at',
@@ -70,11 +72,7 @@ class IncidentController extends BaseController
     public function store(StoreRequest $request)
     {
         try {
-            $incident = auth('sanctum')->user()->incidents()->create([
-                'company_id' => $request->company_id,
-                'incident_type_id' => $request->incident_type_id,
-                'description' => $request->description,
-            ]);
+            $incident = auth('sanctum')->user()->incidents()->create($request->validated());
 
             if ($request->hasFile('file')) {
                 foreach ($request->file('file') as $file) {
@@ -94,11 +92,7 @@ class IncidentController extends BaseController
     {
         $incident = Incident::findTenanted($id);
         try {
-            $incident->update([
-                'company_id' => $request->company_id,
-                'incident_type_id' => $request->incident_type_id,
-                'description' => $request->description,
-            ]);
+            $incident->update($request->validated());
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
