@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -22,11 +23,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('patrols', function (Blueprint $table) {
-            if (Schema::hasColumn('patrols', 'client_id')) {
-                $table->dropForeign(['client_id']);
-            }
+        $foreignKeyExists = DB::select("
+            SELECT CONSTRAINT_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE TABLE_NAME = 'patrols'
+              AND COLUMN_NAME = 'client_id'
+              AND CONSTRAINT_NAME = 'patrols_client_id_foreign'
+              AND CONSTRAINT_SCHEMA = DATABASE()
+        ");
 
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE patrols DROP FOREIGN KEY patrols_client_id_foreign');
+        }
+
+        Schema::table('patrols', function (Blueprint $table) {
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->default(1)->constrained()->cascadeOnDelete();
         });
@@ -43,11 +54,21 @@ return new class extends Migration
             ]);
         });
 
-        Schema::table('absence_reminders', function (Blueprint $table) {
-            if (Schema::hasColumn('absence_reminders', 'client_id')) {
-                $table->dropForeign(['client_id']);
-            }
 
+        $foreignKeyExists = DB::select("
+            SELECT CONSTRAINT_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE TABLE_NAME = 'absence_reminders'
+              AND COLUMN_NAME = 'client_id'
+              AND CONSTRAINT_NAME = 'absence_reminders_client_id_foreign'
+              AND CONSTRAINT_SCHEMA = DATABASE()
+        ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE absence_reminders DROP FOREIGN KEY absence_reminders_client_id_foreign');
+        }
+        Schema::table('absence_reminders', function (Blueprint $table) {
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('company_id')->nullable()->constrained();
         });
@@ -56,11 +77,20 @@ return new class extends Migration
             $table->foreignIdFor(Branch::class)->after('company_id')->nullable()->constrained()->cascadeOnDelete();
         });
 
-        Schema::table('guest_books', function (Blueprint $table) {
-            if (Schema::hasColumn('guest_books', 'client_id')) {
-                $table->dropForeign(['client_id']);
-            }
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'guest_books'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'guest_books_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
 
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE guest_books DROP FOREIGN KEY guest_books_client_id_foreign');
+        }
+        Schema::table('guest_books', function (Blueprint $table) {
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
@@ -69,6 +99,19 @@ return new class extends Migration
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
 
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'overtimes'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'overtimes_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE overtimes DROP FOREIGN KEY overtimes_client_id_foreign');
+        }
         Schema::table('overtimes', function (Blueprint $table) {
             // try {
             //     $table->dropForeign(['client_id']);
@@ -79,15 +122,38 @@ return new class extends Migration
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
-        Schema::table('panics', function (Blueprint $table) {
-            if (Schema::hasColumn('panics', 'client_id')) {
-                $table->dropForeign(['client_id']);
-            }
 
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'panics'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'panics_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE panics DROP FOREIGN KEY panics_client_id_foreign');
+        }
+        Schema::table('panics', function (Blueprint $table) {
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('id')->unsigned()->nullable();
         });
 
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'payroll_components'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'payroll_components_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE payroll_components DROP FOREIGN KEY payroll_components_client_id_foreign');
+        }
         Schema::table('payroll_components', function (Blueprint $table) {
             // try {
             //     $table->dropForeign(['client_id']);
@@ -98,6 +164,20 @@ return new class extends Migration
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
+
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'payroll_settings'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'payroll_settings_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE payroll_settings DROP FOREIGN KEY payroll_settings_client_id_foreign');
+        }
         Schema::table('payroll_settings', function (Blueprint $table) {
             // try {
             //     $table->dropForeign(['client_id']);
@@ -108,6 +188,20 @@ return new class extends Migration
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
+
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'run_payrolls'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'run_payrolls_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE run_payrolls DROP FOREIGN KEY run_payrolls_client_id_foreign');
+        }
         Schema::table('run_payrolls', function (Blueprint $table) {
             // try {
             //     $table->dropForeign(['client_id']);
@@ -118,6 +212,19 @@ return new class extends Migration
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'update_payroll_components'
+          AND COLUMN_NAME = 'client_id'
+          AND CONSTRAINT_NAME = 'update_payroll_components_client_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE update_payroll_components DROP FOREIGN KEY update_payroll_components_client_id_foreign');
+        }
         Schema::table('update_payroll_components', function (Blueprint $table) {
             // try {
             //     $table->dropForeign(['client_id']);
