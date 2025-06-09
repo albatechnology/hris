@@ -181,6 +181,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'D' => NumberFormat::FORMAT_GENERAL,
             'K' => NumberFormat::FORMAT_GENERAL,
             'O' => NumberFormat::FORMAT_GENERAL,
+            'S' => NumberFormat::FORMAT_GENERAL,
             'T' => NumberFormat::FORMAT_GENERAL,
             'U' => NumberFormat::FORMAT_GENERAL,
             'X' => NumberFormat::FORMAT_GENERAL,
