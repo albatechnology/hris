@@ -7,7 +7,7 @@ use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Services\UserService;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use Carbon\Carbon;
@@ -28,7 +28,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
 {
-    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToClient;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToBranch;
 
     /**
      * The attributes that are mass assignable.
@@ -39,7 +39,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'group_id',
         'company_id',
         'branch_id',
-        'client_id',
+        // 'client_id',
+        'branch_id',
         'live_attendance_id',
         'overtime_id',
         // 'approval_id',
@@ -142,7 +143,21 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query->first();
     }
 
-    public function scopeActivePatrolClientId(Builder $query, int $clientId)
+    // public function scopeActivePatrolClientId(Builder $query, int $clientId)
+    // {
+    //     $query->whereHas('schedules', function ($q) {
+    //         $q->where('schedules.type', ScheduleType::PATROL);
+    //         $q->whereDate('schedules.effective_date', '<=', now());
+    //         $q->orderBy('schedules.effective_date', 'desc');
+    //     })->whereHas('detail', function ($q) {
+    //         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
+    //     })->whereHas('patrols.client', function ($q) use ($clientId) {
+    //         $q->tenanted();
+    //         $q->where('clients.id', $clientId);
+    //     });
+    // }
+
+    public function scopeActivePatrolBranchId(Builder $query, int $branchId)
     {
         $query->whereHas('schedules', function ($q) {
             $q->where('schedules.type', ScheduleType::PATROL);
@@ -150,9 +165,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             $q->orderBy('schedules.effective_date', 'desc');
         })->whereHas('detail', function ($q) {
             $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
-        })->whereHas('patrols.client', function ($q) use ($clientId) {
+        })->whereHas('patrols.branch', function ($q) use ($branchId) {
             $q->tenanted();
-            $q->where('clients.id', $clientId);
+            $q->where('branches.id', $branchId);
         });
     }
 
@@ -194,7 +209,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        $query->select(['id', 'group_id', 'company_id', 'branch_id', 'client_id', 'name', 'email', 'type', 'nik', ...$additionalColumns]);
+        $query->select(['id', 'group_id', 'company_id', 'branch_id', 'name', 'email', 'type', 'nik', ...$additionalColumns]);
     }
 
     protected function serializeDate(\DateTimeInterface $date): string

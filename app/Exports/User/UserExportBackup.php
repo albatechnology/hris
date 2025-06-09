@@ -40,7 +40,7 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
             'Supervisor NIK 3',
             'Supervisor NIK 4',
             'Role ID',
-            'Client ID',
+            // 'Client ID',
             'Branch ID',
             'Department ID',
             'Position ID',
@@ -113,7 +113,7 @@ class UserExportBackup implements FromQuery, WithHeadings, WithMapping, WithColu
         return [
             ...$supervisorsNik,
             $user->roles[0]?->id ?? null,
-            $user->client_id,
+            // $user->client_id,
             $user->branch_id,
             $user->positions[0]?->department_id ?? null,
             $user->positions[0]?->position_id ?? null,

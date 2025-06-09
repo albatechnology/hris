@@ -33,7 +33,8 @@ class PayrollComponentController extends BaseController
         $data = QueryBuilder::for(PayrollComponent::tenanted()->where('is_hidden', false))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('branch_id'),
+                // AllowedFilter::exact('client_id'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::scope('has_formulas'),
             ])
@@ -41,7 +42,8 @@ class PayrollComponentController extends BaseController
             ->allowedSorts([
                 'id',
                 'company_id',
-                'client_id',
+                'branch_id',
+                // 'client_id',
                 'name',
                 'type',
                 'amount',

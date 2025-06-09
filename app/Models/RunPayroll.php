@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RunPayrollStatus;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunPayroll extends BaseModel
 {
-    use BelongsToUser, CompanyTenanted, BelongsToClient;
+    use BelongsToUser, CompanyTenanted, BelongsToBranch;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        // 'client_id',
+        'branch_id',
         'user_id',
         'code',
         'period',

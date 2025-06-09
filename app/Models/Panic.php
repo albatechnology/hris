@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Enums\PanicStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
-use App\Traits\Models\TenantedThroughClient;
+use App\Traits\Models\TenantedThroughBranch;
 
 class Panic extends BaseModel implements TenantedInterface
 {
-    use TenantedThroughClient, BelongsToUser;
+    use TenantedThroughBranch, BelongsToUser;
 
     protected $fillable = [
-        'client_id',
+        // 'client_id',
+        'branch_id',
         'user_id',
         'lat',
         'lng',
@@ -36,7 +37,7 @@ class Panic extends BaseModel implements TenantedInterface
         $hasPermission = $user->roles->contains(fn($role) => $role->hasPermissionTo('allow_get_emergency_notification'));
 
         return $query->whereHas(
-            'client',
+            'branch',
             fn($q) => $q->tenanted()
         )->when(
             !$user->is_admin && !$hasPermission,

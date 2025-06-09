@@ -6,7 +6,6 @@ use App\Enums\RateType;
 use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 use App\Models\Company;
 use App\Models\Event;
-use App\Models\NationalHoliday;
 use App\Models\Overtime;
 use App\Models\OvertimeRequest;
 use App\Services\OvertimeService;
@@ -64,29 +63,15 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
     public function collection()
     {
         $branchId = $this->request->filter['branch_id'] ?? null;
-        $clientId = $this->request->filter['client_id'] ?? null;
+        // $clientId = $this->request->filter['client_id'] ?? null;
         $userIds = $this->request->filter['user_ids'] ?? null;
 
-        // $users = User::tenanted()
-        //     ->select('id', 'nik', 'name', 'branch_id', 'company_id', 'client_id')
-        //     ->when($companyId, fn($q) => $q->where('company_id', $companyId))
-        //     ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-        //     ->when($clientId, fn($q) => $q->where('client_id', $clientId))
-        //     ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
-        //     ->with([
-        //         'company' => fn($q) => $q->select('id', 'name'),
-        //         'branch' => fn($q) => $q->select('id', 'name'),
-        //         'detail' => fn($q) => $q->select('user_id', 'employment_status'),
-        //         'overtimeRequests' => fn($q) => $q
-        //             ->whereDateBetween($this->request->filter['start_date'], $this->request->filter['end_date'])
-        //             ->approved()
-        //     ])->get();
         $overtimeRequests = OvertimeRequest::whereDateBetween($this->startDate, $this->endDate)
             ->approved()
             ->whereHas('user', fn($q) => $q->whereIn('company_id', $this->companies->pluck('id')))
             ->when($userIds, fn($q) => $q->whereIn('user_id', explode(',', $userIds)))
             ->when($branchId, fn($q) => $q->whereHas('user', fn($q) => $q->where('branch_id', $branchId)))
-            ->when($clientId, fn($q) => $q->whereHas('user', fn($q) => $q->where('client_id', $clientId)))
+            // ->when($clientId, fn($q) => $q->whereHas('user', fn($q) => $q->where('client_id', $clientId)))
             ->with(
                 'user',
                 fn($q) => $q->select('id', 'nik', 'name', 'branch_id', 'company_id')

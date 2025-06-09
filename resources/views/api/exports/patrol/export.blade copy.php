@@ -10,19 +10,19 @@
         <table>
             <tr>
                 <th>Nama Lokasi</th>
-                <th>{{ $patrolLocation->clientLocation->name }}</th>
+                <th>{{ $patrolLocation->branchLocation->name }}</th>
             </tr>
             <tr>
                 <th>Latitude</th>
-                <th>{{ $patrolLocation->clientLocation->lat }}</th>
+                <th>{{ $patrolLocation->branchLocation->lat }}</th>
             </tr>
             <tr>
                 <th>Longitude</th>
-                <th>{{ $patrolLocation->clientLocation->lng }}</th>
+                <th>{{ $patrolLocation->branchLocation->lng }}</th>
             </tr>
             <tr>
                 <th>Alamat</th>
-                <th>{{ $patrolLocation->clientLocation->address }}</th>
+                <th>{{ $patrolLocation->branchLocation->address }}</th>
             </tr>
         </table>
         @foreach ($patrolLocation->tasks as $task)

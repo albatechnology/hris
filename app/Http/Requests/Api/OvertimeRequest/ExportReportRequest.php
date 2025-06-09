@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\OvertimeRequest;
 
 use App\Models\Branch;
-use App\Models\Client;
 use App\Models\Company;
 use App\Rules\CompanyTenantedRule;
 use Closure;
@@ -55,7 +54,6 @@ class ExportReportRequest extends FormRequest
                     });
                 },
             ],
-            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',

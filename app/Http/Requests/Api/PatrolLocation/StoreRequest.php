@@ -22,7 +22,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_location_id' => 'required|exists:clients,id',
+            'branch_location_id' => 'required|exists:branch_locations,id',
+            // 'client_location_id' => 'required|exists:clients,id',
             'description' => 'nullable',
         ];
     }

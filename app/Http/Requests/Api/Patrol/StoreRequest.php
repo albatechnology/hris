@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Api\Patrol;
 
-use App\Models\Client;
-use App\Models\ClientLocation;
+use App\Models\Branch;
+use App\Models\BranchLocation;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -38,7 +38,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            // 'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
             'name' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
@@ -59,7 +60,8 @@ class StoreRequest extends FormRequest
 
             'locations' => 'required|array',
             'locations.*.id' => ['nullable', 'exists:patrol_locations,id'],
-            'locations.*.client_location_id' => ['required', new CompanyTenantedRule(ClientLocation::class, 'Location not found')],
+            'locations.*.branch_location_id' => ['required', new CompanyTenantedRule(BranchLocation::class, 'Location not found')],
+            // 'locations.*.client_location_id' => ['required', new CompanyTenantedRule(ClientLocation::class, 'Location not found')],
             // 'locations.*.client_location_id' => 'required|exists:client_locations,id',
             'locations.*.tasks' => 'required|array',
             'locations.*.tasks.*.id' => ['nullable', 'exists:patrol_tasks,id'],

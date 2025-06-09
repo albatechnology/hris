@@ -7,17 +7,18 @@ use App\Enums\JhtCost;
 use App\Enums\ProrateSetting;
 use App\Enums\TaxSalary;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollSetting extends Model implements TenantedInterface
 {
-    use CompanyTenanted, BelongsToClient;
+    use CompanyTenanted, BelongsToBranch;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        // 'client_id',
+        'branch_id',
         'cut_off_attendance_start_date',
         'cut_off_attendance_end_date',
         'payroll_start_date',

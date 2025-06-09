@@ -14,7 +14,6 @@ use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
 use App\Enums\UserType;
 use App\Models\Branch;
-use App\Models\Client;
 use App\Models\Department;
 use App\Models\LiveAttendance;
 use App\Models\Position;
@@ -69,7 +68,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            // 'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'name' => 'required|min:2|max:100',
             'last_name' => 'nullable|max:100',
@@ -202,7 +201,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'group_id' => $this->user->group_id,
                 'company_id' => $branch->company_id,
                 'branch_id' => $branch->id,
-                'client_id' => $row['client_id'] ?? null,
+                // 'client_id' => $row['client_id'] ?? null,
                 'live_attendance_id' => $row['live_attendance_id'],
                 // 'overtime_id',
                 'name' => $name,

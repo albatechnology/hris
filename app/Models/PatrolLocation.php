@@ -9,7 +9,8 @@ class PatrolLocation extends BaseModel
 {
     protected $fillable = [
         'patrol_id',
-        'client_location_id',
+        // 'client_location_id',
+        'branch_location_id',
         'description',
     ];
 
@@ -86,9 +87,9 @@ class PatrolLocation extends BaseModel
         return $this->belongsTo(Patrol::class);
     }
 
-    public function clientLocation(): BelongsTo
+    public function branchLocation(): BelongsTo
     {
-        return $this->belongsTo(ClientLocation::class);
+        return $this->belongsTo(BranchLocation::class);
     }
 
     public function tasks(): HasMany

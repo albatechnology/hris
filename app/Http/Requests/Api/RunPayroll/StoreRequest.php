@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\RunPayroll;
 
-use App\Models\Client;
+use App\Models\Branch;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
@@ -25,14 +25,15 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         // client_id is for Syntegra
-        $clientId = $this->client_id ?? null;
+        // $clientId = $this->client_id ?? null;
+        $branchId = $this->branch_id ?? null;
         $companyId = $this->company_id ?? null;
-        if ($clientId) {
-            $companyId = Client::tenanted()->where('id', $clientId)->firstOrFail(['company_id'])->company_id;
+        if ($branchId) {
+            $companyId = Branch::tenanted()->where('id', $branchId)->firstOrFail(['company_id'])->company_id;
         }
 
         $this->merge([
-            'client_id' => $clientId,
+            'branch_id' => $branchId,
             'company_id' => $companyId,
         ]);
     }
@@ -45,7 +46,8 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
+            // 'client_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
+            'branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'company_id' => ['required', new CompanyTenantedRule()],
             'period' => ['required', 'string', function (string $attr, string $value, Closure $fail) {
                 // $runPayroll = RunPayroll::where('period', $value)->exists();

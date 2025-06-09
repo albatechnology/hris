@@ -34,7 +34,8 @@ class AbsenceReminderBatch implements ShouldQueue
         $absenceReminders = AbsenceReminder::query()->has('company')
             ->where('is_active', 1)
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
-            ->when(config('app.name') == 'Syntegra', fn($q) => $q->has('client'))
+            ->when(config('app.name') == 'Syntegra', fn($q) => $q->has('branch'))
+            // ->when(config('app.name') == 'Syntegra', fn($q) => $q->has('client'))
             ->get();
 
         foreach ($absenceReminders as $absenceReminder) {

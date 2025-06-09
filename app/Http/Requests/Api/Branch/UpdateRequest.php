@@ -32,6 +32,10 @@ class UpdateRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'address' => 'nullable|string',
+            'umk' => 'nullable|string',
+            'pic_name' => 'nullable|string',
+            'pic_email' => 'nullable|string',
+            'pic_phone' => 'nullable|string',
         ];
     }
 }

@@ -290,12 +290,6 @@ class PermissionService
                 'incident_edit',
                 'incident_delete',
             ],
-            'client_access' => [
-                'client_read',
-                'client_create',
-                'client_edit',
-                'client_delete',
-            ],
             'patrol_access' => [
                 'patrol_read',
                 'patrol_create',
@@ -574,12 +568,6 @@ class PermissionService
                 'incident_create',
                 'incident_edit',
                 'incident_delete',
-            ],
-            'client_access' => [
-                'client_read',
-                // 'client_create',
-                // 'client_edit',
-                // 'client_delete',
             ],
             'patrol_access' => [
                 'patrol_read',

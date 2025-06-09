@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Client\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\Attendance;
 use App\Models\Client;
 use App\Models\ClientLocation;
 use App\Models\User;

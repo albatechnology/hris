@@ -6,7 +6,7 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
@@ -16,11 +16,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollComponent extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted, BelongsToClient, MorphManyFormulas, CustomSoftDeletes, CreatedUpdatedInfo;
+    use CompanyTenanted, BelongsToBranch, MorphManyFormulas, CustomSoftDeletes, CreatedUpdatedInfo;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        // 'client_id',
+        'branch_id',
         'name',
         'type',
         'category',
