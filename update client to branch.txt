@@ -18,3 +18,28 @@ create BranchLocation
 
 
 branch & branchLocation controller cek request nya
+
+=====
+
+- copy semua data patrol_locations ke branch_locations
+- data existing clients harus ada di branches, perhatikan id nya karena tidak sama
+- sesuaikan branch_id di branch_locations
+- update media yg type nya App\Models\ClientLocation menjadi App\Models\BranchLocation
+- update kolom branch_id di semua table yang ada client_id nya, dan sesuaikan sesuai id yang ada di table branches
+- isi semua table yang mempunyai branch_id, default nya kan null
+- delete kolom client_location_id di table patrol_locations, karena sudah diganti branch_location_id
+
+
+table yang ada client_id nya
+- overtimes
+- users
+- payroll_settings
+- payroll_components
+- update_payroll_components
+- run_payrolls
+- incidents
+- guest_books
+- absence_reminders
+- panics
+- patrols
+- patrol_locations
