@@ -23,11 +23,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('patrols', function (Blueprint $table) {
-            // try {
-            //     $table->dropForeign(['client_id']);
-            // } catch (QueryException $e) {
-            //     // Foreign key nggak ada, skip
-            // }
+            try {
+                $table->dropForeign(['client_id']);
+            } catch (QueryException $e) {
+                // Foreign key nggak ada, skip
+            }
             $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->default(1)->constrained()->cascadeOnDelete();
         });
