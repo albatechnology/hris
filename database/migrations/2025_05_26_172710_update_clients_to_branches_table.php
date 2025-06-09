@@ -44,7 +44,7 @@ return new class extends Migration
         });
 
         Schema::table('absence_reminders', function (Blueprint $table) {
-            if (Schema::hasColumn('patrols', 'client_id')) {
+            if (Schema::hasColumn('absence_reminders', 'client_id')) {
                 $table->dropForeign(['client_id']);
             }
 
@@ -57,7 +57,7 @@ return new class extends Migration
         });
 
         Schema::table('guest_books', function (Blueprint $table) {
-            if (Schema::hasColumn('patrols', 'client_id')) {
+            if (Schema::hasColumn('guest_books', 'client_id')) {
                 $table->dropForeign(['client_id']);
             }
 
@@ -80,7 +80,7 @@ return new class extends Migration
         });
 
         Schema::table('panics', function (Blueprint $table) {
-            if (Schema::hasColumn('patrols', 'client_id')) {
+            if (Schema::hasColumn('panics', 'client_id')) {
                 $table->dropForeign(['client_id']);
             }
 
