@@ -1,12 +1,19 @@
 <?php
 
+use App\Models\AbsenceReminder;
 use App\Models\Branch;
 use App\Models\BranchLocation;
+use App\Models\GuestBook;
+use App\Models\Patrol;
 use App\Models\PatrolLocation;
+use App\Models\PayrollComponent;
+use App\Models\PayrollSetting;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 return new class extends Migration
 {
@@ -130,6 +137,120 @@ return new class extends Migration
             $table->string('pic_email', 50)->nullable();
             $table->string('pic_phone', 20)->nullable();
         });
+
+
+        // =======================================================================
+        BranchLocation::where('branch_id', 1)->update([
+            'branch_id' => 6
+        ]);
+        BranchLocation::where('branch_id', 4)->update([
+            'branch_id' => 7
+        ]);
+        BranchLocation::where('branch_id', 6)->update([
+            'branch_id' => 5
+        ]);
+        BranchLocation::where('branch_id', 9)->update([
+            'branch_id' => 8
+        ]);
+
+        Media::where('model_type', 'App\Models\ClientLocation')->update([
+            'model_type' => 'App\Models\BranchLocation'
+        ]);
+
+
+
+        PayrollSetting::where('company_id', 1)->update([
+            'branch_id' => 1
+        ]);
+        PayrollSetting::where('company_id', 2)->update([
+            'branch_id' => 3
+        ]);
+        PayrollSetting::where('company_id', 3)->update([
+            'branch_id' => 5
+        ]);
+
+        /** @var App\Models\PayrollSetting $payrollSetting */
+        $payrollSetting = PayrollSetting::where('company_id', 4)->first();
+        $payrollSetting->update([
+            'branch_id' => 6
+        ]);
+        PayrollSetting::create([
+            ...$payrollSetting->toArray(),
+            'branch_id' => 7,
+        ]);
+        PayrollSetting::create([
+            ...$payrollSetting->toArray(),
+            'branch_id' => 8,
+        ]);
+        PayrollSetting::create([
+            ...$payrollSetting->toArray(),
+            'branch_id' => 10,
+        ]);
+
+
+
+        PayrollComponent::where('company_id', 1)->update([
+            'branch_id' => 1
+        ]);
+        PayrollComponent::where('company_id', 2)->update([
+            'branch_id' => 3
+        ]);
+        PayrollComponent::where('company_id', 3)->update([
+            'branch_id' => 5
+        ]);
+        PayrollComponent::where('company_id', 4)->update([
+            'branch_id' => 6
+        ]);
+
+
+        GuestBook::whereIn('client_id', [3])->delete();
+        GuestBook::where('client_id', 1)->update([
+            'branch_id' => 6
+        ]);
+        GuestBook::where('client_id', 4)->update([
+            'branch_id' => 7
+        ]);
+        GuestBook::where('client_id', 6)->update([
+            'branch_id' => 5
+        ]);
+        GuestBook::where('client_id', 7)->update([
+            'branch_id' => 10
+        ]);
+
+
+        AbsenceReminder::whereIn('client_id', [2, 3, 5, 7, 8])->delete();
+        AbsenceReminder::where('client_id', 1)->update([
+            'branch_id' => 6
+        ]);
+        AbsenceReminder::where('client_id', 4)->update([
+            'branch_id' => 7
+        ]);
+        AbsenceReminder::where('client_id', 6)->update([
+            'branch_id' => 5
+        ]);
+        AbsenceReminder::where('client_id', 9)->update([
+            'branch_id' => 8
+        ]);
+        AbsenceReminder::where('client_id', 10)->update([
+            'branch_id' => 10
+        ]);
+
+
+        Patrol::where('client_id', 1)->update([
+            'branch_id' => 6
+        ]);
+        Patrol::where('client_id', 4)->update([
+            'branch_id' => 7
+        ]);
+        Patrol::where('client_id', 6)->update([
+            'branch_id' => 5
+        ]);
+        Patrol::where('client_id', 9)->update([
+            'branch_id' => 8
+        ]);
+        Patrol::where('client_id', 10)->update([
+            'branch_id' => 10
+        ]);
     }
 
     /**
