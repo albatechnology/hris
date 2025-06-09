@@ -42,8 +42,21 @@ return new class extends Migration
             $table->foreignIdFor(Branch::class)->after('id')->default(1)->constrained()->cascadeOnDelete();
         });
 
+
+        $foreignKeyExists = DB::select("
+        SELECT CONSTRAINT_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_NAME = 'patrol_locations'
+          AND COLUMN_NAME = 'client_location_id'
+          AND CONSTRAINT_NAME = 'patrol_locations_client_location_id_foreign'
+          AND CONSTRAINT_SCHEMA = DATABASE()
+    ");
+
+        // Kalau ada, drop foreign key-nya
+        if (!empty($foreignKeyExists)) {
+            DB::statement('ALTER TABLE patrol_locations DROP FOREIGN KEY patrol_locations_client_location_id_foreign');
+        }
         Schema::table('patrol_locations', function (Blueprint $table) {
-            $table->dropForeign(['client_location_id']);
             $table->integer('client_location_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(BranchLocation::class)->after('patrol_id')->default(1)->constrained();
         });
