@@ -135,6 +135,23 @@ return new class extends Migration
         });
 
 
+        Patrol::where('client_id', 1)->update([
+            'branch_id' => 6
+        ]);
+        Patrol::where('client_id', 4)->update([
+            'branch_id' => 7
+        ]);
+        Patrol::where('client_id', 6)->update([
+            'branch_id' => 5
+        ]);
+        Patrol::where('client_id', 9)->update([
+            'branch_id' => 8
+        ]);
+        Patrol::where('client_id', 10)->update([
+            'branch_id' => 10
+        ]);
+
+
         // =======================================================================
         BranchLocation::where('branch_id', 1)->update([
             'branch_id' => 6
@@ -228,23 +245,6 @@ return new class extends Migration
             'branch_id' => 8
         ]);
         AbsenceReminder::where('client_id', 10)->update([
-            'branch_id' => 10
-        ]);
-
-
-        Patrol::where('client_id', 1)->update([
-            'branch_id' => 6
-        ]);
-        Patrol::where('client_id', 4)->update([
-            'branch_id' => 7
-        ]);
-        Patrol::where('client_id', 6)->update([
-            'branch_id' => 5
-        ]);
-        Patrol::where('client_id', 9)->update([
-            'branch_id' => 8
-        ]);
-        Patrol::where('client_id', 10)->update([
             'branch_id' => 10
         ]);
     }
