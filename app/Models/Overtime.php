@@ -14,7 +14,6 @@ class Overtime extends BaseModel
 
     protected $fillable = [
         'company_id',
-        // 'client_id',
         'branch_id',
         'name',
         'is_rounding',
@@ -31,11 +30,6 @@ class Overtime extends BaseModel
         'rate_type' => RateType::class,
         'rate_amount' => 'double',
     ];
-
-    // public function client(): BelongsTo
-    // {
-    //     return $this->belongsTo(Client::class);
-    // }
 
     public function overtimeAllowances(): HasMany
     {

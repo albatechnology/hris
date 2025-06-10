@@ -26,7 +26,6 @@ class ExportRequest extends FormRequest
         return [
             'filter' => 'nullable|array',
             'filter.company_id' => ['nullable', new CompanyTenantedRule()],
-            // 'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.check_in_start_date' => ['nullable', 'date'],
             'filter.check_in_end_date' => ['nullable', 'date'],

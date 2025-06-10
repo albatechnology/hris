@@ -14,7 +14,6 @@ class Patrol extends BaseModel implements TenantedInterface
     use CustomSoftDeletes, BelongsToBranch;
 
     protected $fillable = [
-        // 'client_id',
         'branch_id',
         'name',
         'start_date',

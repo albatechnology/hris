@@ -26,8 +26,6 @@ class UpdateRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // client_id is for Syntegra
-        // $clientId = $this->client_id ?? null;
         $branchId = $this->branch_id ?? null;
         $companyId = $this->company_id ?? null;
         if ($branchId) {
@@ -35,7 +33,6 @@ class UpdateRequest extends FormRequest
         }
 
         $this->merge([
-            // 'client_id' => $clientId,
             'branch_id' => $branchId,
             'company_id' => $companyId,
             'is_attendance_pay_last_month' => $this->toBoolean($this->is_attendance_pay_last_month ?? 0),
@@ -50,7 +47,6 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'client_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'company_id' => ['required', new CompanyTenantedRule()],
             // 'cut_off_date' => 'required|date_format:d',

@@ -32,19 +32,16 @@ class PatrolLocationController extends BaseController
 
     public function index(int $patrolId)
     {
-        // $query = PatrolLocation::where('patrol_id', $this->patrol->id)->with('clientLocation');
         $query = PatrolLocation::where('patrol_id', $this->patrol->id)->with('branchLocation');
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('patrol_id'),
                 AllowedFilter::exact('branch_location_id'),
-                // AllowedFilter::exact('client_location_id'),
             ])
             ->allowedSorts([
                 'id',
                 'patrol_id',
                 'branch_location_id',
-                // 'client_location_id',
                 'created_at',
             ])
             ->paginate($this->per_page);
@@ -58,7 +55,6 @@ class PatrolLocationController extends BaseController
         $patrolLocation->load([
             'patrol',
             'branchLocation',
-            // 'clientLocation',
         ]);
 
         return new DefaultResource($patrolLocation);
@@ -167,11 +163,6 @@ class PatrolLocationController extends BaseController
         $type = $splittedToken[0] ?? null;
         $uuid = $splittedToken[1] ?? null;
 
-        // $clientLocation = ClientLocation::tenanted()->firstWhere('uuid', $uuid);
-
-        // if (!$clientLocation) {
-        //     return $this->errorResponse('Invalid token');
-        // }
 
         $branchLocation = BranchLocation::tenanted()->firstWhere('uuid', $uuid);
 
@@ -180,10 +171,6 @@ class PatrolLocationController extends BaseController
         }
 
         $patrolLocation = PatrolLocation::query()
-            // ->whereHas(
-            //     'clientLocation',
-            //     fn($q) => $q->where('client_locations.uuid', $uuid)
-            // )
             ->whereHas(
                 'branchLocation',
                 fn($q) => $q->where('branch_locations.uuid', $uuid)

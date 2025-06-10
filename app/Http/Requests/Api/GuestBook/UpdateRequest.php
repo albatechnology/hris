@@ -22,7 +22,6 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
             // 'is_check_out' => 'nullable|boolean',
             // 'name' => 'required|string|min:2|max:100',
             // 'address' => 'required|string|min:2|max:200',

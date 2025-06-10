@@ -20,7 +20,6 @@ class PayrollComponent extends BaseModel implements TenantedInterface
 
     protected $fillable = [
         'company_id',
-        // 'client_id',
         'branch_id',
         'name',
         'type',

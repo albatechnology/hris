@@ -134,7 +134,6 @@ class ShiftController extends BaseController
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
-        // $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
         $users = User::tenanted(true)
@@ -142,7 +141,6 @@ class ShiftController extends BaseController
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            // ->when($clientId, fn($q) => $q->where('client_id', $clientId))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];

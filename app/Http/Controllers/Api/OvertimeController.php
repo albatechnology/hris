@@ -37,18 +37,15 @@ class OvertimeController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
-                // AllowedFilter::exact('client_id'),
             ])
             ->allowedIncludes([
                 'company',
                 'branch',
-                // 'client',
             ])
             ->allowedSorts([
                 'id',
                 'company_id',
                 'branch_id',
-                // 'client_id',
                 'is_rounding',
                 'compensation_rate_per_day',
                 'rate_type',

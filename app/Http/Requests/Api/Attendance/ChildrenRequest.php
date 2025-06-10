@@ -40,7 +40,6 @@ class ChildrenRequest extends FormRequest
     {
         return [
             'filter' => 'nullable|array',
-            // 'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.date' => 'nullable|date',
             'sort' => 'nullable|string',

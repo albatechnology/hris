@@ -42,7 +42,6 @@ class ExportReportRequest extends FormRequest
         return [
             'filter' => 'required|array',
             'filter.company_id' => ['nullable', new CompanyTenantedRule()],
-            // 'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',

@@ -15,7 +15,6 @@ class RunPayroll extends BaseModel
 
     protected $fillable = [
         'company_id',
-        // 'client_id',
         'branch_id',
         'user_id',
         'code',

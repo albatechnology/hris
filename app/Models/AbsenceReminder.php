@@ -14,7 +14,6 @@ class AbsenceReminder extends BaseModel implements TenantedInterface
     protected $fillable = [
         'company_id',
         'branch_id',
-        // 'client_id',
         'is_active',
         'minutes_before',
         'minutes_repeat',
@@ -40,9 +39,4 @@ class AbsenceReminder extends BaseModel implements TenantedInterface
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
-
-    // public function client(): BelongsTo
-    // {
-    //     return $this->belongsTo(Client::class);
-    // }
 }

@@ -17,7 +17,6 @@ class GuestBook extends BaseModel implements HasMedia, TenantedInterface
 
     protected $fillable = [
         'user_id',
-        // 'client_id',
         'branch_id',
         'is_check_out',
         'name',
@@ -95,11 +94,6 @@ class GuestBook extends BaseModel implements HasMedia, TenantedInterface
     {
         $query->whereDate('created_at', '<=', date('Y-m-d', strtotime($date)));
     }
-
-    // public function client(): BelongsTo
-    // {
-    //     return $this->belongsTo(Client::class);
-    // }
 
     public function checkOutBy(): BelongsTo
     {

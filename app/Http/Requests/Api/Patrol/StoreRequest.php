@@ -39,7 +39,6 @@ class StoreRequest extends FormRequest
     {
         return [
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            // 'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
             'name' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
@@ -61,8 +60,6 @@ class StoreRequest extends FormRequest
             'locations' => 'required|array',
             'locations.*.id' => ['nullable', 'exists:patrol_locations,id'],
             'locations.*.branch_location_id' => ['required', new CompanyTenantedRule(BranchLocation::class, 'Location not found')],
-            // 'locations.*.client_location_id' => ['required', new CompanyTenantedRule(ClientLocation::class, 'Location not found')],
-            // 'locations.*.client_location_id' => 'required|exists:client_locations,id',
             'locations.*.tasks' => 'required|array',
             'locations.*.tasks.*.id' => ['nullable', 'exists:patrol_tasks,id'],
             'locations.*.tasks.*.name' => 'required|string',

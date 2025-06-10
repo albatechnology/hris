@@ -8,8 +8,6 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\BranchLocationController;
-use App\Http\Controllers\Api\ClientController;
-use App\Http\Controllers\Api\ClientLocationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\DepartmentController;
@@ -343,10 +341,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('incidents/export', [IncidentController::class, 'export']);
     Route::apiResource('incidents', IncidentController::class);
 
-    Route::get('clients/summaries', [ClientController::class, 'summary']);
-    Route::apiResource('clients', ClientController::class);
-    Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
-    Route::apiResource('client-locations', ClientLocationController::class);
+    // Route::get('clients/summaries', [ClientController::class, 'summary']);
+    // Route::apiResource('clients', ClientController::class);
+    // Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
+    // Route::apiResource('client-locations', ClientLocationController::class);
 
     Route::get('guest-books/export', [GuestBookController::class, 'export']);
     Route::apiResource('guest-books', GuestBookController::class);

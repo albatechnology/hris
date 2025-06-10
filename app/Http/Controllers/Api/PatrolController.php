@@ -36,9 +36,6 @@ class PatrolController extends BaseController
     {
         return [
             'patrolHours',
-            // AllowedInclude::callback('client', function ($query) {
-            //     $query->selectMinimalist();
-            // }),
             AllowedInclude::callback('branch', function ($query) {
                 $query->selectMinimalist();
             }),
@@ -52,13 +49,6 @@ class PatrolController extends BaseController
                         'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description'),
                     ]);
             }),
-            // AllowedInclude::callback('patrolLocations', function ($query) {
-            //     $query->select('id', 'patrol_id', 'client_location_id', 'description')
-            //         ->with([
-            //             'clientLocation' => fn($q) => $q->select('id', 'client_id', 'name', 'lat', 'lng', 'address', 'description'),
-            //             'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description'),
-            //         ]);
-            // }),
         ];
     }
 
@@ -71,7 +61,6 @@ class PatrolController extends BaseController
                     $query->whereHas('users', fn($q) => $q->where('user_id', $value));
                 }),
                 AllowedFilter::exact('branch_id'),
-                // AllowedFilter::exact('client_id'),
                 'name',
                 'start_date',
                 'end_date',
@@ -79,7 +68,6 @@ class PatrolController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
-                // 'client_id',
                 'name',
                 'start_date',
                 'end_date',
@@ -110,7 +98,6 @@ class PatrolController extends BaseController
         //         // 'userPatrolSchedules.schedule',
         //     ],
         //     'patrolLocations' => [
-        //         'clientLocation',
         //         'tasks',
         //     ],
         // ]));
@@ -122,7 +109,6 @@ class PatrolController extends BaseController
         try {
             // patrol
             $patrol = Patrol::create([
-                // 'client_id' => $request->client_id,
                 'branch_id' => $request->branch_id,
                 'name' => $request->name,
                 'start_date' => $request->start_date,
@@ -142,7 +128,6 @@ class PatrolController extends BaseController
                 foreach ($request->locations as $reqLocation) {
                     $patrolLocation = $patrol->patrolLocations()->create([
                         'branch_location_id' => $reqLocation['branch_location_id'],
-                        // 'client_location_id' => $reqLocation['client_location_id'],
                     ]);
 
                     foreach ($reqLocation['tasks'] as $reqLocationTask) {
@@ -166,7 +151,6 @@ class PatrolController extends BaseController
                 // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
-                // 'clientLocation',
                 'branchLocation',
                 'tasks',
             ],
@@ -181,7 +165,6 @@ class PatrolController extends BaseController
         try {
             // patrol
             $patrol->update([
-                // 'client_id' => $request->client_id,
                 'branch_id' => $request->branch_id,
                 'name' => $request->name,
                 'start_date' => $request->start_date,
@@ -209,12 +192,10 @@ class PatrolController extends BaseController
                     $patrolLocation = PatrolLocation::findOrFail($location['id']);
                     $patrolLocation->update([
                         'branch_location_id' => $location['branch_location_id'],
-                        // 'client_location_id' => $location['client_location_id'],
                     ]);
                 } else {
                     $patrolLocation = $patrol->patrolLocations()->create([
                         'branch_location_id' => $location['branch_location_id'],
-                        // 'client_location_id' => $location['client_location_id'],
                     ]);
                 }
 
@@ -265,7 +246,6 @@ class PatrolController extends BaseController
                 // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
-                // 'clientLocation',
                 'branchLocation',
                 'tasks',
             ],
@@ -384,10 +364,8 @@ class PatrolController extends BaseController
         $patrol->load([
             'patrolLocations' => function ($q) {
                 $q
-                    // ->select('id', 'patrol_id', 'client_location_id', 'description')
                     ->select('id', 'patrol_id', 'branch_location_id', 'description')
                     ->with([
-                        // 'clientLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
                         'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
                         'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
                     ]);
@@ -415,8 +393,6 @@ class PatrolController extends BaseController
     //     $patrol->load([
     //         'patrolLocations' => function ($q) use ($date) {
     //             $q
-    //                 ->select('id', 'patrol_id', 'client_location_id', 'description')
-    //                 ->with('clientLocation', fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'))
     //                 ->with('tasks', function ($q) use ($date) {
     //                     $q
     //                         ->select('id', 'patrol_location_id', 'name', 'description')

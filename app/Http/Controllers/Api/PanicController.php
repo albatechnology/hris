@@ -33,7 +33,6 @@ class PanicController extends BaseController
     {
         $data = QueryBuilder::for(Panic::tenanted()->with('user'))
             ->allowedFilters([
-                // AllowedFilter::exact('client_id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('status'),
@@ -41,7 +40,6 @@ class PanicController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
-                // 'client_id',
                 'user_id',
                 'status',
                 'created_at',
@@ -57,7 +55,6 @@ class PanicController extends BaseController
         return new DefaultResource($panic->load(
             'user',
             'branch',
-            // 'client',
         ));
     }
 

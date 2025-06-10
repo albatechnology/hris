@@ -97,9 +97,6 @@ class UserController extends BaseController
             AllowedInclude::callback('branch', function ($query) {
                 $query->selectMinimalist();
             }),
-            // AllowedInclude::callback('client', function ($query) {
-            //     $query->selectMinimalist();
-            // }),
             'detail',
             'payrollInfo',
             'schedules',
@@ -113,11 +110,9 @@ class UserController extends BaseController
         $users = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
                 ->with(['roles' => fn($q) => $q->select('id', 'name')])
-            // ->when(config('app.name') == 'Syntegra', fn($q) => $q->with('patrols.client'))
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
-                // AllowedFilter::exact('client_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
                 AllowedFilter::callback('branch_id', function ($query, $value) {
@@ -125,17 +120,11 @@ class UserController extends BaseController
                         $query->where('branch_id', $value);
                     }
                 }),
-                // AllowedFilter::callback('client_id', function ($query, $value) {
-                //     if (!empty($value) || $value > 0) {
-                //         $query->where('client_id', $value);
-                //     }
-                // }),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
                     $query->whereHas('patrols', function ($q) {
                         $q->whereDate('patrols.start_date', '<=', now());
                         $q->whereDate('patrols.end_date', '>=', now());
 
-                        // $q->whereHas('client', fn($q2) => $q2->tenanted());
                         // $q->whereDoesntHave('tasks', function($q2){
                         //   $q2->where('status', PatrolTaskStatus::PENDING);
                         // });
@@ -147,9 +136,6 @@ class UserController extends BaseController
                         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
                     });
                 }),
-                // AllowedFilter::callback('client_id', function ($query, $value) {
-                //     $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
-                // }),
                 AllowedFilter::callback('religion', function ($query, $value) {
                     $value = is_array($value) ? $value : [$value];
                     $query->whereHas('detail', fn($q) => $q->whereIn('religion', $value));
@@ -164,7 +150,6 @@ class UserController extends BaseController
             ->allowedSorts([
                 'id',
                 'branch_id',
-                // 'client_id',
                 'name',
                 'email',
                 'type',

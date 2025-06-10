@@ -70,7 +70,6 @@ class RunPayrollService
         $payrollSetting = PayrollSetting::with('company')
             ->whereCompany($request['company_id'])
             ->whenBranch($request['branch_id'] ?? null)
-            // ->whenClient($request['client_id'] ?? null)
             ->first();
         // if (!$payrollSetting->cut_off_attendance_start_date || !$payrollSetting->cut_off_attendance_end_date) {
         //     return response()->json([
@@ -118,7 +117,6 @@ class RunPayrollService
     public static function createRunPayroll(array $request): RunPayroll
     {
         return auth('sanctum')->user()->runPayrolls()->create([
-            // 'client_id' => $request['client_id'] ?? null,
             'branch_id' => $request['branch_id'] ?? null,
             'company_id' => $request['company_id'],
             'period' => $request['period'],
@@ -221,7 +219,6 @@ class RunPayrollService
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
 
         $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $runPayroll->company_id)
-            // ->whenClient($runPayroll->client_id)
             ->whenBranch($runPayroll->branch_id)
             ->pluck('id')->toArray();
 
@@ -258,7 +255,6 @@ class RunPayrollService
                     'updatePayrollComponent',
                     fn($q) => $q->whereCompany($runPayroll->company_id)
                         ->whenBranch($runPayroll->branch_id)
-                        // ->whenClient($runPayroll->client_id)
                         ->whereActive($startDate, $endDate)
                 )
                 ->orderByDesc('id')->get();
@@ -269,7 +265,6 @@ class RunPayrollService
             $basicSalaryComponent = PayrollComponent::tenanted()
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
-                // ->whenClient($runPayroll->client_id)
                 ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
 
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
@@ -298,7 +293,6 @@ class RunPayrollService
             $payrollComponents = PayrollComponent::tenanted()
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
-                // ->whenClient($runPayroll->client_id)
                 ->whereNotDefault()->get();
 
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
@@ -333,7 +327,6 @@ class RunPayrollService
             if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate)) {
                 $alpaComponent = PayrollComponent::tenanted()
                     ->where('company_id', $runPayroll->company_id)
-                    // ->whenClient($runPayroll->client_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->where('category', PayrollComponentCategory::ALPA)->first();
 
@@ -361,7 +354,6 @@ class RunPayrollService
              */
             $loanComponent = PayrollComponent::tenanted()
                 ->where('company_id', $runPayroll->company_id)
-                // ->whenClient($runPayroll->client_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::LOAN)->first();
 
@@ -383,7 +375,6 @@ class RunPayrollService
              */
             $insuranceComponent = PayrollComponent::tenanted()
                 ->where('company_id', $runPayroll->company_id)
-                // ->whenClient($runPayroll->client_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::INSURANCE)->first();
 
@@ -406,7 +397,6 @@ class RunPayrollService
             if ($company->countryTable?->id == 1 && $user->userBpjs) {
                 $bpjsPayrollComponents = PayrollComponent::tenanted()
                     ->whereCompany($runPayroll->company_id)
-                    // ->whenClient($runPayroll->client_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->whereBpjs()->get();
                 // calculate bpjs
@@ -485,7 +475,6 @@ class RunPayrollService
             $overtimePayrollComponent = PayrollComponent::tenanted()
                 ->whereCompany($runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
-                // ->whenClient($runPayroll->client_id)
                 ->where('category', PayrollComponentCategory::OVERTIME)->first();
 
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
@@ -503,7 +492,6 @@ class RunPayrollService
             $taskOvertimePayrollComponent = PayrollComponent::tenanted()
                 ->whereCompany($runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
-                // ->whenClient($runPayroll->client_id)
                 ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
 
             if ($taskOvertimePayrollComponent) {

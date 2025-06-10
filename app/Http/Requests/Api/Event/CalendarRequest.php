@@ -48,7 +48,6 @@ class CalendarRequest extends FormRequest
             'filter.year' => 'required|date_format:Y',
             'filter.company_id' => 'nullable',
             'filter.branch_id' => 'nullable',
-            // 'filter.client_id' => 'nullable',
             // 'sort' => 'nullable|string',
             // 'include' => 'nullable|string',
         ];

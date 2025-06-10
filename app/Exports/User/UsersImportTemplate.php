@@ -140,7 +140,6 @@ class UsersImportTemplate implements FromArray, WithHeadings, WithStyles, Respon
             'Supervisor NIK 3',
             'Supervisor NIK 4',
             'Role ID',
-            // 'Client ID',
             'Branch ID',
             'Department ID',
             'Position ID',

@@ -24,19 +24,16 @@ class AbsenceReminderController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
-                // AllowedFilter::exact('client_id'),
                 'is_active'
             ])
             ->allowedIncludes([
                 'company',
                 'branch'
-                // 'client'
             ])
             ->allowedSorts([
                 'id',
                 'company_id',
                 'branch_id',
-                // 'client_id',
                 'is_active',
                 'created_at',
             ])
@@ -51,7 +48,6 @@ class AbsenceReminderController extends BaseController
         return new DefaultResource($absenceReminder->loadMissing([
             'company',
             'branch',
-            // 'client',
         ]));
     }
 

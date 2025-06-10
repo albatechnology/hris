@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ClientLocation;
 use App\Models\Company;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,9 +14,6 @@ return new class extends Migration
     {
         Schema::table('incidents', function (Blueprint $table) {
             $table->foreignIdFor(Company::class)->after('id')->constrained()->cascadeOnDelete();
-
-            $table->dropForeign('incidents_client_location_id_foreign');
-            $table->dropColumn('client_location_id');
         });
     }
 
@@ -29,7 +25,6 @@ return new class extends Migration
         Schema::table('incidents', function (Blueprint $table) {
             $table->dropForeign('incidents_company_id_foreign');
             $table->dropColumn('company_id');
-            $table->foreignIdFor(ClientLocation::class)->after('id')->constrained();
         });
     }
 };

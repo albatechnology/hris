@@ -39,7 +39,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'group_id',
         'company_id',
         'branch_id',
-        // 'client_id',
         'branch_id',
         'live_attendance_id',
         'overtime_id',
@@ -142,20 +141,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
         return $query->first();
     }
-
-    // public function scopeActivePatrolClientId(Builder $query, int $clientId)
-    // {
-    //     $query->whereHas('schedules', function ($q) {
-    //         $q->where('schedules.type', ScheduleType::PATROL);
-    //         $q->whereDate('schedules.effective_date', '<=', now());
-    //         $q->orderBy('schedules.effective_date', 'desc');
-    //     })->whereHas('detail', function ($q) {
-    //         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
-    //     })->whereHas('patrols.client', function ($q) use ($clientId) {
-    //         $q->tenanted();
-    //         $q->where('clients.id', $clientId);
-    //     });
-    // }
 
     public function scopeActivePatrolBranchId(Builder $query, int $branchId)
     {

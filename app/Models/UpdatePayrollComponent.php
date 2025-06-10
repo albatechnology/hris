@@ -15,7 +15,6 @@ class UpdatePayrollComponent extends BaseModel
 
     protected $fillable = [
         'company_id',
-        // 'client_id',
         'branch_id',
         'transaction_id',
         'type',

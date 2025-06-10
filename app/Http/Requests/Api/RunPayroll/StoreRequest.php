@@ -24,8 +24,6 @@ class StoreRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // client_id is for Syntegra
-        // $clientId = $this->client_id ?? null;
         $branchId = $this->branch_id ?? null;
         $companyId = $this->company_id ?? null;
         if ($branchId) {
@@ -46,7 +44,6 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'client_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'company_id' => ['required', new CompanyTenantedRule()],
             'period' => ['required', 'string', function (string $attr, string $value, Closure $fail) {

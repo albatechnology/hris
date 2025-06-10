@@ -13,7 +13,6 @@ class Panic extends BaseModel implements TenantedInterface
     use TenantedThroughBranch, BelongsToUser;
 
     protected $fillable = [
-        // 'client_id',
         'branch_id',
         'user_id',
         'lat',

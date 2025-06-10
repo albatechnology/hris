@@ -37,7 +37,6 @@ class StoreRequest extends FormRequest
     {
         return [
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            // 'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
         ];

@@ -1,8 +1,6 @@
 <?php
 
 use App\Models\Branch;
-use App\Models\BranchLocation;
-use App\Models\ClientLocation;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -28,18 +26,6 @@ return new class extends Migration
             // softDeletes must implement deleted_by
             $table->unsignedInteger('deleted_by')->nullable();
             $table->softDeletes();
-        });
-
-        ClientLocation::all()->each(function (ClientLocation $clientLocation) {
-            BranchLocation::create([
-                'uuid' => $clientLocation->uuid,
-                'branch_id' => $clientLocation->client_id,
-                'name' => $clientLocation->name,
-                'lat' => $clientLocation->lat,
-                'lng' => $clientLocation->lng,
-                'address' => $clientLocation->address,
-                'description' => $clientLocation->description,
-            ]);
         });
     }
 

@@ -34,7 +34,6 @@ class PayrollComponentController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
-                // AllowedFilter::exact('client_id'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::scope('has_formulas'),
             ])
@@ -43,7 +42,6 @@ class PayrollComponentController extends BaseController
                 'id',
                 'company_id',
                 'branch_id',
-                // 'client_id',
                 'name',
                 'type',
                 'amount',

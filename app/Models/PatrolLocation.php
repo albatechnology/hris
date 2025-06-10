@@ -9,7 +9,6 @@ class PatrolLocation extends BaseModel
 {
     protected $fillable = [
         'patrol_id',
-        // 'client_location_id',
         'branch_location_id',
         'description',
     ];

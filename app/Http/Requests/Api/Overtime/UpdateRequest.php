@@ -45,7 +45,6 @@ class UpdateRequest extends FormRequest
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            // 'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'name' => 'required|string',
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',

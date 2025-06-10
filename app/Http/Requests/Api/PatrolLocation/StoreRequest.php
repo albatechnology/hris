@@ -23,7 +23,6 @@ class StoreRequest extends FormRequest
     {
         return [
             'branch_location_id' => 'required|exists:branch_locations,id',
-            // 'client_location_id' => 'required|exists:clients,id',
             'description' => 'nullable',
         ];
     }

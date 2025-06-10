@@ -26,12 +26,10 @@ class UserPatrolController extends BaseController
             UserPatrol::with([
                 'user.detail',
                 'patrol.branch'
-                // 'patrol.client'
             ])->whereHas('patrol', function ($q) {
                 $q->whereDate('patrols.start_date', '<=', now());
                 $q->whereDate('patrols.end_date', '>=', now());
                 $q->whereHas('branch', fn($q2) => $q2->tenanted());
-                // $q->whereHas('client', fn($q2) => $q2->tenanted());
                 // $q->whereDoesntHave('tasks', function($q2){
                 //   $q2->where('status', PatrolTaskStatus::PENDING);
                 // });
@@ -48,9 +46,6 @@ class UserPatrolController extends BaseController
             AllowedFilter::callback('branch_id', function ($query, $value) {
                 $query->whereHas('patrol', fn($q) => $q->where('branch_id', $value));
             }),
-            // AllowedFilter::callback('client_id', function ($query, $value) {
-            //     $query->whereHas('patrol', fn($q) => $q->where('client_id', $value));
-            // }),
         ])->allowedSorts([
             'id',
             'patrol_id',
