@@ -840,8 +840,15 @@ class UserController extends BaseController
     {
         $startDate = $request->filter['start_date'] ?? null;
         $endDate = $request->filter['end_date'] ?? null;
+        $isActive = $request->filter['is_active'] ?? null;
 
         $query = User::tenanted()
+            ->when($isActive, function ($q) use ($isActive) {
+                if ($isActive) {
+                    return $q->whereNull('resign_date');
+                }
+                return $q->whereNotNull('resign_date');
+            })
             ->when($startDate && $endDate, fn($q) => $q->whereDateBetween('join_date', $startDate, $endDate))
             ->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
                 'detail',

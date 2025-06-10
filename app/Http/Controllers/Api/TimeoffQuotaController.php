@@ -17,6 +17,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class TimeoffQuotaController extends BaseController
@@ -215,7 +216,14 @@ class TimeoffQuotaController extends BaseController
                 AllowedFilter::scope('effective_start_date'),
                 AllowedFilter::scope('effective_end_date'),
             ])
-            ->allowedIncludes(['timeoffPolicy', 'user'])
+            ->allowedIncludes([
+                AllowedInclude::callback('timeoffPolicy', function ($q) {
+                    return $q->selectMinimalist();
+                }),
+                AllowedInclude::callback('user', function ($q) {
+                    return $q->select('id', 'name', 'nik');
+                })
+            ])
             ->allowedSorts([
                 'id',
                 'timeoff_policy_id',

@@ -5,14 +5,11 @@ namespace App\Http\Requests\Api\Timeoff;
 use App\Enums\TimeoffRequestType;
 use App\Models\TimeoffPolicy;
 use App\Rules\CompanyTenantedRule;
-use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    use RequestToBoolean;
-
     /**
      * Determine if the user is authorized to make this request.
      */

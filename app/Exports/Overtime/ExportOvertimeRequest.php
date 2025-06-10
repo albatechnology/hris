@@ -63,7 +63,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
     public function collection()
     {
         $branchId = $this->request->filter['branch_id'] ?? null;
-        // $clientId = $this->request->filter['client_id'] ?? null;
         $userIds = $this->request->filter['user_ids'] ?? null;
 
         $overtimeRequests = OvertimeRequest::whereDateBetween($this->startDate, $this->endDate)
@@ -71,7 +70,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             ->whereHas('user', fn($q) => $q->whereIn('company_id', $this->companies->pluck('id')))
             ->when($userIds, fn($q) => $q->whereIn('user_id', explode(',', $userIds)))
             ->when($branchId, fn($q) => $q->whereHas('user', fn($q) => $q->where('branch_id', $branchId)))
-            // ->when($clientId, fn($q) => $q->whereHas('user', fn($q) => $q->where('client_id', $clientId)))
             ->with(
                 'user',
                 fn($q) => $q->select('id', 'nik', 'name', 'branch_id', 'company_id')

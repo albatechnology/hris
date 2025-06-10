@@ -442,6 +442,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(TimeoffQuota::class);
     }
 
+    public function timeoffs(): HasMany
+    {
+        return $this->hasMany(Timeoff::class);
+    }
+
     public function requestSchedules(): HasMany
     {
         return $this->hasMany(RequestSchedule::class);
