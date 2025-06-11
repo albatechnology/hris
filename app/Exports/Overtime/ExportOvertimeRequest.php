@@ -8,7 +8,9 @@ use App\Models\Company;
 use App\Models\Event;
 use App\Models\Overtime;
 use App\Models\OvertimeRequest;
+use App\Models\User;
 use App\Services\OvertimeService;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -85,6 +87,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         return $overtimeRequests;
     }
 
+
     public function map($overtimeRequest): array
     {
         $dataHeader = [
@@ -128,17 +131,33 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         ]);
 
         if ($overtime->overtimeMultipliers->count()) {
-            $inNationalHoliday = $this->nationalHolidays->where('company_id', $overtimeRequest->user->company_id)->contains(function ($nh) use ($overtimeDate) {
-                $start = Carbon::parse($nh->start_at)->startOfDay();
-                $end = Carbon::parse($nh->end_at)->endOfDay();
-                return $overtimeDate->between($start, $end);
-            });
+            if (config('app.name') == 'LUMORA') {
+                $inNationalHoliday = $this->nationalHolidays->where('company_id', $overtimeRequest->user->company_id)->contains(function ($nh) use ($overtimeDate) {
+                    $start = Carbon::parse($nh->start_at)->startOfDay();
+                    $end = Carbon::parse($nh->end_at)->endOfDay();
+                    return $overtimeDate->between($start, $end);
+                });
 
-            if ($overtimeDate->isWeekday() || $inNationalHoliday) {
-                $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
+                if (!$inNationalHoliday) {
+                    $user = User::select('id')->where('id', $overtimeRequest->user_id)->firstOrFail();
+                    $schedule = ScheduleService::getTodaySchedule(user: $user, datetime: $overtimeRequest->date, scheduleColumn: ['id'], shiftColumn: ['id', 'is_dayoff']);
+                }
+
+                if ($inNationalHoliday) {
+                    $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                } elseif (!$inNationalHoliday && $schedule?->shift?->is_dayoff) {
+                    $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                } else {
+                    $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
+                }
             } else {
-                $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                if ($overtimeDate->isWeekday()) {
+                    $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
+                } else {
+                    $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                }
             }
+
             $overtimeMultipliers = OvertimeService::calculateOvertimeBreakdown($overtimeDuration, $overtimeMultipliers);
         }
 
