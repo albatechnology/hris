@@ -52,8 +52,8 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
         $fourMonthsAgo = $this->startDate;
         $today = $this->endDate;
 
-        // dump($fourMonthsAgo->format('Y-m-d'));
-        // dump($today->format('Y-m-d'));
+        dump($fourMonthsAgo->format('Y-m-d'));
+        dump($today->format('Y-m-d'));
 
         $effectiveEndDate = $today->month == 11 || $today->month == 12 ? $today->copy()->addYear()->endOfYear()->format('Y-m-d') : date('Y-12-31');
         $description = sprintf("AUTOMATICALLY GENERATED FROM THE SYSTEM (EO %s - %s)", $fourMonthsAgo->format('Y-m-d'), $today->format('Y-m-d'));

@@ -324,6 +324,27 @@ class TimeoffQuotaController extends BaseController
         return "DONE BANG";
     }
 
+    public function revaluateTimeoffDiscipline(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date_format:Y-m-d',
+            'end_date' => 'required|date_format:Y-m-d',
+            'password' => ['required', function ($attribute, $value, \Closure $fail) {
+                if (env('ROOT_PASSWORD') != $value) {
+                    $fail('The password is wrong bro');
+                }
+            }],
+        ]);
+
+        try {
+            \App\Jobs\Timeoff\ReevaluateTimeOffDisciplineReward::dispatchSync($request->end_date, $request->start_date);
+        } catch (Exception $e) {
+            throw $e;
+        }
+
+        return $this->okResponse();
+    }
+
     // public function forceDelete($id)
     // {
     //     $timeoffQuota = TimeoffQuota::withTrashed()->findOrFail($id);
