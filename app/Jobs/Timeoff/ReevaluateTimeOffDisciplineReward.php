@@ -148,7 +148,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         dump($user->toArray());
                         dump($date);
                         dump($todaySchedule?->toArray());
-                        dd($attendance);
+                        dd($attendance->toArray());
                         break;
                     }
 
@@ -159,7 +159,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         dump($user->toArray());
                         dump($date);
                         dump($todaySchedule?->toArray());
-                        dd($attendance);
+                        dd($attendance->toArray());
                         break;
                     }
 
@@ -171,8 +171,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                             $isBreak = true;
                             dump($user->toArray());
                             dump($date);
+                            dump($scheduleClockIn);
+                            dump($totalLate);
                             dump($todaySchedule?->toArray());
-                            dd($attendance);
+                            dd($attendance->toArray());
                             break;
                         }
                     }
@@ -185,8 +187,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                             $isBreak = true;
                             dump($user->toArray());
                             dump($date);
+                            dump($scheduleClockOut);
+                            dump($totalLate);
                             dump($todaySchedule?->toArray());
-                            dd($attendance);
+                            dd($attendance->toArray());
                             break;
                         }
                     }
