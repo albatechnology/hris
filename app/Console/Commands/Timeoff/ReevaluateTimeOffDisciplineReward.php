@@ -26,7 +26,7 @@ class ReevaluateTimeOffDisciplineReward extends Command
      */
     public function handle()
     {
-        TimeoffReevaluateTimeOffDisciplineReward::dispatch(endDate: $this->argument('end_date'), startDate: $this->argument('start_date'));
+        TimeoffReevaluateTimeOffDisciplineReward::dispatchSync(endDate: $this->argument('end_date'), startDate: $this->argument('start_date'));
 
         $info = "TimeoffReevaluateTimeOffDisciplineReward RUNNING";
         if ($this->argument('start_date')) $info .= " " . $this->argument('start_date');

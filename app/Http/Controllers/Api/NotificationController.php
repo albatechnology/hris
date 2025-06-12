@@ -69,7 +69,7 @@ class NotificationController extends BaseController
     public function test(string $token)
     {
 
-        ReevaluateTimeOffDisciplineReward::dispatch("2025-04-30", "2025-01-01");
+        ReevaluateTimeOffDisciplineReward::dispatchSync("2025-04-30", "2025-01-01");
         die('OK');
         try {
             $eee = Crypt::decryptString($token);
