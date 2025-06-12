@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\Notification\NotificationResource;
+use App\Jobs\Timeoff\ReevaluateTimeOffDisciplineReward;
 use App\Models\DatabaseNotification;
 use App\Models\User;
 use App\Notifications\TestNotification;
@@ -68,6 +69,8 @@ class NotificationController extends BaseController
     public function test(string $token)
     {
 
+        ReevaluateTimeOffDisciplineReward::dispatch("2025-04-30", "2025-01-01");
+        die('OK');
         try {
             $eee = Crypt::decryptString($token);
             dd($eee);
