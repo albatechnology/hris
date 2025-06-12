@@ -77,6 +77,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 
             $availableUsers = User::where('company_id', $company->id)
                 ->whereNotIn('id', [125, 189])
+                ->whereIn('id', [29,34,43,45,53,54,56,67,76,77,89,92,94,95,97,103,116,126,130,133,134,151,184,193,198,203,241])
                 ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->whereDoesntHave('timeoffs', function ($q) use ($fourMonthsAgo, $today, $timeoffPolicyIds) {
                     $q->approved()
@@ -144,10 +145,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 
                     if (!$attendance) {
                         $isBreak = true;
-                        // dump($user->toArray());
-                        // dump($date);
-                        // dump($todaySchedule?->toArray());
-                        // dd($attendance);
+                        dump($user->toArray());
+                        dump($date);
+                        dump($todaySchedule?->toArray());
+                        dd($attendance);
                         break;
                     }
 
@@ -155,10 +156,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 
                     if (!$attendance->clockIn || !$attendance->clockOut) {
                         $isBreak = true;
-                        // dump($user->toArray());
-                        // dump($date);
-                        // dump($todaySchedule?->toArray());
-                        // dd($attendance);
+                        dump($user->toArray());
+                        dump($date);
+                        dump($todaySchedule?->toArray());
+                        dd($attendance);
                         break;
                     }
 
@@ -168,10 +169,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         $totalLate += $attendanceClockIn->diffInMinutes($scheduleClockIn);
                         if ($totalLate > 10) {
                             $isBreak = true;
-                            // dump($user->toArray());
-                            // dump($date);
-                            // dump($todaySchedule?->toArray());
-                            // dd($attendance);
+                            dump($user->toArray());
+                            dump($date);
+                            dump($todaySchedule?->toArray());
+                            dd($attendance);
                             break;
                         }
                     }
@@ -182,10 +183,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         $totalLate += $attendanceClockOut->diffInMinutes($scheduleClockOut);
                         if ($totalLate > 10) {
                             $isBreak = true;
-                            // dump($user->toArray());
-                            // dump($date);
-                            // dump($todaySchedule?->toArray());
-                            // dd($attendance);
+                            dump($user->toArray());
+                            dump($date);
+                            dump($todaySchedule?->toArray());
+                            dd($attendance);
                             break;
                         }
                     }
