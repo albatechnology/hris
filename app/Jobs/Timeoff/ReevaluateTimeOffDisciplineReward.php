@@ -91,7 +91,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 )
                 ->get(['id', 'company_id', 'name', 'join_date', 'type']);
 
-            // dump($availableUsers?->pluck('id')->toArray());
+            dump($availableUsers?->pluck('id')->toArray());
             $users = collect([]);
             foreach ($availableUsers as $user) {
                 $attendances = Attendance::query()->where('user_id', $user->id)
@@ -195,7 +195,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 $users->push($user);
             }
 
-            // dump($users?->pluck('name')->toArray());
+            dump($users?->pluck('name')->toArray());
 
             foreach ($users as $user) {
                 $timeoffQuota = $user->timeoffQuotas()->create([
