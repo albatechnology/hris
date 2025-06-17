@@ -164,37 +164,37 @@ class UserSeeder extends Seeder
                         [
                             'name' => 'Nikko Febika',
                             'email' => 'febika.nikko@gmail.com',
-                            // 'image' => public_path('img/nikko.jpg')
+                            'image' => public_path('img/nikko.jpg')
                         ],
                         [
                             'name' => 'Ibnul Mundzir',
                             'email' => 'ibnulmundzir97@gmail.com',
-                            // 'image' => public_path('img/ibnul-patroli.jpeg')
+                            'image' => public_path('img/ibnul-patroli.jpeg')
                         ],
                         [
                             'name' => 'Masfud Difa Pratama',
                             'email' => 'masfuddifapratama@gmail.com',
-                            // 'image' => public_path('img/difa.jpg')
+                            'image' => public_path('img/difa.jpg')
                         ],
                         [
                             'name' => 'Muhammad Robbi Zulfikar',
                             'email' => 'mrobbizulfikar@gmail.com',
-                            // 'image' => public_path('img/zulfi.jpg')
+                            'image' => public_path('img/zulfi.jpg')
                         ],
                         [
                             'name' => 'Poedi Udi Maurif',
                             'email' => 'poedi1612@gmail.com',
-                            // 'image' => public_path('img/poedi.jpg')
+                            'image' => public_path('img/poedi.jpg')
                         ],
                         [
                             'name' => 'Teuku Banta Karollah',
                             'email' => 'bantakarollah@gmail.com',
-                            // 'image' => public_path('img/banta.jpg')
+                            'image' => public_path('img/banta.jpg')
                         ],
                         [
                             'name' => 'Urinaldi Sri Juliandika',
                             'email' => 'aldynsx@gmail.com',
-                            // 'image' => public_path('img/aldi.jpg')
+                            'image' => public_path('img/aldi.jpg')
                         ],
                     ];
 
@@ -212,7 +212,7 @@ class UserSeeder extends Seeder
                             'sign_date' => date('Y') . '-01-01',
                             'join_date' => date('Y') . '-01-01',
                         ]);
-                        // $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
+                        $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
                         $user->payrollInfo()->create([
                             'basic_salary' => 10000000
                         ]);
