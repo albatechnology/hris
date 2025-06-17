@@ -201,7 +201,6 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'company_id' => $branch->company_id,
                 'branch_id' => $branch->id,
                 'live_attendance_id' => $row['live_attendance_id'],
-                // 'overtime_id',
                 'name' => $name,
                 // // 'last_name' => $row['last_name'],
                 'email' => $row['email'],

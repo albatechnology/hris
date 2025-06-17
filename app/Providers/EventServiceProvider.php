@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\Attendance\AttendanceRequested;
+use App\Events\Subscription\SubscriptionCreated;
 use App\Listeners\Attendance\RequestAttendanceNotification;
+use App\Listeners\Subscription\SendSubscriptionEmail;
 use App\Models\Company;
 use App\Models\Loan;
 use App\Models\OvertimeRequest;
@@ -32,8 +34,11 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
         AttendanceRequested::class => [
-            RequestAttendanceNotification::class
-        ]
+            RequestAttendanceNotification::class,
+        ],
+        SubscriptionCreated::class => [
+            SendSubscriptionEmail::class,
+        ],
     ];
 
     /**

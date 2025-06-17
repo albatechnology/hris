@@ -101,11 +101,30 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(PayrollComponent::class);
     }
 
+    public function banks(): HasMany
+    {
+        return $this->hasMany(Bank::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    public function overtimes(): HasMany
+    {
+        return $this->hasMany(Overtime::class);
+    }
+
     // public function timeoffRegulation(): HasOne
     // {
     //     return $this->hasOne(TimeoffRegulation::class);
     // }
 
+    public function absenceReminder(): HasOne
+    {
+        return $this->hasOne(AbsenceReminder::class);
+    }
     public function payrollSetting(): HasOne
     {
         return $this->hasOne(PayrollSetting::class);
@@ -144,10 +163,11 @@ class Company extends BaseModel implements TenantedInterface
     public function createPayrollSetting(): void
     {
         $this->payrollSetting()->create([
-            'company_id' => $this->id,
+            'cut_off_attendance_start_date' => '01',
+            'cut_off_attendance_end_date' => '31',
+            'payroll_start_date' => '01',
+            'payroll_end_date' => '31',
             'cut_off_date' => '20',
-            // 'cutoff_attendance_start_date' => '02',
-            // 'cutoff_attendance_end_date' => '05',
             'default_employee_tax_setting' => \App\Enums\TaxMethod::GROSS,
             'default_employee_salary_tax_setting' => \App\Enums\TaxSalary::TAXABLE,
             'default_oas_setting' => \App\Enums\JhtCost::PAID_BY_COMPANY,

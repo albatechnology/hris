@@ -34,10 +34,6 @@ class UserObserver
         if (empty($user->sign_date)) {
             $user->sign_date = $user->join_date;
         }
-
-        if ($user->company_id) {
-            $user->overtime_id = \App\Models\Overtime::where('company_id', $user->company_id)->first(['id'])?->id ?? null;
-        }
     }
 
     /**

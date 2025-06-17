@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ScheduleType;
 use App\Models\Company;
 use App\Models\ScheduleShift;
 use App\Models\Shift;
@@ -59,11 +58,11 @@ class ScheduleSeeder extends Seeder
                     'name' => 'Schedule Attendance ' . $company->name,
                     'effective_date' => date('Y') . '-01-01` ',
                 ],
-                [
-                    'name' => 'Schedule Patrol ' . $company->name,
-                    'effective_date' => date('Y') . '-01-01` ',
-                    'type' => ScheduleType::PATROL
-                ]
+                // [
+                //     'name' => 'Schedule Patrol ' . $company->name,
+                //     'effective_date' => date('Y') . '-01-01` ',
+                //     'type' => ScheduleType::PATROL
+                // ]
             ];
 
             foreach ($schedules as $dataSchedule) {

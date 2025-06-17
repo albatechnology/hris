@@ -4,17 +4,12 @@ namespace App\Jobs\Timeoff;
 
 use App\Enums\TimeoffPolicyType;
 use App\Enums\UserType;
-use App\Jobs\Timeoff\CleanRemainingTimeoff;
 use App\Models\Attendance;
 use App\Models\Company;
 use App\Models\Event;
-use App\Models\Timeoff;
 use App\Models\TimeoffPolicy;
-use App\Models\TimeoffQuota;
 use App\Models\User;
-use App\Models\UserTimeoffHistory;
 use App\Services\ScheduleService;
-use App\Services\TimeoffRegulationService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Bus\Queueable;
@@ -77,7 +72,6 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 
             $availableUsers = User::where('company_id', $company->id)
                 ->whereNotIn('id', [125, 189])
-                ->whereIn('id', [29,34,43,45,53,54,56,67,76,77,89,92,94,95,97,103,116,126,130,133,134,151,184,193,198,203,241])
                 ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->whereDoesntHave('timeoffs', function ($q) use ($fourMonthsAgo, $today, $timeoffPolicyIds) {
                     $q->approved()

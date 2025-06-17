@@ -41,9 +41,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'branch_id',
         'branch_id',
         'live_attendance_id',
-        'overtime_id',
-        // 'approval_id',
-        // 'parent_id',
         'name',
         'last_name',
         'email',
@@ -247,6 +244,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
     }
 
     public function detail(): HasOne

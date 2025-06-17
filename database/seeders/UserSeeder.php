@@ -60,25 +60,25 @@ class UserSeeder extends Seeder
             'group_id' => $group->id,
         ]);
 
-        $group = Group::findOrFail(2);
-        $administrator = User::create([
-            'group_id' => $group->id,
-            'company_id' => null,
-            'branch_id' => null,
-            'name' => 'Administrator - ' . $group->name,
-            'email' => 'administrator.alba@gmail.com',
-            'email_verified_at' => now(),
-            'password' => self::PASSWORD,
-            'type' => UserType::ADMIN,
-        ]);
-        $administrator->payrollInfo()->create([]);
-        $administrator->detail()->create([]);
-        DB::table('model_has_roles')->insert([
-            'role_id' => $administratorRole->id,
-            'model_type' => get_class($administrator),
-            'model_id' => $administrator->id,
-            'group_id' => $group->id,
-        ]);
+        // $group = Group::findOrFail(2);
+        // $administrator = User::create([
+        //     'group_id' => $group->id,
+        //     'company_id' => null,
+        //     'branch_id' => null,
+        //     'name' => 'Administrator - ' . $group->name,
+        //     'email' => 'administrator.alba@gmail.com',
+        //     'email_verified_at' => now(),
+        //     'password' => self::PASSWORD,
+        //     'type' => UserType::ADMIN,
+        // ]);
+        // $administrator->payrollInfo()->create([]);
+        // $administrator->detail()->create([]);
+        // DB::table('model_has_roles')->insert([
+        //     'role_id' => $administratorRole->id,
+        //     'model_type' => get_class($administrator),
+        //     'model_id' => $administrator->id,
+        //     'group_id' => $group->id,
+        // ]);
 
         // $group = Group::findOrFail(3);
         // $administrator = User::create([
@@ -159,42 +159,42 @@ class UserSeeder extends Seeder
             $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin) {
                 $admin->branches()->create(['branch_id' => $branch->id]);
 
-                if ($company->group_id == 2) {
+                if ($company->group_id == 1) {
                     $albaUsers = [
                         [
                             'name' => 'Nikko Febika',
                             'email' => 'febika.nikko@gmail.com',
-                            'image' => public_path('img/nikko.jpg')
+                            // 'image' => public_path('img/nikko.jpg')
                         ],
                         [
                             'name' => 'Ibnul Mundzir',
                             'email' => 'ibnulmundzir97@gmail.com',
-                            'image' => public_path('img/ibnul-patroli.jpeg')
+                            // 'image' => public_path('img/ibnul-patroli.jpeg')
                         ],
                         [
                             'name' => 'Masfud Difa Pratama',
                             'email' => 'masfuddifapratama@gmail.com',
-                            'image' => public_path('img/difa.jpg')
+                            // 'image' => public_path('img/difa.jpg')
                         ],
                         [
                             'name' => 'Muhammad Robbi Zulfikar',
                             'email' => 'mrobbizulfikar@gmail.com',
-                            'image' => public_path('img/zulfi.jpg')
+                            // 'image' => public_path('img/zulfi.jpg')
                         ],
                         [
                             'name' => 'Poedi Udi Maurif',
                             'email' => 'poedi1612@gmail.com',
-                            'image' => public_path('img/poedi.jpg')
+                            // 'image' => public_path('img/poedi.jpg')
                         ],
                         [
                             'name' => 'Teuku Banta Karollah',
                             'email' => 'bantakarollah@gmail.com',
-                            'image' => public_path('img/banta.jpg')
+                            // 'image' => public_path('img/banta.jpg')
                         ],
                         [
                             'name' => 'Urinaldi Sri Juliandika',
                             'email' => 'aldynsx@gmail.com',
-                            'image' => public_path('img/aldi.jpg')
+                            // 'image' => public_path('img/aldi.jpg')
                         ],
                     ];
 
@@ -212,7 +212,7 @@ class UserSeeder extends Seeder
                             'sign_date' => date('Y') . '-01-01',
                             'join_date' => date('Y') . '-01-01',
                         ]);
-                        $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
+                        // $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
                         $user->payrollInfo()->create([
                             'basic_salary' => 10000000
                         ]);

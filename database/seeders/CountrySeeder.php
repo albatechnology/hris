@@ -18,9 +18,9 @@ class CountrySeeder extends Seeder
       [
         'name' => 'Indonesia',
       ],
-      [
-        'name' => 'Malaysia',
-      ],
+    //   [
+    //     'name' => 'Malaysia',
+    //   ],
     ]);
 
     foreach (Country::all() as $country) {
