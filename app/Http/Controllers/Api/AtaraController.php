@@ -10,7 +10,7 @@ class AtaraController extends BaseController
 {
     public function contact(ContactRequest $request)
     {
-        Mail::to('info@atara.id')->bcc(['poedi@albatech.id', 'albaprogrammer2@gmail.com'])->send(new AtaraContactMail($request));
+        Mail::to('info@atara.id')->bcc(['poedi@albatech.id', 'albaprogrammer2@gmail.com'])->queue(new AtaraContactMail($request->validated()));
 
         return $this->okResponse();
     }

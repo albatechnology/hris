@@ -17,7 +17,7 @@ class AtaraContactMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(public ContactRequest $request) {}
+    public function __construct(public array $request) {}
 
     /**
      * Get the message envelope.
@@ -37,11 +37,11 @@ class AtaraContactMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.atara.contact',
             with: [
-                'support_type' => $this->request->support_type,
-                'name' => $this->request->name,
-                'email' => $this->request->email,
-                'phone' => $this->request->phone,
-                'message' => $this->request->message,
+                'support_type' => $this->request['support_type'],
+                'name' => $this->request['name'],
+                'email' => $this->request['email'],
+                'phone' => $this->request['phone'],
+                'message' => $this->request['message'],
             ]
         );
     }
