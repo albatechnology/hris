@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('name')->default(BankName::OCBC->value);
             $table->string('account_no', 50);
             $table->string('account_holder', 100);
-            $table->string('code', 50);
-            $table->string('branch', 100);
+            $table->string('code', 50)->nullable();
+            $table->string('branch', 100)->nullable();
             $table->timestamps();
 
             // created/updated/deleted info
