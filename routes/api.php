@@ -110,7 +110,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::post('users/fcm-token', [UserController::class, 'fcmToken']);
     Route::put('users/password', [UserController::class, 'updatePassword']);
     Route::post('users/verify-password', [UserController::class, 'verifyPassword']);
-    Route::group(['prefix' => 'users/{user}', 'as' => 'user.'], function () {
+    Route::group(['prefix' => 'users/{user}'], function () {
         Route::get('payroll', [UserController::class, 'payroll']);
         Route::get('thr', [UserController::class, 'thr']);
         Route::get('companies', [UserController::class, 'companies']);
@@ -136,7 +136,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::post('rehire', [UserController::class, 'rehire']);
     });
 
-    // Route::apiResource('users', UserController::class);
+    Route::apiResource('users', UserController::class);
 
     Route::apiResource('roles', RoleController::class);
     Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);
@@ -149,11 +149,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         //     Route::apiResource('periods', TimeoffPeriodRegulationController::class);
         // });
 
-        // Route::apiResource('timeoff-regulation/periods/{period}/months', TimeoffRegulationMonthController::class)->except('store', 'destroy');
-        // Route::apiResource('timeoff-regulation/periods', TimeoffPeriodRegulationController::class);
-        // Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
-        // Route::post('timeoff-regulation', [TimeoffRegulationController::class, 'store']);
-        // Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
+        Route::apiResource('timeoff-regulation/periods/{period}/months', TimeoffRegulationMonthController::class)->except('store', 'destroy');
+        Route::apiResource('timeoff-regulation/periods', TimeoffPeriodRegulationController::class);
+        Route::get('timeoff-regulation', [TimeoffRegulationController::class, 'index']);
+        Route::post('timeoff-regulation', [TimeoffRegulationController::class, 'store']);
+        Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
         Route::get('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'index']);
         Route::post('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'store']);
     });
@@ -324,7 +324,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::delete('users', [TaskHourController::class, 'deleteUsers']);
     });
     Route::apiResource('task-hours', TaskHourController::class);
-    Route::group(['prefix' => 'tasks/{task}', 'as' => 'tasks.'], function () {
+    Route::group(['prefix' => 'tasks/{task}'], function () {
         Route::put('restore', [TaskController::class, 'restore']);
         Route::delete('force-delete', [TaskController::class, 'forceDelete']);
     });
@@ -354,7 +354,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('guest-books', GuestBookController::class);
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
-    Route::group(['prefix' => 'patrols/{patrol}', 'as' => 'patrols.'], function () {
+    Route::group(['prefix' => 'patrols/{patrol}'], function () {
         Route::get('export', [PatrolController::class, 'export']);
         Route::get('users', [PatrolController::class, 'userIndex']);
         Route::get('users/{user_patrol_id}', [PatrolController::class, 'userShow']);
