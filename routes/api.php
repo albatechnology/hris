@@ -77,6 +77,9 @@ use App\Http\Controllers\Api\UserTransferController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('atara/contact', [\App\Http\Controllers\Api\AtaraController::class, 'contact']);
+// Route::post('subscriptions', [SubscriptionController::class, 'store']);
+
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
     Route::post('token', 'login');
 });
