@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Company\StoreRequest;
 use App\Http\Requests\Api\Company\UpdateRequest;
 use App\Http\Resources\Company\CompanyResource;
+use App\Interfaces\Services\Company\CompanyServiceInterface;
 use App\Models\Company;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class CompanyController extends BaseController
 {
-    public function __construct()
+    public function __construct(private CompanyServiceInterface $service)
     {
         parent::__construct();
         $this->middleware('permission:company_access', ['only' => ['restore']]);
@@ -59,16 +59,7 @@ class CompanyController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $company = Company::create($request->validated());
-            DB::commit();
-        } catch (\Exception $th) {
-            DB::rollBack();
-
-            return $this->errorResponse($th->getMessage());
-        }
-
+        $company = $this->service->create($request->validated());
         return new CompanyResource($company);
     }
 

@@ -19,8 +19,8 @@ return new class extends Migration
             $table->char('cut_off_date', 2)->default("20");
             $table->boolean('is_attendance_pay_last_month')->default(false);
             // $table->boolean('is_default_cutoff')->default(0);
-            // $table->char('cutoff_attendance_start_date', 2)->nullable();
-            // $table->char('cutoff_attendance_end_date', 2)->nullable();
+            // $table->char('cut_off_attendance_start_date', 2)->nullable();
+            // $table->char('cut_off_attendance_end_date', 2)->nullable();
             // $table->boolean('is_attendance_pay_last_month')->default(0);
             // $table->integer('cutoff_payroll_end_date')->nullable();
             // $table->integer('cutoff_payroll_end_date')->nullable();

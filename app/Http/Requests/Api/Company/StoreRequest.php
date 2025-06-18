@@ -2,18 +2,23 @@
 
 namespace App\Http\Requests\Api\Company;
 
-use App\Enums\TimeoffRenewType;
+use App\Models\Country;
+use App\Models\Group;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'country_id' => Country::where('name', 'indonesia')->first()?->id,
+        ]);
     }
 
     /**
@@ -24,9 +29,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => ['required', new CompanyTenantedRule(Group::class, 'Group not found')],
             'name' => 'required|string',
-            'country_id' => 'nullable|integer',
+            'country_id' => 'required|integer',
             'country' => 'nullable|string',
             'province' => 'nullable|string',
             'city' => 'nullable|string',

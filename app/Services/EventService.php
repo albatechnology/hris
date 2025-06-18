@@ -21,7 +21,6 @@ class EventService
      *
      * @return int The total count of event dates result.
      */
-
     public static function countTotalDateInPeriods(User $user, string|DateTime $startPeriod, string|DateTime $endPeriod, $types): int
     {
         // get period dates between $startPeriod and $endPeriod

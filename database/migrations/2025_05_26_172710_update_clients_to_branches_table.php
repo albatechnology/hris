@@ -36,7 +36,7 @@ return new class extends Migration
         }
 
         Schema::table('patrols', function (Blueprint $table) {
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->default(1)->constrained()->cascadeOnDelete();
         });
 
@@ -55,15 +55,15 @@ return new class extends Migration
             DB::statement('ALTER TABLE patrol_locations DROP FOREIGN KEY patrol_locations_client_location_id_foreign');
         }
         Schema::table('patrol_locations', function (Blueprint $table) {
-            $table->integer('client_location_id')->unsigned()->nullable()->change();
+            // $table->integer('client_location_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(BranchLocation::class)->after('patrol_id')->default(1)->constrained();
         });
 
-        PatrolLocation::all()->each(function (PatrolLocation $patrolLocation) {
-            $patrolLocation->update([
-                'branch_location_id' => $patrolLocation->client_location_id
-            ]);
-        });
+        // PatrolLocation::all()->each(function (PatrolLocation $patrolLocation) {
+        //     $patrolLocation->update([
+        //         'branch_location_id' => $patrolLocation->client_location_id
+        //     ]);
+        // });
 
 
         $foreignKeyExists = DB::select("
@@ -80,7 +80,7 @@ return new class extends Migration
             DB::statement('ALTER TABLE absence_reminders DROP FOREIGN KEY absence_reminders_client_id_foreign');
         }
         Schema::table('absence_reminders', function (Blueprint $table) {
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('company_id')->nullable()->constrained();
         });
 
@@ -102,7 +102,7 @@ return new class extends Migration
             DB::statement('ALTER TABLE guest_books DROP FOREIGN KEY guest_books_client_id_foreign');
         }
         Schema::table('guest_books', function (Blueprint $table) {
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->foreignIdFor(Branch::class)->after('id')->nullable()->constrained();
         });
 
@@ -129,7 +129,7 @@ return new class extends Migration
             // } catch (QueryException $e) {
             //     // Foreign key nggak ada, skip
             // }
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
@@ -148,7 +148,7 @@ return new class extends Migration
             DB::statement('ALTER TABLE panics DROP FOREIGN KEY panics_client_id_foreign');
         }
         Schema::table('panics', function (Blueprint $table) {
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('id')->unsigned()->nullable();
         });
 
@@ -171,7 +171,7 @@ return new class extends Migration
             // } catch (QueryException $e) {
             //     // Foreign key nggak ada, skip
             // }
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
@@ -195,7 +195,7 @@ return new class extends Migration
             // } catch (QueryException $e) {
             //     // Foreign key nggak ada, skip
             // }
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
@@ -219,7 +219,7 @@ return new class extends Migration
             // } catch (QueryException $e) {
             //     // Foreign key nggak ada, skip
             // }
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 
@@ -242,7 +242,7 @@ return new class extends Migration
             // } catch (QueryException $e) {
             //     // Foreign key nggak ada, skip
             // }
-            $table->integer('client_id')->unsigned()->nullable()->change();
+            // $table->integer('client_id')->unsigned()->nullable()->change();
             $table->integer('branch_id')->after('company_id')->unsigned()->nullable();
         });
 

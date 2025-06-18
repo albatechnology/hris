@@ -23,19 +23,12 @@ use App\Models\Bank;
 use App\Models\Branch;
 use App\Models\Overtime;
 use App\Rules\CompanyTenantedRule;
-use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    
 
     /**
      * Prepare inputs for validation.
@@ -65,10 +58,6 @@ class RegisterRequest extends FormRequest
             'email_verified_at' => $emailVerifiedAt,
             'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
-
-        if ($this->company_id) {
-            $data['overtime_id'] = \App\Models\Overtime::where('company_id', $this->company_id)->first(['id'])?->id;
-        }
 
         $this->merge($data);
     }
