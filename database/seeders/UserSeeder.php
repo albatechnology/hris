@@ -108,10 +108,13 @@ class UserSeeder extends Seeder
             ]);
             $permissions = PermissionService::getPermissionsData(PermissionService::administratorPermissions());
             $adminRole->syncPermissions($permissions);
+
+            $liveAttendanceId = $company->liveAttendances()->first()?->id;
             $admin = User::create([
                 'group_id' => $company->group_id,
                 'company_id' => $company->id,
                 'branch_id' => null,
+                'live_attendance_id' => $liveAttendanceId,
                 'name' => 'Admin ' . $company->name,
                 'email' => 'admin' . $company->id . '@gmail.com',
                 'email_verified_at' => now(),
@@ -156,7 +159,7 @@ class UserSeeder extends Seeder
 
             // (new UserSunImport)->import(public_path('import_users.xlsx'));
 
-            $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin) {
+            $company->branches->each(function (Branch $branch) use ($company, $userRole, $admin, $liveAttendanceId) {
                 $admin->branches()->create(['branch_id' => $branch->id]);
 
                 if ($company->group_id == 1) {
@@ -202,6 +205,7 @@ class UserSeeder extends Seeder
                         $user = $branch->users()->create([
                             // 'approval_id' => $admin->id,
                             // 'parent_id' => $admin->id,
+                            'live_attendance_id' => $liveAttendanceId,
                             'name' => $albaUser['name'],
                             'email' => $albaUser['email'],
                             'email_verified_at' => now(),
@@ -212,7 +216,11 @@ class UserSeeder extends Seeder
                             'sign_date' => date('Y') . '-01-01',
                             'join_date' => date('Y') . '-01-01',
                         ]);
-                        $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
+
+                        if (env('MEDIA_DISK', 'public') == 's3') {
+                            $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
+                        }
+
                         $user->payrollInfo()->create([
                             'basic_salary' => 10000000
                         ]);

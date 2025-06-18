@@ -2,19 +2,22 @@
 
 namespace App\Http\Requests\Api\Subscription;
 
-use App\Models\Subscription;
-use App\Rules\CompanyTenantedRule;
-use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'active_end_date' => $this->active_end_date ?? date('Y-m-d', strtotime('+' . config('app.free_trial_max_weeks') . ' days')),
+            'max_companies' => $this->max_companies ?? config('app.free_trial_min_data'),
+            'max_users' => $this->max_users ?? config('app.free_trial_max_data'),
+        ]);
     }
 
     /**
@@ -30,6 +33,12 @@ class StoreRequest extends FormRequest
             'phone' => 'required|string|max:16',
             'company_name' => 'required|string|max:50',
             'company_address' => 'required|string|max:150',
+            'active_end_date' => 'required|date',
+            'max_companies' => 'required|integer',
+            'max_users' => 'required|integer',
+            'price' => 'nullable|integer',
+            'discount' => 'nullable|integer',
+            'total_price' => 'nullable|integer',
         ];
     }
 }

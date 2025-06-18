@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Http\Services\Subscription;
 
 use App\Enums\UserType;
 use App\Events\Subscription\SubscriptionCreated;
-use App\Interfaces\Repositories\SubscriptionRepositoryInterface;
-use App\Interfaces\Services\SubscriptionServiceInterface;
+use App\Http\Services\BaseService;
+use App\Http\Services\Company\CompanyInitializeService;
+use App\Interfaces\Repositories\Subscription\SubscriptionRepositoryInterface;
+use App\Interfaces\Services\Subscription\SubscriptionServiceInterface;
 use App\Models\Company;
 use App\Models\Group;
 use App\Models\Subscription;
@@ -35,17 +37,9 @@ class SubscriptionService extends BaseService implements SubscriptionServiceInte
                 'address' => $data['company_address'],
                 'country_id' => 1,
             ]);
+            app(CompanyInitializeService::class)($company);
 
-            $branch = $company->branches()->create([
-                'name' => $company->name,
-                'country' => $company->country,
-                'province' => $company->province,
-                'city' => $company->city,
-                'zip_code' => $company->zip_code,
-                'lat' => $company->lat,
-                'lng' => $company->lng,
-                'address' => $company->address,
-            ]);
+            $branch = $company->branches()->select('id', 'company_id')->firstOrFail();
 
             /** @var User $user */
             $user = User::create([
@@ -55,6 +49,7 @@ class SubscriptionService extends BaseService implements SubscriptionServiceInte
                 'group_id' => $group->id,
                 'company_id' => $company->id,
                 'branch_id' => $branch->id,
+                'live_attendance_id' => $company->liveAttendances()->select('id')->first()?->id ?? null,
                 'password' => Str::random(10),
                 'type' => UserType::ADMIN,
             ]);
@@ -89,6 +84,8 @@ class SubscriptionService extends BaseService implements SubscriptionServiceInte
 
             $subscription = $this->repository->create([
                 'user_id' => $user->id,
+                'group_id' => $group->id,
+                ...$data,
             ]);
             DB::commit();
         } catch (Exception $e) {

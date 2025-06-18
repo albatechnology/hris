@@ -193,4 +193,7 @@ return [
     'clock_out_tolerance' => env('CLOCK_OUT_TOLERANCE', 2),
     'logo_location' => env('LOGO_LOCATION', "/img/logo/alba.webp"),
     'email_contact' => env('EMAIL_CONTACT', env("MAIL_FROM_ADDRESS", "info@albatech.id")),
+    'free_trial_min_data' => env('FREE_TRIAL_MIN_DATA', 1),
+    'free_trial_max_data' => env('FREE_TRIAL_MAX_DATA', 10),
+    'free_trial_max_weeks' => env('FREE_TRIAL_MAX_WEEKS', 2),
 ];

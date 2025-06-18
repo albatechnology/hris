@@ -14,13 +14,7 @@ class UpdateRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    
 
     /**
      * Prepare inputs for validation.

@@ -1,23 +1,17 @@
 <?php
 
-namespace App\Observers;
+namespace App\Http\Services\Company;
 
 use App\Enums\BankName;
 use App\Enums\EventType;
 use App\Enums\TimeoffPolicyType;
 use App\Models\Company;
-use App\Models\Overtime;
-use App\Models\Role;
 use App\Services\EventService;
 use App\Services\SettingService;
-use FontLib\Table\Type\name;
 
-class CompanyObserver
+class CompanyInitializeService
 {
-    /**
-     * Handle the Company "created" event.
-     */
-    public function created(Company $company): void
+    public function __invoke(Company $company): void
     {
         $company->absenceReminder()->create();
         $company->banks()->create([
@@ -26,6 +20,17 @@ class CompanyObserver
             'account_holder' => $company->name,
             'code' => '0000000000',
             'branch' => $company->city,
+        ]);
+
+        $company->branches()->create([
+            'name' => $company->name,
+            'country' => $company->country,
+            'province' => $company->province,
+            'city' => $company->city,
+            'zip_code' => $company->zip_code,
+            'lat' => $company->lat,
+            'lng' => $company->lng,
+            'address' => $company->address,
         ]);
 
         $division = $company->divisions()->create([
@@ -53,8 +58,8 @@ class CompanyObserver
         $liveAttendance->locations()->create([
             'name' => 'Head Office',
             'radius' => 100,
-            'lat' => "",
-            'lng' => "",
+            'lat' => "0",
+            'lng' => "0",
         ]);
 
         $company->overtimes()->create([
@@ -68,7 +73,7 @@ class CompanyObserver
 
         // Role::create([
         //     'group_id' => $company->group_id,
-        //     'name' => 'User' . $company->group_id,
+        //     'name' => 'User ' . $company->group_id,
         //     'guard_name' => 'web',
         // ]);
 
@@ -104,36 +109,4 @@ class CompanyObserver
             'max_consecutively_day' => 5,
         ]);
     }
-
-    /**
-     * Handle the Company "updated" event.
-     */
-    // public function updated(Company $company): void
-    // {
-    //     //
-    // }
-
-    /**
-     * Handle the Company "deleted" event.
-     */
-    // public function deleted(Company $company): void
-    // {
-    //     //
-    // }
-
-    /**
-     * Handle the Company "restored" event.
-     */
-    // public function restored(Company $company): void
-    // {
-    //     //
-    // }
-
-    /**
-     * Handle the Company "force deleted" event.
-     */
-    // public function forceDeleted(Company $company): void
-    // {
-    //     //
-    // }
 }

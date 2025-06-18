@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Http\Services\Company\CompanyInitializeService;
 use App\Models\Group;
 use Illuminate\Database\Seeder;
 
@@ -592,20 +593,22 @@ class GroupSeeder extends Seeder
             'lat' => '-6.2326902',
             'lng' => '106.6645009',
         ]);
-        $company->positions()->createMany($positions);
-        $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
-        $division->departments()->createMany($departments);
-        $company->branches()->create([
-            'name' => 'Alba Alam Sutera',
-            'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
-            'country' => 'Indonesia',
-            'province' => 'Banten',
-            'city' => 'Kota Tangerang Selatan',
-            'zip_code' => '15320',
-            'lat' => '-6.2348656',
-            'lng' => '106.5766001',
-            'umk' => 5067381,
-        ]);
+
+        app(CompanyInitializeService::class)($company);
+        // $company->positions()->createMany($positions);
+        // $division = $company->divisions()->create(['name' => 'Operasional (' . $company->name . ')']);
+        // $division->departments()->createMany($departments);
+        // $company->branches()->create([
+        //     'name' => 'Alba Alam Sutera',
+        //     'address' => 'Ruko Alam Sutera 29D, Jl. Jalur Sutera No.28, Pakualam, Kec. Serpong Utara, Kota Tangerang Selatan, Banten 15320',
+        //     'country' => 'Indonesia',
+        //     'province' => 'Banten',
+        //     'city' => 'Kota Tangerang Selatan',
+        //     'zip_code' => '15320',
+        //     'lat' => '-6.2348656',
+        //     'lng' => '106.5766001',
+        //     'umk' => 5067381,
+        // ]);
 
 
         // GROUP PATROL

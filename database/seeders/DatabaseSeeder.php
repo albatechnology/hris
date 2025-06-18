@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             ScheduleSeeder::class,
             UserSeeder::class,
-            LiveAttendanceSeeder::class,
+            // LiveAttendanceSeeder::class,
             TimeoffPolicySeeder::class,
             CustomFieldSeeder::class,
             NationalHolidaySeeder::class,

@@ -3,19 +3,27 @@
 namespace App\Models;
 
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends BaseModel
 {
-    use CustomSoftDeletes, BelongsToUser;
+    use CreatedUpdatedInfo, CustomSoftDeletes, BelongsToUser;
 
     protected $fillable = [
         'user_id',
-        // 'stripe_id',
-        // 'stripe_price_id',
-        // 'stripe_status',
-        // 'stripe_price',
-        // 'quantity',
-        // 'cancel_at_period_end',
+        'group_id',
+        'active_end_date',
+        'max_users',
+        'max_companies',
+        'price',
+        'discount',
+        'total_price',
     ];
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
 }

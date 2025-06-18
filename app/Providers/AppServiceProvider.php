@@ -3,24 +3,20 @@
 namespace App\Providers;
 
 use App\Broadcasting\FcmChannel;
-use App\Http\Repositories\BankRepository;
-use App\Http\Repositories\SubscriptionRepository;
-use App\Http\Services\BankService;
-use App\Http\Services\SubscriptionService;
-use App\Interfaces\Repositories\BankRepositoryInterface;
-use App\Interfaces\Repositories\SubscriptionRepositoryInterface;
-use App\Interfaces\Services\BankServiceInterface;
-use App\Interfaces\Services\SubscriptionServiceInterface;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     public $singletons = [
-        BankRepositoryInterface::class => BankRepository::class,
-        BankServiceInterface::class => BankService::class,
-        SubscriptionRepositoryInterface::class => SubscriptionRepository::class,
-        SubscriptionServiceInterface::class => SubscriptionService::class,
+        \App\Interfaces\Repositories\BankRepositoryInterface::class => \App\Http\Repositories\BankRepository::class,
+        \App\Interfaces\Services\BankServiceInterface::class => \App\Http\Services\BankService::class,
+
+        \App\Interfaces\Repositories\Subscription\SubscriptionRepositoryInterface::class => \App\Http\Repositories\Subscription\SubscriptionRepository::class,
+        \App\Interfaces\Services\Subscription\SubscriptionServiceInterface::class => \App\Http\Services\Subscription\SubscriptionService::class,
+
+        \App\Interfaces\Repositories\Company\CompanyRepositoryInterface::class => \App\Http\Repositories\Company\CompanyRepository::class,
+        \App\Interfaces\Services\Company\CompanyServiceInterface::class => \App\Http\Services\Company\CompanyService::class,
     ];
 
     /**

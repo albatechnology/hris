@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Repositories;
+namespace App\Http\Repositories\Subscription;
 
-use App\Interfaces\Repositories\SubscriptionRepositoryInterface;
+use App\Http\Repositories\BaseRepository;
+use App\Interfaces\Repositories\Subscription\SubscriptionRepositoryInterface;
 use App\Models\Subscription;
 
 class SubscriptionRepository extends BaseRepository implements SubscriptionRepositoryInterface

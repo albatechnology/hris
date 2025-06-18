@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Subscription\StoreRequest;
 use App\Http\Requests\Api\Subscription\UpdateRequest;
 use App\Http\Resources\DefaultResource;
-use App\Interfaces\Services\SubscriptionServiceInterface;
+use App\Interfaces\Services\Subscription\SubscriptionServiceInterface;
 use App\Models\Subscription;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;

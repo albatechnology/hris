@@ -6,13 +6,11 @@ use App\Events\Attendance\AttendanceRequested;
 use App\Events\Subscription\SubscriptionCreated;
 use App\Listeners\Attendance\RequestAttendanceNotification;
 use App\Listeners\Subscription\SendSubscriptionEmail;
-use App\Models\Company;
 use App\Models\Loan;
 use App\Models\OvertimeRequest;
 use App\Models\RunPayroll;
 use App\Models\RunThr;
 use App\Models\User;
-use App\Observers\CompanyObserver;
 use App\Observers\LoanObserver;
 use App\Observers\OvertimeRequestObserver;
 use App\Observers\RunPayrollObserver;
@@ -47,7 +45,6 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         OvertimeRequest::observe(OvertimeRequestObserver::class);
-        Company::observe(CompanyObserver::class);
         // TimeoffRegulation::observe(TimeoffRegulationObserver::class);
         User::observe(UserObserver::class);
         RunPayroll::observe(RunPayrollObserver::class);
