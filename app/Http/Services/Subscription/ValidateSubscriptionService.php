@@ -29,7 +29,7 @@ class ValidateSubscriptionService
 
     public function validate(): bool
     {
-        if (config('app.name') != 'LUMORA') return true;
+        if (config('app.name') != 'LUMORA' || in_array($this->groupId, [1, 2, 3])) return true;
 
         if (!$this->subscription) throw new NotFoundHttpException('Subscription not found');
 
