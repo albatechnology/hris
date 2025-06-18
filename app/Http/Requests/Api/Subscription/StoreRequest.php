@@ -14,7 +14,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'active_end_date' => $this->active_end_date ?? date('Y-m-d', strtotime('+' . config('app.free_trial_max_weeks') . ' days')),
+            'active_end_date' => $this->active_end_date ?? date('Y-m-d', strtotime('+' . config('app.free_trial_max_weeks') . ' week')),
             'max_companies' => $this->max_companies ?? config('app.free_trial_min_data'),
             'max_users' => $this->max_users ?? config('app.free_trial_max_data'),
         ]);
