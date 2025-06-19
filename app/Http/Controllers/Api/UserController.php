@@ -30,6 +30,7 @@ use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserMeResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UsersImport;
+use App\Interfaces\Services\User\UserServiceInterface;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\RunPayroll;
@@ -49,7 +50,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
-    public function __construct()
+    public function __construct(private UserServiceInterface $service)
     {
         parent::__construct();
         $this->middleware('permission:user_access', ['only' => ['restore']]);
@@ -190,56 +191,7 @@ class UserController extends BaseController
 
     public function register(RegisterRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $user = User::create($request->validated());
-
-            if ($request->hasFile('photo_profile') && $request->file('photo_profile')->isValid()) {
-                $mediaCollection = MediaCollection::USER->value;
-                $user->addMediaFromRequest('photo_profile')->toMediaCollection($mediaCollection);
-            }
-
-            $user->detail()->create($request->validated());
-            $user->payrollInfo()->create($request->validated());
-            $user->positions()->createMany($request->positions ?? []);
-            $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id]);
-
-            $companyIds = collect($request->company_ids ?? []);
-            if ($user->company_id) {
-                $companyIds->push($user->company_id);
-            }
-            $companyIds = $companyIds->unique()->values()
-                ->map(function ($companyId) {
-                    return ['company_id' => $companyId];
-                })->all();
-            $user->companies()->createMany($companyIds);
-
-            $branchIds = collect($request->branch_ids ?? []);
-            if ($user->branch_id) {
-                $branchIds->push($user->branch_id);
-            }
-            $branchIds = $branchIds->unique()->values()
-                ->map(function ($branchId) {
-                    return ['branch_id' => $branchId];
-                })->all();
-            $user->branches()->createMany($branchIds);
-
-            if ($request->overtime_id) {
-                $user->overtimes()->create(['overtime_id' => $request->overtime_id]);
-            }
-
-            if (empty($request->password)) {
-                $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
-                $user->notify(new ($notificationType->getNotificationClass())($notificationType));
-            }
-
-            DB::commit();
-        } catch (Exception $th) {
-            DB::rollBack();
-
-            return $this->errorResponse($th->getMessage());
-        }
-
+        $user = $this->service->register($request);
         return new UserResource($user);
     }
 

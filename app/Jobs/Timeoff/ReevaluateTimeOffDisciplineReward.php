@@ -71,7 +71,6 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 ])->get(['id']);
 
             $availableUsers = User::where('company_id', $company->id)
-                ->whereNotIn('id', [125, 189])
                 ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->whereDoesntHave('timeoffs', function ($q) use ($fourMonthsAgo, $today, $timeoffPolicyIds) {
                     $q->approved()

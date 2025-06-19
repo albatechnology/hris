@@ -217,7 +217,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     protected function password(): Attribute
     {
         return Attribute::make(
-            set: fn(?string $value) => bcrypt($value ?? 'secret'),
+            set: fn(?string $value) => bcrypt($value),
         );
     }
 

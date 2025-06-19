@@ -217,9 +217,7 @@ class UserSeeder extends Seeder
                             'join_date' => date('Y') . '-01-01',
                         ]);
 
-                        if (env('MEDIA_DISK', 'public') == 's3') {
-                            $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
-                        }
+                        $user->addMedia($albaUser['image'])->preservingOriginal()->toMediaCollection('user');
 
                         $user->payrollInfo()->create([
                             'basic_salary' => 10000000

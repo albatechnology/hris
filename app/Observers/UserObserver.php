@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Enums\UserType;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class UserObserver
 {
@@ -23,6 +24,10 @@ class UserObserver
      */
     public function creating(User $user): void
     {
+        if (empty($user->password)) {
+            $user->password = Str::random(12);
+        }
+
         if (empty($user->type)) {
             $user->type = UserType::USER;
         }
