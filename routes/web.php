@@ -6,11 +6,12 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
-use App\Http\Controllers\FirebaseController;
 use App\Http\Controllers\NationalHolidayController;
 use App\Http\Controllers\OvertimeController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TimeoffController;
 use App\Jobs\AnnualLeave\ExistingEmployee;
 use App\Jobs\AnnualLeave\NewEmployee;
@@ -65,6 +66,9 @@ Route::group(['middleware' => ['auth', 'isSuperAdmin']], function () {
 
     Route::post('national-holidays/import', [NationalHolidayController::class, 'import'])->name('national-holidays.import');
     Route::resource('national-holidays', NationalHolidayController::class);
+
+    Route::resource('payments', PaymentController::class);
+    Route::resource('subscriptions', SubscriptionController::class);
 
     // Route::get('national-holidays-import-export', [NationalHolidayController::class, 'fileImportExport']);
     // Route::post('national-holidays-import', [NationalHolidayController::class, 'fileImport'])->name('national-holidays-import');

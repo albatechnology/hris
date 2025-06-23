@@ -7,7 +7,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\View\Component;
 
-class InputEmail extends Component
+class InputTextarea extends Component
 {
     /**
      * Create a new component instance.
@@ -16,13 +16,11 @@ class InputEmail extends Component
         Model $model,
         public string $name,
         public string $label,
-        public int $minlength = 0,
         public mixed $value = null,
         public ?string $helper = null,
         public ?string $placeholder = null,
         public ?string $required = null,
         public ?string $class = null,
-        public ?string $readonly = null,
     ) {
         // model is provided for edit
         if ($model) {
@@ -35,6 +33,6 @@ class InputEmail extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.forms.input-email');
+        return view('components.forms.input-textarea');
     }
 }

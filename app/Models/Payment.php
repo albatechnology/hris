@@ -13,7 +13,6 @@ class Payment extends Model
 
     protected $fillable = [
         'subscription_id',
-        'active_end_date',
         'payment_at',
         'total_price',
     ];

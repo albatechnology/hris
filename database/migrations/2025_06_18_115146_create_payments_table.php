@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Subscription::class)->constrained()->cascadeOnDelete();
-            $table->date('active_end_date');
             $table->timestamp('payment_at');
             $table->integer('total_price')->unsigned()->default(0);
             $table->timestamps();

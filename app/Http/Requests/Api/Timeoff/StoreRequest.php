@@ -10,8 +10,6 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

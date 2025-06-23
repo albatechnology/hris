@@ -17,6 +17,7 @@ class MenuService
             self::attendances(),
             self::timeoffs(),
             self::overtimes(),
+            self::subscriptions(),
         ];
     }
 
@@ -70,5 +71,13 @@ class MenuService
         $overtimes = new Submenu('overtime_access', 'overtimes', 'fas fa-', 'Overtimes');
 
         return new Menu('overtime_management_access', 'fas fa-building', 'Overtimes', ...[$overtimes]);
+    }
+
+    protected static function subscriptions()
+    {
+        $subscriptions = new Submenu('group_access', 'subscriptions', 'fas fa-handshake', 'Subscriptions');
+        $payments = new Submenu('group_access', 'payments', 'fas fa-credit-card', 'Payments');
+
+        return new Menu('subscription_management_access', 'fas fa-handshake', 'Subscriptions', ...[$subscriptions, $payments]);
     }
 }

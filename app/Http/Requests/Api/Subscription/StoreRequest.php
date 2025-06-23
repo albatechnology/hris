@@ -38,7 +38,7 @@ class StoreRequest extends FormRequest
             'max_users' => 'required|integer',
             'price' => 'nullable|integer',
             'discount' => 'nullable|integer',
-            'total_price' => 'nullable|integer',
+            // 'total_price' => 'nullable|integer',
         ];
     }
 }

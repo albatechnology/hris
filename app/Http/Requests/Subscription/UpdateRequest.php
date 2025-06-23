@@ -1,11 +1,19 @@
 <?php
 
-namespace App\Http\Requests\Api\Subscription;
+namespace App\Http\Requests\Subscription;
 
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
 {
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return auth()->check();
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -13,13 +21,9 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        dd($this->all());
         return [
-            'active_end_date' => 'required|date',
-            'max_companies' => 'required|integer',
-            'max_users' => 'required|integer',
-            'price' => 'nullable|integer',
-            'discount' => 'nullable|integer',
-            // 'total_price' => 'nullable|integer',
+            'name' => 'required|string',
         ];
     }
 }
