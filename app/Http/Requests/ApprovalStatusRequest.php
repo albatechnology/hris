@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\ApprovalStatus;
+use App\Models\Branch;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -38,6 +40,9 @@ class ApprovalStatusRequest extends FormRequest
     {
         return [
             'filter.approval_status' => ['required', Rule::enum(ApprovalStatus::class)],
+            'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'filter.name' => ['nullable', 'string'],
+            'filter.created_at' => ['nullable', 'created_at'],
         ];
     }
 }

@@ -67,6 +67,15 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
         // );
     }
 
+    public function scopeWhereBranch(Builder $q, int $value)
+    {
+        $q->whereHas('attendance', fn($q) => $q->whereHas('user', fn($q) => $q->where('branch_id', $value)));
+    }
+    public function scopeWhereUserName(Builder $q, string $value)
+    {
+        $q->whereHas('attendance', fn($q) => $q->whereHas('user', fn($q) => $q->whereLike('name', $value)));
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(\App\Enums\MediaCollection::ATTENDANCE->value)

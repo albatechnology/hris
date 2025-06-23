@@ -158,7 +158,11 @@ class TaskRequestController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = TaskRequest::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -175,6 +179,9 @@ class TaskRequestController extends BaseController
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedIncludes([
                 AllowedInclude::callback('taskHour', fn($q) => $q->select('id', 'name', 'task_id')->with('task', fn($q) => $q->select('id', 'name'))),

@@ -274,7 +274,11 @@ class TimeoffController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = Timeoff::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -297,6 +301,9 @@ class TimeoffController extends BaseController
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'request_type',
                 'is_cancelled',
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedIncludes([
                 AllowedInclude::callback('timeoffPolicy', fn($query) => $query->selectMinimalist()),

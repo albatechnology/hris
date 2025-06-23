@@ -69,6 +69,15 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
     //     $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
     // }
 
+    public function scopeWhereBranch(Builder $q, int $value)
+    {
+        $q->whereHas('user', fn($q) => $q->where('branch_id', $value));
+    }
+    public function scopeWhereUserName(Builder $q, string $value)
+    {
+        $q->whereHas('user', fn($q) => $q->whereLike('name', $value));
+    }
+
     public function scopeWhereBetweenStartEnd(Builder $query, string $startDate, string $endDate)
     {
         $query->whereDate('start_at', '<=', date('Y-m-d', strtotime($startDate)))->whereDate('end_at', '>=', date('Y-m-d', strtotime($endDate)));

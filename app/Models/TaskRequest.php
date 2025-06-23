@@ -11,7 +11,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class TaskRequest extends RequestedBaseModel implements TenantedInterface, HasMedia
 {
-    use BelongsToUser, InteractsWithMedia, TenantedThroughUser;
+    use InteractsWithMedia, TenantedThroughUser;
 
     protected $fillable = [
         'user_id',

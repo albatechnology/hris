@@ -34,6 +34,15 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         return $this->morphMany(RequestApproval::class, 'requestable');
     }
 
+    public function scopeWhereBranch(Builder $q, int $value)
+    {
+        $q->whereHas('user', fn($q) => $q->where('branch_id', $value));
+    }
+    public function scopeWhereUserName(Builder $q, string $value)
+    {
+        $q->whereHas('user', fn($q) => $q->whereLike('name', $value));
+    }
+
     public function scopeApproved(Builder $query)
     {
         $query->has('approvals')

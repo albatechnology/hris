@@ -135,15 +135,14 @@ class RequestScheduleController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function countTotalApprovals(\Illuminate\Http\Request $request)
+    public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $request->validate([
-            'filter.approval_status' => ['required', \Illuminate\Validation\Rule::in([...ApprovalStatus::cases(), 'on_progress'])],
-        ]);
-
-        // $total = DB::table('request_change_data')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
         $total = RequestSchedule::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -160,7 +159,10 @@ class RequestScheduleController extends BaseController
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::scope('approval_status', 'whereApprovalStatus')
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedIncludes('details')
             ->allowedSorts([

@@ -133,7 +133,11 @@ class OvertimeRequestController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = OvertimeRequest::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -155,7 +159,10 @@ class OvertimeRequestController extends BaseController
                 AllowedFilter::exact('shift_id'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'date',
-                'is_after_shift'
+                'is_after_shift',
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedSorts([
                 'id',

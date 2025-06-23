@@ -42,4 +42,9 @@ abstract class BaseModel extends Model
     {
         $query->whereDate('created_at', '<=', date('Y-m-d', strtotime($date)));
     }
+
+    public function scopeCreatedAt(Builder $query, $date)
+    {
+        $query->whereDate('created_at', date('Y-m-d', strtotime($date)));
+    }
 }

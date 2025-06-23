@@ -85,16 +85,6 @@ class GuestBook extends BaseModel implements HasMedia, TenantedInterface
         return $data;
     }
 
-    public function scopeCreatedAtStart(Builder $query, $date)
-    {
-        $query->whereDate('created_at', '>=', date('Y-m-d', strtotime($date)));
-    }
-
-    public function scopeCreatedAtEnd(Builder $query, $date)
-    {
-        $query->whereDate('created_at', '<=', date('Y-m-d', strtotime($date)));
-    }
-
     public function checkOutBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'check_out_by');
