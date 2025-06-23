@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Enums\BloodType;
 use App\Enums\EmploymentStatus;
 use App\Enums\Gender;
+use App\Enums\JaminanPensiunCost;
 use App\Enums\MaritalStatus;
 use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\OvertimeSetting;
@@ -317,7 +318,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'bpjs_kesehatan_date' => $row['bpjs_kesehatan_date'] ? date('Y-m-d', strtotime($row['bpjs_kesehatan_date'])) : null,
                 'bpjs_kesehatan_cost' => 'company',
                 'jht_cost' => 'company',
-                'jaminan_pensiun_cost' => 'company',
+                'jaminan_pensiun_cost' => JaminanPensiunCost::COMPANY,
                 'jaminan_pensiun_date' => $row['jaminan_pensiun_date'] ? date('Y-m-d', strtotime($row['jaminan_pensiun_date'])) : null,
             ]
         );

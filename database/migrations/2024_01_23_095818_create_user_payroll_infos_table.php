@@ -53,7 +53,7 @@ return new class extends Migration
             // $table->date('bpjs_kesehatan_date')->nullable();
             // $table->string('bpjs_kesehatan_cost')->default(BpjsKesehatanCost::DEFAULT);
             // $table->string('jht_cost')->default(JhtCost::DEFAULT);
-            // $table->string('jaminan_pensiun_cost')->default(JaminanPensiunCost::DEFAULT);
+            // $table->string('jaminan_pensiun_cost')->default(JaminanPensiunCost::COMPANY);
             // $table->date('jaminan_pensiun_date')->nullable();
             $table->timestamps();
         });

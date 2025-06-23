@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Enums\JaminanPensiunCost;
 use App\Enums\MaritalStatus;
 use App\Enums\MediaCollection;
 use App\Enums\PaidBy;
@@ -103,7 +104,7 @@ class UserSunImport implements ToCollection, WithHeadingRow
                     'bpjs_kesehatan_date' => $data['bpjs_kesehatan_date'],
                     'bpjs_kesehatan_cost' => $data['bpjs_kesehatan_cost'] ?? PaidBy::EMPLOYEE,
                     'jht_cost' => $data['jht_cost'] ?? PaidBy::EMPLOYEE,
-                    'jaminan_pensiun_cost' => $data['jaminan_pensiun_cost'] ?? PaidBy::EMPLOYEE,
+                    'jaminan_pensiun_cost' => $data['jaminan_pensiun_cost'] ?? JaminanPensiunCost::COMPANY,
                     'jaminan_pensiun_date' => $data['jaminan_pensiun_date'],
                 ]);
             }

@@ -7,6 +7,7 @@ use App\Enums\CostCenterCategory;
 use App\Enums\CurrencyCode;
 use App\Enums\EmploymentStatus;
 use App\Enums\Gender;
+use App\Enums\JaminanPensiunCost;
 use App\Enums\MaritalStatus;
 use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\OvertimeSetting;
@@ -138,7 +139,7 @@ class RegisterRequest extends FormRequest
             'bpjs_kesehatan_date' => 'nullable|date',
             'bpjs_kesehatan_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jht_cost' => ['nullable', Rule::enum(PaidBy::class)],
-            'jaminan_pensiun_cost' => ['nullable', Rule::enum(PaidBy::class)],
+            'jaminan_pensiun_cost' => ['nullable', Rule::enum(JaminanPensiunCost::class)],
             'jaminan_pensiun_date' => 'nullable|date',
 
             'positions' => 'nullable|array',

@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests\Api\UserPayrollInfo;
 
+use App\Enums\JaminanPensiunCost;
 use App\Enums\PaidBy;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class BpjsConfigurationStoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -27,7 +28,7 @@ class BpjsConfigurationStoreRequest extends FormRequest
             'bpjs_kesehatan_date' => 'nullable|date_format:Y-m-d',
             'bpjs_kesehatan_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jht_cost' => ['nullable', Rule::enum(PaidBy::class)],
-            'jaminan_pensiun_cost' => ['nullable', Rule::enum(PaidBy::class)],
+            'jaminan_pensiun_cost' => ['nullable', Rule::enum(JaminanPensiunCost::class)],
             'jaminan_pensiun_date' => 'nullable|date_format:Y-m-d',
             // 'npp_bpjs_ketenagakerjaan' => ['required', Rule::enum(NppBpjsKetenagakerjaan::class)],
         ];

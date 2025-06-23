@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\JaminanPensiunCost;
 use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\PaidBy;
 use App\Traits\Models\BelongsToUser;
@@ -33,7 +34,7 @@ class UserBpjs extends BaseModel
         'bpjs_kesehatan_family_no' => 'string',
         'bpjs_kesehatan_cost' => PaidBy::class,
         'jht_cost' => PaidBy::class,
-        'jaminan_pensiun_cost' => PaidBy::class,
+        'jaminan_pensiun_cost' => JaminanPensiunCost::class,
         'npp_bpjs_ketenagakerjaan' => NppBpjsKetenagakerjaan::class,
     ];
 
@@ -59,7 +60,7 @@ class UserBpjs extends BaseModel
             }
 
             if (empty($model->jaminan_pensiun_cost)) {
-                $model->jaminan_pensiun_cost = PaidBy::COMPANY;
+                $model->jaminan_pensiun_cost = JaminanPensiunCost::COMPANY;
             }
 
             if (empty($model->npp_bpjs_ketenagakerjaan)) {

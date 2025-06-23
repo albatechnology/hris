@@ -164,7 +164,7 @@ class RunPayrollController extends BaseController
             'company' => fn($q) => $q->select('id', 'name')
         ]);
 
-        return (new RunPayrollExport($runPayroll))->download("payroll $runPayroll->period .xlsx");
+        return (new RunPayrollExport($runPayroll))->download("payroll $runPayroll->period.xlsx");
     }
 
     public function exportOcbc(ExportRequest $request, int $id)

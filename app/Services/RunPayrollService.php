@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\CountrySettingKey;
+use App\Enums\JaminanPensiunCost;
 use App\Enums\OvertimeSetting;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
@@ -440,17 +441,21 @@ class RunPayrollService
                 $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
 
                 // jp
-                $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
+                $company_totalJp = 0;
+                $employee_totalJp = 0;
+                if (!$user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::NOT_PAID)) {
+                    $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
 
-                $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
-                if (!$isTaxable) {
-                    $company_percentageJp += $employee_percentageJp;
-                    $employee_percentageJp = 0;
+                    $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+                    if (!$isTaxable) {
+                        $company_percentageJp += $employee_percentageJp;
+                        $employee_percentageJp = 0;
+                    }
+
+                    $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
+
+                    $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
                 }
-
-                $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
-
-                $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
 
                 foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
                     if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
