@@ -51,6 +51,8 @@
                 <th style="font-weight: bold; background: #b4c7dc;">User</th>
                 <th style="font-weight: bold; background: #b4c7dc;">Patroli Batch</th>
                 <th style="font-weight: bold; background: #b4c7dc;">Task</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Lokasi</th>
+                <th style="font-weight: bold; background: #b4c7dc;">Laporan Pekerjaan</th>
                 <th style="font-weight: bold; background: #b4c7dc;">Waktu Pengerjaan</th>
                 <th style="font-weight: bold; background: #b4c7dc;">Map Lokasi</th>
                 <th style="font-weight: bold; background: #b4c7dc;">Bukti Foto</th>
@@ -64,6 +66,9 @@
                     <td style="background: #ffdbb6;"></td>
                     <td style="background: #ffdbb6;"></td>
                     <td style="background: #ffdbb6;"></td>
+                    <td style="background: #ffdbb6;"></td>
+                    <td style="background: #ffdbb6;"></td>
+                    <td style="background: #ffdbb6;"></td>
                 </tr>
                 @foreach ($userPatrol->user->patrolBatches as $patrolBatch)
                     <tr>
@@ -72,13 +77,18 @@
                         <td style="background: #ffb66c;"></td>
                         <td style="background: #ffb66c;"></td>
                         <td style="background: #ffb66c;"></td>
+                        <td style="background: #ffb66c;"></td>
+                        <td style="background: #ffb66c;"></td>
+                        <td style="background: #ffb66c;"></td>
                     </tr>
                     @foreach ($patrolBatch->userPatrolTasks as $userPatrolTask)
                         <tr>
                             <td></td>
                             <td></td>
+                            <td>{{ $userPatrolTask->patrolTask?->name }}</td>
+                            <td>{{ $userPatrolTask->patrolTask?->patrolLocation?->branchLocation?->name }}</td>
                             <td style="height: 100px">{{ $userPatrolTask->description }}</td>
-                            <td>{{ $userPatrolTask->datetime }}</td>
+                            <td style="width: 130px;">{{ $userPatrolTask->datetime }}</td>
                             <td><a
                                     href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat
                                     Lokasi</a>

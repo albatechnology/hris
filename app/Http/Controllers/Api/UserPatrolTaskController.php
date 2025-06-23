@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserPatrolTaskController extends BaseController
@@ -30,7 +31,14 @@ class UserPatrolTaskController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(UserPatrolTask::tenanted())
-            ->allowedIncludes(['patrolTask', 'schedule', 'shift', 'media'])
+            ->allowedIncludes([
+                'schedule',
+                'shift',
+                'media',
+                AllowedInclude::callback('patrolTask', function ($q) {
+                    $q->select('id', 'patrol_location_id', 'name')->with('patrolLocation', fn($q) => $q->select('id', 'branch_location_id')->with('branchLocation', fn($q) => $q->select('id', 'name')));
+                })
+            ])
             ->allowedFilters([
                 AllowedFilter::exact('user_patrol_batch_id'),
                 AllowedFilter::exact('patrol_task_id'),
