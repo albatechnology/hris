@@ -91,7 +91,7 @@ class PatrolController extends BaseController
 
         return new DefaultResource($patrol);
 
-        // $patrol = Patrol::findTenanted($id);
+        // $patrol = Patrol::where('id',$id)->firstOrFail();;
         // return new DefaultResource($patrol->load([
         //     'users' => [
         //         'user',
@@ -159,7 +159,7 @@ class PatrolController extends BaseController
 
     public function update(int $id, StoreRequest $request)
     {
-        $patrol = Patrol::findTenanted($id);
+        $patrol = Patrol::where('id', $id)->firstOrFail();
 
         DB::beginTransaction();
         try {
@@ -254,7 +254,7 @@ class PatrolController extends BaseController
 
     public function destroy(int $id)
     {
-        $patrol = Patrol::findTenanted($id);
+        $patrol = Patrol::where('id', $id)->firstOrFail();
 
         DB::beginTransaction();
         try {
@@ -283,6 +283,9 @@ class PatrolController extends BaseController
                 AllowedFilter::exact('patrol_id'),
                 'start_time',
                 'end_time',
+                AllowedFilter::callback('search', function ($query, $value) {
+                    $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
+                }),
             ])
             ->allowedSorts([
                 'id',
@@ -359,7 +362,7 @@ class PatrolController extends BaseController
     public function export(Request $request, int $id)
     {
         $date = $request->filter['date'] ?? date('Y-m-d');
-        $patrol = Patrol::selectMinimalist(['created_at'])->findTenanted($id);
+        $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
 
         $patrol->load([
             'patrolLocations' => function ($q) {
@@ -393,7 +396,7 @@ class PatrolController extends BaseController
     // public function export(Request $request, int $id)
     // {
     //     $date = $request->filter['date'] ?? date('Y-m-d');
-    //     $patrol = Patrol::findTenanted($id);
+    //     $patrol = Patrol::where('id',$id)->firstOrFail();;
     //     $patrol->load([
     //         'patrolLocations' => function ($q) use ($date) {
     //             $q
