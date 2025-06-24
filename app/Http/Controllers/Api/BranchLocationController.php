@@ -97,9 +97,9 @@ class BranchLocationController extends BaseController
     public function generateQrCode(Request $request)
     {
         if ($request->id) {
-            $branchLocations = BranchLocation::tenanted()->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))->where('id', $request->id)->get(['id']);
+            $branchLocations = BranchLocation::tenanted()->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))->where('id', $request->id)->get(['id', 'uuid']);
         } else {
-            $branchLocations = BranchLocation::tenanted()->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))->get(['id']);
+            $branchLocations = BranchLocation::tenanted()->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))->get(['id', 'uuid']);
         }
 
         foreach ($branchLocations as $branchLocation) {
