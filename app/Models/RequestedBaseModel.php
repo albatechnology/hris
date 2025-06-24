@@ -141,8 +141,11 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         return ApprovalStatus::ON_PROGRESS->value;
     }
 
-    public function isDescendantApproved(?User $user = null): mixed
+    public function isDescendantApproved(?User $user = null): bool
     {
+        return true;
+
+        // need to create setting for direct approver
         if (!$user) $user = auth()->user();
         $descendant = SupervisorUtility::build(RequestApprovalService::getUser($this), $user)->getSupervisor(false);
         if (!$descendant) return true;

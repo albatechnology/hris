@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\TenantedThroughUser;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
@@ -24,9 +23,6 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
         // 'start_at',
         // 'end_at',
         'note',
-        // 'approval_status',
-        // 'approved_by',
-        // 'approved_at',
     ];
 
     protected $casts = [

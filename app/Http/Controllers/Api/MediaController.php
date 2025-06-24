@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Resources\DefaultResource;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class MediaController extends BaseController
@@ -14,7 +13,7 @@ class MediaController extends BaseController
     {
         $data = QueryBuilder::for(Media::query())
             ->allowedFilters([
-                AllowedFilter::exact('id'),
+                'id',
                 'model_type',
                 'model_id',
                 'uuid',
