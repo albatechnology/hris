@@ -51,55 +51,42 @@ class BranchLocationController extends BaseController
 
     public function show(int $id)
     {
-        $BranchLocation = BranchLocation::findTenanted($id);
-        return new DefaultResource($BranchLocation->load('Branch'));
+        $branchLocation = BranchLocation::findTenanted($id);
+        return new DefaultResource($branchLocation->load('Branch'));
     }
 
     public function store(StoreRequest $request)
     {
         try {
-            $BranchLocation = BranchLocation::create($request->validated());
+            $branchLocation = BranchLocation::create($request->validated());
 
-            $mediaCollections = [MediaCollection::QR_CODE->value];
-            $tempDirectory = 'branch_location_qr_codes';
-            if (! File::exists(public_path($tempDirectory))) {
-                File::makeDirectory(public_path($tempDirectory));
-            }
-            foreach ($mediaCollections as $mediaCollection) {
-                $qrCode = 'data:image/png;base64,' . base64_encode(QrCode::size(500)->format('png')->margin(1)->generate(implode(';', ['branch_location', $BranchLocation->uuid])));
-                $base64_str = substr($qrCode, strpos($qrCode, ',') + 1);
-                $image = base64_decode($base64_str);
-                $path = public_path() . '/' . $tempDirectory . '/' . now()->timestamp . '.png';
-                file_put_contents($path, $image);
-
-                $BranchLocation->addMedia($path)->toMediaCollection($mediaCollection);
-            }
+            $this->generateImage($branchLocation);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($BranchLocation->load('Branch'));
+        return new DefaultResource($branchLocation->load('Branch'));
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $BranchLocation = BranchLocation::findTenanted($id);
+        $branchLocation = BranchLocation::findTenanted($id);
 
         try {
-            $BranchLocation->update($request->validated());
+            $branchLocation->update($request->validated());
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
 
-        return (new DefaultResource($BranchLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($branchLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(int $id)
     {
-        $BranchLocation = BranchLocation::findTenanted($id);
+        $branchLocation = BranchLocation::findTenanted($id);
 
         try {
-            $BranchLocation->delete();
+            $branchLocation->delete();
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
@@ -110,30 +97,32 @@ class BranchLocationController extends BaseController
     public function generateQrCode(Request $request)
     {
         if ($request->id) {
-            $BranchLocations = BranchLocation::tenanted()->where('id', $request->id)->get();
+            $branchLocations = BranchLocation::tenanted()->where('id', $request->id)->get(['id']);
         } else {
-            $BranchLocations = BranchLocation::tenanted()->get();
+            $branchLocations = BranchLocation::tenanted()->get(['id']);
         }
 
-        foreach ($BranchLocations as $BranchLocation) {
-            $BranchLocation->clearMediaCollection(MediaCollection::QR_CODE->value);
-
-            $mediaCollections = [MediaCollection::QR_CODE->value];
-            $tempDirectory = 'branch_location_qr_codes';
-            if (! File::exists(public_path($tempDirectory))) {
-                File::makeDirectory(public_path($tempDirectory));
-            }
-            foreach ($mediaCollections as $mediaCollection) {
-                $qrCode = 'data:image/png;base64,' . base64_encode(QrCode::size(500)->format('png')->margin(1)->generate(implode(';', ['branch_location', $BranchLocation->uuid])));
-                $base64_str = substr($qrCode, strpos($qrCode, ',') + 1);
-                $image = base64_decode($base64_str);
-                $path = public_path() . '/' . $tempDirectory . '/' . now()->timestamp . '.png';
-                file_put_contents($path, $image);
-
-                $BranchLocation->addMedia($path)->toMediaCollection($mediaCollection);
-            }
+        foreach ($branchLocations as $branchLocation) {
+            $this->generateImage($branchLocation);
         }
 
-        return $BranchLocations;
+        return $branchLocations;
+    }
+
+    public function generateImage(BranchLocation $branchLocation)
+    {
+        $mediaCollection = MediaCollection::QR_CODE->value;
+        $tempDirectory = 'branch_location_qr_codes';
+        if (! File::exists(public_path($tempDirectory))) {
+            File::makeDirectory(public_path($tempDirectory));
+        }
+
+        $qrCode = 'data:image/png;base64,' . base64_encode(QrCode::size(500)->format('png')->margin(1)->generate(implode(';', ['branch_location', $branchLocation->uuid])));
+        $base64_str = substr($qrCode, strpos($qrCode, ',') + 1);
+        $image = base64_decode($base64_str);
+        $path = public_path() . '/' . $tempDirectory . '/' . now()->timestamp . '.png';
+        file_put_contents($path, $image);
+
+        $branchLocation->addMedia($path)->toMediaCollection($mediaCollection);
     }
 }

@@ -162,7 +162,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::get('branches/summaries', [BranchController::class, 'summary']);
     Route::apiResource('branches', BranchController::class);
-    Route::get('branch-locations/generate-qr-code', [BranchLocationController::class, 'generateQrCode']);
+    Route::post('branch-locations/generate-qr-code', [BranchLocationController::class, 'generateQrCode']);
     Route::apiResource('branch-locations', BranchLocationController::class);
 
     Route::apiResource('positions', PositionController::class);

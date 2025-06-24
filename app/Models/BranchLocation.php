@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MediaCollection;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughBranch;
@@ -33,6 +34,13 @@ class BranchLocation extends BaseModel implements HasMedia, TenantedInterface
         });
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this
+            ->addMediaCollection(MediaCollection::QR_CODE->value)
+            ->singleFile();
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
@@ -40,7 +48,7 @@ class BranchLocation extends BaseModel implements HasMedia, TenantedInterface
 
     public function getQrCodeAttribute()
     {
-        $file = $this->getFirstMedia(\App\Enums\MediaCollection::QR_CODE->value);
+        $file = $this->getFirstMedia(MediaCollection::QR_CODE->value);
         if ($file) {
             $url = $file->getUrl();
             $preview = null;
