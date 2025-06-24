@@ -975,12 +975,14 @@ class AttendanceController extends BaseController
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
             ->myApprovals()
-            ->with('attendance', fn($q) => $q->with([
-                'user' => fn($q) => $q->select('id', 'name'),
-                'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                'schedule' => fn($q) => $q->select('id', 'name'),
+            ->with([
+                'attendance' => fn($q) => $q->with([
+                    'user' => fn($q) => $q->select('id', 'name'),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+                    'schedule' => fn($q) => $q->select('id', 'name'),
+                ]),
                 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
-            ]));
+            ]);
 
         $attendances = QueryBuilder::for($query)
             ->allowedFilters([
