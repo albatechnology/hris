@@ -13,6 +13,7 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Support\Facades\File;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class BranchLocationController extends BaseController
 {
@@ -96,6 +97,7 @@ class BranchLocationController extends BaseController
 
     public function generateQrCode(Request $request)
     {
+        throw new BadRequestHttpException("This endpoint is disabled");
         if ($request->id) {
             $branchLocations = BranchLocation::tenanted()->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))->where('id', $request->id)->get(['id', 'uuid']);
         } else {
