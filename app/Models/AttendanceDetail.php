@@ -27,33 +27,14 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
     protected $casts = [
         'is_clock_in' => 'boolean',
         'type' => AttendanceType::class,
-        // 'approval_status' => ApprovalStatus::class,
     ];
 
     protected $appends = ['approval_status', 'image'];
-
-    // protected static function booted(): void
-    // {
-    //     parent::booted();
-
-    //     // static::creating(function (self $model) {
-    //     //     if ($model->type->is(AttendanceType::MANUAL)) {
-    //     //         $model->approved_by = $model->attendance->user->approval?->id ?? null;
-    //     //     } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
-    //     //         $model->approval_status = ApprovalStatus::APPROVED;
-    //     //     }
-    //     // });
-    // }
 
     public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class);
     }
-
-    // public function approvedBy(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'approved_by');
-    // }
 
     public function scopeApproved(Builder $q)
     {

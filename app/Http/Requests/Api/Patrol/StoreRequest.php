@@ -10,8 +10,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

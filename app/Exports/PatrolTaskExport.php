@@ -13,7 +13,7 @@ class PatrolTaskExport implements FromView, WithEvents
 {
     use Exportable;
 
-    public function __construct(private Patrol $patrol, private string $date) {}
+    public function __construct(private Patrol $patrol, private string $startDate, private string $endDate) {}
 
     /**
      * @return \Illuminate\Support\Collection
@@ -22,7 +22,8 @@ class PatrolTaskExport implements FromView, WithEvents
     {
         return view('api.exports.patrol.export', [
             'patrol' => $this->patrol,
-            'date' => $this->date
+            'startDate' => date('d-M-Y', strtotime($this->startDate)),
+            'endDate' => date('d-M-Y', strtotime($this->endDate)),
         ]);
     }
 

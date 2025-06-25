@@ -12,7 +12,7 @@
         </tr>
         <tr>
             <th style="font-weight: bold; background: #b4c7dc;">Tanggal</th>
-            <th style="background: #b4c7dc;">{{ $date }}</th>
+            <th style="background: #b4c7dc;">{{ $startDate }} - {{ $endDate }}</th>
         </tr>
     </table>
     <table>

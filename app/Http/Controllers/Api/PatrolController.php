@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Exports\PatrolTaskExport;
 use App\Http\Requests\Api\Patrol\StoreRequest;
+use App\Http\Requests\Api\Patrol\UserIndexRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
 use App\Http\Resources\DefaultResource;
@@ -12,7 +13,6 @@ use App\Models\PatrolLocation;
 use App\Models\PatrolTask;
 use App\Models\UserPatrol;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -157,7 +157,7 @@ class PatrolController extends BaseController
         ]));
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(StoreRequest $request, int $id)
     {
         $patrol = Patrol::where('id', $id)->firstOrFail();
 
@@ -275,15 +275,22 @@ class PatrolController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function userIndex(int $patrolId)
+    public function userIndex(UserIndexRequest $request, int $patrolId)
     {
-        $data = QueryBuilder::for(UserPatrol::where('patrol_id', $patrolId)->with('user'))
+        $data = QueryBuilder::for(
+            UserPatrol::where('patrol_id', $patrolId)->with('user')
+                ->when(
+                    $request->start_date && $request->end_date,
+                    fn($q) => $q->whereHas('user', fn($q) => $q->whereHas(
+                        'patrolBatches',
+                        fn($q) => $q->whereDate('datetime', '>=', $request->start_date)->whereDate('datetime', '<=', $request->end_date)
+                    ))
+                )
+        )
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('patrol_id'),
-                'start_time',
-                'end_time',
-                AllowedFilter::callback('search', function ($query, $value) {
+                AllowedFilter::callback('search', function ($query, string $value) {
                     $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
                 }),
             ])
@@ -359,15 +366,15 @@ class PatrolController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function export(Request $request, int $id)
+    public function export(UserIndexRequest $request, int $id)
     {
-        $date = $request->filter['date'] ?? date('Y-m-d');
+        $startDate = $request->start_date ?? date('Y-m-d');
+        $endDate = $request->end_date ?? date('Y-m-d');
         $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
 
         $patrol->load([
             'patrolLocations' => function ($q) {
-                $q
-                    ->select('id', 'patrol_id', 'branch_location_id', 'description')
+                $q->select('id', 'patrol_id', 'branch_location_id', 'description')
                     ->with([
                         'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
                         'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
@@ -376,9 +383,9 @@ class PatrolController extends BaseController
             'users' => fn($q) => $q->with(
                 'user',
                 fn($q) => $q->select('id', 'name', 'nik')
-                    ->with('patrolBatches', function ($q) use ($id, $date) {
+                    ->with('patrolBatches', function ($q) use ($id, $startDate, $endDate) {
                         $q->where('patrol_id', $id)
-                            ->whereDate('datetime', $date)
+                            ->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
                             ->with(
                                 'userPatrolTasks',
                                 fn($q) => $q->with([
@@ -390,7 +397,7 @@ class PatrolController extends BaseController
             ),
         ]);
 
-        return (new PatrolTaskExport($patrol, $date))->download('report-patroli.xlsx');
+        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('report-patroli.xlsx');
     }
 
     // public function export(Request $request, int $id)
