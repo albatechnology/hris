@@ -50,6 +50,10 @@ class SupervisorUtility
     public function getSupervisorSubordinates(): Collection
     {
         $supervisor = $this->supervisorLines->firstWhere('supervisor_id', $this->supervisor->id);
+        if (!$supervisor) {
+            return collect([]);
+        }
+
         $data = $this->supervisorLines->where('order', '<', $supervisor->order);
         return $data;
     }
