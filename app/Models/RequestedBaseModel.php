@@ -57,6 +57,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
             return $query
                 ->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::PENDING))
                 ->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::REJECTED, ApprovalStatus::APPROVED]));
+        } elseif ($status == ApprovalStatus::ON_PROGRESS->value) {
+            return $query->whereHas('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::APPROVED]))
+                ->whereDoesntHave('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::REJECTED));
         } elseif ($status == ApprovalStatus::APPROVED->value) {
             return $query->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED]));
         } elseif ($status == ApprovalStatus::REJECTED->value) {
@@ -66,8 +69,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         }
 
         // on_progress
-        return $query->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::PENDING))
-            ->whereHas('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::APPROVED, ApprovalStatus::REJECTED]));
+        return $query;
+        // return $query->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::PENDING))
+        //     ->whereHas('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::APPROVED, ApprovalStatus::REJECTED]));
     }
 
     public function scopeMyApprovals(Builder $query): void
