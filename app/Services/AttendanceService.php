@@ -100,7 +100,7 @@ class AttendanceService
                 fn($q) => $q->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
             )
             ->when($query, $query)
-            ->get(['duration']);
+            ->get(['real_duration']);
 
         if ($overtimeRequests->count() <= 0) return null;
 
@@ -112,7 +112,7 @@ class AttendanceService
 
             // $totalSeconds += ((int)$interval->format('%d') * 3600 * 24) + ((int)$interval->format('%h') * 3600) + ((int)$interval->format('%s') * 60) + (int)$interval->format('%s');
 
-            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
+            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->real_duration);
             $totalSeconds += ($hours * 3600) + ($minutes * 60) + $seconds;
         }
 

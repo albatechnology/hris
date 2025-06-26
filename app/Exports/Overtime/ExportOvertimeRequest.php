@@ -114,7 +114,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         $overtimeDate = Carbon::parse($overtimeRequest->date);
 
         // set overtime duration to minutes. 02:00:00 become 120
-        $overtimeDuration = Carbon::parse($overtimeRequest->duration)->diffInMinutes(Carbon::parse('00:00:00'), true);
+        $overtimeDuration = Carbon::parse($overtimeRequest->real_duration)->diffInMinutes(Carbon::parse('00:00:00'), true);
 
         if ($overtimeRounding = $overtime->overtimeRoundings->where('start_minute', '<=', $overtimeDuration)->where('end_minute', '>=', $overtimeDuration)->first()) {
             $overtimeDuration = $overtimeRounding->rounded;

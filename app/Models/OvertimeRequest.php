@@ -20,6 +20,7 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
         'date',
         'is_after_shift',
         'duration',
+        'real_duration',
         // 'start_at',
         // 'end_at',
         'note',
@@ -37,6 +38,13 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
         parent::booted();
 
         static::saving(function (self $model) {
+            [$hour, $minute] = explode(':', $model->real_duration);
+            if (config('app.name') == 'LUMORA' && (int)$hour >= 9) {
+                $model->real_duration = '09:00:00';
+            } else {
+                $model->real_duration = date('H:i:s', strtotime($model->real_duration));
+            }
+
             $model->duration = date('H:i:s', strtotime($model->duration));
         });
 
@@ -65,7 +73,7 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
 
         // return trim($result);
 
-        list($hours, $minutes, $seconds) = explode(':', $this->duration);
+        list($hours, $minutes, $seconds) = explode(':', $this->real_duration);
 
         $result = '';
         if ((int)$hours > 0) {

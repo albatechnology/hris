@@ -59,3 +59,16 @@ if (!function_exists('sumTimes')) {
         return $result;
     }
 }
+
+if (!function_exists('limitToNineHours')) {
+    function limitToNineHours(string $time): string
+    {
+        [$hour, $minute] = explode(':', $time);
+
+        if ((int)$hour >= 9) {
+            return '09:00';
+        }
+
+        return sprintf('%02d:%02d', $hour, $minute);
+    }
+}
