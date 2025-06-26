@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 class IndexRequest extends FormRequest
 {
-    
+
 
     /**
      * Prepare inputs for validation.
@@ -21,7 +21,7 @@ class IndexRequest extends FormRequest
         $branchId = $this->filter['branch_id'] ?? null;
         $companyId = $this->filter['company_id'] ?? null;
         if ($branchId) {
-            $companyId = Branch::tenanted()->where('id', $branchId)->first(['company_id'])->company_id;
+            $companyId = Branch::tenanted()->where('id', $branchId)->first(['company_id'])?->company_id;
         }
 
         $this->merge([
