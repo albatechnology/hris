@@ -131,6 +131,9 @@ class UserController extends BaseController
                         // });
                     });
                 }),
+                AllowedFilter::callback('has_payroll_info', function ($query, $value) {
+                    $query->whereHas('payrollInfo');
+                }),
                 AllowedFilter::callback('last_detected', function ($query, $value) {
                     $query->selectMinimalist();
                     $query->whereHas('detail', function ($q) use ($value) {

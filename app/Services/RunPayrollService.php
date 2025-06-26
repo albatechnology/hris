@@ -226,7 +226,7 @@ class RunPayrollService
         // calculate for each user
         foreach ($userIds as $userId) {
             /** @var \App\Models\User $user */
-            $user = User::find($userId);
+            $user = User::where('id', $userId)->has('payrollInfo')->with('payrollInfo')->first();
             if (!$user) continue;
             if ($user->resign_date) {
                 $resignDate = Carbon::parse($user->resign_date);
