@@ -46,6 +46,10 @@ class Company extends BaseModel implements TenantedInterface
 
         // if ($user->is_admin) return $query->where('group_id', $user->group_id);
 
+        if ($user->is_admin) {
+            return $query->where('group_id', $user->group_id);
+        }
+
         $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
 
         return $query->whereIn('id', $companyIds);
@@ -198,17 +202,17 @@ class Company extends BaseModel implements TenantedInterface
             'is_default' => true,
         ]);
 
-        $this->payrollComponents()->create([
-            'name' => 'Task Overtime',
-            'type' => PayrollComponentType::ALLOWANCE,
-            'category' => PayrollComponentCategory::TASK_OVERTIME,
-            'amount' => 0,
-            'is_taxable' => true,
-            'period_type' => PayrollComponentPeriodType::MONTHLY,
-            'is_monthly_prorate' => false,
-            'is_include_backpay' => false,
-            'is_default' => true,
-        ]);
+        // $this->payrollComponents()->create([
+        //     'name' => 'Task Overtime',
+        //     'type' => PayrollComponentType::ALLOWANCE,
+        //     'category' => PayrollComponentCategory::TASK_OVERTIME,
+        //     'amount' => 0,
+        //     'is_taxable' => true,
+        //     'period_type' => PayrollComponentPeriodType::MONTHLY,
+        //     'is_monthly_prorate' => false,
+        //     'is_include_backpay' => false,
+        //     'is_default' => true,
+        // ]);
 
         $this->payrollComponents()->create([
             'name' => 'Alpa',
@@ -222,29 +226,29 @@ class Company extends BaseModel implements TenantedInterface
             'is_default' => true,
         ]);
 
-        $this->payrollComponents()->create([
-            'name' => 'Loan',
-            'type' => PayrollComponentType::DEDUCTION,
-            'category' => PayrollComponentCategory::LOAN,
-            'amount' => 0,
-            'is_taxable' => false,
-            'period_type' => PayrollComponentPeriodType::MONTHLY,
-            'is_monthly_prorate' => false,
-            'is_include_backpay' => false,
-            'is_default' => true,
-        ]);
+        // $this->payrollComponents()->create([
+        //     'name' => 'Loan',
+        //     'type' => PayrollComponentType::DEDUCTION,
+        //     'category' => PayrollComponentCategory::LOAN,
+        //     'amount' => 0,
+        //     'is_taxable' => false,
+        //     'period_type' => PayrollComponentPeriodType::MONTHLY,
+        //     'is_monthly_prorate' => false,
+        //     'is_include_backpay' => false,
+        //     'is_default' => true,
+        // ]);
 
-        $this->payrollComponents()->create([
-            'name' => 'Insurance',
-            'type' => PayrollComponentType::DEDUCTION,
-            'category' => PayrollComponentCategory::INSURANCE,
-            'amount' => 0,
-            'is_taxable' => false,
-            'period_type' => PayrollComponentPeriodType::MONTHLY,
-            'is_monthly_prorate' => false,
-            'is_include_backpay' => false,
-            'is_default' => true,
-        ]);
+        // $this->payrollComponents()->create([
+        //     'name' => 'Insurance',
+        //     'type' => PayrollComponentType::DEDUCTION,
+        //     'category' => PayrollComponentCategory::INSURANCE,
+        //     'amount' => 0,
+        //     'is_taxable' => false,
+        //     'period_type' => PayrollComponentPeriodType::MONTHLY,
+        //     'is_monthly_prorate' => false,
+        //     'is_include_backpay' => false,
+        //     'is_default' => true,
+        // ]);
 
         if ($this->countryTable?->id == 1) {
             $this->payrollComponents()->create([

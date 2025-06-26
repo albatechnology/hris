@@ -14,7 +14,7 @@ class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
+
 
     protected function prepareForValidation()
     {

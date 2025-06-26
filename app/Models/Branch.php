@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\EventType;
+use App\Enums\PayrollComponentCategory;
+use App\Enums\PayrollComponentPeriodType;
+use App\Enums\PayrollComponentType;
 use App\Interfaces\TenantedInterface;
-use App\Services\EventService;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,33 +32,12 @@ class Branch extends BaseModel implements TenantedInterface
         'pic_phone',
     ];
 
-    protected static function booted(): void
-    {
-        static::created(function (self $model) {
-            if (AbsenceReminder::where('branch_id', $model->id)->doesntExist()) {
-                AbsenceReminder::create([
-                    'company_id' => $model->company_id,
-                    'branch_id' => $model->id,
-                    'minutes_before' => 60,
-                    'minutes_repeat' => 60,
-                ]);
-            }
+    // protected static function booted(): void
+    // {
+    //     static::created(function (self $model) {
 
-            $syntegra = config('app.name') == 'Syntegra';
-            if ($syntegra) {
-                $dates = EventService::getCalendarDate();
-
-                collect($dates)->each(function ($date) use ($model) {
-                    $date['company_id'] = $model->company_id;
-                    $date['branch_id'] = $model->id;
-                    $date['start_at'] = $date['date'];
-                    $date['type'] = EventType::NATIONAL_HOLIDAY->value;
-                    unset($date['date']);
-                    Event::create($date);
-                });
-            }
-        });
-    }
+    //     });
+    // }
 
     public function scopeTenanted(Builder $query): Builder
     {
@@ -67,12 +47,12 @@ class Branch extends BaseModel implements TenantedInterface
             return $query;
         }
 
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-        $query->whereIn('company_id', $companyIds);
+        // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+        // $query->whereIn('company_id', $companyIds);
 
         if ($user->is_admin) {
-            return $query;
-            // return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
+            // return $query;
+            return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
         }
 
         $branchIds = $user->branches()->get(['branch_id'])?->pluck('branch_id') ?? [];
@@ -100,6 +80,11 @@ class Branch extends BaseModel implements TenantedInterface
         return $this->hasMany(User::class);
     }
 
+    public function payrollComponents(): HasMany
+    {
+        return $this->hasMany(PayrollComponent::class);
+    }
+
     public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
         $query->select([
@@ -114,5 +99,241 @@ class Branch extends BaseModel implements TenantedInterface
             'branches.created_at',
             ...$additionalColumns
         ]);
+    }
+
+    public function createPayrollSetting(): void
+    {
+        PayrollSetting::create([
+            'company_id' => $this->company_id,
+            'branch_id' => $this->id,
+            'cut_off_attendance_start_date' => '01',
+            'cut_off_attendance_end_date' => '31',
+            'payroll_start_date' => '01',
+            'payroll_end_date' => '31',
+            'cut_off_date' => '20',
+            'default_employee_tax_setting' => \App\Enums\TaxMethod::GROSS,
+            'default_employee_salary_tax_setting' => \App\Enums\TaxSalary::TAXABLE,
+            'default_oas_setting' => \App\Enums\JhtCost::PAID_BY_COMPANY,
+            'prorate_setting' => \App\Enums\ProrateSetting::BASE_ON_CALENDAR_DAY,
+        ]);
+
+        $this->payrollComponents()->create([
+            'company_id' => $this->company_id,
+            'name' => 'Basic Salary',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::BASIC_SALARY,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
+        $this->payrollComponents()->create([
+            'company_id' => $this->company_id,
+            'name' => 'Overtime',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::OVERTIME,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
+        // $this->payrollComponents()->create([
+        // 'company_id' => $this->company_id,
+        //     'name' => 'Task Overtime',
+        //     'type' => PayrollComponentType::ALLOWANCE,
+        //     'category' => PayrollComponentCategory::TASK_OVERTIME,
+        //     'amount' => 0,
+        //     'is_taxable' => true,
+        //     'period_type' => PayrollComponentPeriodType::MONTHLY,
+        //     'is_monthly_prorate' => false,
+        //     'is_include_backpay' => false,
+        //     'is_default' => true,
+        // ]);
+
+        $this->payrollComponents()->create([
+            'company_id' => $this->company_id,
+            'name' => 'Alpa',
+            'type' => PayrollComponentType::DEDUCTION,
+            'category' => PayrollComponentCategory::ALPA,
+            'amount' => 0,
+            'is_taxable' => false,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
+        // $this->payrollComponents()->create([
+        // 'company_id' => $this->company_id,
+        //     'name' => 'Loan',
+        //     'type' => PayrollComponentType::DEDUCTION,
+        //     'category' => PayrollComponentCategory::LOAN,
+        //     'amount' => 0,
+        //     'is_taxable' => false,
+        //     'period_type' => PayrollComponentPeriodType::MONTHLY,
+        //     'is_monthly_prorate' => false,
+        //     'is_include_backpay' => false,
+        //     'is_default' => true,
+        // ]);
+
+        // $this->payrollComponents()->create([
+        // 'company_id' => $this->company_id,
+        //     'name' => 'Insurance',
+        //     'type' => PayrollComponentType::DEDUCTION,
+        //     'category' => PayrollComponentCategory::INSURANCE,
+        //     'amount' => 0,
+        //     'is_taxable' => false,
+        //     'period_type' => PayrollComponentPeriodType::MONTHLY,
+        //     'is_monthly_prorate' => false,
+        //     'is_include_backpay' => false,
+        //     'is_default' => true,
+        // ]);
+
+        if ($this->company->countryTable?->id == 1) {
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'BPJS Kesehatan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::BPJS_KESEHATAN,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'BPJS Ketenagakerjaan',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::BPJS_KETENAGAKERJAAN,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+            ]);
+
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'BPJS Kesehatan Company',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'BPJS Kesehatan Employee',
+                'type' => PayrollComponentType::DEDUCTION,
+                'category' => PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'JKK',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JKK,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'JKM',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JKM,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'JHT Company',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JHT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'JHT Employee',
+                'type' => PayrollComponentType::DEDUCTION,
+                'category' => PayrollComponentCategory::EMPLOYEE_JHT,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'JP Company',
+                'type' => PayrollComponentType::BENEFIT,
+                'category' => PayrollComponentCategory::COMPANY_JP,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+
+            $this->payrollComponents()->create([
+                'company_id' => $this->company_id,
+                'name' => 'JP Employee',
+                'type' => PayrollComponentType::DEDUCTION,
+                'category' => PayrollComponentCategory::EMPLOYEE_JP,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
+        }
     }
 }

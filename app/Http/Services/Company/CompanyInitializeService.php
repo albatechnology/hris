@@ -13,24 +13,43 @@ class CompanyInitializeService
 {
     public function __invoke(Company $company): void
     {
-        $company->absenceReminder()->create();
+        if (config('app.name') != 'Syntegra') {
+            $company->absenceReminder()->create();
+            $company->branches()->create([
+                'name' => $company->name,
+                'country' => $company->country,
+                'province' => $company->province,
+                'city' => $company->city,
+                'zip_code' => $company->zip_code,
+                'lat' => $company->lat,
+                'lng' => $company->lng,
+                'address' => $company->address,
+            ]);
+
+            $dates = collect(EventService::getCalendarDate())->map(function ($date) {
+                $date['start_at'] = $date['date'];
+                $date['type'] = EventType::NATIONAL_HOLIDAY->value;
+                unset($date['date']);
+                return $date;
+            });
+            $company->events()->createMany($dates);
+
+            $company->overtimes()->create([
+                'compensation_rate_per_day' => 0,
+                'name' => "Default",
+                'rate_amount' => 0,
+                'rate_type' => "amount",
+            ]);
+
+            $company->createPayrollSetting();
+        }
+
         $company->banks()->create([
             'name' => BankName::BCA,
             'account_no' => '0000000000',
             'account_holder' => $company->name,
             'code' => '0000000000',
             'branch' => $company->city,
-        ]);
-
-        $company->branches()->create([
-            'name' => $company->name,
-            'country' => $company->country,
-            'province' => $company->province,
-            'city' => $company->city,
-            'zip_code' => $company->zip_code,
-            'lat' => $company->lat,
-            'lng' => $company->lng,
-            'address' => $company->address,
         ]);
 
         $division = $company->divisions()->create([
@@ -43,14 +62,6 @@ class CompanyInitializeService
             'name' => 'Manager'
         ]);
 
-        $dates = collect(EventService::getCalendarDate())->map(function ($date) {
-            $date['start_at'] = $date['date'];
-            $date['type'] = EventType::NATIONAL_HOLIDAY->value;
-            unset($date['date']);
-            return $date;
-        });
-        $company->events()->createMany($dates);
-
         $liveAttendance = $company->liveAttendances()->create([
             'name' => 'Live Attendance ' . $company->name,
             'is_flexible' => true,
@@ -61,15 +72,6 @@ class CompanyInitializeService
             'lat' => "0",
             'lng' => "0",
         ]);
-
-        $company->overtimes()->create([
-            'compensation_rate_per_day' => 0,
-            'name' => "Default",
-            'rate_amount' => 0,
-            'rate_type' => "amount",
-        ]);
-
-        $company->createPayrollSetting();
 
         // Role::create([
         //     'group_id' => $company->group_id,

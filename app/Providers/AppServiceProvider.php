@@ -12,6 +12,9 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Repositories\BankRepositoryInterface::class => \App\Http\Repositories\BankRepository::class,
         \App\Interfaces\Services\BankServiceInterface::class => \App\Http\Services\BankService::class,
 
+        \App\Interfaces\Repositories\Branch\BranchRepositoryInterface::class => \App\Http\Repositories\Branch\BranchRepository::class,
+        \App\Interfaces\Services\Branch\BranchServiceInterface::class => \App\Http\Services\Branch\BranchService::class,
+
         \App\Interfaces\Repositories\Company\CompanyRepositoryInterface::class => \App\Http\Repositories\Company\CompanyRepository::class,
         \App\Interfaces\Services\Company\CompanyServiceInterface::class => \App\Http\Services\Company\CompanyService::class,
 

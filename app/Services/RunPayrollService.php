@@ -494,15 +494,17 @@ class RunPayrollService
             /**
              * six, calculate task overtime
              */
-            $taskOvertimePayrollComponent = PayrollComponent::tenanted()
-                ->whereCompany($runPayroll->company_id)
-                ->whenBranch($runPayroll->branch_id)
-                ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
+            if (config('app.name') == 'SUNSHINE') {
+                $taskOvertimePayrollComponent = PayrollComponent::tenanted()
+                    ->whereCompany($runPayroll->company_id)
+                    ->whenBranch($runPayroll->branch_id)
+                    ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
 
-            if ($taskOvertimePayrollComponent) {
-                $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
+                if ($taskOvertimePayrollComponent) {
+                    $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
 
-                self::createComponent($runPayrollUser, $taskOvertimePayrollComponent, $amount);
+                    self::createComponent($runPayrollUser, $taskOvertimePayrollComponent, $amount);
+                }
             }
             // END
 

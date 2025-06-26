@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Branch\StoreRequest;
 use App\Http\Requests\Api\Branch\UpdateRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\Branch\BranchServiceInterface;
 use App\Models\Branch;
 use App\Models\BranchLocation;
 use App\Models\User;
@@ -15,7 +16,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class BranchController extends BaseController
 {
-    public function __construct()
+    public function __construct(private BranchServiceInterface $service)
     {
         parent::__construct();
         $this->middleware('permission:branch_access', ['only' => ['restore']]);
@@ -62,8 +63,8 @@ class BranchController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $branch = Branch::create($request->validated());
-
+        $branch = $this->service->create($request->validated());
+        // $branch = Branch::create($request->validated());
         return new BranchResource($branch);
     }
 
