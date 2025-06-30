@@ -942,7 +942,6 @@ class RunPayrollService
 
     public static function isFirstTimePayroll(User|int $user): bool
     {
-        return false;
         $userId = $user instanceof User ? $user->id : $user;
         return RunPayrollUser::query()->where('user_id', $userId)
             ->whereHas('runPayroll', fn($q) => $q->release())
