@@ -228,6 +228,7 @@ class RunPayrollService
             /** @var \App\Models\User $user */
             $user = User::where('id', $userId)->has('payrollInfo')->with('payrollInfo')->first();
             if (!$user) continue;
+            $resignDate = null;
             if ($user->resign_date) {
                 $resignDate = Carbon::parse($user->resign_date);
                 if ($resignDate->lessThan($cutOffStartDate)) continue;
@@ -239,6 +240,10 @@ class RunPayrollService
                 $cutOffStartDate = $joinDate;
                 $cutOffEndDate = $endDate;
                 $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
+            } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
+                $cutOffStartDate = $startDate;
+                $cutOffEndDate = $endDate;
+                $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
             } else {
                 $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
             }
@@ -246,7 +251,6 @@ class RunPayrollService
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
             $userBasicSalary = $user->payrollInfo?->basic_salary;
-
 
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
@@ -327,7 +331,7 @@ class RunPayrollService
              */
             if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate)) {
                 $alpaComponent = PayrollComponent::tenanted()
-                    ->where('company_id', $runPayroll->company_id)
+                ->where('company_id', $runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->where('category', PayrollComponentCategory::ALPA)->first();
 
@@ -938,6 +942,7 @@ class RunPayrollService
 
     public static function isFirstTimePayroll(User|int $user): bool
     {
+        return false;
         $userId = $user instanceof User ? $user->id : $user;
         return RunPayrollUser::query()->where('user_id', $userId)
             ->whereHas('runPayroll', fn($q) => $q->release())
