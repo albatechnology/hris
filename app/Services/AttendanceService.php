@@ -240,6 +240,70 @@ class AttendanceService
         return $totalWorkingDays;
     }
 
+    public static function getTotalAttend(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
+    {
+        $userId = $user;
+        if ($user instanceof User) {
+            $userId = $user->id;
+        }
+
+        if (!($startDate instanceof Carbon)) {
+            $startDate = Carbon::parse($startDate)->startOfDay();
+        }
+
+        if (!($endDate instanceof Carbon)) {
+            $endDate = Carbon::parse($endDate)->startOfDay();
+        }
+
+        $isFirstTimePayroll = RunPayrollService::isFirstTimePayroll($user);
+        if (!$isFirstTimePayroll) {
+            $joinDate = Carbon::parse($user->join_date);
+            if ($joinDate->between($startDate, $endDate)) {
+                $startDate = $joinDate;
+            }
+        }
+
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $attendances = Attendance::where('user_id', $userId)
+            ->whereDate('date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('date', '<=', $endDate->format('Y-m-d'))
+            ->with([
+                'clockIn' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'clockOut' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'timeoff' => fn($q) => $q->select('id', 'is_cancelled'),
+            ])
+            ->get(['id', 'date', 'timeoff_id']);
+
+        $totalAttend = 0;
+        foreach ($dateRange as $date) {
+            $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff']);
+
+            if (!$todaySchedule?->shift || $todaySchedule?->shift->is_dayoff) {
+                continue;
+            }
+
+            $nationalHoliday = Event::whereNationalHoliday()
+                ->where('company_id', $user->company_id)
+                ->where(
+                    fn($q) => $q->whereDate('start_at', '<=', $date->format('Y-m-d'))
+                        ->whereDate('end_at', '>=', $date->format('Y-m-d'))
+                )
+                ->exists();
+            if ($nationalHoliday && $todaySchedule->is_overide_national_holiday == false) {
+                $totalAttend++;
+                continue;
+            }
+
+            $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
+            if ($attendanceOnDate?->clockIn && $attendanceOnDate?->clockOut) {
+                $totalAttend++;
+                continue;
+            }
+        }
+
+        return $totalAttend;
+    }
+
     public static function getTotalAlpa(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
     {
         $userId = $user;

@@ -250,7 +250,7 @@ class RunPayrollService
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
                 $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
-                $totalPresent = AttendanceService::getTotalPresent($user, $cutOffStartDate, $cutOffEndDate);
+                $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
 
                 $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
             } else {
