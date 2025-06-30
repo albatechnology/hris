@@ -218,8 +218,8 @@ class AttendanceService
 
             $totalWorkingDays++;
 
-            $date = $date->format('Y-m-d');
             if (!$schedule->is_overide_national_holiday) {
+                $date = $date->format('Y-m-d');
                 $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
                     return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
                 });
@@ -404,7 +404,6 @@ class AttendanceService
          *
          */
 
-
         $tolerance = $shift->time_dispensation;
         $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
 
@@ -465,89 +464,4 @@ class AttendanceService
             ->whereDateIn($date)
             ->exists();
     }
-
-    // public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, bool $isFormatTime = true, ?int $remainingTime = null): array
-    // {
-    //     /**
-    //      *
-    //      * dispensasi keterlambatan hanya berlaku jika is_enable_grace_period == true. selain itu dihitung terlambat
-    //      * hitung waktu terlambat berdasarkan selisih waktu absen baik itu clock_in atau clock_out($endTime) dengan
-    //      * jadwal masuk/clockin atau pulang/clockout ($startTime).
-    //      *
-    //      *
-    //      *
-    //      * clock_in_dispensation = 10 menit
-    //      * clock_out_dispensation = 10 menit
-    //      * time_dispensation = 10 menit
-    //      * jadwal 09:00 - 18:00
-    //      *
-    //      * masuk jam 09:05
-    //      * pulang jam 17:55 . $remainingTime 5 menitdiffInMinutes
-    //      *
-    //      */
-
-
-    //     $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
-    //     $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
-
-    //     if ($attendanceDetail->is_clock_in) {
-    //         $tolerance = $shift->clock_in_dispensation;
-    //         $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
-
-    //         if ($endTime->lessThanOrEqualTo($startTime)) {
-    //             $diffInSeconds = 0;
-    //         } else {
-    //             $diffInSeconds = $startTime->diffInSeconds($endTime);
-    //         }
-    //     } else {
-    //         $tolerance = $shift->clock_out_dispensation;
-    //         $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
-
-    //         if ($endTime->lessThanOrEqualTo($startTime)) {
-    //             $diffInSeconds = $endTime->diffInSeconds($startTime);
-    //         } else {
-    //             $diffInSeconds = 0;
-    //         }
-    //     }
-
-    //     $diffInTime = "00:00:00";
-    //     $diffInMinutes = floor($diffInSeconds / 60);
-
-    //     if ($shift->is_enable_grace_period === true) {
-    //         $timeDispensation = $shift->time_dispensation <= 0 ? 0 : $shift->time_dispensation;
-    //         $remainingTime = $timeDispensation <= 0 ? 0 : $timeDispensation - $diffInMinutes;
-
-
-    //         if ($diffInMinutes > $tolerance) {
-    //             $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //             $diffInMinutes = 0;
-    //         }
-
-    //         // if ($timeDispensation && $timeDispensation > 0) {
-    //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
-    //         // }
-
-    //         // if ($isFormatTime === false) return $diffInMinutes > $tolerance ? $diffInMinutes : 0;
-    //         // if ($isFormatTime === false) {
-    //         //     $diffInMinutes = $diffInMinutes > $tolerance ? $diffInMinutes : 0;
-    //         // }
-
-    //         // if (!$timeDispensation && $timeDispensation > 0) {
-    //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
-    //         // }
-
-    //         // $diffInTime = "00:00:00";
-    //         // if ($diffInMinutes > $tolerance) {
-    //         //     $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //         // }
-    //     } else {
-    //         $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //     }
-
-    //     return [
-    //         $diffInMinutes, // real data
-    //         $diffInTime,
-    //         $remainingTime,
-    //     ];
-    // }
 }

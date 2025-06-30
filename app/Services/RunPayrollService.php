@@ -234,6 +234,12 @@ class RunPayrollService
                 if ($resignDate->lessThan($cutOffStartDate)) continue;
             }
 
+            $runPayrollUser = self::assignUser($runPayroll, $userId);
+
+            $userBasicSalary = $user->payrollInfo?->basic_salary;
+
+            $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
+
             $isFirstTimePayroll = self::isFirstTimePayroll($user);
             $joinDate = Carbon::parse($user->join_date);
             if ($isFirstTimePayroll && $joinDate->between($startDate, $endDate)) {
@@ -242,17 +248,14 @@ class RunPayrollService
                 $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
-                $cutOffEndDate = $endDate;
+                $cutOffEndDate = $resignDate;
                 $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
+                $totalPresent = AttendanceService::getTotalPresent($user, $cutOffStartDate, $cutOffEndDate);
+
+                $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
             } else {
                 $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
             }
-
-            $runPayrollUser = self::assignUser($runPayroll, $userId);
-
-            $userBasicSalary = $user->payrollInfo?->basic_salary;
-
-            $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
                 ->where('user_id', $userId)
@@ -290,7 +293,6 @@ class RunPayrollService
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
             self::createComponent($runPayrollUser, $basicSalaryComponent, $amount);
-            //
 
             /**
              * second, calculate payroll component where not default
@@ -331,7 +333,7 @@ class RunPayrollService
              */
             if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate)) {
                 $alpaComponent = PayrollComponent::tenanted()
-                ->where('company_id', $runPayroll->company_id)
+                    ->where('company_id', $runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->where('category', PayrollComponentCategory::ALPA)->first();
 
