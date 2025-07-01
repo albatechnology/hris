@@ -375,7 +375,7 @@ class AttendanceService
                 continue;
             }
 
-            if ($attendanceOnDate->timeoff && $attendanceOnDate->timeoff->is_cancelled == false) {
+            if ($attendanceOnDate?->timeoff  && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
                 continue;
             }
 
