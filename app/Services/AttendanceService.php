@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\DailyAttendance;
 use App\Enums\EventType;
 use App\Models\Attendance;
@@ -265,6 +266,9 @@ class AttendanceService
 
         $dateRange = CarbonPeriod::create($startDate, $endDate);
         $attendances = Attendance::where('user_id', $userId)
+            ->where(
+                fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff')
+            )
             ->whereDate('date', '>=', $startDate->format('Y-m-d'))
             ->whereDate('date', '<=', $endDate->format('Y-m-d'))
             ->with([
@@ -295,6 +299,12 @@ class AttendanceService
             }
 
             $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
+
+            if ($attendanceOnDate?->timeoff  && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
+                $totalAttend++;
+                continue;
+            }
+
             if ($attendanceOnDate?->clockIn && $attendanceOnDate?->clockOut) {
                 $totalAttend++;
                 continue;
