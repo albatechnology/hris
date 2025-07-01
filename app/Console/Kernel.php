@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
 
         $schedule->job(new NewEmployee)->dailyAt('01:00');
-        $schedule->job(new AbsenceReminderBatch())->everyFiveMinutes();
+        $schedule->job(new AbsenceReminderBatch())->everyTwoMinutes();
 
         // cron untuk company yang punya timeoff regulation monthly
         // cron untuk company yang punya timeoff regulation user_period
