@@ -277,13 +277,15 @@ class PatrolController extends BaseController
 
     public function userIndex(UserIndexRequest $request, int $patrolId)
     {
+        $startDate = $request->filter['start_date'] ?? null;
+        $endDate = $request->filter['end_date'] ?? null;
         $data = QueryBuilder::for(
             UserPatrol::where('patrol_id', $patrolId)->with('user')
                 ->when(
-                    $request->start_date && $request->end_date,
+                    $startDate && $endDate,
                     fn($q) => $q->whereHas('user', fn($q) => $q->whereHas(
                         'patrolBatches',
-                        fn($q) => $q->whereDate('datetime', '>=', $request->start_date)->whereDate('datetime', '<=', $request->end_date)
+                        fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
                     ))
                 )
         )
@@ -368,8 +370,9 @@ class PatrolController extends BaseController
 
     public function export(UserIndexRequest $request, int $id)
     {
-        $startDate = $request->start_date ?? date('Y-m-d');
-        $endDate = $request->end_date ?? date('Y-m-d');
+
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? date('Y-m-d');
         $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
 
         $patrol->load([
