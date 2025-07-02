@@ -2,9 +2,49 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Interfaces\TenantedInterface;
+use App\Traits\Models\CreatedUpdatedInfo;
+use App\Traits\Models\CustomSoftDeletes;
+use App\Traits\Models\TenantedThroughUser;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Reimbursement extends Model
+class Reimbursement extends RequestedBaseModel implements HasMedia, TenantedInterface
 {
-    //
+    use CreatedUpdatedInfo, CustomSoftDeletes, InteractsWithMedia, TenantedThroughUser;
+
+    protected $fillable = [
+        'reimbursement_category_id',
+        'user_id',
+        'date',
+        'amount',
+        'description',
+    ];
+
+    protected $appends = [
+        'approval_status',
+        'files',
+    ];
+
+    public function getFilesAttribute()
+    {
+        $files = $this->getMedia(\App\Enums\MediaCollection::REIMBURSEMENT->value);
+        $data = [];
+        foreach ($files as $file) {
+            $data[] = $file;
+        }
+
+        return $data;
+    }
+
+    public function reimbursementCategory(): BelongsTo
+    {
+        return $this->belongsTo(ReimbursementCategory::class);
+    }
+
+    public function scopeWhereDateBetween($query, $start, $end)
+    {
+        return $query->whereBetween('date', [date('Y-m-d', strtotime($start)), date('Y-m-d', strtotime($end))]);
+    }
 }

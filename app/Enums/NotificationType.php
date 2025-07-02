@@ -36,6 +36,9 @@ enum NotificationType: string
 
     case SETUP_PASSWORD = 'setup_password';
 
+    case REQUEST_REIMBURSEMENT = 'request_reimbursement';
+    case REQUEST_REIMBURSEMENT_APPROVED = 'request_reimbursement_approved';
+
     public function getNotificationClass(): string
     {
         return match ($this) {
@@ -57,6 +60,8 @@ enum NotificationType: string
             self::REQUEST_SCHEDULE_APPROVED => \App\Notifications\RequestSchedule\RequestScheduleApproved::class,
             self::REQUEST_SHIFT => \App\Notifications\RequestShift\RequestShift::class,
             self::REQUEST_SHIFT_APPROVED => \App\Notifications\RequestShift\RequestShiftApproved::class,
+            self::REQUEST_REIMBURSEMENT => \App\Notifications\Reimbursement\RequestReimbursement::class,
+            self::REQUEST_REIMBURSEMENT_APPROVED => \App\Notifications\Reimbursement\RequestReimbursementApproved::class,
             self::SETUP_PASSWORD => \App\Notifications\User\SetupPasswordNotification::class,
         };
     }
@@ -82,37 +87,39 @@ enum NotificationType: string
             self::REQUEST_SCHEDULE_APPROVED => 'Your schedule request has been %s.', // approved/rejected
             self::REQUEST_SHIFT => 'Requesting shift',
             self::REQUEST_SHIFT_APPROVED => 'Your shift request has been %s.', // approved/rejected
+            self::REQUEST_REIMBURSEMENT => 'Requesting reimbursement',
+            self::REQUEST_REIMBURSEMENT_APPROVED => 'Your reimbursement request has been %s.', // approved/rejected
             default => null,
         };
     }
 
-    public function getUrlPath(): mixed
-    {
-        return match ($this) {
-            self::REQUEST_ATTENDANCE => 'url/path',
-            self::ATTENDANCE_APPROVED => 'url/path',
-            self::REQUEST_TIMEOFF => 'url/path',
-            self::TIMEOFF_APPROVED => 'url/path',
-            self::REQUEST_OVERTIME => 'url/path',
-            self::OVERTIME_APPROVED => 'url/path',
-            self::REQUEST_ADVANCED_LEAVE => 'url/path',
-            self::ADVANCED_LEAVE_APPROVED => 'url/path',
-            default => null,
-        };
-    }
+    // public function getUrlPath(): mixed
+    // {
+    //     return match ($this) {
+    //         self::REQUEST_ATTENDANCE => 'url/path',
+    //         self::ATTENDANCE_APPROVED => 'url/path',
+    //         self::REQUEST_TIMEOFF => 'url/path',
+    //         self::TIMEOFF_APPROVED => 'url/path',
+    //         self::REQUEST_OVERTIME => 'url/path',
+    //         self::OVERTIME_APPROVED => 'url/path',
+    //         self::REQUEST_ADVANCED_LEAVE => 'url/path',
+    //         self::ADVANCED_LEAVE_APPROVED => 'url/path',
+    //         default => null,
+    //     };
+    // }
 
-    public function getIcon(): string
-    {
-        return match ($this) {
-            self::REQUEST_ATTENDANCE => 'fa fa-check-double',
-            self::ATTENDANCE_APPROVED => 'fa fa-check-double',
-            self::REQUEST_TIMEOFF => 'fa fa-check-double',
-            self::TIMEOFF_APPROVED => 'fa fa-check-double',
-            self::REQUEST_OVERTIME => 'fa fa-check-double',
-            self::OVERTIME_APPROVED => 'fa fa-check-double',
-            self::REQUEST_ADVANCED_LEAVE => 'fa fa-check-double',
-            self::ADVANCED_LEAVE_APPROVED => 'fa fa-check-double',
-            default => null,
-        };
-    }
+    // public function getIcon(): string
+    // {
+    //     return match ($this) {
+    //         self::REQUEST_ATTENDANCE => 'fa fa-check-double',
+    //         self::ATTENDANCE_APPROVED => 'fa fa-check-double',
+    //         self::REQUEST_TIMEOFF => 'fa fa-check-double',
+    //         self::TIMEOFF_APPROVED => 'fa fa-check-double',
+    //         self::REQUEST_OVERTIME => 'fa fa-check-double',
+    //         self::OVERTIME_APPROVED => 'fa fa-check-double',
+    //         self::REQUEST_ADVANCED_LEAVE => 'fa fa-check-double',
+    //         self::ADVANCED_LEAVE_APPROVED => 'fa fa-check-double',
+    //         default => null,
+    //     };
+    // }
 }

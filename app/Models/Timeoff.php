@@ -29,9 +29,6 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         'cancelled_by',
         'cancelled_at',
         'timeoff_quota_histories',
-        // 'approval_status',
-        // 'approved_by',
-        // 'approved_at',
     ];
 
     protected $casts = [
@@ -39,35 +36,12 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
         'request_type' => TimeoffRequestType::class,
         'is_cancelled' => 'boolean',
         'timeoff_quota_histories' => 'array',
-        // 'approval_status' => ApprovalStatus::class,
     ];
 
     protected $appends = [
         'approval_status',
         'files',
     ];
-
-
-    // public function scopeApproved(Builder $query)
-    // {
-    //     $query->where('approval_status', ApprovalStatus::APPROVED);
-    // }
-
-    // public function scopeStartAt(Builder $query, $date = null)
-    // {
-    //     if (is_null($date)) {
-    //         return $query;
-    //     }
-    //     $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($date)));
-    // }
-
-    // public function scopeEndAt(Builder $query, $date = null)
-    // {
-    //     if (is_null($date)) {
-    //         return $query;
-    //     }
-    //     $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
-    // }
 
     public function scopeWhereBranch(Builder $q, int $value)
     {
@@ -100,7 +74,7 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
 
     public function cancelledBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, '');
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function attendances(): HasMany
@@ -118,11 +92,6 @@ class Timeoff extends RequestedBaseModel implements HasMedia, TenantedInterface
 
         return $data;
     }
-
-    // public function approvedBy(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'approved_by');
-    // }
 
     // public function getTotalDaysAttribute(): int|null
     // {

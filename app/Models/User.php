@@ -316,6 +316,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(UserDepartmentPosition::class);
     }
 
+    public function reimbursementCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(ReimbursementCategory::class, 'user_reimbursement_categories')->withPivot('limit_amount');
+    }
+
     public function overtimes(): BelongsToMany
     {
         return $this->belongsToMany(Overtime::class, 'user_overtimes');

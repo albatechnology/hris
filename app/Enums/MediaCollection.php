@@ -19,4 +19,5 @@ enum MediaCollection: string
     case GUEST_BOOK_CHECK_OUT = 'guest_book_check_out';
     case REPRIMAND = 'reprimand';
     case ANNOUNCEMENT = 'announcement';
+    case REIMBURSEMENT = 'reimbursement';
 }

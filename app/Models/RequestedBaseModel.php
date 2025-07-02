@@ -127,6 +127,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         } elseif ($this instanceof RequestShift) {
             if ($isApproved) return NotificationType::REQUEST_SHIFT_APPROVED;
             return NotificationType::REQUEST_SHIFT;
+        } elseif ($this instanceof Reimbursement) {
+            if ($isApproved) return NotificationType::REQUEST_REIMBURSEMENT_APPROVED;
+            return NotificationType::REQUEST_REIMBURSEMENT;
         }
     }
 

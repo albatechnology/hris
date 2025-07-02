@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\PayrollScheduleController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\ReimbursementCategoryController;
+use App\Http\Controllers\Api\ReimbursementController;
 use App\Http\Controllers\Api\ReprimandController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
@@ -402,9 +403,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('reimbursement-categories', ReimbursementCategoryController::class);
 
-    // Route::get('reimbursements/report', [ReimbursementCategoryController::class, 'report']);
-    // Route::get('reimbursements/approvals', [ReimbursementCategoryController::class, 'approvals']);
-    // Route::get('reimbursements/approvals/count-total', [ReimbursementCategoryController::class, 'countTotalApprovals']);
-    // Route::put('reimbursements/{overtime_request}/approve', [ReimbursementCategoryController::class, 'approve']);
-    // Route::apiResource('reimbursements', ReimbursementCategoryController::class)->except('update');
+    Route::get('reimbursements/approvals', [ReimbursementController::class, 'approvals']);
+    Route::get('reimbursements/approvals/count-total', [ReimbursementController::class, 'countTotalApprovals']);
+    Route::put('reimbursements/{overtime_request}/approve', [ReimbursementController::class, 'approve']);
+    Route::apiResource('reimbursements', ReimbursementController::class)->except('update');
 });
