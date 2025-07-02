@@ -18,6 +18,13 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Repositories\Company\CompanyRepositoryInterface::class => \App\Http\Repositories\Company\CompanyRepository::class,
         \App\Interfaces\Services\Company\CompanyServiceInterface::class => \App\Http\Services\Company\CompanyService::class,
 
+
+        \App\Interfaces\Repositories\ReimbursementCategory\ReimbursementCategoryRepositoryInterface::class => \App\Http\Repositories\ReimbursementCategory\ReimbursementCategoryRepository::class,
+        \App\Interfaces\Services\ReimbursementCategory\ReimbursementCategoryServiceInterface::class => \App\Http\Services\ReimbursementCategory\ReimbursementCategoryService::class,
+
+        // \App\Interfaces\Repositories\Reimbursement\ReimbursementRepositoryInterface::class => \App\Http\Repositories\Reimbursement\ReimbursementRepository::class,
+        // \App\Interfaces\Services\Reimbursement\ReimbursementServiceInterface::class => \App\Http\Services\Reimbursement\ReimbursementService::class,
+
         \App\Interfaces\Repositories\Subscription\SubscriptionRepositoryInterface::class => \App\Http\Repositories\Subscription\SubscriptionRepository::class,
         \App\Interfaces\Services\Subscription\SubscriptionServiceInterface::class => \App\Http\Services\Subscription\SubscriptionService::class,
 

@@ -330,6 +330,12 @@ class PermissionService
                 // 'extra_off_edit',
                 // 'extra_off_delete',
             ],
+            'reimbursement_category_access' => [
+                'reimbursement_category_read',
+                'reimbursement_category_create',
+                'reimbursement_category_edit',
+                'reimbursement_category_delete',
+            ],
             'allow_get_emergency_notification' => []
         ];
     }
