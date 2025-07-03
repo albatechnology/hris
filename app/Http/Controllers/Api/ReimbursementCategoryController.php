@@ -99,7 +99,12 @@ class ReimbursementCategoryController extends BaseController
         $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id'));
 
         $users = QueryBuilder::for(
-            User::tenanted()->select('id', 'name', 'email', 'nik')->whereHas('reimbursementCategories', fn($q) => $q->where('reimbursement_categories.id', $id))
+            User::tenanted()->select('users.id', 'users.name', 'users.email', 'users.nik', 'user_reimbursement_categories.limit_amount')
+                ->whereHas('reimbursementCategories', fn($q) => $q->where('reimbursement_categories.id', $id))
+                ->join('user_reimbursement_categories', function (\Illuminate\Database\Query\JoinClause $join) use ($id) {
+                    $join->on('users.id', '=', 'user_reimbursement_categories.user_id')
+                        ->where('user_reimbursement_categories.reimbursement_category_id', $id);
+                })
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
