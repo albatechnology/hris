@@ -119,6 +119,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
 
+        Route::get('reimbursement-balance', [ReimbursementCategoryController::class, 'getUserBalance']);
+
         Route::get('timeoff-quotas', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuota']);
         Route::get('timeoff-quotas/{timeoff_policy}', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuotaHistories']);
         Route::put('detail', [UserController::class, 'detail']);

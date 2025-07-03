@@ -6,6 +6,7 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -46,5 +47,23 @@ class Reimbursement extends RequestedBaseModel implements HasMedia, TenantedInte
     public function scopeWhereDateBetween($query, $start, $end)
     {
         return $query->whereBetween('date', [date('Y-m-d', strtotime($start)), date('Y-m-d', strtotime($end))]);
+    }
+
+    public function scopeWhereYearIs(Builder $query, ?string $year = null)
+    {
+        if (is_null($year)) {
+            $year = date('Y');
+        }
+
+        $query->whereYear('date', $year);
+    }
+
+    public function scopeWhereMonthIs(Builder $query, ?string $month = null)
+    {
+        if (is_null($month)) {
+            $month = date('m');
+        }
+
+        $query->whereMonth('date', $month);
     }
 }

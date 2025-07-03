@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\ReimbursementCategory\AddUsersRequest;
+use App\Http\Requests\Api\ReimbursementCategory\DeleteUsersRequest;
 use App\Http\Requests\Api\ReimbursementCategory\EditUserRequest;
+use App\Http\Requests\Api\ReimbursementCategory\GetUserReimbursementRequest;
 use App\Http\Requests\Api\ReimbursementCategory\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
+use App\Http\Services\Reimbursement\ReimbursementService;
 use App\Interfaces\Services\ReimbursementCategory\ReimbursementCategoryServiceInterface;
 use App\Models\ReimbursementCategory;
 use App\Models\User;
@@ -94,6 +97,38 @@ class ReimbursementCategoryController extends BaseController
         return $this->okResponse();
     }
 
+    public function getUserBalance(GetUserReimbursementRequest $request, int $userId)
+    {
+        if (auth()->id() == $userId) {
+            $user = auth()->user();
+        } else {
+            $user = User::selectMinimalist()->findTenanted($userId);
+        }
+
+        $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
+        $month = isset($request->filter['month']) ? $request->filter['month'] : date('m');
+        $date = date('Y-m-d', strtotime($year . '-' . $month . '-01'));
+        $startDate = date($year . '-' . $month . '-01', strtotime($date));
+        $endDate = date($year . '-' . $month . '-t', strtotime($date));
+        $reimbursementCategoryId = $request->filter['reimbursement_category_id'] ?? null;
+
+        $reimbursementCategories = $user->reimbursementCategories()->when($reimbursementCategoryId, fn($q) => $q->where('reimbursement_category_id', $reimbursementCategoryId))->get()
+            ->map(function ($reimbursementCategory) use ($userId, $startDate, $endDate) {
+                $totalReimbursementTaken = app(ReimbursementService::class)->getTotalReimbursementTaken($userId, $reimbursementCategory->id, $startDate, $endDate);
+
+                $totalReimbursementBalance = $reimbursementCategory?->pivot->limit_amount - $totalReimbursementTaken;
+                return [
+                    'id' => $reimbursementCategory->id,
+                    'name' => $reimbursementCategory->name,
+                    'limit_amount' => $reimbursementCategory?->pivot->limit_amount,
+                    'total_reimbursement_taken' => $totalReimbursementTaken,
+                    'total_reimbursement_balance' => max($totalReimbursementBalance, 0),
+                ];
+            });
+
+        return DefaultResource::collection($reimbursementCategories);
+    }
+
     public function getUsers(int $id)
     {
         $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id'));
@@ -132,7 +167,14 @@ class ReimbursementCategoryController extends BaseController
     {
         $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id', 'limit_amount'));
 
-        $this->service->addUsers($reimbursementCategory, $request->user_ids ?? []);
+        $data = collect($request->users ?? [])->map(function ($item) {
+            return [
+                'user_id' => $item['id'],
+                'limit_amount' => $item['limit_amount'],
+            ];
+        });
+
+        $this->service->addUsers($reimbursementCategory, $data);
 
         return $this->createdResponse();
     }
@@ -146,7 +188,7 @@ class ReimbursementCategoryController extends BaseController
         return $this->updatedResponse();
     }
 
-    public function deleteUsers(AddUsersRequest $request, int $id)
+    public function deleteUsers(DeleteUsersRequest $request, int $id)
     {
         $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id'));
 

@@ -10,6 +10,7 @@ use App\Models\PayrollSetting;
 use App\Models\ReimbursementCategory;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class ReimbursementCategoryService extends BaseService implements ReimbursementCategoryServiceInterface
@@ -19,9 +20,10 @@ class ReimbursementCategoryService extends BaseService implements ReimbursementC
         parent::__construct($repository);
     }
 
-    public function addUsers(ReimbursementCategory $reimbursementCategory, array $userIds)
+    public function addUsers(ReimbursementCategory $reimbursementCategory, Collection $data)
     {
-        $reimbursementCategory->users()->attach($userIds, ['limit_amount' => $reimbursementCategory->limit_amount]);
+        $reimbursementCategory->users()->detach($data->pluck('user_id'));
+        $reimbursementCategory->users()->attach($data);
     }
 
     public function editUsers(ReimbursementCategory $reimbursementCategory, array $data)

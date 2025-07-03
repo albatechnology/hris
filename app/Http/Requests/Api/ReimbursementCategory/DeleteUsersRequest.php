@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests\Api\ReimbursementCategory;
 
-use App\Models\User;
-use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class AddUsersRequest extends FormRequest
+class DeleteUsersRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -16,9 +14,8 @@ class AddUsersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'users' => 'required|array',
-            'users.*.id' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
-            'users.*.limit_amount' => ['required', 'integer', 'min:0', 'max:4000000000'],
+            'user_ids' => 'required|array',
+            'user_ids.*' => ['required', 'integer'],
         ];
     }
 }

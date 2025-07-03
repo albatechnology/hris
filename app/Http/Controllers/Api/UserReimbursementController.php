@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApprovalStatus;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\Reimbursement\StoreRequest;
-use App\Http\Requests\Api\ReimbursementCategory\GetUserReimbursementRequest;
 use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Reimbursement\ReimbursementServiceInterface;
 use App\Models\Reimbursement;
@@ -15,39 +14,33 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class ReimbursementController extends BaseController
+class UserReimbursementController extends BaseController
 {
     public function __construct(private ReimbursementServiceInterface $service)
     {
         parent::__construct();
     }
 
-    public function index(GetUserReimbursementRequest $request): ResourceCollection
+    public function index(): ResourceCollection
     {
         $data = QueryBuilder::for(
-            Reimbursement::tenanted()
+            Reimbursement::tenanted()->with('approvals', fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')))
                 ->with([
-                    'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')),
                     'user' => fn($q) => $q->select('id', 'name'),
-                    'reimbursementCategory' => fn($q) => $q->select('id', 'name'),
+                    'shift' => fn($q) => $q->selectMinimalist(),
                 ])
         )
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('reimbursement_category_id'),
-                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
-                AllowedFilter::scope('branch_id', 'whereBranch'),
-                AllowedFilter::scope('name', 'whereUserName'),
-                AllowedFilter::scope('year', 'whereYearIs'),
-                AllowedFilter::scope('month', 'whereMonthIs'),
+                AllowedFilter::exact('shift_id'),
                 'date',
+                'is_after_shift'
             ])
             ->allowedSorts([
                 'id',
                 'user_id',
-                'reimbursement_category_id',
+                'shift_id',
                 'date',
-                'amount',
             ])
             ->paginate($this->per_page);
 
@@ -115,9 +108,8 @@ class ReimbursementController extends BaseController
     {
         $query = Reimbursement::myApprovals()
             ->with([
-                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')),
                 'user' => fn($q) => $q->select('id', 'name'),
-                'reimbursementCategory' => fn($q) => $q->select('id', 'name'),
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
             ]);
 
         $data = QueryBuilder::for($query)
@@ -135,7 +127,6 @@ class ReimbursementController extends BaseController
                 'user_id',
                 'reimbursement_category_id',
                 'date',
-                'amount',
                 'created_at',
             ])
             ->paginate($this->per_page);
