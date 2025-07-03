@@ -202,6 +202,18 @@ class Company extends BaseModel implements TenantedInterface
             'is_default' => true,
         ]);
 
+        $this->payrollComponents()->create([
+            'name' => 'Reimbursement',
+            'type' => PayrollComponentType::ALLOWANCE,
+            'category' => PayrollComponentCategory::REIMBURSEMENT,
+            'amount' => 0,
+            'is_taxable' => true,
+            'period_type' => PayrollComponentPeriodType::MONTHLY,
+            'is_monthly_prorate' => false,
+            'is_include_backpay' => false,
+            'is_default' => true,
+        ]);
+
         // $this->payrollComponents()->create([
         //     'name' => 'Task Overtime',
         //     'type' => PayrollComponentType::ALLOWANCE,

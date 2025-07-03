@@ -68,6 +68,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
             ->whereNotIn('category', [
                 PayrollComponentCategory::BASIC_SALARY,
                 PayrollComponentCategory::OVERTIME,
+                PayrollComponentCategory::REIMBURSEMENT,
                 PayrollComponentCategory::ALPA,
                 PayrollComponentCategory::LOAN,
                 PayrollComponentCategory::INSURANCE,

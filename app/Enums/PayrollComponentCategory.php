@@ -9,6 +9,7 @@ enum PayrollComponentCategory: string
     case DEFAULT = 'default';
     case BASIC_SALARY = 'basic_salary';
     case OVERTIME = 'overtime';
+    case REIMBURSEMENT = 'reimbursement';
     case TASK_OVERTIME = 'task_overtime';
     case ALPA = 'alpa';
     case LOAN = 'loan';

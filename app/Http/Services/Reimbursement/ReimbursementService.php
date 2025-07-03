@@ -31,7 +31,7 @@ class ReimbursementService extends BaseService implements ReimbursementServiceIn
         $reimbursementCategory = $this->reimbursementCategoryService->findById($data['reimbursement_category_id']);
         list($startDate, $endDate) = $this->reimbursementCategoryService->getStartEndDate($reimbursementCategory, $data['date']);
         $limitAmount = $this->reimbursementCategoryService->getLimitAmount($reimbursementCategory, $user);
-        $totalAmountReimbursementTaken = $this->getTotalReimbursementTaken($reimbursementCategory, $user, $startDate, $endDate);
+        $totalAmountReimbursementTaken = $this->getTotalReimbursementTaken($user, $reimbursementCategory, $startDate, $endDate);
 
         if ($totalAmountReimbursementTaken + floatval($data['amount']) > $limitAmount) {
             throw new UnprocessableEntityHttpException('Your remaining reimbursement limit is only ' . number_format(max($limitAmount - $totalAmountReimbursementTaken, 0), 2));
@@ -59,23 +59,24 @@ class ReimbursementService extends BaseService implements ReimbursementServiceIn
      * Get the total amount of reimbursement taken by a user on a reimbursement category,
      * within the given date range.
      *
-     * @param ReimbursementCategory|int $reimbursementCategoryId
      * @param User|int $userId
+     * @param ReimbursementCategory|int $reimbursementCategoryId
      * @param string|null $startDate
      * @param string|null $endDate
      * @return int
      */
-    public function getTotalReimbursementTaken(ReimbursementCategory|int $reimbursementCategoryId, User|int $userId, ?string $startDate = null, ?string $endDate = null): int
+    public function getTotalReimbursementTaken(User|int $userId, ReimbursementCategory|int|null $reimbursementCategoryId = null, ?string $startDate = null, ?string $endDate = null): int
     {
-        if ($reimbursementCategoryId instanceof ReimbursementCategory) {
-            $reimbursementCategoryId = $reimbursementCategoryId->id;
-        }
-
         if ($userId instanceof User) {
             $userId = $userId->id;
         }
 
-        return Reimbursement::where('user_id', $userId)->where('reimbursement_category_id', $reimbursementCategoryId)
+        if ($reimbursementCategoryId && $reimbursementCategoryId instanceof ReimbursementCategory) {
+            $reimbursementCategoryId = $reimbursementCategoryId->id;
+        }
+
+        return Reimbursement::where('user_id', $userId)
+            ->when($reimbursementCategoryId, fn($q) => $q->where('reimbursement_category_id', $reimbursementCategoryId))
             ->approved()
             ->when($startDate, fn($q) => $q->whereDate('date', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('date', '<=', $endDate))

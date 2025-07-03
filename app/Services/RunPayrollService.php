@@ -295,6 +295,21 @@ class RunPayrollService
             self::createComponent($runPayrollUser, $basicSalaryComponent, $amount);
 
             /**
+             * five, calculate reimbursement
+             */
+            $reimbursementComponent = PayrollComponent::tenanted()
+                ->whereCompany($runPayroll->company_id)
+                ->whenBranch($runPayroll->branch_id)
+                ->where('category', PayrollComponentCategory::REIMBURSEMENT)->first();
+
+            if ($reimbursementComponent) {
+                $amount = app(\App\Http\Services\Reimbursement\ReimbursementService::class)->getTotalReimbursementTaken(userId: $user, startDate: $cutOffStartDate, endDate: $cutOffEndDate);
+
+                self::createComponent($runPayrollUser, $reimbursementComponent, $amount);
+            }
+            // END
+
+            /**
              * second, calculate payroll component where not default
              */
             $payrollComponents = PayrollComponent::tenanted()
@@ -346,7 +361,7 @@ class RunPayrollService
                         // potongan = (totalAlpa/totalHariKerja)*(basicSalary+SUM(allowance))
                         $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $cutOffStartDate, $cutOffEndDate);
                         $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
-                        $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::OVERTIME]))->sum('amount');
+                        $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::REIMBURSEMENT, PayrollComponentCategory::OVERTIME]))->sum('amount');
                         $amount = round(max(($totalAlpa / $totalWorkingDays) * ($userBasicSalary + $totalAllowance), 0));
                     }
 
