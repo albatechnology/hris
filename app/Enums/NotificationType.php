@@ -93,33 +93,33 @@ enum NotificationType: string
         };
     }
 
-    // public function getUrlPath(): mixed
-    // {
-    //     return match ($this) {
-    //         self::REQUEST_ATTENDANCE => 'url/path',
-    //         self::ATTENDANCE_APPROVED => 'url/path',
-    //         self::REQUEST_TIMEOFF => 'url/path',
-    //         self::TIMEOFF_APPROVED => 'url/path',
-    //         self::REQUEST_OVERTIME => 'url/path',
-    //         self::OVERTIME_APPROVED => 'url/path',
-    //         self::REQUEST_ADVANCED_LEAVE => 'url/path',
-    //         self::ADVANCED_LEAVE_APPROVED => 'url/path',
-    //         default => null,
-    //     };
-    // }
+    public function getUrlPath(): mixed
+    {
+        return match ($this) {
+            self::REQUEST_ATTENDANCE => 'url/path',
+            self::ATTENDANCE_APPROVED => 'url/path',
+            self::REQUEST_TIMEOFF => 'url/path',
+            self::TIMEOFF_APPROVED => 'url/path',
+            self::REQUEST_OVERTIME => 'url/path',
+            self::OVERTIME_APPROVED => 'url/path',
+            self::REQUEST_ADVANCED_LEAVE => 'url/path',
+            self::ADVANCED_LEAVE_APPROVED => 'url/path',
+            default => null,
+        };
+    }
 
-    // public function getIcon(): string
-    // {
-    //     return match ($this) {
-    //         self::REQUEST_ATTENDANCE => 'fa fa-check-double',
-    //         self::ATTENDANCE_APPROVED => 'fa fa-check-double',
-    //         self::REQUEST_TIMEOFF => 'fa fa-check-double',
-    //         self::TIMEOFF_APPROVED => 'fa fa-check-double',
-    //         self::REQUEST_OVERTIME => 'fa fa-check-double',
-    //         self::OVERTIME_APPROVED => 'fa fa-check-double',
-    //         self::REQUEST_ADVANCED_LEAVE => 'fa fa-check-double',
-    //         self::ADVANCED_LEAVE_APPROVED => 'fa fa-check-double',
-    //         default => null,
-    //     };
-    // }
+    public function getIcon(): string
+    {
+        return match ($this) {
+            self::REQUEST_ATTENDANCE => 'fa fa-check-double',
+            self::ATTENDANCE_APPROVED => 'fa fa-check-double',
+            self::REQUEST_TIMEOFF => 'fa fa-check-double',
+            self::TIMEOFF_APPROVED => 'fa fa-check-double',
+            self::REQUEST_OVERTIME => 'fa fa-check-double',
+            self::OVERTIME_APPROVED => 'fa fa-check-double',
+            self::REQUEST_ADVANCED_LEAVE => 'fa fa-check-double',
+            self::ADVANCED_LEAVE_APPROVED => 'fa fa-check-double',
+            default => null,
+        };
+    }
 }
