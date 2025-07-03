@@ -7,6 +7,7 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ReimbursementCategory extends BaseModel implements TenantedInterface
 {
@@ -22,4 +23,9 @@ class ReimbursementCategory extends BaseModel implements TenantedInterface
     protected $casts = [
         'period_type' => ReimbursementPeriodType::class,
     ];
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_reimbursement_categories');
+    }
 }

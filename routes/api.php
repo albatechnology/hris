@@ -401,6 +401,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('lock-attendances/{lock_attendance}/details', [LockAttendanceController::class, 'details']);
     Route::apiResource('lock-attendances', LockAttendanceController::class);
 
+    Route::get('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'getUsers']);
+    Route::post('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'addUsers']);
+    Route::put('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'editUser']);
+    Route::delete('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'deleteUsers']);
     Route::apiResource('reimbursement-categories', ReimbursementCategoryController::class);
 
     Route::get('reimbursements/approvals', [ReimbursementController::class, 'approvals']);

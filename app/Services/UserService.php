@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class UserService
 {
-
     /**
      * Determine if the given user has any descendants.
      *

@@ -3,6 +3,7 @@
 namespace App\Http\Repositories;
 
 use App\Interfaces\Repositories\BaseRepositoryInterface;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -20,13 +21,17 @@ abstract class BaseRepository implements BaseRepositoryInterface
         return $this->model->query();
     }
 
-    public function findAll(): Collection
+    public function findAll(?Closure $query = null): Collection
     {
-        return $this->query()->get();
+        return $this->query()
+            ->when($query, $query)
+            ->get();
     }
-    public function findById(string $id, bool $withTrashed = false): ?Model
+    public function findById(string $id, ?Closure $query = null, bool $withTrashed = false): ?Model
     {
-        return $this->query()->when($withTrashed, fn($q) => $q->withTrashed())->where('id', $id)->firstOrFail();
+        return $this->query()
+            ->when($query, $query)
+            ->when($withTrashed, fn($q) => $q->withTrashed())->where('id', $id)->firstOrFail();
     }
 
     public function create(array $data): Model

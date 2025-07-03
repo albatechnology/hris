@@ -10,6 +10,7 @@ use App\Models\PayrollSetting;
 use App\Models\ReimbursementCategory;
 use App\Models\User;
 use Carbon\Carbon;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class ReimbursementCategoryService extends BaseService implements ReimbursementCategoryServiceInterface
 {
@@ -18,26 +19,59 @@ class ReimbursementCategoryService extends BaseService implements ReimbursementC
         parent::__construct($repository);
     }
 
-    public function getLimitAmount(ReimbursementCategory|int $reimbursementCategory, User|int $user): int
+    public function addUsers(ReimbursementCategory $reimbursementCategory, array $userIds)
     {
-        if (is_int($reimbursementCategory)) {
-            $reimbursementCategory = $this->findById($reimbursementCategory);
+        $reimbursementCategory->users()->attach($userIds, ['limit_amount' => $reimbursementCategory->limit_amount]);
+    }
+
+    public function editUsers(ReimbursementCategory $reimbursementCategory, array $data)
+    {
+        $reimbursementCategory->users()->where('id', $data['user_id'])->update(['limit_amount' => $data['limit_amount']]);
+    }
+
+    public function deleteUsers(ReimbursementCategory $reimbursementCategory, array $userIds)
+    {
+        $reimbursementCategory->users()->detach($userIds);
+    }
+
+    /**
+     * Get the limit amount for a user on a reimbursement category.
+     *
+     * @param ReimbursementCategory|int $reimbursementCategoryId
+     * @param User|int $user
+     * @return int
+     * @throws UnprocessableEntityHttpException
+     */
+    public function getLimitAmount(ReimbursementCategory|int $reimbursementCategoryId, User|int $user): int
+    {
+        if ($reimbursementCategoryId instanceof ReimbursementCategory) {
+            $reimbursementCategoryId = $reimbursementCategoryId->id;
         }
 
         if (is_int($user)) {
             $user = User::select('id')->where('id', $user)->firstOrFail();
         }
 
-        $limitAmount = $reimbursementCategory->limit_amount;
+        $userReimbursementCategory = $user->reimbursementCategories()->where('reimbursement_category_id', $reimbursementCategoryId)->first();
 
-        $userReimbursementCategory = $user->reimbursementCategories()->where('reimbursement_category_id', $reimbursementCategory->id)->first();
-        if ($userReimbursementCategory && $userReimbursementCategory->pivot?->limit_amount) {
-            $limitAmount = $userReimbursementCategory->pivot->limit_amount;
+        if (!$userReimbursementCategory && !$userReimbursementCategory->pivot?->limit_amount) {
+            throw new UnprocessableEntityHttpException('User does not have this Reimbursement Category');
         }
 
-        return $limitAmount;
+        return $userReimbursementCategory->pivot->limit_amount;
     }
 
+    /**
+     * Calculate the start and end dates for a reimbursement category based on the requested date.
+     *
+     * If the reimbursement category has a monthly period type, the start and end dates are determined
+     * by the payroll settings of the associated company. Otherwise, it defaults to the entire year of
+     * the requested date.
+     *
+     * @param ReimbursementCategory $reimbursementCategory The reimbursement category to evaluate.
+     * @param string $requestedDate The date for which to calculate the start and end dates.
+     * @return array An array containing the start and end dates as strings in 'Y-m-d' format.
+     */
     public function getStartEndDate(ReimbursementCategory $reimbursementCategory, string $requestedDate): array
     {
         $startDate = date('Y-01-01', strtotime($requestedDate));
@@ -48,8 +82,6 @@ class ReimbursementCategoryService extends BaseService implements ReimbursementC
                 $date = self::generateDate($payrollSetting->cut_off_attendance_start_date, $payrollSetting->cut_off_attendance_end_date, date('m-Y', strtotime($requestedDate)));
                 $startDate = $date['start']->format('Y-m-d');
                 $endDate = $date['end']->format('Y-m-d');
-                // $startDate = date('Y-m-' . $payrollSetting->cut_off_attendance_start_date, strtotime($requestedDate));
-                // $endDate = date('Y-m-' . $payrollSetting->cut_off_attendance_end_date, strtotime($requestedDate));
             }
         }
 

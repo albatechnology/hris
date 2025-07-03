@@ -55,7 +55,16 @@ class ReimbursementService extends BaseService implements ReimbursementServiceIn
         return $reimbursement;
     }
 
-
+    /**
+     * Get the total amount of reimbursement taken by a user on a reimbursement category,
+     * within the given date range.
+     *
+     * @param ReimbursementCategory|int $reimbursementCategoryId
+     * @param User|int $userId
+     * @param string|null $startDate
+     * @param string|null $endDate
+     * @return int
+     */
     public function getTotalReimbursementTaken(ReimbursementCategory|int $reimbursementCategoryId, User|int $userId, ?string $startDate = null, ?string $endDate = null): int
     {
         if ($reimbursementCategoryId instanceof ReimbursementCategory) {
