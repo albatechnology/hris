@@ -209,10 +209,6 @@ class RunPayrollService
      */
     public static function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, array $request): JsonResponse
     {
-        $cutOffStartDate = $runPayroll->cut_off_start_date;
-        $cutOffEndDate = $runPayroll->cut_off_end_date;
-        $startDate = $runPayroll->payroll_start_date;
-        $endDate = $runPayroll->payroll_end_date;
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
         $company = $payrollSetting->company;
 
@@ -225,6 +221,11 @@ class RunPayrollService
 
         // calculate for each user
         foreach ($userIds as $userId) {
+            $cutOffStartDate = $runPayroll->cut_off_start_date;
+            $cutOffEndDate = $runPayroll->cut_off_end_date;
+            $startDate = $runPayroll->payroll_start_date;
+            $endDate = $runPayroll->payroll_end_date;
+
             /** @var \App\Models\User $user */
             $user = User::where('id', $userId)->has('payrollInfo')->with('payrollInfo')->first();
             if (!$user) continue;
@@ -232,12 +233,16 @@ class RunPayrollService
 
             if ($user->join_date) {
                 $joinDate = Carbon::parse($user->join_date);
-                if ($joinDate->greaterThan($endDate)) continue;
+                if ($joinDate->greaterThan($endDate)) {
+                    continue;
+                }
             }
 
             if ($user->resign_date) {
                 $resignDate = Carbon::parse($user->resign_date);
-                if ($resignDate->lessThan($cutOffEndDate)) continue;
+                if ($resignDate->lessThan($cutOffEndDate)) {
+                    continue;
+                }
             }
 
             $runPayrollUser = self::assignUser($runPayroll, $userId);
