@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Enums\LoanType;
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
-use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Loan extends BaseModel implements TenantedInterface
 {
-    use CustomSoftDeletes, CreatedUpdatedInfo;
+    use CustomSoftDeletes, CreatedUpdatedInfo, BelongsToUser;
 
     protected $fillable = [
         'user_id',
