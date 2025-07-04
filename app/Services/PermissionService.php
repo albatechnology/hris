@@ -336,6 +336,12 @@ class PermissionService
                 'reimbursement_category_edit',
                 'reimbursement_category_delete',
             ],
+            'loan_access' => [
+                'loan_read',
+                'loan_create',
+                'loan_edit',
+                'loan_delete',
+            ],
             'allow_get_emergency_notification' => []
         ];
     }
