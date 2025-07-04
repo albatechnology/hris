@@ -169,11 +169,37 @@ class RunPayrollController extends BaseController
 
     public function exportOcbc(ExportRequest $request, int $id)
     {
-        $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule')->findTenanted($id);
+        $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule', 'cut_off_end_date', 'payroll_start_date', 'payroll_end_date')->findTenanted($id);
         $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
 
         $datas = RunPayrollUser::where('run_payroll_id', $id)
             ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
+            ->when($type = $request->type, function ($q) use ($runPayroll, $type) {
+                $q->when($type == 'active', fn($q) => $q->whereHas(
+                    'user',
+                    fn($q) => $q->where(
+                        fn($q) =>
+                        $q->where('join_date', '<=', $runPayroll->cut_off_end_date)
+                            ->whereNull('resign_date')
+                    )
+                        ->orWhere(
+                            fn($q) => $q->whereDate('resign_date', '<=', $runPayroll->cut_off_end_date)
+                                ->whereNotNull('resign_date')
+                        )
+                ))
+                    ->when($type == 'resign', fn($q) => $q->whereHas(
+                        'user',
+                        fn($q) => $q->whereDateBetween('resign_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
+                    ))
+                    ->when($type == 'new', fn($q) => $q->whereHas(
+                        'user',
+                        fn($q) => $q->whereDateBetween('join_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
+                    ))
+                    ->when($type == 'new_and_resign', fn($q) => $q->whereHas(
+                        'user',
+                        fn($q) => $q->whereDateBetween('join_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date)->orWhere(fn($q) => $q->whereDateBetween('resign_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date))
+                    ));
+            })
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name')
@@ -182,9 +208,7 @@ class RunPayrollController extends BaseController
             ])
             ->get();
 
-
         $body = "";
-        $totalAmount = 0;
         foreach ($datas as $runPayrollUser) {
             if (!$runPayrollUser->user) {
                 throw new Exception("User with ID $runPayrollUser->user_id not found");
@@ -248,11 +272,37 @@ class RunPayrollController extends BaseController
 
     public function exportBca(ExportRequest $request, int $id)
     {
-        $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule')->findTenanted($id);
+        $runPayroll = RunPayroll::select('id', 'code', 'payment_schedule', 'cut_off_end_date', 'payroll_start_date', 'payroll_end_date')->findTenanted($id);
         $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
 
         $datas = RunPayrollUser::where('run_payroll_id', $id)
-            ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
+            // ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
+            ->when($type = $request->type, function ($q) use ($runPayroll, $type) {
+                $q->when($type == 'active', fn($q) => $q->whereHas(
+                    'user',
+                    fn($q) => $q->where(
+                        fn($q) =>
+                        $q->where('join_date', '<=', $runPayroll->cut_off_end_date)
+                            ->whereNull('resign_date')
+                    )
+                        ->orWhere(
+                            fn($q) => $q->whereDate('resign_date', '<=', $runPayroll->cut_off_end_date)
+                                ->whereNotNull('resign_date')
+                        )
+                ))
+                    ->when($type == 'resign', fn($q) => $q->whereHas(
+                        'user',
+                        fn($q) => $q->whereDateBetween('resign_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
+                    ))
+                    ->when($type == 'new', fn($q) => $q->whereHas(
+                        'user',
+                        fn($q) => $q->whereDateBetween('join_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
+                    ))
+                    ->when($type == 'new_and_resign', fn($q) => $q->whereHas(
+                        'user',
+                        fn($q) => $q->whereDateBetween('join_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date)->orWhere(fn($q) => $q->whereDateBetween('resign_date', $runPayroll->payroll_start_date, $runPayroll->payroll_end_date))
+                    ));
+            })
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'nik')

@@ -9,8 +9,6 @@ class UpdateRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
-
     /**
      * Prepare inputs for validation.
      *

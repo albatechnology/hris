@@ -229,9 +229,15 @@ class RunPayrollService
             $user = User::where('id', $userId)->has('payrollInfo')->with('payrollInfo')->first();
             if (!$user) continue;
             $resignDate = null;
+
+            if ($user->join_date) {
+                $joinDate = Carbon::parse($user->join_date);
+                if ($joinDate->greaterThan($endDate)) continue;
+            }
+
             if ($user->resign_date) {
                 $resignDate = Carbon::parse($user->resign_date);
-                if ($resignDate->lessThan($cutOffStartDate)) continue;
+                if ($resignDate->lessThan($cutOffEndDate)) continue;
             }
 
             $runPayrollUser = self::assignUser($runPayroll, $userId);
