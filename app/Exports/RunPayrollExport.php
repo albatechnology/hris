@@ -38,7 +38,7 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
         $payrollEndDate = Carbon::parse($this->runPayroll->payroll_end_date);
 
         $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($cutOffStartDate, $cutOffEndDate, $payrollStartDate, $payrollEndDate) {
-            return $item->user->resign_date && (Carbon::parse($item->user->resign_date)->between($cutOffStartDate, $cutOffEndDate) || Carbon::parse($item->user->resign_date)->between($payrollStartDate, $payrollEndDate)) ? 'resign' : (Carbon::parse($item->user->join_date)->between($cutOffStartDate, $cutOffEndDate) ? 'new' : 'active');
+            return $item->user->resign_date && (Carbon::parse($item->user->resign_date)->between($cutOffStartDate, $cutOffEndDate) || Carbon::parse($item->user->resign_date)->between($payrollStartDate, $payrollEndDate)) ? 'resign' : (Carbon::parse($item->user->join_date)->between($cutOffStartDate, $cutOffEndDate) || Carbon::parse($item->user->join_date)->between($payrollStartDate, $payrollEndDate) ? 'new' : 'active');
         });
         // $runPayrollUsers = $this->runPayroll->users->groupBy(fn($item, $key) => 'active');
         $activeUsers = $runPayrollUsers->get('active')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
