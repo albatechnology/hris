@@ -41,7 +41,7 @@ class ReimbursementService extends BaseService implements ReimbursementServiceIn
         try {
             $reimbursement = Reimbursement::create($data);
 
-            foreach ($data['files'] as $file) {
+            foreach ($data['files'] ?? [] as $file) {
                 if ($file->isValid()) {
                     $reimbursement->addMedia($file)->toMediaCollection(MediaCollection::REIMBURSEMENT->value);
                 }
