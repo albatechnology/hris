@@ -87,8 +87,8 @@ enum NotificationType: string
             self::REQUEST_SCHEDULE_APPROVED => 'Your schedule request has been %s.', // approved/rejected
             self::REQUEST_SHIFT => 'Requesting shift',
             self::REQUEST_SHIFT_APPROVED => 'Your shift request has been %s.', // approved/rejected
-            self::REQUEST_REIMBURSEMENT => 'Requesting reimbursement',
-            self::REQUEST_REIMBURSEMENT_APPROVED => 'Your reimbursement request has been %s.', // approved/rejected
+            self::REQUEST_REIMBURSEMENT => '%s Requesting reimbursement',
+            self::REQUEST_REIMBURSEMENT_APPROVED => '%s %s your reimbursement request', // approved/rejected
             default => null,
         };
     }

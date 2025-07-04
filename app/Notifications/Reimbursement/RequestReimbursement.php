@@ -52,7 +52,7 @@ class RequestReimbursement extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->reimbursement->duration_text),
+            'message' => sprintf($this->notificationType->getMessage(), $this->user->name),
             // 'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->reimbursement->id
@@ -64,7 +64,7 @@ class RequestReimbursement extends Notification
      */
     public function toFcm(object $notifiable): array
     {
-        $body = sprintf($this->notificationType->getMessage(), $this->reimbursement->duration_text);
+        $body = sprintf($this->notificationType->getMessage(), $this->user->name);
 
         return [
             'token' => $this->user->fcm_token,

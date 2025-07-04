@@ -53,7 +53,7 @@ class RequestReimbursementApproved extends Notification
     {
         return [
             'type' => $this->notificationType->value,
-            'message' => sprintf($this->notificationType->getMessage(), $this->approvalStatus->value),
+            'message' => sprintf($this->notificationType->getMessage(), $this->user->name, $this->approvalStatus->value),
             // 'url_path' => $this->notificationType->getUrlPath(),
             'user_id' => $this->user->id,
             'model_id' => $this->reimbursement->id
@@ -65,7 +65,7 @@ class RequestReimbursementApproved extends Notification
      */
     public function toFcm(object $notifiable): array
     {
-        $body = sprintf($this->notificationType->getMessage(), $this->approvalStatus->value);
+        $body = sprintf($this->notificationType->getMessage(), $this->user->name, $this->approvalStatus->value);
 
         return [
             'token' => $notifiable->fcm_token,
