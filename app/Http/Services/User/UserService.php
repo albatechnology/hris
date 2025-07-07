@@ -59,14 +59,16 @@ class UserService extends BaseService implements UserServiceInterface
             $user->branches()->createMany($branchIds);
 
             if ($request->overtime_id) {
-                $user->overtimes()->create(['overtime_id' => $request->overtime_id]);
+                DB::table('user_overtimes')->insert([
+                    'user_id' => $user->id,
+                    'overtime_id' => $request->overtime_id
+                ]);
             }
 
             if (empty($request->password)) {
                 $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
                 $user->notify(new ($notificationType->getNotificationClass())($notificationType));
             }
-
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();

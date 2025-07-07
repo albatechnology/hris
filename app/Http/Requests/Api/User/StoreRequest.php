@@ -48,7 +48,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'nullable|exists:groups,id',
+            'group_id' => 'required|exists:groups,id',
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             // 'approval_id' => 'nullable|exists:users,id',
