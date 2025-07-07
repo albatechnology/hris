@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\User;
 
+use App\Enums\CurrencyCode;
 use App\Enums\Gender;
 use App\Enums\UserType;
+use App\Models\Bank;
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,7 +13,32 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $email = $this->email;
+        if (!$email) {
+            if ($this->nik) {
+                $email = $this->nik . '@gmail.com';
+            } else {
+                $email = str_replace(' ', '', $this->name) . time() . '@gmail.com';
+            }
+        }
+
+        $user = auth()->user();
+        $data = [
+            'group_id' => $this->group_id ?? $user->group_id,
+            'company_id' => $this->company_id ?? $user->company_id,
+            'branch_id' => $this->branch_id ?? $user->branch_id,
+            'email' => $email,
+        ];
+
+        $this->merge($data);
+    }
 
     /**
      * Get the validation rules that apply to the request.

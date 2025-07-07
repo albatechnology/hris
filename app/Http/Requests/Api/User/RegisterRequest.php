@@ -49,7 +49,11 @@ class RegisterRequest extends FormRequest
         if ($this->password) $emailVerifiedAt = date('Y-m-d H:i:s');
         if ($this->email_verified_at) $emailVerifiedAt = date('Y-m-d H:i:s', strtotime($this->email_verified_at));
 
+        $user = auth()->user();
         $data = [
+            'group_id' => $this->group_id ?? $user->group_id,
+            'company_id' => $this->company_id ?? $user->company_id,
+            'branch_id' => $this->branch_id ?? $user->branch_id,
             'email' => $email,
             'bank_id' => $this->bank_id ?? Bank::where('company_id', $this->company_id)->first(['id'])?->id,
             'month' => $this->month ?? date('m'),
@@ -69,7 +73,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'nullable|exists:groups,id',
+            'group_id' => 'required|exists:groups,id',
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'overtime_id' => ['nullable', new CompanyTenantedRule(Overtime::class, 'Overtime data not found')],
