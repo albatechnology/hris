@@ -5,9 +5,10 @@ namespace App\Notifications\User;
 use App\Enums\NotificationType;
 use App\Mail\SetupPasswordMailable;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class SetupPasswordNotification extends Notification
+class SetupPasswordNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
