@@ -69,20 +69,18 @@ class OvertimeRequestController extends BaseController
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
-        if (config('app.name') != 'LUMORA') {
-            $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
-            if (!$attendance) {
-                return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
+        // if (!$attendance) {
+        //     return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
-            if ($attendance->clockIn()->doesntExist()) {
-                return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        // if ($attendance->clockIn()->doesntExist()) {
+        //     return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
-            if ($attendance->clockOut()->doesntExist()) {
-                return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-        }
+        // if ($attendance->clockOut()->doesntExist()) {
+        //     return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
