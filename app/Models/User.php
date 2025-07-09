@@ -214,6 +214,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         $query->where(fn($q) => $q->whereDate($column, '>=', $startDate)->whereDate($column, '<=', $endDate));
     }
 
+    public function scopeWhereResignDateAfter(Builder $query, string $value)
+    {
+        $query->where(fn($q) => $q->whereDate('resign_date', '>=', date('Y-m-d', strtotime($value)))->orWhereNull('resign_date'));
+    }
+
     public function scopeWhereResignDateBefore(Builder $query, string $value)
     {
         $query->where(fn($q) => $q->whereDate('resign_date', '<=', date('Y-m-d', strtotime($value)))->orWhereNull('resign_date'));
