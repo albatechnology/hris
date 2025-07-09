@@ -216,7 +216,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function scopeWhereResignDateBefore(Builder $query, string $value)
     {
-        $query->where(fn($q) => $q->whereDate('resign_date', '<=', date('Y-m-d', strtotime($value))));
+        $query->where(fn($q) => $q->whereDate('resign_date', '<=', date('Y-m-d', strtotime($value)))->orWhereNull('resign_date'));
     }
 
     protected function password(): Attribute
