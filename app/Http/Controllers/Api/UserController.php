@@ -145,6 +145,7 @@ class UserController extends BaseController
                     $query->whereHas('detail', fn($q) => $q->whereIn('religion', $value));
                 }),
                 AllowedFilter::scope('name', 'whereName'),
+                AllowedFilter::scope('resign_date_before', 'whereResignDateBefore'),
                 'email',
                 'type',
                 'nik',
