@@ -83,7 +83,12 @@ class Loan extends BaseModel implements TenantedInterface
 
     public function getEndDateAttribute(): string
     {
-        return date('Y-m-d', strtotime($this->effective_date . ' + ' . $this->installment . ' month'));
+        return date('Y-m-d', strtotime($this->effective_date . ' + ' . ($this->installment - 1) . ' month'));
+    }
+
+    public function getBalanceAttribute(): float
+    {
+        return max($this->amount - $this->details()->whereNotNull('run_payroll_user_id')->sum('basic_payment'), 0);
     }
 
     public static function generateCode()

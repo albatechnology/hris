@@ -58,6 +58,7 @@ class LoanController extends BaseController
                 $loan->installment = $loan->installment;
                 $loan->outstanding = $loan->outstanding;
                 $loan->end_date = $loan->end_date;
+                $loan->balance = $loan->balance;
                 return $loan;
             });
 
