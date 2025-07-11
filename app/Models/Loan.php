@@ -81,7 +81,7 @@ class Loan extends BaseModel implements TenantedInterface
         return $this->details()->whereNull('run_payroll_user_id')->count();
     }
 
-    public function getEndDateAttribute(): int
+    public function getEndDateAttribute(): string
     {
         return date('Y-m-d', strtotime($this->effective_date . ' + ' . $this->installment . ' month'));
     }
