@@ -117,6 +117,10 @@ class LockAttendanceController extends BaseController
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
 
+                if (!$schedule || !$schedule->shift) {
+                    continue;
+                }
+
                 // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
                 // 2. kalo company event(holiday), shiftnya pake holiday
                 // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift
@@ -130,13 +134,25 @@ class LockAttendanceController extends BaseController
                     $isHoliday = $companyHolidays->contains(function ($ch) use ($date) {
                         return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
                     });
+
+                    if ($isHoliday) {
+                        continue;
+                    }
                 }
 
                 if ($schedule?->is_overide_national_holiday == false && !$isHoliday) {
                     $isHoliday = $nationalHolidays->contains(function ($nh) use ($date) {
                         return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
                     });
+
+                    if ($isHoliday) {
+                        continue;
+                    }
                 }
+
+                if ($schedule->shift->is_dayoff) {
+                    continue;
+                };
 
                 if ($attendance && !$isHoliday) {
                     $shift = $attendance->shift;
