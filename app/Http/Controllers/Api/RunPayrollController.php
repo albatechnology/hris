@@ -12,6 +12,7 @@ use App\Http\Resources\RunPayroll\RunPayrollResource;
 use App\Models\Bank;
 use App\Models\Company;
 use App\Models\CountrySetting;
+use App\Models\LoanDetail;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
@@ -92,8 +93,35 @@ class RunPayrollController extends BaseController
     {
         $runPayroll = RunPayroll::findTenanted($id);
 
-        if (count($request->validated())) {
-            $runPayroll->update($request->validated());
+        DB::beginTransaction();
+        try {
+            if (count($request->validated())) {
+                $runPayroll->update($request->validated());
+                $runPayrollUserComponents = RunPayrollUserComponent::select('id', 'run_payroll_user_id', 'payroll_component_id', 'context')
+                    ->whereNotNull('context')
+                    ->whereHas('payrollComponent', fn($q) => $q->where('category', \App\Enums\PayrollComponentCategory::LOAN))
+                    ->whereHas('runPayrollUser', fn($q) => $q->where('run_payroll_id', $runPayroll->id))
+                    ->with('runPayrollUser', fn($q) => $q->select('id'))
+                    ->get();
+
+                if ($runPayroll->status->is(\App\Enums\RunPayrollStatus::RELEASE)) {
+                    $runPayrollUserComponents->each(function (RunPayrollUserComponent $runPayrollUserComponent) {
+                        foreach ($runPayrollUserComponent->context['loans'] ?? [] as $loan) {
+                            LoanDetail::whereIn('id', collect($loan['details'])->pluck('id'))->update(['run_payroll_user_id' => $runPayrollUserComponent->runPayrollUser->id]);
+                        }
+                    });
+                } elseif ($runPayroll->status->is(\App\Enums\RunPayrollStatus::REVIEW)) {
+                    $runPayrollUserComponents->each(function (RunPayrollUserComponent $runPayrollUserComponent) {
+                        foreach ($runPayrollUserComponent->context['loans'] ?? [] as $loan) {
+                            LoanDetail::whereIn('id', collect($loan['details'])->pluck('id'))->update(['run_payroll_user_id' => null]);
+                        }
+                    });
+                }
+            }
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
 
         return (new RunPayrollResource($runPayroll->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);

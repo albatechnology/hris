@@ -12,6 +12,7 @@ class RunPayrollUserComponent extends BaseModel
         'amount',
         'is_editable',
         'payroll_component',
+        'context',
     ];
 
     protected $casts = [
@@ -20,6 +21,7 @@ class RunPayrollUserComponent extends BaseModel
         'amount' => 'double',
         'is_editable' => 'boolean',
         'payroll_component' => 'array',
+        'context' => 'array',
     ];
 
     public function runPayrollUser(): BelongsTo

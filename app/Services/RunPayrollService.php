@@ -393,14 +393,13 @@ class RunPayrollService
             if ($loanComponent) {
                 $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
                 $loans = Loan::where('user_id', $user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
-
                 if ($loans->count()) {
                     $loans->load(['details' => $whereHas]);
                     $amount = $loans->sum(fn($loan) => $loan->details->sum('total'));
 
-                    $loans->each(fn($loan) => $loan->details->each->update(['run_payroll_user_id' => $runPayrollUser->id]));
-
-                    self::createComponent($runPayrollUser, $loanComponent, $amount);
+                    self::createComponent($runPayrollUser, $loanComponent, $amount, [
+                        "loans" => $loans->toArray()
+                    ]);
                 }
             }
 
@@ -572,13 +571,14 @@ class RunPayrollService
      * @param  bool             $isEditable
      * @return RunPayrollUserComponent
      */
-    public static function createComponent(RunPayrollUser $runPayrollUser, PayrollComponent $payrollComponent, int|float $amount = 0, ?bool $isEditable = true): RunPayrollUserComponent
+    public static function createComponent(RunPayrollUser $runPayrollUser, PayrollComponent $payrollComponent, int|float $amount = 0, array|null $context = null, ?bool $isEditable = true): RunPayrollUserComponent
     {
         return $runPayrollUser->components()->create([
             'payroll_component_id' => $payrollComponent->id,
             'amount' => $amount,
             'is_editable' => $isEditable,
             'payroll_component' => $payrollComponent,
+            'context' => $context,
         ]);
     }
 

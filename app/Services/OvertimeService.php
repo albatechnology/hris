@@ -25,13 +25,12 @@ class OvertimeService
     {
         $umk = $user->branch?->umk ?? 0;
         $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
-
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            $start = Carbon::parse($overtimeRequest->start_at);
-            $end = Carbon::parse($overtimeRequest->end_at);
-            $hour = $end->diffInHours($start);
-            $totalDurationInHours += ($hour > 9 ? 9 : $hour);
+            $realDuration = Carbon::parse($overtimeRequest->real_duration);
+            $durationInHours = $realDuration->hour + ($realDuration->minute / 60) + ($realDuration->second / 3600);
+
+            $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
         return ($basicSalary / 160) * $totalDurationInHours;
@@ -41,10 +40,10 @@ class OvertimeService
     {
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            $start = Carbon::parse($overtimeRequest->start_at);
-            $end = Carbon::parse($overtimeRequest->end_at);
-            $hour = $end->diffInHours($start);
-            $totalDurationInHours += ($hour > 9 ? 9 : $hour);
+            $realDuration = Carbon::parse($overtimeRequest->real_duration);
+            $durationInHours = $realDuration->hour + ($realDuration->minute / 60) + ($realDuration->second / 3600);
+
+            $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
         $rate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 12500;
