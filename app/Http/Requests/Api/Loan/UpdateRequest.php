@@ -10,8 +10,6 @@ use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *
@@ -21,7 +19,7 @@ class UpdateRequest extends FormRequest
     {
         $details = collect($this->details ?? [])->reject(fn($detail) => $detail['basic_payment'] <= 0);
         $this->merge([
-            'installment' => $details->count(),
+            // 'installment' => $details->count(),
             'details' => $details->toArray(),
         ]);
     }
@@ -38,7 +36,7 @@ class UpdateRequest extends FormRequest
             'user_contact_id' => ['nullable', new CompanyTenantedRule(UserContact::class, 'Family of user not found')],
             'effective_date' => 'nullable|date',
             'type' => ['nullable', Rule::enum(LoanType::class)],
-            'installment' => 'required|integer',
+            // 'installment' => 'required|integer',
             'interest' => 'nullable|numeric',
             'amount' => 'required|numeric',
             'description' => 'nullable|string',

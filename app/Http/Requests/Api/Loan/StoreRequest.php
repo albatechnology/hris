@@ -3,29 +3,25 @@
 namespace App\Http\Requests\Api\Loan;
 
 use App\Enums\LoanType;
-use App\Models\Loan;
 use App\Models\User;
 use App\Models\UserContact;
 use App\Rules\CompanyTenantedRule;
-use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
-
      /**
      * Prepare inputs for validation.
      *
      * @return void
      */
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'installment' => count($this->details ?? []),
-        ]);
-    }
+    // protected function prepareForValidation()
+    // {
+    //     $this->merge([
+    //         'installment' => count($this->details ?? []),
+    //     ]);
+    // }
 
     /**
      * Get the validation rules that apply to the request.
@@ -39,7 +35,7 @@ class StoreRequest extends FormRequest
             'user_contact_id' => ['nullable', new CompanyTenantedRule(UserContact::class, 'Family of user not found')],
             'effective_date' => 'required|date',
             'type' => ['required', Rule::enum(LoanType::class)],
-            'installment' => 'required|integer',
+            // 'installment' => 'required|integer',
             'interest' => 'nullable|numeric',
             'amount' => 'required|numeric',
             'description' => 'nullable|string',

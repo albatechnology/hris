@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('code', 50)->unique();
             $table->date('effective_date');
             $table->string('type')->default(LoanType::LOAN);
-            $table->integer('installment')->unsigned();
+            // $table->integer('installment')->unsigned();
             $table->float('interest')->unsigned()->default(0);
             $table->double('amount', 13, 2)->unsigned()->default(0);
             $table->text('description')->nullable();

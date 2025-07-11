@@ -34,7 +34,7 @@ class LoanController extends BaseController
                 'code',
                 'effective_date',
                 'type',
-                'installment',
+                // 'installment',
                 'interest',
             ])
             ->allowedIncludes([
@@ -48,12 +48,17 @@ class LoanController extends BaseController
                 'code',
                 'effective_date',
                 'type',
-                'installment',
+                // 'installment',
                 'interest',
                 'amount',
                 'created_at',
             ])
-            ->paginate($this->per_page);
+            ->paginate($this->per_page)
+            ->through(function ($loan) {
+                $loan->installment = $loan->installment;
+                $loan->outstanding = $loan->outstanding;
+                return $loan;
+            });
 
         return DefaultResource::collection($data);
     }

@@ -19,7 +19,6 @@ class Loan extends BaseModel implements TenantedInterface
         'code',
         'effective_date',
         'type',
-        'installment',
         'interest',
         'amount',
         'description',
@@ -28,6 +27,11 @@ class Loan extends BaseModel implements TenantedInterface
     protected $casts = [
         'type' => LoanType::class,
     ];
+
+    // protected $appends = [
+    //     'installment',
+    //     'outstanding',
+    // ];
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
@@ -65,6 +69,16 @@ class Loan extends BaseModel implements TenantedInterface
     public function scopeWhereInsurance($q)
     {
         $q->where('type', LoanType::INSURANCE);
+    }
+
+    public function getinstallmentAttribute(): int
+    {
+        return $this->details()->count();
+    }
+
+    public function getOutstandingAttribute(): int
+    {
+        return $this->details()->whereNull('run_payroll_user_id')->count();
     }
 
     public static function generateCode()
