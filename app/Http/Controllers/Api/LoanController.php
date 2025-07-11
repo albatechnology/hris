@@ -57,6 +57,7 @@ class LoanController extends BaseController
             ->through(function ($loan) {
                 $loan->installment = $loan->installment;
                 $loan->outstanding = $loan->outstanding;
+                $loan->end_date = $loan->end_date;
                 return $loan;
             });
 
