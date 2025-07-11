@@ -84,7 +84,7 @@ class LockAttendanceController extends BaseController
         $users = User::select('id', 'name', 'nik')
             ->where('company_id', $lockAttendance->company_id)
             ->when($search, fn($q) => $q->where(fn($q) => $q->whereLike('name', $search)->orWhereLike('nik', $search)))
-            ->with('payrollInfo', fn($q) => $q->select('user_id', 'total_working_days'))
+            ->with('payrollInfo', fn($q) => $q->select('user_id', 'is_ignore_alpa', 'total_working_days'))
             ->paginate($this->per_page);
 
         $dateRange = CarbonPeriod::create($lockAttendance->start_date, $lockAttendance->end_date);
@@ -201,7 +201,9 @@ class LockAttendanceController extends BaseController
                         $summaryAwayTimeOff += 1;
                     }
                 } else {
-                    $summaryNotPresentAbsent += 1;
+                    if ($user->payrollInfo?->is_ignore_alpa == false) {
+                        $summaryNotPresentAbsent += 1;
+                    }
                 }
             }
 
