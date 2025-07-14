@@ -7,7 +7,7 @@
             <th style="font-weight: bold">Shift</th>
             <th style="font-weight: bold">Schedule Check In</th>
             <th style="font-weight: bold">Schedule Check Out</th>
-            <th style="font-weight: bold">Attendance Code</th>
+            {{-- <th style="font-weight: bold">Attendance Code</th> --}}
             <th style="font-weight: bold">Time Off Code</th>
             <th style="font-weight: bold">Check In</th>
             <th style="font-weight: bold">Check Out</th>
@@ -28,46 +28,46 @@
         @foreach ($data as $data)
             @forelse ($data['attendances'] as $attendance)
                 <tr>
-                    <td>{{ $data['user']['nik'] }}</td>
-                    <td>{{ $data['user']['name'] }}</td>
+                    <td>{{ $data['user']->nik }}</td>
+                    <td>{{ $data['user']->name }}</td>
                     <td>{{ $attendance['date'] }}</td>
-                    <td>{{ $attendance['shift']['name'] }}</td>
-                    <td>{{ $attendance['shift']['clock_in'] }}</td>
-                    <td>{{ $attendance['shift']['clock_out'] }}</td>
-                    <td>
-                        @if (isset($attendance['attendance']['timeoff']) && !is_null($attendance['attendance']['timeoff']))
-                            @if (isset($attendance['attendance']['timeoff']['timeoffPolicy']) &&
-                                    !is_null($attendance['attendance']['timeoff']['timeoffPolicy']))
-                                {{ $attendance['attendance']['timeoff']['timeoffPolicy']['code'] }}
+                    <td>{{ $attendance['shift']->name }}</td>
+                    <td>{{ $attendance['shift']->clock_in }}</td>
+                    <td>{{ $attendance['shift']->clock_out }}</td>
+                    {{-- <td>
+                        @if (isset($attendance['attendance']->timeoff) && !is_null($attendance['attendance']->timeoff))
+                            @if (isset($attendance['attendance']->timeoff->timeoffPolicy) &&
+                                    !is_null($attendance['attendance']->timeoff->timeoffPolicy))
+                                {{ $attendance['attendance']->timeoff->timeoffPolicy['code'] }}
                             @else
-                                {{ $attendance['attendance']['timeoff']['timeoffPolicy']['name'] }}
+                                {{ $attendance['attendance']->timeoff->timeoffPolicy['name'] }}
                             @endif
                         @else
-                            @if (isset($attendance['attendance']['shift']) && !is_null($attendance['attendance']['shift']))
+                            @if (isset($attendance['attendance']->shift) && !is_null($attendance['attendance']->shift))
                                 H
                             @else
                                 A
                             @endif
                         @endif
-                    </td>
+                    </td> --}}
                     <td>
-                        @if (isset($attendance['attendance']['timeoff']) && !is_null($attendance['attendance']['timeoff']))
-                            @if (isset($attendance['attendance']['timeoff']['timeoffPolicy']) &&
-                                    !is_null($attendance['attendance']['timeoff']['timeoffPolicy']))
-                                {{ $attendance['attendance']['timeoff']['timeoffPolicy']['code'] }}
+                        @if (isset($attendance['attendance']->timeoff) && !is_null($attendance['attendance']->timeoff))
+                            @if (isset($attendance['attendance']->timeoff->timeoffPolicy) &&
+                                    !is_null($attendance['attendance']->timeoff->timeoffPolicy))
+                                {{ $attendance['attendance']->timeoff->timeoffPolicy['code'] }}
                             @else
-                                {{ $attendance['attendance']['timeoff']['timeoffPolicy']['name'] }}
+                                {{ $attendance['attendance']->timeoff->timeoffPolicy['name'] }}
                             @endif
                         @endif
                     </td>
                     <td>
-                        @if (isset($attendance['attendance']['clock_in']) && !is_null($attendance['attendance']['clock_in']))
-                            {{ date('H:i', strtotime($attendance['attendance']['clock_in']['time'])) }}
+                        @if (isset($attendance['attendance']->clockIn) && !is_null($attendance['attendance']->clockIn))
+                            {{ date('H:i', strtotime($attendance['attendance']->clockIn['time'])) }}
                         @endif
                     </td>
                     <td>
-                        @if (isset($attendance['attendance']['clock_out']) && !is_null($attendance['attendance']['clock_out']))
-                            {{ date('H:i', strtotime($attendance['attendance']['clock_out']['time'])) }}
+                        @if (isset($attendance['attendance']->clockOut) && !is_null($attendance['attendance']->clockOut))
+                            {{ date('H:i', strtotime($attendance['attendance']->clockOut['time'])) }}
                         @endif
                     </td>
                     <td>
@@ -81,8 +81,8 @@
                         @endif
                     </td>
                     <td>
-                        @if (isset($attendance['attendance']['shift']) && isset($attendance['attendance']['shift']['schedule_working_hour']))
-                            {{ $attendance['attendance']['shift']['schedule_working_hour'] }}
+                        @if (isset($attendance['attendance']->shift) && isset($attendance['attendance']->shift['schedule_working_hour']))
+                            {{ $attendance['attendance']->shift['schedule_working_hour'] }}
                         @else
                             {{ $attendance['shift']['schedule_working_hour'] }}
                         @endif
@@ -105,13 +105,13 @@
                         @endif
                     </td>
                     <td>
-                        @if (isset($attendance['attendance']['clock_in']) && !is_null($attendance['attendance']['clock_in']))
-                            {{ $attendance['attendance']['clock_in']['lat'] . ',' . $attendance['attendance']['clock_in']['lng'] }}
+                        @if (isset($attendance['attendance']->clockIn) && !is_null($attendance['attendance']->clockIn))
+                            {{ $attendance['attendance']->clockIn['lat'] . ',' . $attendance['attendance']->clockIn['lng'] }}
                         @endif
                     </td>
                     <td>
-                        @if (isset($attendance['attendance']['clock_out']) && !is_null($attendance['attendance']['clock_out']))
-                            {{ $attendance['attendance']['clock_out']['lat'] . ',' . $attendance['attendance']['clock_out']['lng'] }}
+                        @if (isset($attendance['attendance']->clockOut) && !is_null($attendance['attendance']->clockOut))
+                            {{ $attendance['attendance']->clockOut['lat'] . ',' . $attendance['attendance']->clockOut['lng'] }}
                         @endif
                     </td>
                     {{-- <td>
@@ -129,7 +129,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td>A</td>
+                    {{-- <td>A</td> --}}
                     <td></td>
                     <td></td>
                     <td></td>
@@ -146,7 +146,7 @@
                 </tr>
             @endforelse
             <tr>
-                <th style="background: #ffcbb1; font-weight: bold" colspan="10">TOTAL FOR EMPLOYEE :
+                <th style="background: #ffcbb1; font-weight: bold" colspan="9">TOTAL FOR EMPLOYEE :
                     {{ $data['user']['nik'] . ' - ' . $data['user']['name'] }}</th>
                 <th style="background: #ffcbb1; font-weight: bold">{{ $data['summary']['late_in'] }}</th>
                 <th style="background: #ffcbb1; font-weight: bold">{{ $data['summary']['early_out'] }}</th>

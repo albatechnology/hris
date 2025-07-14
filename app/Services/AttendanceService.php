@@ -544,7 +544,7 @@ class AttendanceService
      * base query is for GET /api/attendances
      * if you want to custom load, you can pass it in $load params
      */
-    public static function getUserAttendancesInPeriod(User|int $user, $startDate, $endDate, array $load = [])
+    public static function getUserAttendancesInPeriod(User|int $user, $startDate, $endDate, array $load = [], array $select = ['*'])
     {
         $userId = $user;
         if ($user instanceof User) {
@@ -586,7 +586,8 @@ class AttendanceService
             }
         }
 
-        return Attendance::where('user_id', $userId)
+        return Attendance::select($select)
+            ->where('user_id', $userId)
             ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
             ->whereDateBetween($startDate, $endDate)
             ->with($loads)

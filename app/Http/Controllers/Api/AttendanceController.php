@@ -65,6 +65,7 @@ class AttendanceController extends BaseController
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
         $users = User::tenanted(true)
+            ->where('id', 23)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
@@ -77,41 +78,42 @@ class AttendanceController extends BaseController
             $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
             $user->setAppends([]);
-            $attendances = Attendance::where('user_id', $user->id)
-                ->with([
-                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'clock_in_dispensation', 'clock_out_dispensation', 'time_dispensation']),
-                    'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->approved(),
-                    'clockOut' => fn($q) => $q->approved(),
-                ])
-                ->whereDateBetween($startDate, $endDate)
-                ->get(['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date']);
+
+            $attendances = AttendanceService::getUserAttendancesInPeriod(
+                $user,
+                $startDate,
+                $endDate,
+                [
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'clock_in_dispensation', 'clock_out_dispensation', 'time_dispensation'])
+                ],
+                ['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date']
+            );
 
             $dataAttendance = [];
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
 
-                if (!$schedule || !$schedule->shift) {
-                    continue;
-                }
+                // if (!$schedule || !$schedule->shift) {
+                //     continue;
+                // }
 
                 $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
 
-                if ($attendance?->clockIn) {
-                    $attendance->clock_in = $attendance?->clockIn;
-                }
-                if ($attendance?->clockOut) {
-                    $attendance->clock_out = $attendance?->clockOut;
-                }
-                if ($attendance?->timeoff) {
-                    $attendance->timeoff = $attendance?->timeoff;
-                    if ($attendance->timeoff->timeoffPolicy) {
-                        $attendance->timeoff->timeoffPolicy = $attendance?->timeoff->timeoffPolicy;
-                    }
-                }
-
                 if ($attendance) {
                     $shift = $attendance->shift;
+
+                    // if ($attendance->clockIn) {
+                    //     $attendance->clock_in = $attendance->clockIn;
+                    // }
+                    // if ($attendance->clockOut) {
+                    //     $attendance->clock_out = $attendance->clockOut;
+                    // }
+                    // if ($attendance->timeoff) {
+                    //     $attendance->timeoff = $attendance->timeoff;
+                    //     if ($attendance->timeoff->timeoffPolicy) {
+                    //         $attendance->timeoff->timeoffPolicy = $attendance->timeoff->timeoffPolicy;
+                    //     }
+                    // }
 
                     // load overtime
                     $overtimeDurationBeforeShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn($q) => $q->where('is_after_shift', false));
@@ -124,20 +126,13 @@ class AttendanceController extends BaseController
                     $totalTask = TaskService::getSumDuration($user, $date);
                     $attendance->total_task = $totalTask;
 
-                    // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_late_in && $attendance->clockIn) {
                     $remainingTime = 0;
                     if ($attendance->clockIn) {
-                        // $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
-                        // $attendance->late_in = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
                         list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
                         $attendance->late_in = $diffInTime;
                     }
-                    // dump('remainingTime OKE', $remainingTime);
-                    // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_early_out && $attendance->clockOut) {
+
                     if ($attendance->clockOut) {
-                        // dump('clockOut clockOut clockOut clockOut');
-                        // $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
-                        // $attendance->early_out = AttendanceService::getTotalLateTime($attendance->clockOut, $shift);
                         list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockOut, $shift, $remainingTime);
                         $attendance->early_out = $diffInTime;
 
@@ -184,7 +179,6 @@ class AttendanceController extends BaseController
                     unset($shift->pivot);
 
                     $dataAttendance[] = [
-                        // 'user' => $user,
                         'date' => $date->format('Y-m-d'),
                         'shift_type' => $shiftType,
                         'shift' => $shift,
@@ -392,7 +386,8 @@ class AttendanceController extends BaseController
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
-                'branch' => fn($q) => $q->select('id', 'name')
+                'branch' => fn($q) => $q->select('id', 'name'),
+                'payrollInfo' => fn($q) => $q->select('user_id', 'is_ignore_alpa'),
             ]);
 
         $date = $request->filter['date'];
@@ -403,6 +398,9 @@ class AttendanceController extends BaseController
                 $q->orWhere('nik', 'LIKE', '%' . $request->filter['search'] . '%');
             });
         }
+
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
 
         $summaryPresentOnTime = 0;
         $summaryPresentLateClockIn = 0;
@@ -417,12 +415,9 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->whereHas('schedule', function ($q) {
-                    $q->where('schedules.type', $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
-                })
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->select('id', 'clock_in', 'clock_out'),
-                    'timeoff' => fn($q) => $q->select('id'),
+                    'timeoff' => fn($q) => $q->approved()->select('id', 'request_type'),
                     'clockIn' => fn($q) => $q->select('attendance_id', 'time'),
                     'clockOut' => fn($q) => $q->select('attendance_id', 'time'),
                 ])->first();
@@ -466,41 +461,40 @@ class AttendanceController extends BaseController
                 }
 
                 // calculate timeoff
-                if ($attendance->timeoff) {
+                if ($attendance->timeoff && $attendance->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY)) {
                     $summaryAwayTimeOff += 1;
                 }
             } else {
                 $shift = $schedule?->shift ?? null;
-                $summaryNotPresentAbsent += 1;
+
+                $companyHoliday = null;
+                $isHoliday = false;
+                if ($schedule?->is_overide_company_holiday == false) {
+                    $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                        return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
+                    });
+
+                    if ($companyHoliday) {
+                        $isHoliday = true;
+                    }
+                }
+
+                if ($schedule?->is_overide_national_holiday == false && !$isHoliday) {
+                    $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                        return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                    });
+
+                    if ($nationalHoliday) {
+                        $isHoliday = true;
+                    }
+                }
+
+                if (
+                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                ) {
+                    $summaryNotPresentAbsent += 1;
+                }
             }
-            // $shiftType = 'shift';
-
-            // $companyHolidayData = null;
-            // if ($schedule?->is_overide_company_holiday == false) {
-            //     $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-            //         return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
-            //     });
-
-            //     if ($companyHolidayData) {
-            //         $shift = $companyHolidayData;
-            //         $shiftType = 'company_holiday';
-            //     }
-            // }
-
-            // if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-            //     $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
-            //     if ($nationalHoliday) {
-            //         $shift = $nationalHoliday;
-            //         $shiftType = 'national_holiday';
-            //     }
-            // }
-
-            // unset($shift->pivot);
-
-            // $user->date = $date;
-            // $user->shift_type = $shiftType;
-            // $user->shift = $shift;
-            // $user->attendance = $attendance;
         }
 
         $summary = [
@@ -524,6 +518,8 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
+        $user = auth('sanctum')->user();
+
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -536,6 +532,9 @@ class AttendanceController extends BaseController
             ]);
 
         $date = $request->filter['date'];
+
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
 
         $users = QueryBuilder::for($query)
             ->allowedFilters([
@@ -558,28 +557,13 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                // ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                    'timeoff.timeoffPolicy',
+                    'timeoff' => fn($q) => $q->approved()->with('timeoffPolicy', fn($q) => $q->select('id', 'type', 'name', 'code')),
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
-                    // 'details' => fn ($q) => $q->orderBy('created_at')
                 ])->first();
 
-            if ($attendance) {
-                $shift = $attendance->shift;
-
-                // load overtime
-                $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
-                $attendance->total_overtime = $totalOvertime;
-
-                // load task
-                // $totalTask = TaskService::getSumDuration($user, $date);
-                // $attendance->total_task = $totalTask;
-            } else {
-                $shift = $schedule?->shift ?? null;
-            }
             $shiftType = 'shift';
 
             $companyHoliday = null;
@@ -603,6 +587,20 @@ class AttendanceController extends BaseController
                     $shift = $nationalHoliday;
                     $shiftType = 'national_holiday';
                 }
+            }
+
+            if ($attendance) {
+                $shift = $attendance->shift;
+
+                // load overtime
+                $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
+                $attendance->total_overtime = $totalOvertime;
+
+                // load task
+                // $totalTask = TaskService::getSumDuration($user, $date);
+                // $attendance->total_task = $totalTask;
+            } else {
+                $shift = $schedule?->shift ?? null;
             }
 
             unset($shift->pivot);
