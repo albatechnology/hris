@@ -13,6 +13,7 @@ use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Collection;
 
 class AttendanceService
 {
@@ -537,5 +538,58 @@ class AttendanceService
         return LockAttendance::whereCompany($user->company_id)
             ->whereDateIn($date)
             ->exists();
+    }
+
+    /**
+     * base query is for GET /api/attendances
+     * if you want to custom load, you can pass it in $load params
+     */
+    public static function getUserAttendancesInPeriod(User|int $user, $startDate, $endDate, array $load = [])
+    {
+        $userId = $user;
+        if ($user instanceof User) {
+            $userId = $user->id;
+        }
+
+        $loads = [
+            'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+            'timeoff' => fn($q) => $q->approved()->with('timeoffPolicy', fn($q) => $q->select('id', 'type', 'name', 'code')),
+            'clockIn' => fn($q) => $q->approved(),
+            'clockOut' => fn($q) => $q->approved(),
+        ];
+
+        if (isset($load['shift'])) {
+            $loads['shift'] = $load['shift'];
+            unset($load['shift']);
+        }
+
+        if (isset($load['timeoff'])) {
+            $loads['timeoff'] = $load['timeoff'];
+            unset($load['timeoff']);
+        }
+
+        if (isset($load['clockIn'])) {
+            $loads['clockIn'] = $load['clockIn'];
+            unset($load['clockIn']);
+        }
+
+        if (isset($load['clockOut'])) {
+            $loads['clockOut'] = $load['clockOut'];
+            unset($load['clockOut']);
+        }
+
+        foreach ($load as $key => $item) {
+            if (is_int($key) && is_string($item)) {
+                $loads[$item] = fn($q) => $q;
+            } elseif (is_string($key) && $item instanceof \Closure) {
+                $loads[$key] = $item;
+            }
+        }
+
+        return Attendance::where('user_id', $userId)
+            ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
+            ->whereDateBetween($startDate, $endDate)
+            ->with($loads)
+            ->get();
     }
 }

@@ -9,7 +9,6 @@ use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\LockAttendance;
 use App\Models\User;
-use App\Services\AttendanceService;
 use App\Services\ScheduleService;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Response;
@@ -100,31 +99,35 @@ class LockAttendanceController extends BaseController
             $summaryNotPresentAbsent = 0;
             $summaryNotPresentNoClockIn = 0;
             $summaryNotPresentNoClockOut = 0;
+            // $summaryAwayDayOff = 0;
             $summaryAwayTimeOff = 0;
 
-            $attendances = AttendanceService::getUserAttendancesInPeriod($user, $lockAttendance->start_date, $lockAttendance->end_date, [
-                'shift' => fn($q) => $q->select('id', 'is_dayoff', 'clock_in', 'clock_out')->withTrashed(),
-                'timeoff' => fn($q) => $q->select('id', 'request_type')->approved(),
-                'clockIn' => fn($q) => $q->select('id', 'attendance_id', 'time')->approved(),
-                'clockOut' => fn($q) => $q->select('id', 'attendance_id', 'time')->approved(),
-            ]);
+            $attendances = Attendance::where('user_id', $user->id)
+                ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
+                ->with([
+                    'shift' => fn($q) => $q->select('id', 'is_dayoff', 'clock_in', 'clock_out')->withTrashed(),
+                    'timeoff' => fn($q) => $q->select('id')->approved(),
+                    'clockIn' => fn($q) => $q->select('id', 'attendance_id', 'time')->approved(),
+                    'clockOut' => fn($q) => $q->select('id', 'attendance_id', 'time')->approved(),
+                    // 'details' => fn($q) => $q->approved()->orderBy('created_at')
+                ])
+                ->whereDateBetween($lockAttendance->start_date, $lockAttendance->end_date)
+                ->get();
 
             foreach ($dateRange as $date) {
-                // 1. get schedule in date
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
 
-                // 2. if doesnt have schedule, skip
                 if (!$schedule || !$schedule->shift) {
                     continue;
                 }
 
+                // 1. kalo tgl merah(national holiday), shift nya pake tgl merah
+                // 2. kalo company event(holiday), shiftnya pake holiday
+                // 3. kalo schedulenya is_overide_national_holiday == false, shiftnya pake shift
+                // 4. kalo schedulenya is_overide_company_holiday == false, shiftnya pake shift
+                // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
                 $date = $date->format('Y-m-d');
                 $attendance = $attendances->firstWhere('date', $date);
-
-                // 3. if dayoff, skip
-                if ($schedule->shift->is_dayoff) {
-                    continue;
-                };
 
                 $isHoliday = false;
                 if ($schedule?->is_overide_company_holiday == false) {
@@ -147,7 +150,11 @@ class LockAttendanceController extends BaseController
                     }
                 }
 
-                if ($attendance) {
+                if ($schedule->shift->is_dayoff) {
+                    continue;
+                };
+
+                if ($attendance && !$isHoliday) {
                     $shift = $attendance->shift;
 
                     if ($attendance->clockIn) {
@@ -190,7 +197,7 @@ class LockAttendanceController extends BaseController
                     }
 
                     // calculate timeoff
-                    if ($attendance->timeoff && $attendance->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY)) {
+                    if ($attendance->timeoff) {
                         $summaryAwayTimeOff += 1;
                     }
                 } else {
@@ -207,6 +214,7 @@ class LockAttendanceController extends BaseController
             $user->summaryNotPresentAbsent = $summaryNotPresentAbsent;
             $user->summaryNotPresentNoClockIn = $summaryNotPresentNoClockIn;
             $user->summaryNotPresentNoClockOut = $summaryNotPresentNoClockOut;
+            // // $user->summaryAwayDayOff = $summaryAwayDayOff;
             $user->summaryAwayTimeOff = $summaryAwayTimeOff;
         });
 

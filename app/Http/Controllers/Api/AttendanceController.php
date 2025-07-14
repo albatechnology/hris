@@ -90,6 +90,11 @@ class AttendanceController extends BaseController
             $dataAttendance = [];
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
+
+                if (!$schedule || !$schedule->shift) {
+                    continue;
+                }
+
                 $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
 
                 if ($attendance?->clockIn) {
@@ -212,24 +217,16 @@ class AttendanceController extends BaseController
     public function index(IndexRequest $request)
     {
         if (isset($request->filter['user_id'])) {
-            $user = User::where('id', $request->filter['user_id'])->firstOrFail(['id', 'company_id']);
+            $user = User::where('id', $request->filter['user_id'])->with('payrollInfo', fn($q) => $q->select('user_id', 'is_ignore_alpa'))->firstOrFail(['id', 'company_id']);
         } else {
             $user = auth('sanctum')->user();
         }
-
-        // $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
-        // $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
         $month = date('m');
 
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
-        // if (date('d') <= $payrollSetting->cut_off_date) {
-        //     $month -= 1;
-        // }
 
-        // $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cut_off_date));
-        // $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromDate($year, $month, 1);
         $endDate = $startDate->copy()->endOfMonth();
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -243,27 +240,9 @@ class AttendanceController extends BaseController
         $summaryNotPresentAbsent = 0;
         $summaryNotPresentNoClockIn = 0;
         $summaryNotPresentNoClockOut = 0;
-        $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
-        // $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
-        // $schedule = ScheduleService::getTodaySchedule($user, $endDate, ['id'], ['id']);
-        // if ($schedule) {
-        // $order = $schedule->shifts->where('id', $schedule->shift->id);
-        // $orderKey = array_keys($order->toArray())[0];
-        // $totalShifts = $schedule->shifts->count();
-
-        $attendances = Attendance::where('user_id', $user->id)
-            ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
-            ->with([
-                'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                'timeoff.timeoffPolicy',
-                'clockIn' => fn($q) => $q->approved(),
-                'clockOut' => fn($q) => $q->approved(),
-                'details' => fn($q) => $q->approved()->orderBy('created_at')
-            ])
-            ->whereDateBetween($startDate, $endDate)
-            ->get();
+        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $startDate, $endDate, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
 
         $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
         $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
@@ -277,6 +256,35 @@ class AttendanceController extends BaseController
             // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
             $date = $date->format('Y-m-d');
             $attendance = $attendances->firstWhere('date', $date);
+
+            $shiftType = 'shift';
+
+            $companyHoliday = null;
+            $isHoliday = false;
+            if ($schedule?->is_overide_company_holiday == false) {
+                $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                    return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
+                });
+
+                if ($companyHoliday) {
+                    $isHoliday = true;
+                    $shift = $companyHoliday;
+                    $shiftType = 'company_holiday';
+                }
+            }
+
+            if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
+                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                });
+
+                if ($nationalHoliday) {
+                    $isHoliday = true;
+                    $shift = $nationalHoliday;
+                    $shiftType = 'national_holiday';
+                }
+            }
+
             if ($attendance) {
                 $shift = $attendance->shift;
 
@@ -320,7 +328,7 @@ class AttendanceController extends BaseController
                 }
 
                 // calculate timeoff
-                if ($attendance->timeoff) {
+                if ($attendance->timeoff && $attendance->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY)) {
                     $summaryAwayTimeOff += 1;
                 }
 
@@ -333,30 +341,11 @@ class AttendanceController extends BaseController
                 // $attendance->total_task = $totalTask;
             } else {
                 $shift = $schedule?->shift;
-                $summaryNotPresentAbsent += 1;
-            }
-            $shiftType = 'shift';
 
-            $companyHoliday = null;
-            if ($schedule?->is_overide_company_holiday == false) {
-                $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
-                    return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
-                });
-
-                if ($companyHoliday) {
-                    $shift = $companyHoliday;
-                    $shiftType = 'company_holiday';
-                }
-            }
-
-            if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
-                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
-                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
-                });
-
-                if ($nationalHoliday) {
-                    $shift = $nationalHoliday;
-                    $shiftType = 'national_holiday';
+                if (
+                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                ) {
+                    $summaryNotPresentAbsent += 1;
                 }
             }
 
@@ -384,7 +373,6 @@ class AttendanceController extends BaseController
                     'no_clock_out' => $summaryNotPresentNoClockOut,
                 ],
                 'away' => [
-                    'day_off' => $summaryAwayDayOff,
                     'time_off' => $summaryAwayTimeOff,
                 ]
             ],
@@ -422,7 +410,6 @@ class AttendanceController extends BaseController
         $summaryNotPresentAbsent = 0;
         $summaryNotPresentNoClockIn = 0;
         $summaryNotPresentNoClockOut = 0;
-        $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
         foreach ($query->get() as $user) {
@@ -528,7 +515,6 @@ class AttendanceController extends BaseController
                 'no_clock_out' => $summaryNotPresentNoClockOut,
             ],
             'away' => [
-                'day_off' => $summaryAwayDayOff,
                 'time_off' => $summaryAwayTimeOff,
             ]
         ];
