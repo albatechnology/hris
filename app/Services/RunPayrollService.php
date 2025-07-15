@@ -177,7 +177,8 @@ class RunPayrollService
                 // NORMAL CALCULATION
                 $totalDaysFromStartDateToStartEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startDate, $startEffectiveDate, true);
                 $startSalary = ($totalDaysFromStartDateToStartEffectiveDate / $totalWorkingDays) * $basicAmount;
-                $totalDaysFromStartEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $endDate);
+                // $totalDaysFromStartEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $startEffectiveDate, $endDate);
+                $totalDaysFromStartEffectiveDateToEndDate = $totalWorkingDays - $totalDaysFromStartDateToStartEffectiveDate;
                 $endSalary = ($totalDaysFromStartEffectiveDateToEndDate / $totalWorkingDays) * $updatePayrollComponentAmount;
 
                 $basicAmount = $startSalary + $endSalary;
@@ -187,7 +188,8 @@ class RunPayrollService
                 $totalDaysFromStartDateToEndEffectiveDate = self::calculateProrateTotalDays($totalWorkingDays, $startDate, $endEffectiveDate);
                 $startSalary = ($totalDaysFromStartDateToEndEffectiveDate / $totalWorkingDays) * $updatePayrollComponentAmount;
 
-                $totalDaysFromEndEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $endDate, true);
+                // $totalDaysFromEndEffectiveDateToEndDate = self::calculateProrateTotalDays($totalWorkingDays, $endEffectiveDate, $endDate, true);
+                $totalDaysFromEndEffectiveDateToEndDate = $totalWorkingDays - $totalDaysFromStartDateToEndEffectiveDate;
                 $endSalary = ($totalDaysFromEndEffectiveDateToEndDate / $totalWorkingDays) * $basicAmount;
 
                 $basicAmount = $startSalary + $endSalary;

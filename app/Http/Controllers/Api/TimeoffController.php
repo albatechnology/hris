@@ -111,7 +111,7 @@ class TimeoffController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-            return $this->errorResponse(message: $e->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return $this->createdResponse();
