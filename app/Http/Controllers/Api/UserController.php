@@ -799,18 +799,25 @@ class UserController extends BaseController
 
     public function export(ExportRequest $request)
     {
-        $startDate = $request->filter['start_date'] ?? null;
-        $endDate = $request->filter['end_date'] ?? null;
+        // $startDate = $request->filter['start_date'] ?? null;
+        // $endDate = $request->filter['end_date'] ?? null;
+        $isResign = $request->filter['is_resign'] ?? null;
         $isActive = $request->filter['is_active'] ?? null;
 
         $query = User::tenanted()
-            ->when($isActive, function ($q) use ($isActive) {
-                if ($isActive) {
+            ->when($isResign && !$isActive, function ($q) use ($isResign) {
+                if ((bool)$isResign) {
+                    return $q->whereNotNull('resign_date');
+                }
+                // return $q->whereNotNull('resign_date');
+            })
+            ->when($isActive && !$isResign, function ($q) use ($isActive) {
+                if ((bool)$isActive) {
                     return $q->whereNull('resign_date');
                 }
-                return $q->whereNotNull('resign_date');
+                // return $q->whereNotNull('resign_date');
             })
-            ->when($startDate && $endDate, fn($q) => $q->whereDateBetween('join_date', $startDate, $endDate))
+            // ->when($startDate && $endDate, fn($q) => $q->whereDateBetween('join_date', $startDate, $endDate))
             ->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
                 'detail',
                 'userBpjs',
