@@ -19,8 +19,10 @@ class ExportRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'filter.is_resign' => !empty($this->filter['is_resign']) ? $this->toBoolean($this->is_resign) : null,
-            'filter.is_active' => !empty($this->filter['is_active']) ? $this->toBoolean($this->is_active) : null,
+            'filter' => [
+                'is_resign' => !empty($this->filter['is_resign']) ? $this->toBoolean($this->is_resign) : null,
+                'is_active' => !empty($this->filter['is_active']) ? $this->toBoolean($this->is_active) : null,
+            ],
         ]);
     }
 
@@ -31,7 +33,7 @@ class ExportRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+
             'is_json' => ['nullable', 'boolean'],
             'user_ids' => ['nullable', 'array'],
             'user_ids.*' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
