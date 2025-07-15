@@ -13,7 +13,6 @@ use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Support\Collection;
 
 class AttendanceService
 {
