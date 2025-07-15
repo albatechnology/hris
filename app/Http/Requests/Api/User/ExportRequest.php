@@ -33,7 +33,7 @@ class ExportRequest extends FormRequest
      */
     public function rules(): array
     {
-
+        return [
             'is_json' => ['nullable', 'boolean'],
             'user_ids' => ['nullable', 'array'],
             'user_ids.*' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
