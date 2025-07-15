@@ -193,10 +193,14 @@ class LockAttendanceController extends BaseController
                     if ($attendance->timeoff && $attendance->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY)) {
                         $summaryAwayTimeOff += 1;
                     }
-                } else {
-                    if ($user->payrollInfo?->is_ignore_alpa == false) {
-                        $summaryNotPresentAbsent += 1;
-                    }
+                    // } else {
+                    //     if ($user->payrollInfo?->is_ignore_alpa == false && (!$attendance->clockIn || !$attendance->clockOut)) {
+                    //         $summaryNotPresentAbsent += 1;
+                    //     }
+                }
+
+                if ($user->payrollInfo?->is_ignore_alpa == false && (!$attendance || !$attendance?->clockIn || !$attendance?->clockOut)) {
+                    $summaryNotPresentAbsent += 1;
                 }
             }
 
