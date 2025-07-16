@@ -77,19 +77,22 @@ class OvertimeService
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
 
-        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob')) {
+        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob' || strtolower($ov->name) == 'ob_sun_english')) {
+            $totalAmount = 0;
             $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $user->overtimes->whereIn('name', ['ob', 'OB'])->value('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
-            return self::calculateOb($user, $overtimeRequests);
-        }
+            $totalAmount += self::calculateOb($user, $overtimeRequests);
 
-        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob_sun_english')) {
+            // =================================
+
             $overtime = $user->overtimes->whereIn('name', ['OB_SUN_ENGLISH', 'ob_sun_english'])->first();
             if ($overtime) {
                 $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
-                return self::calculateObSunEnglish($user, $overtime, $overtimeRequests);
+                $totalAmount += self::calculateObSunEnglish($user, $overtime, $overtimeRequests);
             } else {
-                return 0;
+                $totalAmount += 0;
             }
+
+            return $totalAmount;
         }
 
         $overtimeRequestGroups = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get()->groupBy(['overtime_id', fn($data) => $data->date]);
