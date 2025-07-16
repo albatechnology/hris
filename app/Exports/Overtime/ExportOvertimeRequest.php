@@ -98,12 +98,14 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             $overtimeRequest->user->detail->employment_status?->value,
             $overtimeRequest->date,
             $overtimeRequest->note,
+            $overtimeRequest->real_duration,
         ];
 
         $overtime = $this->overtimes->where('id', $overtimeRequest->overtime_id)->first();
         if (!$overtime) {
             return [
                 ...$dataHeader,
+                0,
                 0,
                 0,
                 0,
@@ -283,6 +285,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 'Employment Status',
                 'Date',
                 'Note',
+                'Real Duration',
                 'Overtime Duration',
                 'Overtime Multiplier',
                 'Overtime Rate',
@@ -297,8 +300,8 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 // Merge dari kolom A1 sampai K1
-                $sheet->mergeCells('A1:K1');
-                $sheet->mergeCells('A2:K2');
+                $sheet->mergeCells('A1:L1');
+                $sheet->mergeCells('A2:L2');
 
                 // Center horizontal dan vertical
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -307,8 +310,8 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('A2')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-                // Bold seluruh baris ke-3 (A3 sampai K3)
-                $sheet->getStyle('A3:K3')->getFont()->setBold(true);
+                // Bold seluruh baris ke-3 (A3 sampai L3)
+                $sheet->getStyle('A3:L3')->getFont()->setBold(true);
                 $sheet->getRowDimension(3)->setRowHeight(30);
                 $sheet->getRowDimension(2)->setRowHeight(20);
                 $sheet->getRowDimension(1)->setRowHeight(20);
