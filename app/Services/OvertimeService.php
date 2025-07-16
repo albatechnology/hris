@@ -22,32 +22,26 @@ use Illuminate\Database\Eloquent\Collection;
 class OvertimeService
 {
 
-    public static function roundingOvertimeMinutes(string $minutes): int|float
+    public static function roundingOvertimeMinutes(int|float $minutes): int|float
     {
-        switch ($minutes) {
-            // case $minutes >= 0 && $minutes <= 14:
-            //     return 0;
-            //     break;
-            case $minutes >= 15 && $minutes <= 29:
-                return 0.25;
-                break;
-            case $minutes >= 30 && $minutes <= 44:
-                return 0.5;
-                break;
-            case $minutes >= 45 && $minutes <= 59:
-                return 0.75;
-                break;
-            default:
-                return 0;
-                break;
+        $minutes = (int) $minutes; // pastikan integer
+
+        if ($minutes >= 15 && $minutes <= 29) {
+            return 0.25;
+        } elseif ($minutes >= 30 && $minutes <= 44) {
+            return 0.5;
+        } elseif ($minutes >= 45 && $minutes <= 59) {
+            return 0.75;
         }
+
+        return 0;
     }
 
     public static function calculateOvertimeDuration(string $duration): int|float
     {
         $realDuration = Carbon::parse($duration);
         $durationInHours = $realDuration->hour;
-        $durationInMinutes = self::roundingOvertimeMinutes($realDuration->minute);
+        $durationInMinutes = self::roundingOvertimeMinutes(0);
 
         return $durationInHours + $durationInMinutes;
     }
