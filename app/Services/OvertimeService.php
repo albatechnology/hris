@@ -21,15 +21,44 @@ use Illuminate\Database\Eloquent\Collection;
 
 class OvertimeService
 {
+
+    public static function roundingOvertimeMinutes(string $minutes): int|float
+    {
+        switch ($minutes) {
+            // case $minutes >= 0 && $minutes <= 14:
+            //     return 0;
+            //     break;
+            case $minutes >= 15 && $minutes <= 29:
+                return 0.25;
+                break;
+            case $minutes >= 30 && $minutes <= 44:
+                return 0.5;
+                break;
+            case $minutes >= 45 && $minutes <= 59:
+                return 0.75;
+                break;
+            default:
+                return 0;
+                break;
+        }
+    }
+
+    public static function calculateOvertimeDuration(string $duration): int|float
+    {
+        $realDuration = Carbon::parse($duration);
+        $durationInHours = $realDuration->hour;
+        $durationInMinutes = self::roundingOvertimeMinutes($realDuration->minute);
+
+        return $durationInHours + $durationInMinutes;
+    }
+
     public static function calculateOb(User $user, Collection $overtimeRequests): int|float
     {
         $umk = $user->branch?->umk ?? 0;
         $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            $realDuration = Carbon::parse($overtimeRequest->real_duration);
-            $durationInHours = $realDuration->hour + ($realDuration->minute / 60) + ($realDuration->second / 3600);
-
+            $durationInHours = self::calculateOvertimeDuration($overtimeRequest->real_duration);
             $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
@@ -40,9 +69,7 @@ class OvertimeService
     {
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            $realDuration = Carbon::parse($overtimeRequest->real_duration);
-            $durationInHours = $realDuration->hour + ($realDuration->minute / 60) + ($realDuration->second / 3600);
-
+            $durationInHours = self::calculateOvertimeDuration($overtimeRequest->real_duration);
             $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
@@ -99,7 +126,9 @@ class OvertimeService
                 }
 
                 // set overtime duration to hour. 120 become 2
-                $overtimeDuration = round($overtimeDuration / 60);
+                // $durationInHours = round($overtimeDuration / 60);
+                $durationInHours = floor($overtimeDuration / 60);
+                $durationInHours += self::roundingOvertimeMinutes($overtimeDuration % 60);
 
                 // dd($overtime->overtimeMultipliers?->toArray());
                 $overtimeMultipliers = collect([
@@ -142,7 +171,7 @@ class OvertimeService
                         }
                     }
 
-                    $overtimeMultipliers = self::calculateOvertimeBreakdown($overtimeDuration, $overtimeMultipliers);
+                    $overtimeMultipliers = self::calculateOvertimeBreakdown($durationInHours, $overtimeMultipliers);
                 }
 
                 $overtimeAmountMultiply = 0;
@@ -179,7 +208,7 @@ class OvertimeService
 
                             break;
                     }
-                    // $amount += ($overtimeDuration * $multiply) * $overtimeAmountMultiply;
+                    // $amount += ($durationInHours * $multiply) * $overtimeAmountMultiply;
                 }
 
                 if ($overtimeMultipliers->count()) {

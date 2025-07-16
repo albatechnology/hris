@@ -119,17 +119,15 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             $user = $overtimeRequest->user;
             $umk = $user->branch?->umk ?? 0;
             $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
-            $realDuration = Carbon::parse($overtimeRequest->real_duration);
-            $durationInHours = $realDuration->hour + ($realDuration->minute / 60) + ($realDuration->second / 3600);
 
-            $totalDurationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
-
+            $durationInHours = OvertimeService::calculateOvertimeDuration($overtimeRequest->real_duration);
+            $durationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
             $overtimeRate = ($basicSalary / 160);
-            $totalPayment = $overtimeRate * $totalDurationInHours;
+            $totalPayment = $overtimeRate * $durationInHours;
 
             return [
                 ...$dataHeader,
-                $totalDurationInHours,
+                $durationInHours,
                 $overtimeMultiplier,
                 $overtimeRate,
                 $totalPayment,
@@ -139,24 +137,21 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         // from OvertimeService::calculateObSunEnglish
         if (strtolower($overtimeRequest->overtime->name) == 'ob_sun_english') {
             // return OvertimeService::calculateObSunEnglish($overtimeRequest->user, $overtime, collect($overtimeRequest));
-            $realDuration = Carbon::parse($overtimeRequest->real_duration);
-            $durationInHours = $realDuration->hour + ($realDuration->minute / 60) + ($realDuration->second / 3600);
-
-            $totalDurationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
+            $durationInHours = OvertimeService::calculateOvertimeDuration($overtimeRequest->real_duration);
+            $durationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
 
             $overtimeRate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 17500;
 
-            $totalPayment = $overtimeRate * $totalDurationInHours;
+            $totalPayment = $overtimeRate * $durationInHours;
 
             return [
                 ...$dataHeader,
-                $totalDurationInHours,
+                $durationInHours,
                 $overtimeMultiplier,
                 $overtimeRate,
                 $totalPayment,
             ];
         }
-
         $overtimeDate = Carbon::parse($overtimeRequest->date);
 
         // set overtime duration to minutes. 02:00:00 become 120
@@ -167,7 +162,9 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
         }
 
         // set overtime duration to hour. 120 become 2
-        $overtimeDurationInHours = round($overtimeDuration / 60);
+        // $durationInHours = round($overtimeDuration / 60);
+        $durationInHours = floor($overtimeDuration / 60);
+        $durationInHours += OvertimeService::roundingOvertimeMinutes($overtimeDuration % 60);
 
         $overtimeMultipliers = collect([
             [
@@ -204,7 +201,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 }
             }
 
-            $overtimeMultipliers = OvertimeService::calculateOvertimeBreakdown($overtimeDurationInHours, $overtimeMultipliers);
+            $overtimeMultipliers = OvertimeService::calculateOvertimeBreakdown($durationInHours, $overtimeMultipliers);
         }
 
         $overtimeAmountMultiply = 0;
@@ -241,7 +238,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
 
                     break;
             }
-            // $amount += ($overtimeDurationInHours * $multiply) * $overtimeAmountMultiply;
+            // $amount += ($durationInHours * $multiply) * $overtimeAmountMultiply;
         }
         $overtimeRate = $overtimeAmountMultiply;
 
@@ -262,7 +259,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
 
         return [
             ...$dataHeader,
-            $overtimeDurationInHours,
+            $durationInHours,
             $overtimeMultiplier,
             $overtimeRate,
             $totalPayment,
