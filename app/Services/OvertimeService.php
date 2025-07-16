@@ -46,7 +46,7 @@ class OvertimeService
             $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
-        $rate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 12500;
+        $rate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 17500;
 
         return $rate * $totalDurationInHours;
     }
@@ -61,8 +61,8 @@ class OvertimeService
             return self::calculateOb($user, $overtimeRequests);
         }
 
-        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'OB_SUN_ENGLISH')) {
-            $overtime = $user->overtimes->where('name', 'OB_SUN_ENGLISH')->first();
+        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob_sun_english')) {
+            $overtime = $user->overtimes->whereIn('name', ['OB_SUN_ENGLISH', 'ob_sun_english'])->first();
             if ($overtime) {
                 $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
                 return self::calculateObSunEnglish($user, $overtime, $overtimeRequests);
