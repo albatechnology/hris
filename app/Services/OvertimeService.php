@@ -41,7 +41,7 @@ class OvertimeService
     {
         $realDuration = Carbon::parse($duration);
         $durationInHours = $realDuration->hour;
-        $durationInMinutes = self::roundingOvertimeMinutes(0);
+        $durationInMinutes = self::roundingOvertimeMinutes($realDuration->minute);
 
         return $durationInHours + $durationInMinutes;
     }
