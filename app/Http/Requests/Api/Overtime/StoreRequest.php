@@ -14,8 +14,6 @@ class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
-
     /**
      * Prepare inputs for validation.
      *
@@ -24,6 +22,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'compensation_rate_per_day' => $this->compensation_rate_per_day ?? 0,
             'company_id' => $this->company_id ? $this->company_id : auth('sanctum')->user()->company_id,
             'is_rounding' => $this->toBoolean($this->is_rounding),
         ]);

@@ -9,7 +9,17 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
+     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'compensation_rate_per_day' => $this->compensation_rate_per_day ?? 0,
+        ]);
+    }
 
     /**
      * Get the validation rules that apply to the request.
