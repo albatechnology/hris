@@ -304,7 +304,7 @@ class RunPayrollController extends BaseController
         $bank = Bank::select('id', 'account_no', 'code')->findTenanted($request->bank_id);
 
         $datas = RunPayrollUser::where('run_payroll_id', $id)
-            // ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
+            ->whereHas('user.payrollInfo', fn($q) => $q->where('bank_id', $bank->id))
             ->when($type = $request->type, function ($q) use ($runPayroll, $type) {
                 $q->when($type == 'active', fn($q) => $q->whereHas(
                     'user',
