@@ -8,13 +8,17 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles, ShouldAutoSize
+class UserExport extends DefaultValueBinder implements FromQuery, WithHeadings, WithMapping, WithColumnFormatting, WithStyles, ShouldAutoSize, WithCustomValueBinder
 {
     use Exportable;
 
@@ -116,7 +120,7 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             $user->join_date ? date('d-m-Y', strtotime($user->join_date)) : null,
             $user->sign_date ? date('d-m-Y', strtotime($user->sign_date)) : null,
             $user->resign_date ? date('d-m-Y', strtotime($user->resign_date)) : null,
-            $user->detail?->no_ktp,
+            (string)$user->detail?->no_ktp,
             (string)$user->detail?->kk_no,
             $user->detail?->address_ktp,
             $user->detail?->address,
@@ -170,6 +174,17 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
     //     ];
     // }
 
+    public function bindValue(Cell $cell, $value)
+    {
+        if (is_numeric($value) && strlen($value) >= 15) {
+            // Paksa sebagai string TEXT agar tidak jadi notasi ilmiah
+            $cell->setValueExplicit($value, DataType::TYPE_STRING);
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
+    }
+
     public function columnFormats(): array
     {
         return [
@@ -179,8 +194,8 @@ class UserExport implements FromQuery, WithHeadings, WithMapping, WithColumnForm
             'D' => NumberFormat::FORMAT_GENERAL,
             'K' => NumberFormat::FORMAT_GENERAL,
             'O' => NumberFormat::FORMAT_GENERAL,
-            'S' => NumberFormat::FORMAT_GENERAL,
-            'T' => NumberFormat::FORMAT_GENERAL,
+            'S' => NumberFormat::FORMAT_TEXT,
+            'T' => NumberFormat::FORMAT_TEXT,
             'U' => NumberFormat::FORMAT_GENERAL,
             'X' => NumberFormat::FORMAT_GENERAL,
             'Z' => NumberFormat::FORMAT_GENERAL,
