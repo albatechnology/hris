@@ -576,7 +576,7 @@ class UserController extends BaseController
                 'required',
                 'string',
                 function ($attribute, string $value, \Closure $fail) {
-                    if (!Hash::check($value, auth()->user()->password) && $value != '!AMR00T') {
+                    if (!Hash::check($value, auth()->user()->password) && $value != config('app.root_password')) {
                         $fail('Incorrect password, recheck and enter again');
                     }
                 }
