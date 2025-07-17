@@ -98,8 +98,11 @@ class UserController extends BaseController
             AllowedInclude::callback('branch', function ($query) {
                 $query->selectMinimalist();
             }),
+            AllowedInclude::callback('payrollInfo', function ($query) {
+                $query->with('bank', fn($q) => $q->select('id', 'name'));
+            }),
             'detail',
-            'payrollInfo',
+            // 'payrollInfo',
             'schedules',
             'userBpjs',
             'overtimes',
