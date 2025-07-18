@@ -8,6 +8,7 @@ use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\UserTransfer\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\UserTransfer;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -48,11 +49,16 @@ class UserTransferController extends BaseController
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('approval_id'),
                 AllowedFilter::exact('parent_id'),
-                'type', 'employment_status', 'approval_status'
+                'type',
+                'employment_status',
+                'approval_status'
             ])
             ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
-                'id', 'user_id', 'effective_date', 'created_at'
+                'id',
+                'user_id',
+                'effective_date',
+                'created_at'
             ])
             ->paginate($this->per_page);
 
@@ -62,8 +68,8 @@ class UserTransferController extends BaseController
     public function show(int $id)
     {
         $userTransfer = UserTransfer::with([
-            'user' => fn ($q) => $q->select('id', 'name', 'nik'),
-            'approval' => fn ($q) => $q->select('id', 'name'),
+            'user' => fn($q) => $q->select('id', 'name', 'nik'),
+            // 'approval' => fn($q) => $q->select('id', 'name'),
             // 'manager' => fn ($q) => $q->select('id', 'name'),
         ])->findTenanted($id);
 
@@ -72,16 +78,18 @@ class UserTransferController extends BaseController
 
     public function store(StoreRequest $request)
     {
+        // dd($request->validated());
         DB::beginTransaction();
         try {
             $userTransfer = UserTransfer::create($request->validated());
-            $userTransfer->branches()->createMany(
-                collect($request->branch_ids)->unique()->values()
-                    ->map(function ($branchId) {
-                        return ['branch_id' => $branchId];
-                    })->all()
-            );
-            $userTransfer->positions()->createMany($request->positions ?? []);
+            // $userTransfer->branches()->createMany(
+            //     collect($request->branch_ids)->unique()->values()
+            //         ->map(function ($branchId) {
+            //             return ['branch_id' => $branchId];
+            //         })->all()
+            // );
+
+            // $userTransfer->positions()->createMany($request->positions ?? []);
 
             if ($request->hasFile('file') && $request->file('file')->isValid()) {
                 $mediaCollection = MediaCollection::USER_TRANSFER->value;
@@ -90,11 +98,11 @@ class UserTransferController extends BaseController
 
             DB::commit();
 
-            if ($userTransfer->is_notify_manager) {
-            }
-            if ($userTransfer->is_notify_user) {
-            }
-        } catch (\Exception $e) {
+            // if ($userTransfer->is_notify_manager) {
+            // }
+            // if ($userTransfer->is_notify_user) {
+            // }
+        } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
@@ -114,7 +122,7 @@ class UserTransferController extends BaseController
             }
             if ($userTransfer->is_notify_user) {
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
@@ -137,7 +145,7 @@ class UserTransferController extends BaseController
 
         try {
             $userTransfer->update($request->validated());
-        } catch (\Exception $th) {
+        } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
 
@@ -153,7 +161,7 @@ class UserTransferController extends BaseController
 
     public function approvals()
     {
-        $query = UserTransfer::tenanted()->whereHas('user', fn ($q) => $q->where('approval_id', auth('sanctum')->id()));
+        $query = UserTransfer::tenanted()->whereHas('user', fn($q) => $q->where('approval_id', auth('sanctum')->id()));
         // ->with([
         //     'user' => fn ($q) => $q->select('id', 'name', 'nik'),
         //     // 'approvedBy' => fn ($q) => $q->select('id', 'name'),
@@ -164,11 +172,16 @@ class UserTransferController extends BaseController
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('shift_id'),
-                'approval_status', 'date', 'is_after_shift'
+                'approval_status',
+                'date',
+                'is_after_shift'
             ])
             ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
-                'id', 'user_id', 'effective_date', 'created_at'
+                'id',
+                'user_id',
+                'effective_date',
+                'created_at'
             ])
             ->paginate($this->per_page);
 
