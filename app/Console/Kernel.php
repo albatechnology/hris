@@ -3,7 +3,6 @@
 namespace App\Console;
 
 use App\Jobs\AbsenceReminder\AbsenceReminderBatch;
-use App\Jobs\AnnualLeave\NewEmployee;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -16,7 +15,8 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        $schedule->job(new NewEmployee)->dailyAt('01:00');
+        $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->dailyAt('01:00');
+        $schedule->job(new \App\Jobs\UserTransfer\ExecuteUserTransfer)->dailyAt('02:00');
         $schedule->job(new AbsenceReminderBatch())->everyFiveMinutes();
 
         // cron untuk company yang punya timeoff regulation monthly
@@ -31,7 +31,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

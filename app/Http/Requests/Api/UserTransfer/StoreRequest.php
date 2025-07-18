@@ -9,6 +9,7 @@ use App\Models\Department;
 use App\Models\Position;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,16 +23,48 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => ['required', 'exists:users,id'],
             'type' => ['required', Rule::enum(TransferType::class)],
-            'effective_date' => 'required|date',
+            'effective_date' => ['required', 'date'],
             'company_id' => ['nullable', new CompanyTenantedRule()],
-            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'supervisor_id' => ['nullable', new CompanyTenantedRule(User::class, 'Supervisor not found')],
-            'position_id' => ['required_with:department_id', new CompanyTenantedRule(Position::class, 'Position not found')],
-            'department_id' => ['required_with:position_id', new CompanyTenantedRule(Department::class, 'Department not found')],
+            'branch_id' => ['nullable', function ($attribute, $value, Closure $fail) {
+                if (
+                    Branch::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    ->doesntExist()
+                ) {
+                    $fail("Branch not found");
+                };
+            }],
+            'supervisor_id' => ['nullable', function ($attribute, $value, Closure $fail) {
+                if (
+                    User::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    ->doesntExist()
+                ) {
+                    $fail("Supervisor not found");
+                };
+            }],
+            'position_id' => ['required_with:department_id', function ($attribute, $value, Closure $fail) {
+                if (
+                    Position::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    ->doesntExist()
+                ) {
+                    $fail("Position not found");
+                };
+            }],
+            'department_id' => ['required_with:position_id', function ($attribute, $value, Closure $fail) {
+                if (
+                    Department::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->whereHas('division', fn($q) => $q->where('company_id', $this->company_id)))
+                    ->doesntExist()
+                ) {
+                    $fail("Department not found");
+                };
+            }],
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
-            'reason' => 'required|string',
+            'reason' => ['required', 'string'],
             'file' => ['nullable', 'mimes:' . config('app.file_mimes_types')],
 
             // 'branch_ids' => 'nullable|array',

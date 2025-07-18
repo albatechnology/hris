@@ -7,6 +7,7 @@ use App\Enums\MediaCollection;
 use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\UserTransfer\StoreRequest;
 use App\Http\Resources\DefaultResource;
+use App\Jobs\UserTransfer\ExecuteUserTransfer;
 use App\Models\UserTransfer;
 use Exception;
 use Illuminate\Http\Response;
@@ -78,7 +79,6 @@ class UserTransferController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        // dd($request->validated());
         DB::beginTransaction();
         try {
             $userTransfer = UserTransfer::create($request->validated());
