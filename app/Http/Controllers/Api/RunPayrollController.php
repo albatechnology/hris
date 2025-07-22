@@ -170,6 +170,38 @@ class RunPayrollController extends BaseController
         return $this->deletedResponse();
     }
 
+    public function bulkDestroy(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'exists:run_payrolls,id'],
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // ambil semua run_payroll_user_id terkait payroll_id
+            $runPayrollUserIds = \App\Models\RunPayrollUser::whereIn('run_payroll_id', $request->ids)->pluck('id');
+
+            if ($runPayrollUserIds->isNotEmpty()) {
+                // hapus semua komponennya langsung sekali jalan
+                \App\Models\RunPayrollUserComponent::whereIn('run_payroll_user_id', $runPayrollUserIds)->delete();
+
+                // hapus semua run payroll user sekaligus
+                \App\Models\RunPayrollUser::whereIn('id', $runPayrollUserIds)->delete();
+            }
+
+            // terakhir hapus run payroll
+            RunPayroll::whereIn('id', $request->ids)->delete();
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->deletedResponse();
+    }
+
     public function export(int $id)
     {
         $runPayroll = RunPayroll::findTenanted($id);
