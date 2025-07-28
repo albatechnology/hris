@@ -64,7 +64,14 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             return $carry + $item; // Menggabungkan array dengan mempertahankan key
         }, []);
 
-        return view('api.exports.payroll.run-payroll', [
+        $viewName = 'api.exports.payroll.run-payroll';
+        $totalColumns = 21;
+        if (config('app.name') == 'LUMORA') {
+            $viewName = 'api.exports.payroll.run-payroll-lumora';
+            $totalColumns = 19;
+        }
+
+        return view($viewName, [
             'runPayroll' => $this->runPayroll,
             'activeUsers' => $activeUsers,
             'resignUsers' => $resignUsers,
@@ -76,7 +83,7 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             'totalAllowancesStorages' => $totalAllowancesStorages,
             'totalDeductionsStorages' => $totalDeductionsStorages,
             'totalBenefitsStorages' => $totalBenefitsStorages,
-            'totalColumns' =>  21 +  $allowances->count() + $deductions->count() + $benefits->count()
+            'totalColumns' =>  $totalColumns +  $allowances->count() + $deductions->count() + $benefits->count()
         ]);
     }
 
