@@ -71,7 +71,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
-            // 'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
+            'schedule_id' => ['nullable', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'name' => 'required|min:2|max:100',
             'last_name' => 'nullable|max:100',
             'email' => 'nullable|email',
@@ -258,6 +258,10 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'department_id' => $row['department_id'],
                 'position_id' => $row['position_id'],
             ]);
+        }
+
+        if (isset($row['schedule_id']) && !empty($row['schedule_id'])) {
+            $user->schedules()->syncWithoutDetaching([$row['schedule_id']]);
         }
 
         // create user_details
