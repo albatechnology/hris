@@ -19,6 +19,7 @@ use App\Models\Department;
 use App\Models\LiveAttendance;
 use App\Models\Position;
 use App\Models\Role;
+use App\Models\Schedule;
 use App\Models\User;
 use App\Models\UserBpjs;
 use App\Models\UserDetail;
@@ -70,6 +71,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
+            // 'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'name' => 'required|min:2|max:100',
             'last_name' => 'nullable|max:100',
             'email' => 'nullable|email',
