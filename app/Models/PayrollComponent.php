@@ -126,4 +126,17 @@ class PayrollComponent extends BaseModel implements TenantedInterface
             PayrollComponentCategory::EMPLOYEE_JP,
         ]);
     }
+
+    public function scopeAvailableForUpdatePayrollComponent(Builder $query, $value): void
+    {
+        if ((bool)$value) {
+            $query->whereNotIn('category', [
+                PayrollComponentCategory::REIMBURSEMENT,
+                PayrollComponentCategory::LOAN,
+                PayrollComponentCategory::INSURANCE,
+                PayrollComponentCategory::OVERTIME,
+                PayrollComponentCategory::TASK_OVERTIME,
+            ]);
+        }
+    }
 }
