@@ -39,7 +39,7 @@ class ScheduleService
             return $schedule;
         }
 
-        $requestShift = RequestShift::select('id', 'schedule_id', 'new_shift_id')
+        $requestShift = RequestShift::select('id', 'schedule_id', 'old_shift_id', 'new_shift_id')
             ->where('user_id', $user->id)->approved()
             ->whereHas('schedule', fn($q) => $q->where('type', $scheduleType))
             ->whereDate('date', $date)->latest('id')->first();
@@ -53,7 +53,7 @@ class ScheduleService
             $shift = Shift::withTrashed()->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('id', $requestShift->new_shift_id)->first();
 
             // digunakan untuk by pass di AttendanceService::getTotalWorkingDays untuk new employee
-            $shift->is_request_shift = true;
+            $shift->is_request_shift = $requestShift->old_shift_id != $requestShift->new_shift_id ? true : false;
 
             $schedule?->setRelation('shift', $shift);
 
