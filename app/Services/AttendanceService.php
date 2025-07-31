@@ -232,7 +232,7 @@ class AttendanceService
 
             if (
                 $schedule->shift->is_dayoff
-                && (!isset($schedule->shift->is_request_shift))
+                && (!isset($schedule->shift->is_request_shift) || $schedule->shift->is_request_shift == false)
             ) {
                 $totalWorkingDays--;
             }
