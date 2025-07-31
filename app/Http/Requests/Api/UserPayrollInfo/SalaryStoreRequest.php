@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
 
 class SalaryStoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -24,6 +24,7 @@ class SalaryStoreRequest extends FormRequest
     {
         return [
             'basic_salary' => 'required|integer',
+            'total_working_days' => 'required|integer',
             'salary_type' => ['required', Rule::enum(SalaryType::class)],
             'payment_schedule' => ['required', Rule::enum(PaymentSchedule::class)],
             'prorate_setting' => ['nullable', Rule::enum(ProrateSetting::class)],
