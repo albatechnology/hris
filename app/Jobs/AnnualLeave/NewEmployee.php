@@ -33,7 +33,7 @@ class NewEmployee implements ShouldQueue
             return;
         }
 
-        if (config('app.name') != 'SUNSHINE') {
+        if (config('app.name') == 'SUNSHINE') {
             $this->sunshineTimeoff();
             return;
         }
@@ -69,7 +69,7 @@ class NewEmployee implements ShouldQueue
          */
 
         // date to compare that the user should be working at least 3 months since join_date
-        $joinDate = Carbon::now()->subMonths(3);
+        $joinDate = Carbon::now()->subMonths(4);
 
         $dataQuotas = $this->getQuotas($joinDate);
         // dump($joinDate);

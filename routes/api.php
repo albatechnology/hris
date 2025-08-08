@@ -414,4 +414,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('reimbursements/approvals/count-total', [ReimbursementController::class, 'countTotalApprovals']);
     Route::put('reimbursements/{overtime_request}/approve', [ReimbursementController::class, 'approve']);
     Route::apiResource('reimbursements', ReimbursementController::class)->except('update');
+
+    Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
 });
