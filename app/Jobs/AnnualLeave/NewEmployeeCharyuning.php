@@ -85,14 +85,15 @@ class NewEmployeeCharyuning implements ShouldQueue
                 // ->whereYear('join_date', $joinDate->format('Y'))
                 // ->whereMonth('join_date', '<=', $joinDate->format('m'))
                 // ->whereDay('join_date', '<=', 15)
-                ->whereDoesntHave(
-                    'timeoffQuotas',
-                    fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
-                        ->whereHas(
-                            'timeoffQuotaHistories',
-                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinDate->format('Y'))
-                        )
-                )->get(['id']);
+                // ->whereDoesntHave(
+                //     'timeoffQuotas',
+                //     fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
+                //         ->whereHas(
+                //             'timeoffQuotaHistories',
+                //             fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinDate->format('Y'))
+                //         )
+                // )
+                ->get(['id']);
             // dd($users->select('id', 'name', 'join_date')->toArray());
 
             foreach ($users as $user) {
