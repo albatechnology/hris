@@ -61,7 +61,10 @@ class UserPatrolBatchController extends BaseController
             $userPatrolBatch = UserPatrolBatch::create($request->validated());
 
             foreach ($request->tasks ?? [] as $task) {
-                $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create($task);
+                $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create([
+                    'user_patrol_batch_id' => $userPatrolBatch->id,
+                    ...$task
+                ]);
                 foreach ($task['images'] ?? [] as $image) {
                     if ($image->isValid()) {
                         $userPatrolTask->addMedia($image)->toMediaCollection();
@@ -70,7 +73,10 @@ class UserPatrolBatchController extends BaseController
             }
 
             foreach ($request->locations ?? [] as $location) {
-                $userPatrolBatch->userPatrolMovements()->create($location);
+                $userPatrolBatch->userPatrolMovements()->create([
+                    'user_patrol_batch_id' => $userPatrolBatch->id,
+                    ...$location
+                ]);
             }
 
             DB::commit();
