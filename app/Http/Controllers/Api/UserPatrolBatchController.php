@@ -9,6 +9,8 @@ use App\Models\UserPatrolBatch;
 use App\Http\Requests\Api\UserPatrolBatch\StoreRequest;
 use App\Http\Requests\Api\UserPatrolBatch\SyncRequest;
 use App\Http\Requests\Api\UserPatrolBatch\UpdateRequest;
+use App\Models\UserPatrolMovement;
+use App\Models\UserPatrolTask;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,7 +63,12 @@ class UserPatrolBatchController extends BaseController
             $userPatrolBatch = UserPatrolBatch::create($request->validated());
 
             foreach ($request->tasks ?? [] as $task) {
-                $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create([
+                // $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create([
+                //     'user_patrol_batch_id' => $userPatrolBatch->id,
+                //     ...$task
+                // ]);
+
+                $userPatrolTask = UserPatrolTask::create([
                     'user_patrol_batch_id' => $userPatrolBatch->id,
                     ...$task
                 ]);
@@ -73,7 +80,11 @@ class UserPatrolBatchController extends BaseController
             }
 
             foreach ($request->locations ?? [] as $location) {
-                $userPatrolBatch->userPatrolMovements()->create([
+                // $userPatrolBatch->userPatrolMovements()->create([
+                //     'user_patrol_batch_id' => $userPatrolBatch->id,
+                //     ...$location
+                // ]);
+                UserPatrolMovement::create([
                     'user_patrol_batch_id' => $userPatrolBatch->id,
                     ...$location
                 ]);
