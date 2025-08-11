@@ -28,15 +28,15 @@ class NewEmployeeCharyuning implements ShouldQueue
      */
     public function handle(): void
     {
-        if (config('app.name') == 'LUMORA') {
-            $this->lumoraTimeoff();
-            return;
-        }
+        // if (config('app.name') == 'LUMORA') {
+        //     $this->lumoraTimeoff();
+        //     return;
+        // }
 
-        if (config('app.name') == 'SUNSHINE') {
-            $this->sunshineTimeoff();
-            return;
-        }
+        // if (config('app.name') == 'SUNSHINE') {
+        //     $this->sunshineTimeoff();
+        //     return;
+        // }
     }
 
     private function getQuotas(Carbon $joinDate)
