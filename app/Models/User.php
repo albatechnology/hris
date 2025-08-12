@@ -97,8 +97,12 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         //         ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
         // }
 
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-        $query->whereIn('company_id', $companyIds);
+        if (config('app.name' == 'SUNSHINE')) {
+            $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+            $query->whereIn('company_id', $companyIds);
+        } else {
+            $query->where('group_id', $user->group_id);
+        }
 
         if ($user->is_admin) {
             return $query;
