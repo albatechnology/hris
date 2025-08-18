@@ -149,7 +149,7 @@ class UserController extends BaseController
                 }),
                 AllowedFilter::scope('name', 'whereName'),
                 AllowedFilter::scope('resign_date_after', 'whereResignDateAfter'),
-                AllowedFilter::scope('resign_date_bewhereResignDateBeforefore', 'whereResignDateBefore'),
+                AllowedFilter::scope('resign_date_before', 'whereResignDateBefore'),
                 AllowedFilter::scope('is_show_resign_users', 'showResignUsers'),
                 'email',
                 'type',
