@@ -4,11 +4,12 @@ namespace App\Http\Requests\Api\Attendance;
 
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ChildrenRequest extends FormRequest
 {
-    
+    use RequestToBoolean;
 
     /**
      * Prepare inputs for validation.
@@ -21,6 +22,7 @@ class ChildrenRequest extends FormRequest
             'filter' => [
                 ...($this->filter ?? []),
                 'date' => !empty($this->filter['date']) ? $this->filter['date'] : date('Y-m-d'),
+                'is_show_resign_users' => $this->is_show_resign_users ? $this->toBoolean($this->is_show_resign_users) : null,
             ],
         ]);
     }
@@ -36,6 +38,7 @@ class ChildrenRequest extends FormRequest
             'filter' => 'nullable|array',
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.date' => 'nullable|date',
+            'filter.is_show_resign_users' => 'nullable|boolean',
             'sort' => 'nullable|string',
         ];
     }

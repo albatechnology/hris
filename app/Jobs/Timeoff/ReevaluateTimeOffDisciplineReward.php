@@ -22,6 +22,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public string $today;
     public Carbon $startDate;
     public Carbon $endDate;
 
@@ -30,8 +31,22 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
      */
     public function __construct(?string $endDate = null, ?string $startDate = null)
     {
-        $this->endDate = $endDate ? Carbon::createFromFormat('Y-m-d', $endDate) : Carbon::now()->subMonth()->endOfMonth();
-        $this->startDate = $startDate ? Carbon::createFromFormat('Y-m-d', $startDate) : $this->endDate->copy()->subMonths(3)->startOfMonth();
+        // $this->endDate = $endDate
+        //     ? Carbon::createFromFormat('Y-m-d', $endDate)
+        //     : Carbon::now()->subMonth()->endOfMonth();
+
+        // $this->startDate = $startDate
+        //     ? Carbon::createFromFormat('Y-m-d', $startDate)
+        //     : $this->endDate->copy()->subMonths(4)->startOfMonth();
+
+        $this->today = date('Y-m-01');
+        $this->endDate = $endDate
+            ? Carbon::createFromFormat('Y-m-d', $endDate)
+            : Carbon::now()->subMonth()->endOfMonth();
+
+        $this->startDate = $startDate
+            ? Carbon::createFromFormat('Y-m-d', $startDate)
+            : Carbon::now()->subMonths(4)->startOfMonth();
     }
 
     /**
@@ -45,22 +60,23 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
         // $today = Carbon::createFromDate(2025, 4, 30);
 
         $fourMonthsAgo = $this->startDate;
-        $today = $this->endDate;
+        $startDate = $this->endDate;
 
+        dump($this->today);
         dump($fourMonthsAgo->format('Y-m-d'));
-        dump($today->format('Y-m-d'));
+        dump($startDate->format('Y-m-d'));
 
-        $effectiveEndDate = $today->month == 11 || $today->month == 12 ? $today->copy()->addYear()->endOfYear()->format('Y-m-d') : date('Y-12-31');
-        $description = sprintf("AUTOMATICALLY GENERATED FROM THE SYSTEM (EO %s - %s)", $fourMonthsAgo->format('Y-m-d'), $today->format('Y-m-d'));
+        $effectiveEndDate = $startDate->month == 11 || $startDate->month == 12 ? $startDate->copy()->addYear()->endOfYear()->format('Y-m-d') : date('Y-12-31');
+        $description = sprintf("AUTOMATICALLY GENERATED FROM THE SYSTEM (EO %s - %s)", $fourMonthsAgo->format('Y-m-d'), $startDate->format('Y-m-d'));
 
-        $dateRange = CarbonPeriod::create($fourMonthsAgo, $today);
+        $dateRange = CarbonPeriod::create($fourMonthsAgo, $startDate);
 
         $companies = Company::select('id')->where('id', 1)->get();
 
         foreach ($companies as $company) {
             $timeoffPolicyId = TimeoffPolicy::select('id')->where('type', TimeoffPolicyType::EXTRA_OFF)->firstOrFail()->id;
-            $companyHolidays = Event::selectMinimalist()->where('company_id', $company->id)->whereDateBetween($fourMonthsAgo, $today)->whereCompanyHoliday()->get();
-            $nationalHolidays = Event::selectMinimalist()->where('company_id', $company->id)->whereDateBetween($fourMonthsAgo, $today)->whereNationalHoliday()->get();
+            $companyHolidays = Event::selectMinimalist()->where('company_id', $company->id)->whereDateBetween($fourMonthsAgo, $startDate)->whereCompanyHoliday()->get();
+            $nationalHolidays = Event::selectMinimalist()->where('company_id', $company->id)->whereDateBetween($fourMonthsAgo, $startDate)->whereNationalHoliday()->get();
 
             $timeoffPolicyIds = TimeoffPolicy::where('company_id', $company->id)
                 ->whereIn('type', [
@@ -71,20 +87,22 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 ])->get(['id']);
 
             $availableUsers = User::where('company_id', $company->id)
+                ->where('id', 189)
                 ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
-                ->whereDoesntHave('timeoffs', function ($q) use ($fourMonthsAgo, $today, $timeoffPolicyIds) {
+                ->whereDoesntHave('timeoffs', function ($q) use ($fourMonthsAgo, $startDate, $timeoffPolicyIds) {
                     $q->approved()
                         ->whereDate('start_at', '>=', $fourMonthsAgo->format("Y-m-d"))
-                        ->whereDate('end_at', '<=', $today->format("Y-m-d"))
+                        ->whereDate('end_at', '<=', $startDate->format("Y-m-d"))
                         ->whereIn('timeoff_policy_id', $timeoffPolicyIds?->toArray());
                 })
-                ->whereDoesntHave(
-                    'timeoffQuotas',
-                    fn($q) => $q->where('timeoff_policy_id', $timeoffPolicyId)
-                        ->where(fn($q) => $q->whereDate('effective_end_date', '>=', $fourMonthsAgo->format('Y-m-d'))->orWhereDate('effective_end_date', '>=', $today->format('Y-m-d')))
-                )
+                ->whereDoesntHave('timeoffQuotas', function ($q) use ($timeoffPolicyId, $fourMonthsAgo) {
+                    $q->where('timeoff_policy_id', $timeoffPolicyId)
+                        ->whereRaw('DATE_ADD(effective_start_date, INTERVAL 4 MONTH) > ?', [$this->today]);
+                    // ->whereRaw('DATE_ADD(effective_start_date, INTERVAL 4 MONTH) > ?', [$fourMonthsAgo->format('Y-m-d')]);
+                })
                 ->get(['id', 'company_id', 'name', 'join_date', 'type']);
 
+            // dd($availableUsers?->toArray());
             dump($availableUsers?->pluck('id')->toArray());
             $users = collect([]);
             foreach ($availableUsers as $user) {
@@ -99,7 +117,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         'clockIn' => fn($q) => $q->approved(),
                         'clockOut' => fn($q) => $q->approved(),
                     ])
-                    ->whereDateBetween($fourMonthsAgo, $today)
+                    ->whereDateBetween($fourMonthsAgo, $startDate)
                     ->get(['id', 'schedule_id', 'shift_id', 'date', 'timeoff_id']);
 
                 $isBreak = false;
@@ -138,10 +156,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 
                     if (!$attendance) {
                         $isBreak = true;
-                        dump($user->toArray());
-                        dump($date);
-                        dump($todaySchedule?->toArray());
-                        dd($attendance->toArray());
+                        // dump($user->toArray());
+                        // dump($date);
+                        // dump($todaySchedule?->toArray());
+                        // dd($attendance?->toArray());
                         break;
                     }
 
@@ -149,10 +167,10 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
 
                     if (!$attendance->clockIn || !$attendance->clockOut) {
                         $isBreak = true;
-                        dump($user->toArray());
-                        dump($date);
-                        dump($todaySchedule?->toArray());
-                        dd($attendance->toArray());
+                        // dump($user->toArray());
+                        // dump($date);
+                        // dump($todaySchedule?->toArray());
+                        // dd($attendance->toArray());
                         break;
                     }
 
@@ -162,13 +180,13 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         $totalLate += $attendanceClockIn->diffInMinutes($scheduleClockIn);
                         if ($totalLate > 10) {
                             $isBreak = true;
-                            dump($user->toArray());
-                            dump($date);
-                            dump($scheduleClockIn);
-                            dump($attendanceClockIn);
-                            dump($totalLate);
-                            dump($todaySchedule?->toArray());
-                            dd($attendance->toArray());
+                            // dump($user->toArray());
+                            // dump($date);
+                            // dump($scheduleClockIn);
+                            // dump($attendanceClockIn);
+                            // dump($totalLate);
+                            // dump($todaySchedule?->toArray());
+                            // dd($attendance->toArray());
                             break;
                         }
                     }
@@ -179,13 +197,13 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                         $totalLate += $attendanceClockOut->diffInMinutes($scheduleClockOut);
                         if ($totalLate > 10) {
                             $isBreak = true;
-                            dump($user->toArray());
-                            dump($date);
-                            dump($scheduleClockOut);
-                            dump($attendanceClockOut);
-                            dump($totalLate);
-                            dump($todaySchedule?->toArray());
-                            dd($attendance->toArray());
+                            // dump($user->toArray());
+                            // dump($date);
+                            // dump($scheduleClockOut);
+                            // dump($attendanceClockOut);
+                            // dump($totalLate);
+                            // dump($todaySchedule?->toArray());
+                            // dd($attendance->toArray());
                             break;
                         }
                     }
@@ -194,13 +212,12 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 if ($isBreak) continue;
                 $users->push($user);
             }
-
-            dump($users?->pluck('name')->toArray());
+            dd($users?->pluck('name')->toArray());
 
             foreach ($users as $user) {
                 $timeoffQuota = $user->timeoffQuotas()->create([
                     'timeoff_policy_id' => $timeoffPolicyId,
-                    'effective_start_date' => $today->format('Y-m-d'),
+                    'effective_start_date' => $startDate->format('Y-m-d'),
                     'effective_end_date' => $effectiveEndDate,
                     'quota' => 1,
                 ]);

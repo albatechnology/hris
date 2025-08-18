@@ -61,6 +61,7 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -69,6 +70,7 @@ class AttendanceController extends BaseController
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
@@ -377,6 +379,7 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -384,6 +387,7 @@ class AttendanceController extends BaseController
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name'),
                 'payrollInfo' => fn($q) => $q->select('user_id', 'is_ignore_alpa'),
@@ -519,6 +523,7 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -526,6 +531,7 @@ class AttendanceController extends BaseController
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);

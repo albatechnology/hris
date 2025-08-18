@@ -228,6 +228,14 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         $query->where(fn($q) => $q->whereDate('resign_date', '<=', date('Y-m-d', strtotime($value)))->orWhereNull('resign_date'));
     }
 
+    public function scopeShowResignUsers(Builder $query, ?bool $value = null)
+    {
+        $query->where(
+            fn($q) => $q->whereNull('resign_date')
+                ->when(isset($value) && $value == true, fn($q) => $q->orWhereNotNull('resign_date'))
+        );
+    }
+
     protected function password(): Attribute
     {
         return Attribute::make(

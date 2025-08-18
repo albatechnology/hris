@@ -4,11 +4,12 @@ namespace App\Http\Requests\Api\Attendance;
 
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ExportReportRequest extends FormRequest
 {
-    
+    use RequestToBoolean;
 
     /**
      * Prepare inputs for validation.
@@ -22,6 +23,7 @@ class ExportReportRequest extends FormRequest
                 ...($this->filter ?? []),
                 'start_date' => !empty($this->filter['start_date']) ? $this->filter['start_date'] : date('Y-m-01'),
                 'end_date' => !empty($this->filter['end_date']) ? $this->filter['end_date'] : date('Y-m-t'),
+                'is_show_resign_users' => $this->is_show_resign_users ? $this->toBoolean($this->is_show_resign_users) : null,
             ],
         ]);
     }
@@ -39,6 +41,7 @@ class ExportReportRequest extends FormRequest
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.start_date' => 'required|date',
             'filter.end_date' => 'required|date',
+            'filter.is_show_resign_users' => 'nullable|boolean',
             'filter.user_ids' => [
                 'nullable',
                 'string',
