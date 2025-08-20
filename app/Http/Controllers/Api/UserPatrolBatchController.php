@@ -58,10 +58,10 @@ class UserPatrolBatchController extends BaseController
 
     public function sync(SyncRequest $request)
     {
+        $userPatrolBatch = UserPatrolBatch::create($request->validated());
+
         DB::beginTransaction();
         try {
-            $userPatrolBatch = UserPatrolBatch::create($request->validated());
-
             foreach ($request->tasks ?? [] as $task) {
                 // $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create([
                 //     'user_patrol_batch_id' => $userPatrolBatch->id,
@@ -93,6 +93,7 @@ class UserPatrolBatchController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
+            $userPatrolBatch->delete();
             return $this->errorResponse($e->getMessage());
         }
 

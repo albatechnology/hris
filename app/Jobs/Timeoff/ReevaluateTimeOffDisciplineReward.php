@@ -87,7 +87,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 ])->get(['id']);
 
             $availableUsers = User::where('company_id', $company->id)
-                ->where('id', 189)
+                // ->where('id', 128)
                 ->whereIn('type', [UserType::ADMINISTRATOR, UserType::USER])
                 ->whereDoesntHave('timeoffs', function ($q) use ($fourMonthsAgo, $startDate, $timeoffPolicyIds) {
                     $q->approved()
@@ -123,7 +123,7 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                 $isBreak = false;
                 foreach ($dateRange as $date) {
                     $totalLate = 0;
-                    $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff']);
+                    $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'clock_in', 'clock_out']);
 
                     $date = $date->format('Y-m-d');
 
@@ -177,16 +177,16 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                     $attendanceClockIn = Carbon::parse($attendance->clockIn->time);
                     $scheduleClockIn = Carbon::parse($attendanceClockIn->format('Y-m-d') . ' ' . $todaySchedule->shift->clock_in);
                     if ($attendanceClockIn->greaterThan($scheduleClockIn)) {
-                        $totalLate += $attendanceClockIn->diffInMinutes($scheduleClockIn);
+                        $totalLate += abs($attendanceClockIn->diffInMinutes($scheduleClockIn));
                         if ($totalLate > 10) {
                             $isBreak = true;
-                            // dump($user->toArray());
-                            // dump($date);
-                            // dump($scheduleClockIn);
-                            // dump($attendanceClockIn);
-                            // dump($totalLate);
-                            // dump($todaySchedule?->toArray());
-                            // dd($attendance->toArray());
+                            dump($user->toArray());
+                            dump($date);
+                            dump($scheduleClockIn);
+                            dump($attendanceClockIn);
+                            dump($totalLate);
+                            dump($todaySchedule?->toArray());
+                            dd($attendance->toArray());
                             break;
                         }
                     }
@@ -194,16 +194,17 @@ class ReevaluateTimeOffDisciplineReward implements ShouldQueue
                     $attendanceClockOut = Carbon::parse($attendance->clockOut->time);
                     $scheduleClockOut = Carbon::parse($attendanceClockOut->format('Y-m-d') . ' ' . $todaySchedule->shift->clock_out);
                     if ($attendanceClockOut->lessThan($scheduleClockOut)) {
-                        $totalLate += $attendanceClockOut->diffInMinutes($scheduleClockOut);
+                        $totalLate += abs($attendanceClockOut->diffInMinutes($scheduleClockOut));
+
                         if ($totalLate > 10) {
                             $isBreak = true;
-                            // dump($user->toArray());
-                            // dump($date);
-                            // dump($scheduleClockOut);
-                            // dump($attendanceClockOut);
-                            // dump($totalLate);
-                            // dump($todaySchedule?->toArray());
-                            // dd($attendance->toArray());
+                            dump($user->toArray());
+                            dump($date);
+                            dump($scheduleClockOut);
+                            dump($attendanceClockOut);
+                            dump($totalLate);
+                            dump($todaySchedule?->toArray());
+                            dd($attendance->toArray());
                             break;
                         }
                     }
