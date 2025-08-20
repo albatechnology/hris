@@ -11,4 +11,5 @@ enum BankName: string
     case MANDIRI = 'MANDIRI';
     case BRI = 'BRI';
     case BNI = 'BNI';
+    case JENIUS = 'JENIUS';
 }
