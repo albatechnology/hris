@@ -226,6 +226,7 @@ class AttendanceService
                 });
 
                 if ($nationalHoliday) {
+                    $totalWorkingDays--;
                     continue;
                 }
             }
@@ -235,6 +236,7 @@ class AttendanceService
                 && (!isset($schedule->shift->is_request_shift) || $schedule->shift->is_request_shift == false)
             ) {
                 $totalWorkingDays--;
+                continue;
             }
         }
 
