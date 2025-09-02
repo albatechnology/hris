@@ -455,10 +455,11 @@ class UserController extends BaseController
             }
         }
 
+        /** @var \App\Models\User */
+        $userLoggedIn = auth()->user();
         DB::beginTransaction();
         try {
-            $userLoggedIn = auth()->user();
-            if (!$userLoggedIn->is_user) {
+            if (!$userLoggedIn->is_user || ($userLoggedIn->is_user && $userLoggedIn->can('user_edit'))) {
                 /** @var \App\Models\RequestChangeData $requestChangeData */
                 $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
                 $requestChangeData->approvals()->createQuietly([
