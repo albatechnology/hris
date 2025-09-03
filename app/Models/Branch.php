@@ -91,7 +91,6 @@ class Branch extends BaseModel implements TenantedInterface
             'branches.id',
             'branches.company_id',
             'branches.name',
-            'branches.phone',
             'branches.address',
             'branches.pic_name',
             'branches.pic_email',
