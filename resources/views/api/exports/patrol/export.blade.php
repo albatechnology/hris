@@ -95,7 +95,7 @@
                             </td>
                             @foreach ($userPatrolTask->media as $media)
                                 <td>
-                                    <img href="{{ $media->original_url }}" alt="image" />
+                                    <img src="{{ $media->original_url }}" alt="image" style="height: 100px; width: auto;" />
                                 </td>
                             @endforeach
                         </tr>
