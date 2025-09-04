@@ -402,7 +402,7 @@ class PatrolController extends BaseController
             ),
         ]);
 
-        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('report-patroli.xls', \Maatwebsite\Excel\Excel::HTML);
+        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::HTML);
     }
 
     public function testExport()
