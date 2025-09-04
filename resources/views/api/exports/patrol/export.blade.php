@@ -95,7 +95,7 @@
                             </td>
                             @foreach ($userPatrolTask->media as $media)
                                 <td>
-                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
+                                    <img href="{{ $media->original_url }}" alt="image" />
                                 </td>
                             @endforeach
                         </tr>

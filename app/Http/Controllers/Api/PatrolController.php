@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exports\PatrolTaskExport;
+use App\Exports\TestPatrolTaskExport;
 use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserIndexRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
@@ -12,6 +13,7 @@ use App\Models\Patrol;
 use App\Models\PatrolLocation;
 use App\Models\PatrolTask;
 use App\Models\UserPatrol;
+use App\Models\UserPatrolBatch;
 use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -400,7 +402,16 @@ class PatrolController extends BaseController
             ),
         ]);
 
-        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('report-patroli.xlsx');
+        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('report-patroli.xlsx', \Maatwebsite\Excel\Excel::HTML);
+    }
+
+    public function testExport()
+    {
+        if (request()->has('preview')) {
+            $userPatrolBatch = UserPatrolBatch::with('userPatrolTasks.media')->find(449);
+            return $userPatrolBatch;
+        }
+        return (new TestPatrolTaskExport(449))->download('test-report-patroli.xls', \Maatwebsite\Excel\Excel::HTML);
     }
 
     // public function export(Request $request, int $id)

@@ -74,7 +74,6 @@ class Branch extends BaseModel implements TenantedInterface
     {
         return $this->belongsTo(Company::class);
     }
-
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
