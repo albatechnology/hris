@@ -381,6 +381,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('user-patrols', UserPatrolController::class);
 
     Route::post('user-patrol-batches/sync', [UserPatrolBatchController::class, 'sync']);
+    Route::delete('user-patrol-batches/{user_patrol_batch}/force-delete', [UserPatrolBatchController::class, 'forceDelete']);
     Route::apiResource('user-patrol-batches', UserPatrolBatchController::class);
     Route::apiResource('user-patrol-movements', UserPatrolMovementController::class);
 

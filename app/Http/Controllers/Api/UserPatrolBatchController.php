@@ -131,6 +131,14 @@ class UserPatrolBatchController extends BaseController
         $userPatrolBatch = UserPatrolBatch::findTenanted($id);
         $userPatrolBatch->delete();
 
-        return new DefaultResource($userPatrolBatch);
+        return $this->deletedResponse();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $userPatrolBatch = UserPatrolBatch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $userPatrolBatch->forceDelete();
+
+        return $this->deletedResponse();
     }
 }
