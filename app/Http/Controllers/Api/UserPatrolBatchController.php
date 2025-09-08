@@ -137,8 +137,19 @@ class UserPatrolBatchController extends BaseController
     public function forceDelete(int $id)
     {
         $userPatrolBatch = UserPatrolBatch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        UserPatrolTask::where('user_patrol_batch_id', $id)->with('media')->delete();
-        UserPatrolMovement::where('user_patrol_batch_id', $id)->delete();
+
+        DB::beginTransaction();
+        try {
+            UserPatrolTask::select('id')->where('user_patrol_batch_id', $id)->get()->each(function ($userPatrolTask) {
+                $userPatrolTask->media()->forceDelete();
+                $userPatrolTask->forceDelete();
+            });
+            UserPatrolMovement::where('user_patrol_batch_id', $id)->forceDelete();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
         $userPatrolBatch->forceDelete();
 
         return $this->deletedResponse();
