@@ -34,7 +34,7 @@ class Panic extends BaseModel implements TenantedInterface, HasMedia
             $user = auth('sanctum')->user();
         }
 
-        if ($user->is_super_admin) return $query;
+        if ($user->is_super_admin || $user->is_admin) return $query;
 
         $hasPermission = $user->roles->contains(fn($role) => $role->hasPermissionTo('allow_get_emergency_notification'));
 
