@@ -25,8 +25,9 @@ class UserPatrolTask extends BaseModel implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->fit(Fit::Crop, 100, 100) // resize dan crop biar square
-            ->quality(90) // jaga kualitas
+            ->fit(Fit::Contain, 150) // resize dan crop biar square
+            ->quality(100) // jaga kualitas
+            ->nonOptimized()
             ->queued();
     }
 }
