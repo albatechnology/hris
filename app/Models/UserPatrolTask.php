@@ -86,8 +86,8 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-              ->width(50)
-              ->height(50);
+            //   ->width(50)
+              ->height(100);
             //   ->sharpen(10);
     }
 }
