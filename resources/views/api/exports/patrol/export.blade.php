@@ -97,7 +97,7 @@
                                 <td>
                                     {{-- <img src="{{ $media->original_url }}" alt="image" style="height: 100px; width: auto;" /> --}}
                                     {{-- <h1>{{ $media->getUrl() }}</h1> --}}
-                                    <img src="{{ $media->getUrl('thumb') }}" alt="image" style="height: 100px; width: auto;" />
+                                    <img src="{{ $media->getUrl() }}" width="100" height="100" alt="image"/>
                                 </td>
                             @endforeach
                             <td>
