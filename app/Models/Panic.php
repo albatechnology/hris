@@ -7,10 +7,12 @@ use App\Enums\PanicStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\TenantedThroughBranch;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Panic extends BaseModel implements TenantedInterface
+class Panic extends BaseModel implements TenantedInterface, HasMedia
 {
-    use TenantedThroughBranch, BelongsToUser;
+    use TenantedThroughBranch, BelongsToUser, InteractsWithMedia;
 
     protected $fillable = [
         'branch_id',
@@ -18,6 +20,7 @@ class Panic extends BaseModel implements TenantedInterface
         'lat',
         'lng',
         'status',
+        'description',
     ];
 
     protected $casts = [

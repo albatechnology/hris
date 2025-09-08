@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MediaCollection;
 use App\Http\Requests\Api\Panic\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Panic;
@@ -32,6 +33,10 @@ class PanicController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(Panic::tenanted()->with('user'))
+            ->allowedIncludes([
+                'user',
+                'media'
+            ])
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('user_id'),
@@ -55,6 +60,7 @@ class PanicController extends BaseController
         return new DefaultResource($panic->load(
             'user',
             'branch',
+            'media',
         ));
     }
 
@@ -64,6 +70,14 @@ class PanicController extends BaseController
         DB::beginTransaction();
         try {
             $panic = $user->panics()->create($request->validated());
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    if ($file->isValid()) {
+                        $panic->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                    }
+                }
+            }
 
             $supervisors = User::select('id', 'fcm_token', 'name')->whereIn('id', $user->supervisors?->pluck('supervisor_id'))->get();
             if ($supervisors->count() == 0) {

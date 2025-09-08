@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('lat');
             $table->string('lng');
             $table->string('status')->default(PanicStatus::PANIC->value);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

@@ -8,8 +8,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *
@@ -33,6 +31,9 @@ class StoreRequest extends FormRequest
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
+            'description' => ['nullable', 'string'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['required', 'mimes:' . config('app.file_mimes_types')],
         ];
     }
 }
