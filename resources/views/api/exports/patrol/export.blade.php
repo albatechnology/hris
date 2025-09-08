@@ -96,12 +96,14 @@
                             @foreach ($userPatrolTask->media as $media)
                                 <td>
                                     {{-- <img src="{{ $media->original_url }}" alt="image" style="height: 100px; width: auto;" /> --}}
-                                    {{-- <h1>{{ $media->getUrl() }}</h1> --}}
-                                    <img src="{{ $media->getUrl() }}" width="100" height="100" alt="image"/>
+                                    <img src="{{ $media->getUrl('thumb') }}" alt="image"/>
                                 </td>
                             @endforeach
                             <td>
                                 <h1 style="margin-bottom: 100px">'</h1>
+                                <h1 style="margin-bottom: 100px">&nbsp;</h1>
+                                <h1 style="margin-bottom: 100px">&nbsp;</h1>
+                                <h1 style="margin-bottom: 100px">&nbsp;</h1>
                                 <h1 style="margin-bottom: 100px">&nbsp;</h1>
                                 <h1 style="margin-bottom: 100px">&nbsp;</h1>
                                 <h1 style="margin-bottom: 100px">&nbsp;</h1>
