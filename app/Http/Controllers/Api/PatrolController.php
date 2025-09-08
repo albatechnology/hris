@@ -92,17 +92,6 @@ class PatrolController extends BaseController
             ->firstOrFail();
 
         return new DefaultResource($patrol);
-
-        // $patrol = Patrol::where('id',$id)->firstOrFail();;
-        // return new DefaultResource($patrol->load([
-        //     'users' => [
-        //         'user',
-        //         // 'userPatrolSchedules.schedule',
-        //     ],
-        //     'patrolLocations' => [
-        //         'tasks',
-        //     ],
-        // ]));
     }
 
     public function store(StoreRequest $request)
@@ -372,7 +361,6 @@ class PatrolController extends BaseController
 
     public function export(UserIndexRequest $request, int $id)
     {
-
         $startDate = $request->filter['start_date'] ?? date('Y-m-d');
         $endDate = $request->filter['end_date'] ?? date('Y-m-d');
         $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
 {
@@ -80,5 +81,13 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
     public function userPatrolBatch(): BelongsTo
     {
         return $this->belongsTo(UserPatrolBatch::class);
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+              ->width(50)
+              ->height(50);
+            //   ->sharpen(10);
     }
 }
