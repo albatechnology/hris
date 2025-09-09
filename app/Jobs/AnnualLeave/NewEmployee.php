@@ -69,32 +69,27 @@ class NewEmployee implements ShouldQueue
          */
 
         // date to compare that the user should be working at least 3 months since join_date
-        $joinDate = Carbon::now()->subMonths(4);
+        $joinMonth = now()->subMonths(3);
 
-        $dataQuotas = $this->getQuotas($joinDate);
-        // dump($joinDate);
-        // dump($dataQuotas);
         $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
             $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()
                 ->where('company_id', $company->id)
                 ->whereDate('join_date', '>', now()->subYear())
-                ->whereDate('join_date', '<=', $joinDate)
-                // ->whereYear('join_date', $joinDate->format('Y'))
-                // ->whereMonth('join_date', '<=', $joinDate->format('m'))
-                // ->whereDay('join_date', '<=', 15)
+                ->whereDate('join_date', '<=', $joinMonth)
                 ->whereDoesntHave(
                     'timeoffQuotas',
                     fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
                         ->whereHas(
                             'timeoffQuotaHistories',
-                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinDate->format('Y'))
+                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinMonth->format('Y'))
                         )
-                )->get(['id']);
-            // dd($users->select('id', 'name', 'join_date')->toArray());
+                )
+                ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
+                $dataQuotas = $this->getQuotas(Carbon::parse($user->join_date));
                 DB::transaction(function () use ($user, $dataQuotas, $timeoffPolicyId) {
                     foreach ($dataQuotas as $dataQuota) {
                         $timeoffQuota = $user->timeoffQuotas()->create([
