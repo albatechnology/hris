@@ -96,7 +96,7 @@
                             @foreach ($userPatrolTask->media as $media)
                                 <td>
                                     {{-- <img src="{{ $media->original_url }}" alt="image" style="height: 100px; width: auto;" /> --}}
-                                    @if($media?->getUrl('thumb'))
+                                    @if($media->hasGeneratedConversion('thumb'))
                                     <img src="{{ $media->getUrl('thumb') }}" alt="image"/>
                                     @endif
                                 </td>
