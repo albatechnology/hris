@@ -391,6 +391,19 @@ class Company extends BaseModel implements TenantedInterface
                 'is_default' => true,
                 'is_hidden' => true,
             ]);
+
+            $this->payrollComponents()->create([
+                'name' => 'BPJS Family',
+                'type' => PayrollComponentType::DEDUCTION,
+                'category' => PayrollComponentCategory::BPJS_KESEHATAN_FAMILY,
+                'amount' => 0,
+                'is_taxable' => true,
+                'period_type' => PayrollComponentPeriodType::MONTHLY,
+                'is_monthly_prorate' => false,
+                'is_include_backpay' => false,
+                'is_default' => true,
+                'is_hidden' => true,
+            ]);
         }
     }
 }

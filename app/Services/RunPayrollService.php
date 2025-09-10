@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\CountrySettingKey;
 use App\Enums\JaminanPensiunCost;
 use App\Enums\OvertimeSetting;
+use App\Enums\PaidBy;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
@@ -440,8 +441,8 @@ class RunPayrollService
                     !empty($user->userBpjs->bpjs_kesehatan_no)
                     && !empty($user->userBpjs->bpjs_kesehatan_date)
                     && (
-                        date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) < date('Y', strtotime($runPayroll->cut_off_start_date))
-                        || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($runPayroll->cut_off_start_date)))
+                        date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) < date('Y', strtotime($runPayroll->payroll_start_date))
+                        || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
                     )
                 ) {
                     $isEligibleToCalculateBpjsKesehatan = true;
@@ -452,8 +453,8 @@ class RunPayrollService
                     !empty($user->userBpjs->bpjs_ketenagakerjaan_no)
                     && !empty($user->userBpjs->bpjs_ketenagakerjaan_date)
                     && (
-                        date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) < date('Y', strtotime($runPayroll->cut_off_start_date))
-                        || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($runPayroll->cut_off_start_date)))
+                        date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) < date('Y', strtotime($runPayroll->payroll_start_date))
+                        || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
                     )
                 ) {
                     $isEligibleToCalculateBpjsKetenagakerjaan = true;
@@ -479,6 +480,10 @@ class RunPayrollService
                 $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
 
                 $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
+                if ($user->userBpjs->bpjs_kesehatan_cost->is(PaidBy::COMPANY)) {
+                    $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
+                    $employee_totalBpjsKesehatan = 0;
+                }
 
                 // jkk
                 $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
@@ -498,6 +503,10 @@ class RunPayrollService
 
                 $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
                 $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                if ($user->userBpjs->jht_cost->is(PaidBy::COMPANY)) {
+                    $company_totalJht += $employee_totalJht;
+                    $employee_totalJht = 0;
+                }
 
                 // jp
                 $company_totalJp = 0;
@@ -514,6 +523,11 @@ class RunPayrollService
                     $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
 
                     $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+
+                    if ($user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::COMPANY)) {
+                        $company_totalJp += $employee_totalJp;
+                        $employee_totalJp = 0;
+                    }
                 }
 
                 foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {

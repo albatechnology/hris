@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('npp_bpjs_ketenagakerjaan')->default(NppBpjsKetenagakerjaan::DEFAULT);
             $table->date('bpjs_ketenagakerjaan_date')->nullable();
             $table->string('bpjs_kesehatan_no')->nullable();
-            $table->string('bpjs_kesehatan_family_no')->nullable();
+            $table->tinyInteger('bpjs_kesehatan_family_no')->unsigned()->default(0);
             $table->date('bpjs_kesehatan_date')->nullable();
             $table->string('bpjs_kesehatan_cost')->default(PaidBy::COMPANY);
             $table->string('jht_cost')->default(PaidBy::COMPANY);

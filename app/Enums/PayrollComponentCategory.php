@@ -15,6 +15,8 @@ enum PayrollComponentCategory: string
     case LOAN = 'loan';
     case INSURANCE = 'insurance';
 
+    case BPJS_KESEHATAN_FAMILY = 'bpjs_kesehatan_family';
+
     case BPJS_KESEHATAN = 'bpjs_kesehatan';
     case BPJS_KETENAGAKERJAAN = 'bpjs_ketenagakerjaan';
 
