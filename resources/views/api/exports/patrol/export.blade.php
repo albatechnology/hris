@@ -89,15 +89,16 @@
                             <td>{{ $userPatrolTask->patrolTask?->patrolLocation?->branchLocation?->name }}</td>
                             <td style="height: 100px">{{ $userPatrolTask->description }}</td>
                             <td style="width: 130px;">{{ $userPatrolTask->datetime }}</td>
-                            <td><a
-                                    href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat
-                                    Lokasi</a>
+                            <td>
+                                <a href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat Lokasi</a>
                             </td>
                             @foreach ($userPatrolTask->media as $media)
                                 <td>
                                     {{-- <img src="{{ $media->original_url }}" alt="image" style="height: 100px; width: auto;" /> --}}
                                     @if($media->hasGeneratedConversion('thumb'))
                                     <img src="{{ $media->getUrl('thumb') }}" alt="image"/>
+                                    @else
+                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
                                     @endif
                                 </td>
                             @endforeach
