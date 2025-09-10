@@ -82,6 +82,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
                 PayrollComponentCategory::EMPLOYEE_JHT,
                 PayrollComponentCategory::COMPANY_JP,
                 PayrollComponentCategory::EMPLOYEE_JP,
+                PayrollComponentCategory::BPJS_KESEHATAN_FAMILY,
             ]);
     }
 
@@ -108,6 +109,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
             PayrollComponentCategory::EMPLOYEE_JHT,
             PayrollComponentCategory::COMPANY_JP,
             PayrollComponentCategory::EMPLOYEE_JP,
+            PayrollComponentCategory::BPJS_KESEHATAN_FAMILY,
         ]);
     }
 
