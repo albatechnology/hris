@@ -8,8 +8,6 @@ use Illuminate\Validation\Rule;
 
 class BulkApproveRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

@@ -434,6 +434,31 @@ class RunPayrollService
                     ->whereCompany($runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->whereBpjs()->get();
+
+                $isEligibleToCalculateBpjsKesehatan = false;
+                if (
+                    !empty($user->userBpjs->bpjs_kesehatan_no)
+                    && !empty($user->userBpjs->bpjs_kesehatan_date)
+                    && (
+                        date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) < date('Y', strtotime($runPayroll->cut_off_start_date))
+                        || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($runPayroll->cut_off_start_date)))
+                    )
+                ) {
+                    $isEligibleToCalculateBpjsKesehatan = true;
+                }
+
+                $isEligibleToCalculateBpjsKetenagakerjaan = false;
+                if (
+                    !empty($user->userBpjs->bpjs_ketenagakerjaan_no)
+                    && !empty($user->userBpjs->bpjs_ketenagakerjaan_date)
+                    && (
+                        date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) < date('Y', strtotime($runPayroll->cut_off_start_date))
+                        || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($runPayroll->cut_off_start_date)))
+                    )
+                ) {
+                    $isEligibleToCalculateBpjsKetenagakerjaan = true;
+                }
+
                 // calculate bpjs
                 // init bpjs variable
                 $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
@@ -492,14 +517,24 @@ class RunPayrollService
                 }
 
                 foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+                    $amount = 0;
+                    if ($isEligibleToCalculateBpjsKesehatan) {
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
+                    }
+
+                    if ($isEligibleToCalculateBpjsKetenagakerjaan) {
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+                    }
 
                     $amount = self::calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
 
