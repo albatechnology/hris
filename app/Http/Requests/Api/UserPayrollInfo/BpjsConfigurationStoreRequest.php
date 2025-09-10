@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\UserPayrollInfo;
 
+use App\Enums\BpjsKesehatanFamilyNo;
 use App\Enums\JaminanPensiunCost;
 use App\Enums\PaidBy;
 use Illuminate\Foundation\Http\FormRequest;
@@ -38,7 +39,7 @@ class BpjsConfigurationStoreRequest extends FormRequest
             'upah_bpjs_ketenagakerjaan' => ['nullable', 'numeric', 'min:0'],
             'bpjs_ketenagakerjaan_date' => ['required_with:bpjs_ketenagakerjaan_no', 'date_format:Y-m-d'],
 
-            'bpjs_kesehatan_family_no' => ['nullable', 'string'],
+            'bpjs_kesehatan_family_no' => ['required', Rule::enum(BpjsKesehatanFamilyNo::class)],
             'bpjs_kesehatan_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jht_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jaminan_pensiun_cost' => ['nullable', Rule::enum(JaminanPensiunCost::class)],
