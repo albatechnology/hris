@@ -4,6 +4,8 @@ namespace App\Enums;
 
 enum BpjsKesehatanFamilyNo: int
 {
+    use BaseEnum;
+
     case ZERO = 0;
     case ONE = 1;
     case TWO = 2;

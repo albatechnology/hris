@@ -591,6 +591,27 @@ class RunPayrollService
             }
             // END
 
+            /**
+             * seven, calculate BPJS FAMILY
+             */
+            if ($user->userBpjs && !$user->userBpjs->bpjs_kesehatan_family_no->is(\App\Enums\BpjsKesehatanFamilyNo::ZERO)) {
+                $bpjsKesehatanFamilyComponent = PayrollComponent::tenanted()
+                    ->whereCompany($runPayroll->company_id)
+                    ->whenBranch($runPayroll->branch_id)
+                    ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
+
+                if ($bpjsKesehatanFamilyComponent) {
+                    $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+                    if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
+
+                    // one percent from current_upahBpjsKesehatan, dikali bpjs_kesehatan_family_no
+                    $amount = ($current_upahBpjsKesehatan * 0.01) * $user->userBpjs->bpjs_kesehatan_family_no->value;
+
+                    self::createComponent($runPayrollUser, $bpjsKesehatanFamilyComponent, $amount);
+                }
+            }
+            // END
+
             // update total amount for each user
             self::refreshRunPayrollUser($runPayrollUser);
         }
