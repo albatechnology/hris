@@ -538,8 +538,8 @@ class AttendanceController extends BaseController
 
         $date = $request->filter['date'];
 
-        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
-        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
+        // $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
 
         $users = QueryBuilder::for($query)
             ->allowedFilters([

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\LockAttendance\SearchRequest;
 use App\Http\Requests\Api\LockAttendance\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\LockAttendance;
 use App\Models\User;

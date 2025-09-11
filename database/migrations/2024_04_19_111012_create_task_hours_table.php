@@ -20,6 +20,10 @@ return new class extends Migration
             $table->unsignedSmallInteger('min_working_hour')->default(0);
             $table->unsignedSmallInteger('max_working_hour')->default(0);
             $table->timestamps();
+
+            // softDeletes must implement deleted_by
+            $table->unsignedInteger('deleted_by')->nullable();
+            $table->softDeletes();
         });
     }
 

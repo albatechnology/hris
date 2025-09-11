@@ -383,7 +383,7 @@ class OvertimeService
     }
 
 
-    public static function calculateTaskOvertime(User $user, string $startPeriod = null, string $endPeriod = null)
+    public static function calculateTaskOvertime(User $user, ?string $startPeriod = null, ?string $endPeriod = null)
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
