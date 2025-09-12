@@ -99,7 +99,7 @@ class RunPayrollController extends BaseController
                 $runPayroll->update($request->validated());
                 $runPayrollUserComponents = RunPayrollUserComponent::select('id', 'run_payroll_user_id', 'payroll_component_id', 'context')
                     ->whereNotNull('context')
-                    ->whereHas('payrollComponent', fn($q) => $q->where('category', \App\Enums\PayrollComponentCategory::LOAN))
+                    ->whereHas('payrollComponent', fn($q) => $q->whereIn('category', [\App\Enums\PayrollComponentCategory::LOAN, \App\Enums\PayrollComponentCategory::INSURANCE]))
                     ->whereHas('runPayrollUser', fn($q) => $q->where('run_payroll_id', $runPayroll->id))
                     ->with('runPayrollUser', fn($q) => $q->select('id'))
                     ->get();
@@ -108,6 +108,10 @@ class RunPayrollController extends BaseController
                     $runPayrollUserComponents->each(function (RunPayrollUserComponent $runPayrollUserComponent) {
                         foreach ($runPayrollUserComponent->context['loans'] ?? [] as $loan) {
                             LoanDetail::whereIn('id', collect($loan['details'])->pluck('id'))->update(['run_payroll_user_id' => $runPayrollUserComponent->runPayrollUser->id]);
+                        }
+
+                        foreach ($runPayrollUserComponent->context['insurances'] ?? [] as $insurance) {
+                            LoanDetail::whereIn('id', collect($insurance['details'])->pluck('id'))->update(['run_payroll_user_id' => $runPayrollUserComponent->runPayrollUser->id]);
                         }
                     });
                 } elseif ($runPayroll->status->is(\App\Enums\RunPayrollStatus::REVIEW)) {
