@@ -199,7 +199,7 @@ class LockAttendanceController extends BaseController
                 }
 
                 if ($user->payrollInfo?->is_ignore_alpa == false && (!$attendance || !$attendance?->clockIn || !$attendance?->clockOut)) {
-                    if ($attendance->timeoff) continue;
+                    if ($attendance?->timeoff) continue;
                     $summaryNotPresentAbsent += 1;
                 }
             }
