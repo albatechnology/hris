@@ -20,6 +20,7 @@ class BpjsConfigurationStoreRequest extends FormRequest
         $this->merge([
             'upah_bpjs_ketenagakerjaan' => $this->bpjs_ketenagakerjaan_no ? $this->upah_bpjs_ketenagakerjaan : 0,
             'upah_bpjs_kesehatan' => $this->bpjs_kesehatan_no ? $this->upah_bpjs_kesehatan : 0,
+            'bpjs_kesehatan_family_no' => $this->bpjs_kesehatan_family_no ?? 0,
         ]);
     }
 

@@ -320,7 +320,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'npp_bpjs_ketenagakerjaan' => $this->nppBpjsKetenagakerjaan,
                 'bpjs_ketenagakerjaan_date' => $row['bpjs_ketenagakerjaan_date'] ? date('Y-m-d', strtotime($row['bpjs_ketenagakerjaan_date'])) : null,
                 'bpjs_kesehatan_no' => $row['bpjs_kesehatan_number'],
-                'bpjs_kesehatan_family_no' => $row['bpjs_kesehatan_family_number'],
+                'bpjs_kesehatan_family_no' => $row['bpjs_kesehatan_family_number'] ?? 0,
                 'bpjs_kesehatan_date' => $row['bpjs_kesehatan_date'] ? date('Y-m-d', strtotime($row['bpjs_kesehatan_date'])) : null,
                 'bpjs_kesehatan_cost' => 'company',
                 'jht_cost' => 'company',

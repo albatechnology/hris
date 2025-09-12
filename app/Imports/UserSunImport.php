@@ -100,7 +100,7 @@ class UserSunImport implements ToCollection, WithHeadingRow
                     // 'npp_bpjs_ketenagakerjaan' => $data['npp_bpjs_ketenagakerjaan'],
                     'bpjs_ketenagakerjaan_date' => $data['bpjs_ketenagakerjaan_date'],
                     'bpjs_kesehatan_no' => $data['bpjs_kesehatan_no'],
-                    'bpjs_kesehatan_family_no' => $data['bpjs_kesehatan_family_no'],
+                    'bpjs_kesehatan_family_no' => $data['bpjs_kesehatan_family_no'] ?? 0,
                     'bpjs_kesehatan_date' => $data['bpjs_kesehatan_date'],
                     'bpjs_kesehatan_cost' => $data['bpjs_kesehatan_cost'] ?? PaidBy::EMPLOYEE,
                     'jht_cost' => $data['jht_cost'] ?? PaidBy::EMPLOYEE,

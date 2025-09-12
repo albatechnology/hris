@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\BpjsKesehatanFamilyNo;
 use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\PaidBy;
 use App\Models\User;
@@ -24,7 +25,7 @@ return new class extends Migration
             $table->string('npp_bpjs_ketenagakerjaan')->default(NppBpjsKetenagakerjaan::DEFAULT);
             $table->date('bpjs_ketenagakerjaan_date')->nullable();
             $table->string('bpjs_kesehatan_no')->nullable();
-            $table->tinyInteger('bpjs_kesehatan_family_no')->unsigned()->default(0);
+            $table->tinyInteger('bpjs_kesehatan_family_no')->unsigned()->default(BpjsKesehatanFamilyNo::ZERO);
             $table->date('bpjs_kesehatan_date')->nullable();
             $table->string('bpjs_kesehatan_cost')->default(PaidBy::COMPANY);
             $table->string('jht_cost')->default(PaidBy::COMPANY);

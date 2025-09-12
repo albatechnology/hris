@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\User;
 
 use App\Enums\BloodType;
+use App\Enums\BpjsKesehatanFamilyNo;
 use App\Enums\CostCenterCategory;
 use App\Enums\CurrencyCode;
 use App\Enums\EmploymentStatus;
@@ -60,6 +61,7 @@ class RegisterRequest extends FormRequest
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
             'email_verified_at' => $emailVerifiedAt,
+            'bpjs_kesehatan_family_no' => $this->bpjs_kesehatan_family_no ?? 0,
             'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
 
@@ -141,7 +143,7 @@ class RegisterRequest extends FormRequest
             'npp_bpjs_ketenagakerjaan' => ['nullable', Rule::enum(NppBpjsKetenagakerjaan::class)],
             'bpjs_ketenagakerjaan_date' => 'nullable|date',
             'bpjs_kesehatan_no' => 'nullable|string',
-            'bpjs_kesehatan_family_no' => 'nullable|string',
+            'bpjs_kesehatan_family_no' => ['required', Rule::enum(BpjsKesehatanFamilyNo::class)],
             'bpjs_kesehatan_date' => 'nullable|date',
             'bpjs_kesehatan_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jht_cost' => ['nullable', Rule::enum(PaidBy::class)],
