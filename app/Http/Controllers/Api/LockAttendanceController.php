@@ -82,6 +82,7 @@ class LockAttendanceController extends BaseController
 
         $search = $request->filter['search'] ?? null;
         $users = User::select('id', 'name', 'nik')
+            ->where('id', 16)
             ->where('company_id', $lockAttendance->company_id)
             ->when($search, fn($q) => $q->where(fn($q) => $q->whereLike('name', $search)->orWhereLike('nik', $search)))
             ->with('payrollInfo', fn($q) => $q->select('user_id', 'is_ignore_alpa', 'total_working_days'))
@@ -199,6 +200,7 @@ class LockAttendanceController extends BaseController
                 }
 
                 if ($user->payrollInfo?->is_ignore_alpa == false && (!$attendance || !$attendance?->clockIn || !$attendance?->clockOut)) {
+                    if ($attendance->timeoff) continue;
                     $summaryNotPresentAbsent += 1;
                 }
             }

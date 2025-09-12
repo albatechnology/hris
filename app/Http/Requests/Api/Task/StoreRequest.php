@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
