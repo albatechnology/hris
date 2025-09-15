@@ -281,7 +281,7 @@ class RunPayrollService
                 )
                 ->orderByDesc('id')->get();
 
-            /**
+                /**
              * first, calculate basic salary. for now basic salary component is required
              */
             $basicSalaryComponent = PayrollComponent::tenanted()
@@ -327,10 +327,10 @@ class RunPayrollService
              * second, calculate payroll component where not default
              */
             $payrollComponents = PayrollComponent::tenanted()
+                ->where('id', 53)
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->whereNotDefault()->get();
-
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -341,18 +341,17 @@ class RunPayrollService
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
                 if ($updatePayrollComponentDetail) {
-                    $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+                    // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
-                    // end_date / endEffectiveDate can be null
-                    $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+                    // // end_date / endEffectiveDate can be null
+                    // $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
                     // calculate prorate
                     // $amount = self::prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
-                    $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser);
+                    $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
                 } else {
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
                 }
-
                 self::createComponent($runPayrollUser, $payrollComponent, $amount);
             });
             // END
@@ -665,7 +664,7 @@ class RunPayrollService
      * @param RunPayrollUser|null $runPayrollUser The run payroll user associated with the component. Default is null.
      * @return int|float The calculated amount of the component.
      */
-    public static function calculatePayrollComponentPeriodType(PayrollComponent $payrollComponent, int|float $amount = 0, int $cutoffDiffDay = 0, ?RunPayrollUser $runPayrollUser = null): int|float
+    public static function calculatePayrollComponentPeriodType(PayrollComponent $payrollComponent, int|float $amount = 0, int $cutoffDiffDay = 0, ?RunPayrollUser $runPayrollUser = null, ?UpdatePayrollComponentDetail $updatePayrollComponentDetail = null): int|float
     {
         if ($payrollComponent->category->is(PayrollComponentCategory::ALPA)) {
             return $amount;
@@ -682,7 +681,30 @@ class RunPayrollService
 
                 break;
             case PayrollComponentPeriodType::ONE_TIME:
-                if ($runPayrollUser->user->oneTimePayrollComponents()->where('payroll_component_id', $payrollComponent->id)->whereHas('runPayroll', fn($q) => $q->release())->exists()) {
+                $checkOneTime = $runPayrollUser->user->oneTimePayrollComponents()
+                    ->where('payroll_component_id', $payrollComponent->id)
+                    ->whereHas(
+                        'runPayroll',
+                        fn($q) => $q->release()
+                            ->when($updatePayrollComponentDetail, function ($q) use ($updatePayrollComponentDetail) {
+                                $startDate = $updatePayrollComponentDetail->updatePayrollComponent->effective_date;
+                                $endDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ?? null;
+                                return $q->when(
+                                    !$endDate,
+                                    function ($q) use ($startDate) {
+                                        return $q->whereDate('payroll_start_date', '>', $startDate);
+                                    },
+                                    function ($q) use ($startDate, $endDate) {
+                                        return $q->whereDate('payroll_start_date', '>=', $startDate)
+                                            ->whereDate('payroll_start_date', '<=', $endDate);
+                                    }
+                                );
+                            })
+                    )
+                    ->exists();
+
+                // dd($runPayrollUser->user->oneTimePayrollComponents()->where('payroll_component_id', $payrollComponent->id)->whereHas('runPayroll', fn($q) => $q->release())->exists());
+                if ($checkOneTime) {
                     $amount = 0;
                 } else {
                     $runPayrollUser->user->oneTimePayrollComponents()->create([
