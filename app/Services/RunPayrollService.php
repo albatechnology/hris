@@ -327,7 +327,6 @@ class RunPayrollService
              * second, calculate payroll component where not default
              */
             $payrollComponents = PayrollComponent::tenanted()
-                ->where('id', 53)
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->whereNotDefault()->get();
