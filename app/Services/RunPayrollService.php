@@ -268,7 +268,8 @@ class RunPayrollService
 
                 $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
             } else {
-                $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
+                // $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
+                $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
             }
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
@@ -281,7 +282,7 @@ class RunPayrollService
                 )
                 ->orderByDesc('id')->get();
 
-                /**
+            /**
              * first, calculate basic salary. for now basic salary component is required
              */
             $basicSalaryComponent = PayrollComponent::tenanted()
@@ -330,6 +331,7 @@ class RunPayrollService
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->whereNotDefault()->get();
+
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -339,6 +341,7 @@ class RunPayrollService
                 }
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+
                 if ($updatePayrollComponentDetail) {
                     // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -347,6 +350,7 @@ class RunPayrollService
 
                     // calculate prorate
                     // $amount = self::prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
+
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
                 } else {
                     $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
@@ -702,7 +706,6 @@ class RunPayrollService
                     )
                     ->exists();
 
-                // dd($runPayrollUser->user->oneTimePayrollComponents()->where('payroll_component_id', $payrollComponent->id)->whereHas('runPayroll', fn($q) => $q->release())->exists());
                 if ($checkOneTime) {
                     $amount = 0;
                 } else {

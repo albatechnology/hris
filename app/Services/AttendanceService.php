@@ -284,7 +284,9 @@ class AttendanceService
         foreach ($dateRange as $date) {
             $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff']);
 
-            if (!$todaySchedule?->shift || $todaySchedule?->shift->is_dayoff) {
+            $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
+
+            if ((!$todaySchedule?->shift || $todaySchedule?->shift->is_dayoff) && !$attendanceOnDate) {
                 continue;
             }
 
@@ -299,8 +301,6 @@ class AttendanceService
                 $totalAttend++;
                 continue;
             }
-
-            $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
 
             if ($attendanceOnDate?->timeoff  && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
                 $totalAttend++;
