@@ -128,12 +128,14 @@ class AttendanceController extends BaseController
                     $attendance->total_task = $totalTask;
 
                     $remainingTime = 0;
-                    if ($attendance->clockIn) {
+                    $attendance->late_in = "00:00:00";
+                    if ($attendance->clockIn && !$attendance->shift->is_dayoff) {
                         list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
                         $attendance->late_in = $diffInTime;
                     }
 
-                    if ($attendance->clockOut) {
+                    $attendance->early_out = "00:00:00";
+                    if ($attendance->clockOut && !$attendance->shift->is_dayoff) {
                         list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockOut, $shift, $remainingTime);
                         $attendance->early_out = $diffInTime;
 
