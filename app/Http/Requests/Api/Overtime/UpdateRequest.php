@@ -65,7 +65,11 @@ class UpdateRequest extends FormRequest
                 'integer',
                 function ($attribute, int $value, Closure $fail) {
                     $index = explode('.', $attribute)[1];
-                    if ($index > 0 && $value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) {
+                    if (
+                        ($index > 0) &&
+                        ($value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) &&
+                        ($this->overtime_multipliers[$index - 1]['is_weekday'] == $this->overtime_multipliers[$index]['is_weekday'])
+                    ) {
                         $fail($attribute . ' must be greater than ' . $this->overtime_multipliers[$index - 1]['end_hour']);
                     }
                 }
