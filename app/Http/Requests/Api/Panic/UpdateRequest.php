@@ -35,6 +35,8 @@ class UpdateRequest extends FormRequest
             'solved_lat' => ['nullable', 'string'],
             'solved_lng' => ['nullable', 'string'],
             'solved_description' => ['nullable', 'string'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['required', 'mimes:' . config('app.file_mimes_types')],
         ];
     }
 }

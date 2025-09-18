@@ -20,4 +20,5 @@ enum MediaCollection: string
     case REPRIMAND = 'reprimand';
     case ANNOUNCEMENT = 'announcement';
     case REIMBURSEMENT = 'reimbursement';
+    case PANIC_SOLVED = 'panic_solved';
 }

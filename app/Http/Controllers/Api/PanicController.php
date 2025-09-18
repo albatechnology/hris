@@ -105,6 +105,14 @@ class PanicController extends BaseController
         $panic = Panic::findTenanted($id);
         try {
             $panic->update($request->validated());
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    if ($file->isValid()) {
+                        $panic->addMedia($file)->toMediaCollection(MediaCollection::PANIC_SOLVED->value);
+                    }
+                }
+            }
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
