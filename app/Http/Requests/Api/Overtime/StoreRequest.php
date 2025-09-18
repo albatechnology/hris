@@ -38,7 +38,11 @@ class StoreRequest extends FormRequest
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'name' => 'required|string',
+            'name' => ['required', 'string', function ($attribute, $value, \Closure $fail) {
+                if (in_array(strtolower($value), ['ob', 'ob_sun_english', 'OB_SUN_ENGLISH'])) {
+                    $fail($attribute . ' is reserved');
+                }
+            }],
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',
             'rate_type' => ['nullable', Rule::enum(RateType::class)],
