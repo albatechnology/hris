@@ -21,6 +21,11 @@ class Panic extends BaseModel implements TenantedInterface, HasMedia
         'lng',
         'status',
         'description',
+        'solved_by_id',
+        'solved_at',
+        'solved_lat',
+        'solved_lng',
+        'solved_description',
     ];
 
     protected $casts = [

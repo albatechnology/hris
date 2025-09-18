@@ -117,12 +117,24 @@ class TaskRequestController extends BaseController
 
     public function destroy(int $id)
     {
-        $taskRequest = TaskRequest::findTenanted($id);
+        $taskRequest = TaskRequest::select('id')->findTenanted($id);
         // if (!$taskRequest->approval_status->is(\App\Enums\ApprovalStatus::PENDING)) {
         //     return $this->errorResponse(message: 'Task request can not be deleted', code: 400);
         // }
 
-        $taskRequest->delete();
+        DB::beginTransaction();
+        try {
+            TaskRequest::withoutGlobalScopes()->where('id', $id)->forceDelete($taskRequest);
+            \App\Services\RequestApprovalService::deleteByType($id, TaskRequest::class, [
+                \App\Notifications\Task\RequestTask::class,
+                \App\Notifications\Task\TaskApproved::class
+            ]);
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+
         return $this->deletedResponse();
     }
 

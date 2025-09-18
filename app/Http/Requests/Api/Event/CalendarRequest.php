@@ -6,8 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class CalendarRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

@@ -132,7 +132,7 @@ class TimeoffController extends BaseController
 
     public function destroy(int $id)
     {
-        $timeoff = Timeoff::findTenanted($id);
+        $timeoff = Timeoff::select('id')->findTenanted($id);
         $timeoff->delete();
 
         return $this->deletedResponse();
