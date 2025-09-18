@@ -16,8 +16,8 @@ class UpdateRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'approved_by' => auth('sanctum')->id(),
-            'approved_at' => now()
+            'solved_by_id' => auth('sanctum')->id(),
+            'solved_at' => now()
         ]);
     }
 
@@ -31,7 +31,7 @@ class UpdateRequest extends FormRequest
         return [
             'status' => ['required', Rule::enum(PanicStatus::class)],
             'solved_by_id' => ['nullable', 'integer'],
-            'solved_at' => ['required', 'date_format:Y-m-d H:i'],
+            'solved_at' => ['required'],
             'solved_lat' => ['nullable', 'string'],
             'solved_lng' => ['nullable', 'string'],
             'solved_description' => ['nullable', 'string'],
