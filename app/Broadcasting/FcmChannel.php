@@ -14,7 +14,7 @@ class FcmChannel
     protected $fcm;
 
     /**
-     * Create a new channel instance.
+     * @method array toFcm(object $notifiable)
      */
     public function __construct()
     {

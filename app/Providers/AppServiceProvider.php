@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
 
         \App\Interfaces\Repositories\User\UserRepositoryInterface::class => \App\Http\Repositories\User\UserRepository::class,
         \App\Interfaces\Services\User\UserServiceInterface::class => \App\Http\Services\User\UserService::class,
+
+        \App\Interfaces\Repositories\Attendance\AttendanceRepositoryInterface::class => \App\Repositories\AttendanceRepository::class,
+        \App\Interfaces\Services\Attendance\AttendanceServiceInterface::class => \App\Http\Services\Attendance\AttendanceService::class,
     ];
 
     /**
