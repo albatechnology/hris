@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\GuestBookController;
 use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\IncidentTypeController;
+use App\Http\Controllers\Api\LevelController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\LoanController;
@@ -418,4 +419,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('reimbursements', ReimbursementController::class)->except('update');
 
     Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
+
+    Route::apiResource('levels',LevelController::class);
 });

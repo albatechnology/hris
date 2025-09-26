@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
 
         \App\Interfaces\Repositories\User\UserRepositoryInterface::class => \App\Http\Repositories\User\UserRepository::class,
         \App\Interfaces\Services\User\UserServiceInterface::class => \App\Http\Services\User\UserService::class,
+
+        \App\Interfaces\Repositories\Level\LevelRepositoryInterface::class => \App\Http\Repositories\Level\LevelRepository::class,
+        \App\Interfaces\Services\Level\LevelServiceInterface::class => \App\Http\Services\Level\LevelService::class,
     ];
 
     /**

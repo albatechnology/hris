@@ -579,4 +579,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             'preview' => $preview
         ];
     }
+
+    public function levels():HasMany
+    {
+        return $this->hasMany(Level::class);
+    }
 }
