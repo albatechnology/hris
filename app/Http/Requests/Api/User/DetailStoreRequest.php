@@ -35,8 +35,6 @@ class DetailStoreRequest extends FormRequest
             'positions' => 'nullable|array',
             'positions.*.position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'positions.*.department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
-            'division_id'=>['required'],
-            
         ];
     }
 }

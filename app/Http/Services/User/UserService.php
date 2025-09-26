@@ -20,6 +20,31 @@ class UserService extends BaseService implements UserServiceInterface
         parent::__construct($repository);
     }
 
+    private function generateNik(string $directorateCode, string $joinDate):string
+    {
+        $prefixMap = [
+            'DIR01'=>'2',
+            'DIR02'=>'3',
+            'DIR03'=>'4',
+            'DIR04'=>'5',
+        ];
+
+        $prefix = $prefixMap[$directorateCode] ?? '9';
+
+        $year = date('y',strtotime($joinDate));
+
+        $latestNik = User::where('nik','like',"{$prefix}{$year}%")
+            ->orderBy('nik')
+            ->value('nik');
+        if($latestNik){
+            $lastNumber = (int) substr($latestNik, -4);
+            $newNumber = str_pad($lastNumber + 1,4,'0',STR_PAD_LEFT);
+        }else{
+            $newNumber = '00001';
+        }
+        return "{$prefix}{$year}{$newNumber}";
+    }
+
     public function register(RegisterRequest $request): User
     {
         (new ValidateSubscriptionService($request->group_id ?? auth()->user()->group_id, SubscriptionKey::USERS))();
@@ -68,10 +93,17 @@ class UserService extends BaseService implements UserServiceInterface
                 ]);
             }
 
+            if(empty($request->nik)){
+                $requestNik = $this->generateNik($request->directorate_code,$request->join_date);
+                $user->nik = $requestNik;
+            }
+
             if (empty($request->password)) {
                 $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
                 $user->notify(new ($notificationType->getNotificationClass())($notificationType));
             }
+
+            
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
