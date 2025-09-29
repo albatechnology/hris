@@ -23,8 +23,7 @@ class LevelController extends BaseController
     public function index()
     {
          $levels = $this->service->findAll();
-
-        return LevelResource::collection($levels);
+         return LevelResource::collection($levels);
     }
 
     /**
@@ -44,9 +43,9 @@ class LevelController extends BaseController
     /**
      * Display the specified resource.
      */
-    public function show(Level $level)
+    public function show(int $id)
     {
-        // $level->service->findById($level->id)
+        $level = $this->service->findById($id);
         return new LevelResource($level);
     }
 
@@ -55,21 +54,21 @@ class LevelController extends BaseController
     /**
      * Update the specified resource in storage.
      */
-    public function update(LevelUpdateRequest $request, Level $level)
+    public function update(LevelUpdateRequest $request, int $id)
     {
-        $this->service->update($level->id, $request->validated());
+        $this->service->findById($id);
+        $this->service->update($id, $request->validated());
 
-    return (new LevelResource($level->refresh()))
-        ->response()
-        ->setStatusCode(200);
+        return $this->updatedResponse();
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Level $level)
+    public function destroy(int $id)
     {
-        $this->service->delete($level->id);
+        $this->service->findById($id);
+        $this->service->delete($id);
         return $this->deletedResponse();
     }
 }
