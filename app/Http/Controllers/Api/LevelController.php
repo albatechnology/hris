@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Level\LevelRequest;
-use App\Http\Requests\Api\Level\LevelUpdateRequest;
-use App\Http\Resources\Level\LevelResource;
+use App\Http\Requests\Api\Level\StorelRequest;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Level\LevelServiceInterface;
 use App\Models\Level;
-use Illuminate\Http\Request;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class LevelController extends BaseController
 {
@@ -22,22 +21,33 @@ class LevelController extends BaseController
      */
     public function index()
     {
-         $levels = $this->service->findAll();
-         return LevelResource::collection($levels);
+        $data = QueryBuilder::for(Level::tenanted())
+            ->allowedFilters([
+                AllowedFilter::exact('company_id'),
+                'name',
+            ])
+            ->allowedIncludes(['company'])
+            ->allowedSorts([
+                'id',
+                'company_id',
+                'name',
+                'created_at',
+            ])
+            ->paginate($this->per_page);
+
+        return DefaultResource::collection($data);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(LevelRequest $request)
+    public function store(StorelRequest $request)
     {
-        // dump($this->per_page);
-        // dd($request->validated());
         $level = $this->service->create($request->validated());
 
-       return (new LevelResource($level))
-        ->response()
-        ->setStatusCode(201);
+        return (new DefaultResource($level))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
@@ -46,15 +56,13 @@ class LevelController extends BaseController
     public function show(int $id)
     {
         $level = $this->service->findById($id);
-        return new LevelResource($level);
+        return new DefaultResource($level);
     }
-
-   
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(LevelUpdateRequest $request, int $id)
+    public function update(StorelRequest $request, int $id)
     {
         $this->service->findById($id);
         $this->service->update($id, $request->validated());

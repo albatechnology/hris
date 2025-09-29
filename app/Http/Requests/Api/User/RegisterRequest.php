@@ -161,7 +161,7 @@ class RegisterRequest extends FormRequest
             'company_ids.*' => ['required', new CompanyTenantedRule()],
             'branch_ids' => 'nullable|array',
             'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'directorate_code'=>'nullable'
+            // 'directorate_code'=>'nullable'
         ];
     }
 }

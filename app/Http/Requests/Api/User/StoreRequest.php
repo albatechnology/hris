@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests\Api\User;
 
-use App\Enums\CurrencyCode;
 use App\Enums\Gender;
 use App\Enums\UserType;
-use App\Models\Bank;
 use App\Models\Branch;
+use App\Models\Level;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -51,6 +50,7 @@ class StoreRequest extends FormRequest
             'group_id' => 'required|exists:groups,id',
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'level_id' => ['nullable', new CompanyTenantedRule(Level::class, 'Level not found')],
             // 'approval_id' => 'nullable|exists:users,id',
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',

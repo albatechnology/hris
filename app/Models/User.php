@@ -39,7 +39,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'group_id',
         'company_id',
         'branch_id',
-        'branch_id',
+        'level_id',
         'live_attendance_id',
         'name',
         'last_name',
@@ -580,8 +580,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         ];
     }
 
-    public function levels():HasMany
+    public function level(): BelongsTo
     {
-        return $this->hasMany(Level::class);
+        return $this->belongsTo(Level::class);
     }
 }
