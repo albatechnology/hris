@@ -2,17 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Interfaces\TenantedInterface;
+use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CustomSoftDeletes;
 
-class Level extends Model
+class Level extends BaseModel implements TenantedInterface
 {
-    use HasFactory, SoftDeletes;
-    protected $fillable = ['company_id','name'];
+    use CustomSoftDeletes, CompanyTenanted;
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $fillable = ['company_id','name'];
 }

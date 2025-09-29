@@ -13,6 +13,4 @@ class LevelService extends BaseService implements LevelServiceInterface
     {
         parent::__construct($repository);
     }
-
-   
 }

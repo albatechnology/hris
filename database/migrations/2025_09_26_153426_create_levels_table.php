@@ -39,6 +39,5 @@ return new class extends Migration
             $table->dropColumn('level_id');
         });
         Schema::dropIfExists('levels');
-
     }
 };
