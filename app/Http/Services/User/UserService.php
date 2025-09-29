@@ -9,6 +9,7 @@ use App\Http\Services\BaseService;
 use App\Http\Services\Subscription\ValidateSubscriptionService;
 use App\Interfaces\Repositories\User\UserRepositoryInterface;
 use App\Interfaces\Services\User\UserServiceInterface;
+use App\Models\Company;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -40,10 +41,35 @@ class UserService extends BaseService implements UserServiceInterface
     //         $lastNumber = (int) substr($latestNik, -4);
     //         $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
     //     } else {
-    //         $newNumber = '00001';
+    //         $newNumber = '0001';
     //     }
     //     return "{$prefix}{$year}{$newNumber}";
     // }
+
+    private function generateNikFromCompany(User $user, string $joinDate, int $companyId)
+    {
+        $company = Company::find($companyId);
+  
+        if(!$company)
+        {
+            throw new Exception("Company not found");
+        }
+
+        $prefix = $company->employee_prefix ?? '9';
+      
+        $year = date('y',strtotime($joinDate));
+
+        $latestNik = User::where('nik','like',"{$prefix}{$year}%")
+            ->orderBy('nik','desc')
+            ->value('nik');
+        if($latestNik){
+            $lastNumber = (int) substr($latestNik,-3);
+            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        }else{
+            $newNumber = '001';
+        }
+        return "{$prefix}{$year}{$newNumber}";
+    }
 
     public function register(RegisterRequest $request): User
     {
@@ -51,6 +77,7 @@ class UserService extends BaseService implements UserServiceInterface
 
         DB::beginTransaction();
         try {
+            // dd($request->all());
             $user = User::create($request->validated());
 
             if ($request->hasFile('photo_profile') && $request->file('photo_profile')->isValid()) {
@@ -93,10 +120,13 @@ class UserService extends BaseService implements UserServiceInterface
                 ]);
             }
 
-            // if(empty($request->nik)){
-            //     $requestNik = $this->generateNik($request->directorate_code,$request->join_date);
-            //     $user->nik = $requestNik;
-            // }
+            if(config('app.name') == 'SUNSHINE'){
+                if(empty($request->nik) && $request->company_id){
+                $requestNik = $this->generateNikFromCompany($user,$request->join_date ?? now(), $request->company_id);
+                $user->nik = $requestNik;
+                $user->save();
+            }
+        }
 
             if (empty($request->password)) {
                 $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;

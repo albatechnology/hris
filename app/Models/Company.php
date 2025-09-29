@@ -31,6 +31,7 @@ class Company extends BaseModel implements TenantedInterface
         'address',
         'currency_code',
         'jkk_tier',
+        'employee_prefix'
     ];
 
     protected $casts = [

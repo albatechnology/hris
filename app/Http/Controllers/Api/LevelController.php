@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Level\StorelRequest;
 use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Level\LevelServiceInterface;
 use App\Models\Level;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -55,8 +56,13 @@ class LevelController extends BaseController
      */
     public function show(int $id)
     {
-        $level = $this->service->findById($id);
-        return new DefaultResource($level);
+        try {
+             $level = $this->service->findById($id);
+            return new DefaultResource($level);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse("Data tidak ditemukan",[],404);
+        }
+       
     }
 
     /**

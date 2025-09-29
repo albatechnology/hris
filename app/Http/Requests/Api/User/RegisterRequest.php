@@ -90,7 +90,7 @@ class RegisterRequest extends FormRequest
             'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
-            'nik' => 'nullable',
+            'nik' => 'nullable|unique:users,nik',
             'phone' => 'nullable',
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',
