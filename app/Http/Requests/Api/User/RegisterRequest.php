@@ -65,7 +65,7 @@ class RegisterRequest extends FormRequest
             'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
 
-        if(config('app.name') == 'SUNSHINE'){
+        if (config('app.name') == 'SUNSHINE') {
             $data['nik'] = null;
         }
 

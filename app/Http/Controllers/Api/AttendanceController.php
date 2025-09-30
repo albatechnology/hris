@@ -9,7 +9,6 @@ use App\Models\Event;
 use Carbon\CarbonPeriod;
 use App\Models\Attendance;
 use App\Enums\ScheduleType;
-use Illuminate\Http\Request;
 use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Services\TaskService;
@@ -39,20 +38,16 @@ use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use App\Interfaces\Services\Attendance\AttendanceServiceInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class AttendanceController extends BaseController
 {
     const ALLOWED_INCLUDES = ['user', 'schedule', 'shift', 'details'];
 
-    private AttendanceServiceInterface $attendanceService;
-
-    public function __construct(AttendanceServiceInterface $attendanceService)
+    public function __construct()
     {
         parent::__construct();
-        
-        $this->attendanceService = $attendanceService;
+
         // $this->middleware('permission:attendance_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:attendance_access', ['only' => ['restore']]);
         $this->middleware('permission:attendance_read', ['only' => ['index', 'show', 'report', 'employees', 'employeesSummary']]);
@@ -663,86 +658,86 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
-    // public function store(StoreRequest $request)
-    // {
-    //     $user = auth('sanctum')->user();
-
-    //     if (AttendanceService::inLockAttendance($request->time, $user)) {
-    //         throw new UnprocessableEntityHttpException('Attendance is locked');
-    //     }
-
-    //     if ($request->is_offline_mode) {
-    //         $attendance = AttendanceService::getTodayAttendance(date: $request->time, user: $user, isCheckByDetails: false);
-    //         if ($attendance) {
-    //             $request->merge([
-    //                 'schedule_id' => $attendance->schedule_id,
-    //                 'shift_id' => $attendance->shift_id
-    //             ]);
-    //         } else {
-    //             $schedule = ScheduleService::getTodaySchedule($user, $request->time);
-    //             $request->merge([
-    //                 'schedule_id' => $schedule->id,
-    //                 'shift_id' => $schedule->shift->id
-    //             ]);
-    //         }
-    //     } else {
-    //         $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
-    //     }
-
-    //     if (config('app.enable_face_rekognition') === true && !$request->is_offline_mode) {
-    //         try {
-    //             $compareFace = Rekognition::compareFace($user, $request->file('file'));
-    //             if (!$compareFace) {
-    //                 return $this->errorResponse(message: 'Face not match!', code: 400);
-    //             }
-    //         } catch (Exception $e) {
-    //             return $this->errorResponse(message: $e->getMessage());
-    //         }
-    //     }
-
-    //     DB::beginTransaction();
-    //     try {
-    //         if (!$attendance) {
-    //             $attendance = Attendance::create([
-    //                 'user_id' => $user->id,
-    //                 'date' => date('Y-m-d', strtotime($request->time)),
-    //                 'schedule_id' => $request->schedule_id,
-    //                 'shift_id' => $request->shift_id,
-    //             ]);
-    //         }
-
-    //         /** @var AttendanceDetail $attendanceDetail */
-    //         $attendanceDetail = $attendance->details()->create($request->validated());
-
-    //         if ($request->hasFile('file') && $request->file('file')->isValid()) {
-    //             $mediaCollection = MediaCollection::ATTENDANCE->value;
-    //             $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
-    //         }
-
-    //         // moved to AttendanceDetail booted created
-    //         // AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
-    //         DB::commit();
-    //     } catch (Exception $e) {
-    //         DB::rollBack();
-    //         return $this->errorResponse($e->getMessage());
-    //     }
-
-    //     return new AttendanceResource($attendance);
-    // }
-
     public function store(StoreRequest $request)
     {
+        $user = auth('sanctum')->user();
+
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
+        if ($request->is_offline_mode) {
+            $attendance = AttendanceService::getTodayAttendance(date: $request->time, user: $user, isCheckByDetails: false);
+            if ($attendance) {
+                $request->merge([
+                    'schedule_id' => $attendance->schedule_id,
+                    'shift_id' => $attendance->shift_id
+                ]);
+            } else {
+                $schedule = ScheduleService::getTodaySchedule($user, $request->time);
+                $request->merge([
+                    'schedule_id' => $schedule->id,
+                    'shift_id' => $schedule->shift->id
+                ]);
+            }
+        } else {
+            $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user, false);
+        }
+
+        if (config('app.enable_face_rekognition') === true && !$request->is_offline_mode) {
+            try {
+                $compareFace = Rekognition::compareFace($user, $request->file('file'));
+                if (!$compareFace) {
+                    return $this->errorResponse(message: 'Face not match!', code: 400);
+                }
+            } catch (Exception $e) {
+                return $this->errorResponse(message: $e->getMessage());
+            }
+        }
+
+        DB::beginTransaction();
         try {
-            $user = auth('sanctum')->user();
-            // dd($request->validated());
-            $attendance = $this->attendanceService->storeAttendance($request->validated(),$user);
-            return new AttendanceResource($attendance);
-        } catch (\DomainException $e) {
-            return $this->errorResponse($e->getMessage());
-        }catch(Exception $e){
+            if (!$attendance) {
+                $attendance = Attendance::create([
+                    'user_id' => $user->id,
+                    'date' => date('Y-m-d', strtotime($request->time)),
+                    'schedule_id' => $request->schedule_id,
+                    'shift_id' => $request->shift_id,
+                ]);
+            }
+
+            /** @var AttendanceDetail $attendanceDetail */
+            $attendanceDetail = $attendance->details()->create($request->validated());
+
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::ATTENDANCE->value;
+                $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+
+            // moved to AttendanceDetail booted created
+            // AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
+
+        return new AttendanceResource($attendance);
     }
+
+    // public function store(StoreRequest $request)
+    // {
+    //     try {
+    //         $user = auth('sanctum')->user();
+    //         // dd($request->validated());
+    //         $attendance = $this->attendanceService->storeAttendance($request->validated(),$user);
+    //         return new AttendanceResource($attendance);
+    //     } catch (\DomainException $e) {
+    //         return $this->errorResponse($e->getMessage());
+    //     }catch(Exception $e){
+    //         return $this->errorResponse($e->getMessage());
+    //     }
+    // }
 
     public function manualAttendance(ManualAttendanceRequest $request)
     {
@@ -982,67 +977,66 @@ class AttendanceController extends BaseController
         return response()->json(['message' => $total]);
     }
 
-    // public function approvals()
-    // {
-    //     $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
-    //         ->myApprovals()
-    //         ->with([
-    //             'attendance' => fn($q) => $q->with([
-    //                 'user' => fn($q) => $q->select('id', 'name'),
-    //                 'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-    //                 'schedule' => fn($q) => $q->select('id', 'name'),
-    //             ]),
-    //             'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
-    //         ]);
-
-    //     $attendances = QueryBuilder::for($query)
-    //         ->allowedFilters([
-    //             AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
-    //             AllowedFilter::scope('branch_id', 'whereBranch'),
-    //             AllowedFilter::scope('name', 'whereUserName'),
-    //             'created_at',
-    //         ])
-    //         ->allowedSorts([
-    //             'id',
-    //             'created_at',
-    //         ])
-    //         ->paginate($this->per_page);
-
-    //     return AttendanceApprovalsResource::collection($attendances);
-    // }
-
-    public function approvals(Request $request)
+    public function approvals()
     {
-        $attendances = $this->attendanceService->getApprovals(
-            [],
-            $this->per_page
-        );
+        $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
+            ->myApprovals()
+            ->with([
+                'attendance' => fn($q) => $q->with([
+                    'user' => fn($q) => $q->select('id', 'name'),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+                    'schedule' => fn($q) => $q->select('id', 'name'),
+                ]),
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
+            ]);
+
+        $attendances = QueryBuilder::for($query)
+            ->allowedFilters([
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
+            ])
+            ->allowedSorts([
+                'id',
+                'created_at',
+            ])
+            ->paginate($this->per_page);
+
         return AttendanceApprovalsResource::collection($attendances);
     }
 
-    // public function showApproval(AttendanceDetail $attendanceDetail)
+    // public function approvals(Request $request)
     // {
-    //     $attendanceDetail->load(
-    //         [
-    //             // 'attendance' => fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
-    //             'attendance' => fn($q) => $q
-    //                 ->with([
-    //                     'user' => fn($q) => $q->select('id', 'name'),
-    //                     'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-    //                     'schedule' => fn($q) => $q->select('id', 'name')
-    //                 ])
-    //         ]
+    //     $attendances = $this->attendanceService->getApprovals(
+    //         [],
+    //         $this->per_page
     //     );
-
-    //     return new AttendanceDetailResource($attendanceDetail);
+    //     return AttendanceApprovalsResource::collection($attendances);
     // }
 
     public function showApproval(AttendanceDetail $attendanceDetail)
     {
-        $detail = $this->attendanceService->getApprovalDetail($attendanceDetail);
+        $attendanceDetail->load(
+            [
+                'attendance' => fn($q) => $q
+                    ->with([
+                        'user' => fn($q) => $q->select('id', 'name'),
+                        'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+                        'schedule' => fn($q) => $q->select('id', 'name')
+                    ])
+            ]
+        );
 
-        return new AttendanceDetailResource($detail);
+        return new AttendanceDetailResource($attendanceDetail);
     }
+
+    // public function showApproval(AttendanceDetail $attendanceDetail)
+    // {
+    //     $detail = $this->attendanceService->getApprovalDetail($attendanceDetail);
+
+    //     return new AttendanceDetailResource($detail);
+    // }
 
     public function approveValidate(int $id, ?int $approverId = null)
     {

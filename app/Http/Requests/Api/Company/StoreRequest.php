@@ -6,6 +6,7 @@ use App\Models\Country;
 use App\Models\Group;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -39,7 +40,7 @@ class StoreRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'address' => 'nullable|string',
-            'employee_prefix' => 'nullable|string'
+            'employee_prefix' => [Rule::requiredIf(config('app.name') == 'SUNSHINE'), 'string']
 
             // timeoff_regulations
             // 'renew_type' => ['required', Rule::enum(TimeoffRenewType::class)],

@@ -21,31 +21,31 @@ class UserService extends BaseService implements UserServiceInterface
         parent::__construct($repository);
     }
 
-    private function generateNikFromCompany(string $joinDate, int $companyId)
+    private function generateNikFromCompany(string $joinDate, int $companyId): ?string
     {
-        $company = Company::find($companyId);
-  
-        if(!$company)
-        {
+        $company = Company::select('employee_prefix')->find($companyId);
+
+        if (!$company) {
             throw new Exception("Company not found");
         }
-       
+
         $prefix = $company->employee_prefix;
 
-         if(empty($prefix)){
+        if (empty($prefix)) {
             return null;
         }
 
-        $year = date('y',strtotime($joinDate));
+        $year = date('y', strtotime($joinDate));
 
-        $latestNik = User::where('nik','like',"{$prefix}{$year}%")
-            ->orderBy('nik','desc')
+        $latestNik = User::where('company_id', $companyId)
+            ->where('nik', 'like', "{$prefix}{$year}%")
+            ->orderBy('nik', 'desc')
             ->value('nik');
 
-        if($latestNik){
-            $lastNumber = (int) substr($latestNik,-3);
+        if ($latestNik) {
+            $lastNumber = (int) substr($latestNik, -3);
             $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-        }else{
+        } else {
             $newNumber = '001';
         }
 
@@ -100,13 +100,13 @@ class UserService extends BaseService implements UserServiceInterface
                 ]);
             }
 
-            if(config('app.name') == 'SUNSHINE'){
-                if(empty($request->nik) && $request->company_id){
-                $requestNik = $this->generateNikFromCompany($request->join_date ?? now(), $request->company_id);
-                $user->nik = $requestNik;
-                $user->save();
+            if (config('app.name') == 'SUNSHINE') {
+                if (empty($request->nik) && $request->company_id) {
+                    $requestNik = $this->generateNikFromCompany($request->join_date ?? now(), $request->company_id);
+                    $user->nik = $requestNik;
+                    $user->save();
+                }
             }
-        }
 
             if (empty($request->password)) {
                 $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;

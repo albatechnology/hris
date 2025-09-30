@@ -128,8 +128,8 @@ class AttendanceService extends BaseService implements AttendanceServiceInterfac
         $summaryNotPresentAbsent = 0;
         $summaryNotPresentClockIn =0;
         $summaryNotPresentClockOut = 0;
-        $summaryAwayTimeOff = 0;    
-        
+        $summaryAwayTimeOff = 0;
+
         foreach ($users as $user) {
             $schedule = ScheduleService::getTodaySchedule($user,$date, scheduleType:$scheduleType);
 
@@ -141,5 +141,5 @@ class AttendanceService extends BaseService implements AttendanceServiceInterfac
         }
         return [];
     }
-    
+
 }
