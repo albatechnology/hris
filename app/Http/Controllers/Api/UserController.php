@@ -111,7 +111,7 @@ class UserController extends BaseController
 
     public function index()
     {
-        $users = QueryBuilder::for(
+        $query = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
                 ->with(['roles' => fn($q) => $q->select('id', 'name')])
         )
@@ -156,18 +156,57 @@ class UserController extends BaseController
                 'nik',
                 'phone',
             ])
-            ->allowedIncludes($this->getAllowedIncludes())
-            ->allowedSorts([
+            ->allowedFields([
                 'id',
                 'branch_id',
+                'company_id',
                 'name',
                 'email',
                 'type',
                 'nik',
                 'phone',
+                'resign_date',
+                'join_date',
                 'created_at',
             ])
-            ->paginate($this->per_page);
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->allowedSorts([
+                'id',
+                'group_id',
+                'company_id',
+                'branch_id',
+                'level_id',
+                'live_attendance_id',
+                'name',
+                'last_name',
+                'email',
+                'work_email',
+                'password',
+                'email_verified_at',
+                'fcm_token',
+                'type',
+                'nik',
+                'phone',
+                'gender',
+                'join_date',
+                'sign_date',
+                'end_contract_date',
+                'resign_date',
+                'rehire_date',
+                'created_at',
+            ]);
+
+        if (request()->has('include') && str_contains(request()->include, 'detail')) {
+            $query->orderByDesc(
+                \App\Models\UserDetail::select('detected_at')
+                    ->whereColumn('user_id', 'users.id')
+                    ->latest()
+                    ->limit(1)
+            );
+        }
+
+
+        $users = $query->paginate($this->per_page);
 
         return UserResource::collection($users);
     }

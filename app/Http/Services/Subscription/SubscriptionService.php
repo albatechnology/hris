@@ -101,7 +101,6 @@ class SubscriptionService extends BaseService implements SubscriptionServiceInte
     public function getQuotaInfo():array
     {
         $groupId = auth('sanctum')->user()->group_id;
-        // dd($groupId);
         $usedUser = $this->repository->countUsedUsers($groupId);
         $usedCompany = $this->repository->countUsedCompanies($groupId);
         $quota = $this->repository->getQuota($groupId);
