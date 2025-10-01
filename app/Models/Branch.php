@@ -114,7 +114,6 @@ class Branch extends BaseModel implements TenantedInterface
             'default_oas_setting' => \App\Enums\JhtCost::PAID_BY_COMPANY,
             'prorate_setting' => \App\Enums\ProrateSetting::BASE_ON_CALENDAR_DAY,
         ]);
-
         $this->payrollComponents()->create([
             'company_id' => $this->company_id,
             'name' => 'Basic Salary',
@@ -142,6 +141,7 @@ class Branch extends BaseModel implements TenantedInterface
         ]);
 
         $this->payrollComponents()->create([
+            'company_id' => $this->company_id,
             'name' => 'Reimbursement',
             'type' => PayrollComponentType::ALLOWANCE,
             'category' => PayrollComponentCategory::REIMBURSEMENT,
