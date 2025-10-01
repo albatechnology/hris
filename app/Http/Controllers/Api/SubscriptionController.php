@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
+use App\Models\Subscription;
+use Spatie\QueryBuilder\QueryBuilder;
+use Spatie\QueryBuilder\AllowedFilter;
+use App\Http\Resources\DefaultResource;
 use App\Http\Requests\Api\Subscription\StoreRequest;
 use App\Http\Requests\Api\Subscription\UpdateRequest;
-use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Subscription\SubscriptionServiceInterface;
-use App\Models\Subscription;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
+use App\Models\Company;
 
 class SubscriptionController extends BaseController
 {
@@ -89,5 +91,28 @@ class SubscriptionController extends BaseController
         $this->service->restore($id);
 
         return $this->okResponse();
+    }
+
+    public function quotaInfo()
+    {
+        // $usedUser =  User::where('group_id', $groupId)->whereNull('resign_date')->count();
+        // $usedCompany =  Company::where('group_id', $groupId)->count();
+        // $quota = Subscription::select('max_users', 'max_companies')->where('group_id',$groupId)->first();
+        // return response()->json([
+        //     'data' => [
+        //         'user'=> [
+        //             'quota' => $quota?->max_users ?? 0,
+        //             'used' => $usedUser,
+        //         ],
+        //         'company'=> [
+        //             'quota' => $quota?->max_companies ?? 0,
+        //             'used' => $usedCompany,
+        //         ],
+        //     ]
+        // ]);
+        $data = $this->service->getQuotaInfo();
+        return response()->json([
+            'data'=> $data
+        ]);
     }
 }
