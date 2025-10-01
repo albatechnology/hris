@@ -156,19 +156,6 @@ class UserController extends BaseController
                 'nik',
                 'phone',
             ])
-            ->allowedFields([
-                'id',
-                'branch_id',
-                'company_id',
-                'name',
-                'email',
-                'type',
-                'nik',
-                'phone',
-                'resign_date',
-                'join_date',
-                'created_at',
-            ])
             ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
@@ -196,14 +183,14 @@ class UserController extends BaseController
                 'created_at',
             ]);
 
-        if (request()->has('include') && str_contains(request()->include, 'detail')) {
-            $query->orderByDesc(
-                \App\Models\UserDetail::select('detected_at')
-                    ->whereColumn('user_id', 'users.id')
-                    ->latest()
-                    ->limit(1)
-            );
-        }
+        // if (request()->has('include') && str_contains(request()->include, 'detail')) {
+        //     $query->orderByDesc(
+        //         \App\Models\UserDetail::select('detected_at')
+        //             ->whereColumn('user_id', 'users.id')
+        //             ->latest()
+        //             ->limit(1)
+        //     );
+        // }
 
 
         $users = $query->paginate($this->per_page);
