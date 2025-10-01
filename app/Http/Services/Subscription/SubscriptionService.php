@@ -104,7 +104,8 @@ class SubscriptionService extends BaseService implements SubscriptionServiceInte
         // dd($groupId);
         $usedUser = $this->repository->countUsedUsers($groupId);
         $usedCompany = $this->repository->countUsedCompanies($groupId);
-        $quota = $this->repository->findAll(fn($q)=> $q->where('group_id', $groupId))->first();
+        $quota = $this->repository->getQuota($groupId);
+
         return [
             'user' => [
                 'quota' => $quota?->max_users ?? 0,
