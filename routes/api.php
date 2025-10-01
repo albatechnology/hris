@@ -363,6 +363,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
     Route::get('patrols/test-export', [PatrolController::class, 'testExport']);
+    Route::get('patrols/users-location', [PatrolController::class, 'usersLocation']);
     Route::group(['prefix' => 'patrols/{patrol}'], function () {
         Route::get('export', [PatrolController::class, 'export']);
         Route::get('users', [PatrolController::class, 'userIndex']);

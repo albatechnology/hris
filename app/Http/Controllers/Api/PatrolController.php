@@ -2,25 +2,26 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
+use App\Models\User;
+use App\Models\Patrol;
+use App\Models\PatrolTask;
+use App\Models\UserPatrol;
+use Illuminate\Http\Response;
+use App\Models\PatrolLocation;
+use App\Models\UserPatrolBatch;
 use App\Exports\PatrolTaskExport;
+use Illuminate\Support\Facades\DB;
 use App\Exports\TestPatrolTaskExport;
+use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Schema;
+use Spatie\QueryBuilder\AllowedFilter;
+use App\Http\Resources\DefaultResource;
+use Spatie\QueryBuilder\AllowedInclude;
 use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserIndexRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
-use App\Http\Resources\DefaultResource;
-use App\Models\Patrol;
-use App\Models\PatrolLocation;
-use App\Models\PatrolTask;
-use App\Models\UserPatrol;
-use App\Models\UserPatrolBatch;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\AllowedInclude;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class PatrolController extends BaseController
 {
@@ -428,4 +429,26 @@ class PatrolController extends BaseController
 
     //     return $patrol;
     // }
+
+    public function usersLocation()
+    {
+        $query = QueryBuilder::for(
+            User::tenanted(request()->filter['is_my_descendant'] ?? false)
+                ->select('id', 'name')
+                ->with('detail', fn($q) => $q->select('user_id', 'detected_at', 'lat', 'lng'))
+        )
+            ->allowedFilters([
+                AllowedFilter::exact('branch_id'),
+                AllowedFilter::scope('name', 'whereName'),
+            ])
+            ->orderByDesc(
+                \App\Models\UserDetail::select('detected_at')
+                    ->whereColumn('user_id', 'users.id')
+                    ->latest()
+                    ->take(1)
+            );
+
+        $users = $query->paginate($this->per_page);
+        return DefaultResource::collection($users);
+    }
 }
