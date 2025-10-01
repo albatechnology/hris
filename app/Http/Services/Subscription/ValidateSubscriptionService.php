@@ -48,7 +48,7 @@ class ValidateSubscriptionService
         if ($this->subscriptionKey->is(SubscriptionKey::COMPANIES)) {
             return Company::select('id')->where('group_id', $this->groupId)->count();
         } elseif ($this->subscriptionKey->is(SubscriptionKey::USERS)) {
-            return User::select('id')->where('group_id', $this->groupId)->count();
+            return User::select('id')->where('group_id', $this->groupId)->whereNull('resign_date')->count();
         }
 
         throw new BadRequestHttpException('Invalid subscription key');
