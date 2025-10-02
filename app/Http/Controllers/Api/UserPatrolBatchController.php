@@ -29,14 +29,12 @@ class UserPatrolBatchController extends BaseController
 
     public function index(Request $request)
     {
-        $date = null;
-        if (isset($request->filter['date']) && !empty($request->filter['date'])) {
-            $date = date('Y-m-d', strtotime($request->filter['date']));
-        }
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? $startDate;
 
         $data = QueryBuilder::for(
             UserPatrolBatch::with(['user' => fn($q) => $q->select('id', 'name', 'nik')])
-                ->when($date, fn($q) => $q->whereDate('datetime', $date))
+                ->where(fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate))
         )
             ->allowedIncludes([
                 'patrol'
