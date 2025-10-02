@@ -272,8 +272,8 @@ class PatrolController extends BaseController
         $startDate = $request->filter['start_date'] ?? null;
         $endDate = $request->filter['end_date'] ?? null;
         $data = QueryBuilder::for(
-            UserPatrol::where('patrol_id', $patrolId)->with('user')
-                ->with(['user' => function($query){
+            UserPatrol::where('patrol_id', $patrolId)
+                ->with(['user' => function($query) use($patrolId){
                     $query->select('id','name','nik')
                         ->withMax('patrolBatches as last_activity', 'created_at');
                 }])
@@ -301,7 +301,12 @@ class PatrolController extends BaseController
                 'created_at',
             ])
             ->paginate($this->per_page);
-            // dd($data);
+
+            $sorted = $data->getCollection()
+            ->sortByDesc(fn($userPatrol) => $userPatrol->user->last_activity)
+            ->values();
+
+            $data->setCollection($sorted);
 
         return DefaultResource::collection($data);
     }
