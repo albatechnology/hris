@@ -269,47 +269,62 @@ class PatrolController extends BaseController
 
     public function userIndex(UserIndexRequest $request, int $patrolId)
     {
-        $startDate = $request->filter['start_date'] ?? null;
-        $endDate = $request->filter['end_date'] ?? null;
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? $startDate;
+
         $data = QueryBuilder::for(
-            UserPatrol::where('patrol_id', $patrolId)
-                ->with(['user' => function($query) use($patrolId){
-                    $query->select('id','name','nik')
-                        ->withMax('patrolBatches as last_activity', 'created_at');
-                }])
-                ->when(
-                    $startDate && $endDate,
-                    fn($q) => $q->whereHas('user', fn($q) => $q->whereHas(
-                        'patrolBatches',
-                        fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
-                    ))
-                )
+            User::select('id', 'name', 'nik')
+                ->whereHas('userPatrols', fn($q) => $q->where('patrol_id', $patrolId))
+                ->withCount(['patrolBatches' =>  fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)])
+                ->withMax('patrolBatches as last_activity', 'datetime')
+                ->orderByDesc('last_activity')
         )
             ->allowedFilters([
-                AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('patrol_id'),
-                AllowedFilter::callback('search', function ($query, string $value) {
-                    $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
-                }),
-            ])
-            ->allowedSorts([
-                'id',
-                'user_id',
-                'patrol_id',
-                'start_time',
-                'end_time',
-                'created_at',
+                AllowedFilter::exact('id'),
+                AllowedFilter::scope('search', 'whereName'),
             ])
             ->paginate($this->per_page);
 
-            $sorted = $data->getCollection()
-            ->sortByDesc(fn($userPatrol) => $userPatrol->user->last_activity)
-            ->values();
-
-            $data->setCollection($sorted);
-
         return DefaultResource::collection($data);
     }
+
+    // public function userIndex(UserIndexRequest $request, int $patrolId)
+    // {
+    //     $startDate = $request->filter['start_date'] ?? null;
+    //     $endDate = $request->filter['end_date'] ?? null;
+    //     $data = QueryBuilder::for(
+    //         UserPatrol::where('patrol_id', $patrolId)
+    //             ->with(['user' => function ($query) {
+    //                 $query->select('id', 'name', 'nik')
+    //                     ->withMax('patrolBatches as last_activity', 'created_at');
+    //             }])
+    //             ->when(
+    //                 $startDate && $endDate,
+    //                 fn($q) => $q->whereHas('user', fn($q) => $q->whereHas(
+    //                     'patrolBatches',
+    //                     fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
+    //                 ))
+    //             )
+    //     )
+    //         ->allowedFilters([
+    //             AllowedFilter::exact('user_id'),
+    //             AllowedFilter::exact('patrol_id'),
+    //             AllowedFilter::callback('search', function ($query, string $value) {
+    //                 $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
+    //             }),
+    //         ])
+    //         ->allowedSorts([
+    //             'id',
+    //             'user_id',
+    //             'patrol_id',
+    //             'start_time',
+    //             'end_time',
+    //             'created_at',
+    //         ])
+    //         ->paginate($this->per_page);
+
+    //     return DefaultResource::collection($data);
+    // }
 
     public function userShow(int $patrolId, int $userPatrolId)
     {
