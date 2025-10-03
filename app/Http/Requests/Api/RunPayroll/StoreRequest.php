@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\RunPayroll;
 
+use App\Http\DTO\Payroll\RunPayrollDTO;
 use App\Models\Branch;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
@@ -13,8 +14,6 @@ use Illuminate\Validation\Rule;
 class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
-
-
 
     protected function prepareForValidation()
     {
@@ -61,5 +60,10 @@ class StoreRequest extends FormRequest
                 },
             ],
         ];
+    }
+
+    public function toDTO(): RunPayrollDTO
+    {
+        return RunPayrollDTO::fromArray($this->validated());
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Requests\Api\RunPayroll\UpdateRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
+use App\Interfaces\Services\Payroll\RunPayrollServiceInterface;
 use App\Models\Bank;
 use App\Models\Company;
 use App\Models\CountrySetting;
@@ -16,7 +17,7 @@ use App\Models\LoanDetail;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
-use App\Services\RunPayrollService;
+use App\Services\NewRunPayrollService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -27,7 +28,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class RunPayrollController extends BaseController
 {
-    public function __construct()
+    public function __construct(private RunPayrollServiceInterface $service)
     {
         parent::__construct();
 
@@ -83,7 +84,11 @@ class RunPayrollController extends BaseController
             }
         }
 
-        $runPayroll = app(RunPayrollService::class)->execute($request->validated());
+        if(config('app.name') == "SUNSHINE"){
+            $runPayroll = app(NewRunPayrollService::class)->execute($request->validated());
+        } else {
+            $runPayroll = $this->service->store($request->toDTO());
+        }
 
         if (!$runPayroll instanceof RunPayroll && !$runPayroll->getData()?->success) return response()->json($runPayroll->getData(), 400);
         return new RunPayrollResource($runPayroll);
@@ -141,7 +146,7 @@ class RunPayrollController extends BaseController
                 $runPayrollUserComponent->update(['amount' => $userComponent['amount']]);
             }
 
-            RunPayrollService::refreshRunPayrollUser($runPayrollUser);
+            NewRunPayrollService::refreshRunPayrollUser($runPayrollUser);
             DB::commit();
         } catch (Exception $th) {
             DB::rollBack();

@@ -35,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
 
         \App\Interfaces\Repositories\Level\LevelRepositoryInterface::class => \App\Http\Repositories\Level\LevelRepository::class,
         \App\Interfaces\Services\Level\LevelServiceInterface::class => \App\Http\Services\Level\LevelService::class,
+
+        \App\Interfaces\Repositories\Payroll\RunPayrollRepositoryInterface::class => \App\Http\Repositories\Payroll\RunPayrollRepository::class,
+        \App\Interfaces\Services\Payroll\RunPayrollServiceInterface::class => \App\Http\Services\Payroll\RunPayrollService::class,
     ];
 
     /**
