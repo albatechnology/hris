@@ -28,7 +28,8 @@ class PayrollSetting extends Model implements TenantedInterface
         'default_employee_salary_tax_setting',
         'default_oas_setting',
         'prorate_setting',
-        'is_count_national_holiday_as_working_day',
+        'prorate_custom_working_day',
+        'prorate_national_holiday_as_working_day',
     ];
 
     protected $casts = [
@@ -36,7 +37,7 @@ class PayrollSetting extends Model implements TenantedInterface
         'default_employee_salary_tax_setting' => TaxSalary::class,
         'default_oas_setting' => JhtCost::class,
         'prorate_setting' => ProrateSetting::class,
-        'is_count_national_holiday_as_working_day' => 'boolean',
         'is_attendance_pay_last_month' => 'boolean',
+        'prorate_national_holiday_as_working_day' => 'boolean',
     ];
 }

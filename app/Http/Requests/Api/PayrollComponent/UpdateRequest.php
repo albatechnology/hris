@@ -15,8 +15,6 @@ class UpdateRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
-
     /**
      * Prepare inputs for validation.
      *
@@ -34,6 +32,7 @@ class UpdateRequest extends FormRequest
             'branch_id' => $branchId,
             'company_id' => $companyId,
             'is_taxable' => $this->toBoolean($this->is_taxable),
+            'is_prorate' => $this->toBoolean($this->is_prorate),
             'is_monthly_prorate' => $this->toBoolean($this->is_monthly_prorate),
             // 'is_daily_default' => $this->toBoolean($this->is_daily_default),
             // 'is_one_time_bonus' => $this->toBoolean($this->is_one_time_bonus),
@@ -57,6 +56,7 @@ class UpdateRequest extends FormRequest
             // 'setting' => ['nullable', Rule::enum(PayrollComponentSetting::class)],
             'amount' => 'required|numeric',
             'is_taxable' => 'required|boolean',
+            'is_prorate' => 'required|boolean',
             'period_type' => ['required', Rule::enum(PayrollComponentPeriodType::class)],
             'is_monthly_prorate' => 'nullable|boolean',
             // 'is_daily_default' => 'nullable|boolean',

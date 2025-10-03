@@ -6,7 +6,6 @@ use App\Http\Requests\Api\PayrollProrate\UpdateRequest;
 use App\Http\Resources\PayrollProrate\PayrollProrateResource;
 use App\Models\PayrollSetting;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class PayrollProrateController extends BaseController
 {
@@ -24,7 +23,7 @@ class PayrollProrateController extends BaseController
             'filter.company_id' => 'required',
         ]);
 
-        $payrollSetting = PayrollSetting::tenanted()->where('company_id', $request->filter['company_id'])->firstOrFail();
+        $payrollSetting = PayrollSetting::select('id','company_id','prorate_setting','prorate_custom_working_day','prorate_national_holiday_as_working_day')->tenanted()->where('company_id', $request->filter['company_id'])->firstOrFail();
         return new PayrollProrateResource($payrollSetting);
     }
 
@@ -33,6 +32,6 @@ class PayrollProrateController extends BaseController
         $payrollSetting = PayrollSetting::tenanted()->where('company_id', $request->company_id)->firstOrFail();
         $payrollSetting->update($request->validated());
 
-        return (new PayrollProrateResource($payrollSetting))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 }
