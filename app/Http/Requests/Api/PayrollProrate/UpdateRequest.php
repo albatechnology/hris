@@ -3,11 +3,14 @@
 namespace App\Http\Requests\Api\PayrollProrate;
 
 use App\Enums\ProrateSetting;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
      * Prepare inputs for validation.
      *
@@ -18,7 +21,7 @@ class UpdateRequest extends FormRequest
         $prorateSetting = ProrateSetting::from($this->prorate_setting);
         $this->merge([
             'prorate_custom_working_day' => $prorateSetting->hasProrateCustomWorkingDay() ? $this->prorate_custom_working_day : null,
-            'prorate_national_holiday_as_working_day' => $prorateSetting->hasCountNationalHolidayAsWorkingDay() ? $this->prorate_national_holiday_as_working_day : false,
+            'prorate_national_holiday_as_working_day' => $prorateSetting->hasCountNationalHolidayAsWorkingDay() ? $this->toBoolean($this->prorate_national_holiday_as_working_day) : false,
         ]);
     }
 
