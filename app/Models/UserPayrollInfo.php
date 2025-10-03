@@ -46,6 +46,8 @@ class UserPayrollInfo extends BaseModel
         'employee_tax_status', // not used yet
         'beginning_netto', // not used yet
         'pph21_paid', // not used yet
+        'tabungan_haji_no',
+        'epf_no'
     ];
 
     protected $casts = [

@@ -79,6 +79,8 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
+        $countryId = optional($this->user()->company)->country_id;
+
         return [
             'group_id' => 'required|exists:groups,id',
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
@@ -103,7 +105,14 @@ class RegisterRequest extends FormRequest
             'resign_date' => 'nullable|date',
             'photo_profile' => 'nullable|mimes:' . config('app.file_mimes_types'),
 
-            'no_ktp' => 'required|string',
+            'no_ktp' => [
+                'required',
+                 'string',
+                Rule::when(
+                    $countryId == 2,
+                    ['required', 'regex:/^\d{6}-\d{2}-\d{4}$/']
+                )
+                ],
             'kk_no' => 'nullable|string',
             'postal_code' => 'nullable|string',
             'address' => 'required|string',
@@ -147,7 +156,7 @@ class RegisterRequest extends FormRequest
             'npp_bpjs_ketenagakerjaan' => ['nullable', Rule::enum(NppBpjsKetenagakerjaan::class)],
             'bpjs_ketenagakerjaan_date' => 'nullable|date',
             'bpjs_kesehatan_no' => 'nullable|string',
-            'bpjs_kesehatan_family_no' => ['required', Rule::enum(BpjsKesehatanFamilyNo::class)],
+            'bpjs_kesehatan_family_no' => ['nullable', Rule::enum(BpjsKesehatanFamilyNo::class)],
             'bpjs_kesehatan_date' => 'nullable|date',
             'bpjs_kesehatan_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jht_cost' => ['nullable', Rule::enum(PaidBy::class)],
@@ -165,7 +174,16 @@ class RegisterRequest extends FormRequest
             'company_ids.*' => ['required', new CompanyTenantedRule()],
             'branch_ids' => 'nullable|array',
             'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+
+            'issue_date' => 'nullable|date'
             // 'directorate_code'=>'nullable'
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'no_ktp.regex' => "Invalid Identity Number Format"
         ];
     }
 }

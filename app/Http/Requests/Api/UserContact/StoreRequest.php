@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -26,11 +26,27 @@ class StoreRequest extends FormRequest
             'phone' => 'required',
             'relationship' => ['required', Rule::enum(RelationshipType::class)],
             'email' => 'nullable|email',
-            'id_number' => 'nullable|string',
+            'id_number' => Rule::when(
+                $this->relationship === RelationshipType::SPOUSE->value,
+                ['required','string'],
+                ['nullable','string']
+            ),
             'gender' => ['nullable', Rule::enum(Gender::class)],
             'job' => 'nullable|string',
             'religion' => ['nullable', Rule::enum(Religion::class)],
             'birthdate' => 'nullable|date',
+            'is_working' => Rule::when(
+                $this->relationship === RelationshipType::SPOUSE->value,
+                ['required','boolean'],
+                ['nullable','boolean']
+            ),
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'id_number.regex' => 'Invalid Identity Number Format',
         ];
     }
 }

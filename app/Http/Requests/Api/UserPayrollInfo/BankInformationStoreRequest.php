@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BankInformationStoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -25,6 +25,8 @@ class BankInformationStoreRequest extends FormRequest
             'secondary_bank_account_no' => 'nullable|string',
             'secondary_bank_account_holder' => 'nullable|string',
             'bank_id' => ['required', new CompanyTenantedRule(Bank::class, 'Bank not found')],
+            'tabungan_haji_no' => 'nullable|string',
+            'epf_no' => 'nullable|string'
         ];
     }
 }

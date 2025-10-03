@@ -40,6 +40,7 @@ class UserDetail extends BaseModel
         'battery',
         'detected_at',
         'last_absence_reminder_at',
+        'issue_date'
     ];
 
     protected $casts = [

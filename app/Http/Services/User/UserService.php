@@ -64,7 +64,10 @@ class UserService extends BaseService implements UserServiceInterface
                 $mediaCollection = MediaCollection::USER->value;
                 $user->addMediaFromRequest('photo_profile')->toMediaCollection($mediaCollection);
             }
-
+            $countryId = $user->company->country_id;
+            if($countryId == 1){
+                $user->userBpjs()->create($request->validated());
+            }
             $user->detail()->create($request->validated());
             $user->payrollInfo()->create($request->validated());
             $user->positions()->createMany($request->positions ?? []);
@@ -72,6 +75,7 @@ class UserService extends BaseService implements UserServiceInterface
             $user->schedules()->sync([
                 'schedule_id' => $request->schedule_id
             ]);
+
 
             $companyIds = collect($request->company_ids ?? []);
             if ($user->company_id) {
