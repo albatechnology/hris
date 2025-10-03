@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\PayrollProrate;
 
 use App\Enums\ProrateSetting;
+use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'company_id' => ['required', new CompanyTenantedRule()],
             'prorate_setting' => ['required', Rule::enum(ProrateSetting::class)],
             'prorate_custom_working_day' => 'nullable|integer|min:0|max:31',
             'prorate_national_holiday_as_working_day' => 'nullable|boolean',
