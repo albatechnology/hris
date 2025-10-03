@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\PayrollComponentCategory;
-// use App\Enums\PayrollComponentSetting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +21,7 @@ return new class extends Migration
             // $table->string('setting')->default(PayrollComponentSetting::DEFAULT->value); // PayrollComponentSetting::class
             $table->double('amount', 13, 2)->unsigned()->default(0);
             $table->boolean('is_taxable')->default(0);
+            $table->boolean('is_prorate')->default(0);
             $table->string('period_type'); // PayrollComponentPeriodType::class
             $table->boolean('is_monthly_prorate')->default(0)->comment('Only for the data which had the "monthly" value of period_type column');
             // $table->boolean('is_daily_default')->default(0)->comment('Only for the data which had the "daily" value of period_type column');

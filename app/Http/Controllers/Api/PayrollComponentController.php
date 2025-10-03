@@ -47,6 +47,7 @@ class PayrollComponentController extends BaseController
                 'type',
                 'amount',
                 'is_taxable',
+                'is_prorate',
                 'period_type',
                 'is_monthly_prorate',
                 // 'is_daily_default',
