@@ -39,7 +39,8 @@ return new class extends Migration
         });
 
         Schema::table('user_payroll_infos', function (Blueprint $table) {
-            $table->dropColumn('tabungan_haji');
+            $table->dropColumn('tabungan_haji_no');
+            $table->dropColumn('tepf_no');
         });
     }
 };
