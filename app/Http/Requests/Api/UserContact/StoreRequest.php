@@ -18,6 +18,17 @@ class StoreRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+
+    protected function prepareForValidation()
+    {
+        if($this->relationship !== RelationshipType::SPOUSE->value){
+            $this->merge([
+                'is_working' => null,
+                'is_disabled' => null,
+                'tax_identification_no' => null,
+            ]);
+        }
+    }
     public function rules(): array
     {
         return [
@@ -26,11 +37,7 @@ class StoreRequest extends FormRequest
             'phone' => 'required',
             'relationship' => ['required', Rule::enum(RelationshipType::class)],
             'email' => 'nullable|email',
-            'id_number' => Rule::when(
-                $this->relationship === RelationshipType::SPOUSE->value,
-                ['required','string'],
-                ['nullable','string']
-            ),
+            'id_number' => ['nullable','string'],
             'gender' => ['nullable', Rule::enum(Gender::class)],
             'job' => 'nullable|string',
             'religion' => ['nullable', Rule::enum(Religion::class)],
@@ -39,6 +46,16 @@ class StoreRequest extends FormRequest
                 $this->relationship === RelationshipType::SPOUSE->value,
                 ['required','boolean'],
                 ['nullable','boolean']
+            ),
+            'is_disabled' => Rule::when(
+                $this->relationship === RelationshipType::SPOUSE->value,
+                ['required','boolean'],
+                ['nullable','boolean']
+            ),
+            'tax_identification_no' => Rule::when(
+                $this->relationship === RelationshipType::SPOUSE->value,
+                ['required','string'],
+                ['nullable','string']
             ),
         ];
     }
