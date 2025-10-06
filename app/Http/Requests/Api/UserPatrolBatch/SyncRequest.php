@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class SyncRequest extends FormRequest
 {
-    
+
 
     /**
      * Prepare inputs for validation.
@@ -32,6 +32,7 @@ class SyncRequest extends FormRequest
             // 'patrol_id' => ['required', new CompanyTenantedRule(Patrol::class, 'Patrol not found')],
             'patrol_id' => ['required', 'exists:patrols,id'],
             'datetime' => 'required|date_format:Y-m-d H:i:s',
+            'end_at' => 'nullable|date_format:Y-m-d H:i:s',
 
             'tasks' => 'nullable|array',
             'tasks.*.datetime' => 'required|date_format:Y-m-d H:i:s',

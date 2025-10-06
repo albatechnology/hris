@@ -14,6 +14,7 @@ class UserPatrolBatch extends BaseModel
         'user_id',
         'patrol_id',
         'datetime',
+        'end_at'
     ];
 
     protected static function booted(): void

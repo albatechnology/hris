@@ -88,6 +88,9 @@ class UserPatrolBatchController extends BaseController
                 ]);
             }
 
+            $endAt = $request->locations[count($request->locations)-1];
+            $userPatrolBatch->update(['end_at' => $endAt['datetime'] ?? null]);
+
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
