@@ -322,7 +322,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
      */
     private function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, RunPayrollDTO $dto): JsonResponse
     {
-        dump($payrollSetting->toArray());
+        // dump($payrollSetting->toArray());
         $company = $payrollSetting->company;
 
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
@@ -391,7 +391,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
         // calculate for each user
         // foreach ($userIds as $userId) {
-        dump($runPayroll->toArray());
+        // dump($runPayroll->toArray());
         foreach ($users as $user) {
             $cutOffStartDate = $runPayroll->cut_off_start_date;
             $cutOffEndDate = $runPayroll->cut_off_end_date;
@@ -437,12 +437,10 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 $totalPresent = $getTotalAttendance['total_present'];
                 $totalWorkingDays = $getTotalAttendance['total_working_days'];
 
-
                 $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
 
                 dump($totalPresent);
                 dump($totalWorkingDays);
-                dd($userBasicSalary);
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
@@ -456,8 +454,10 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 // dump($cutOffStartDate);
                 // dump($cutOffEndDate);
                 $getTotalAttendance = AttendanceHelper::getTotalAttendance($user, $cutOffStartDate, $cutOffEndDate);
-                // dd($getTotalAttendance);
                 $totalPresent = $getTotalAttendance['total_present'];
+                $totalWorkingDays = $getTotalAttendance['total_working_days'];
+                dump($totalPresent);
+                dump($totalWorkingDays);
             }
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
@@ -479,25 +479,27 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             //     ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
 
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
-
             // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
             //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
             // }
 
             if ($updatePayrollComponentDetail) {
                 $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+                dump($startEffectiveDate);
 
                 // end_date / endEffectiveDate can be null
                 $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+                dump($endEffectiveDate);
 
                 // calculate prorate
                 $userBasicSalary = $this->prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
+                dd($userBasicSalary);
             }
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
             $this->createComponent($runPayrollUser, $basicSalaryComponent, $amount);
-            dd($amount);
-            dd($user->toArray());
+            dump($amount);
+            dd($user->join_date);
 
             /**
              * five, calculate reimbursement
@@ -970,7 +972,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         }
 
         $isCountNationalHoliday = false;
-        if($payrollSetting->prorate_setting->in([ProrateSetting::BASE_ON_WORKING_DAY, ProrateSetting::CUSTOM_ON_WORKING_DAY])){
+        if ($payrollSetting->prorate_setting->in([ProrateSetting::BASE_ON_WORKING_DAY, ProrateSetting::CUSTOM_ON_WORKING_DAY])) {
             $isCountNationalHoliday = $payrollSetting->prorate_national_holiday_as_working_day ?? false;
         }
 
