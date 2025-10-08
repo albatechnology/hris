@@ -31,6 +31,8 @@ class SalaryStoreRequest extends FormRequest
             'overtime_setting' => ['required', Rule::enum(OvertimeSetting::class)],
             'cost_center_category' => ['nullable', Rule::enum(CostCenterCategory::class)],
             'currency' => ['required', Rule::enum(CurrencyCode::class)],
+            'epf_no'=>'nullable|string',
+            'tabungan_haji_no'=>'nullable|string',
         ];
     }
 }
