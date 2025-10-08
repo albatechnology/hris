@@ -28,6 +28,7 @@ class UserContact extends BaseModel implements TenantedInterface
         'is_working',
         'is_disabled',
         'tax_identification_no',
+        'address'
     ];
 
     protected $casts = [

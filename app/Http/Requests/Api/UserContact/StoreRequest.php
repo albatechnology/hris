@@ -57,6 +57,7 @@ class StoreRequest extends FormRequest
                 ['required','string'],
                 ['nullable','string']
             ),
+            'address'=>'nullable|string',
         ];
     }
 
