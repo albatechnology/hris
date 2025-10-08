@@ -2,6 +2,7 @@
 
 namespace App\Http\Services\Payroll;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\CountrySettingKey;
 use App\Enums\JaminanPensiunCost;
 use App\Enums\OvertimeSetting;
@@ -9,13 +10,17 @@ use App\Enums\PaidBy;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
+use App\Enums\ProrateSetting;
 use App\Enums\RunPayrollStatus;
 use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
+use App\Helpers\AttendanceHelper;
 use App\Http\DTO\Payroll\RunPayrollDTO;
 use App\Http\Services\BaseService;
 use App\Interfaces\Repositories\Payroll\RunPayrollRepositoryInterface;
 use App\Interfaces\Services\Payroll\RunPayrollServiceInterface;
+use App\Models\Attendance;
+use App\Models\Event;
 use App\Models\Loan;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
@@ -317,6 +322,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
      */
     private function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, RunPayrollDTO $dto): JsonResponse
     {
+        dump($payrollSetting->toArray());
         $company = $payrollSetting->company;
 
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
@@ -385,6 +391,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
         // calculate for each user
         // foreach ($userIds as $userId) {
+        dump($runPayroll->toArray());
         foreach ($users as $user) {
             $cutOffStartDate = $runPayroll->cut_off_start_date;
             $cutOffEndDate = $runPayroll->cut_off_end_date;
@@ -418,10 +425,24 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             $isFirstTimePayroll = $this->isFirstTimePayroll($user);
             $joinDate = Carbon::parse($user->join_date);
-            if ($isFirstTimePayroll && $joinDate->between($startDate, $endDate)) {
+            if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
                 $cutOffStartDate = $joinDate;
                 $cutOffEndDate = $endDate;
-                $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
+                // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
+                // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $startDate, $cutOffEndDate);
+                // $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+                // dump($totalWorkingDays);
+                // dump($totalPresent);
+                $getTotalAttendance = AttendanceHelper::getTotalAttendance($user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
+                $totalPresent = $getTotalAttendance['total_present'];
+                $totalWorkingDays = $getTotalAttendance['total_working_days'];
+
+
+                $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
+
+                dump($totalPresent);
+                dump($totalWorkingDays);
+                dd($userBasicSalary);
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
@@ -431,7 +452,12 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
             } else {
                 // $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
-                $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+                // $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+                // dump($cutOffStartDate);
+                // dump($cutOffEndDate);
+                $getTotalAttendance = AttendanceHelper::getTotalAttendance($user, $cutOffStartDate, $cutOffEndDate);
+                // dd($getTotalAttendance);
+                $totalPresent = $getTotalAttendance['total_present'];
             }
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
@@ -454,9 +480,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
 
-            if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
-                $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
-            }
+            // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+            //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
+            // }
 
             if ($updatePayrollComponentDetail) {
                 $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
@@ -470,6 +496,8 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
             $this->createComponent($runPayrollUser, $basicSalaryComponent, $amount);
+            dd($amount);
+            dd($user->toArray());
 
             /**
              * five, calculate reimbursement
@@ -852,5 +880,148 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             'tax' => round($tax),
             'payroll_info' => $userPayrollInfo,
         ]);
+    }
+
+    public function getTotalWDNewUser(PayrollSetting $payrollSetting, User|int $user, $startDate, $endDate)
+    {
+        if (!$user instanceof User) {
+            $user = User::find($user, ['id', 'type', 'group_id']);
+        }
+
+        $startDate = Carbon::createFromDate($startDate);
+        $endDate = Carbon::createFromDate($endDate);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+
+        // $isCountNationalHoliday = false;
+
+        //if prorate_setting == Based ON Working Day
+        if ($payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_WORKING_DAY)) {
+            $isCountNationalHoliday = $payrollSetting->prorate_national_holiday_as_working_day ?? false;
+
+            $totalWorkingDays = 0;
+            foreach ($dateRange as $date) {
+                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+
+                if (!$schedule || !$schedule->shift) {
+                    continue;
+                }
+
+                $totalWorkingDays++;
+
+                if (!$schedule->is_overide_national_holiday || $isCountNationalHoliday) {
+                    $date = $date->format('Y-m-d');
+                    $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                        return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                    });
+
+                    if ($nationalHoliday) {
+                        $totalWorkingDays--;
+                        continue;
+                    }
+                }
+
+                if (
+                    $schedule->shift->is_dayoff
+                    && (!isset($schedule->shift->is_request_shift) || $schedule->shift->is_request_shift == false)
+                ) {
+                    $totalWorkingDays--;
+                    continue;
+                }
+            }
+        } elseif ($payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY)) {
+            //if prorate_setting == BASE_ON_CALENDAR_DAY
+            $totalWorkingDays = $endDate->diffInDays($user->join_date);
+            $totalWholeWorkingDays = count($dateRange);
+        } elseif ($payrollSetting->prorate_setting->is(ProrateSetting::CUSTOM_ON_WORKING_DAY)) {
+            //if prorate_setting == CUSTOM_ON_WORKING_DAY
+
+        } elseif ($payrollSetting->prorate_setting->is(ProrateSetting::CUSTOM_ON_CALENDAR_DAY)) {
+            //if prorate_setting == CUSTOM_ON_CALENDAR_DAY
+        }
+
+        return $totalWorkingDays;
+    }
+
+    // public static function getTotalAttend(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
+    public function getTotalWorkingDays(PayrollSetting $payrollSetting, User|int $user, Carbon | string $startDate, Carbon | string $endDate)
+    {
+        $userId = $user;
+        if ($user instanceof User) {
+            $userId = $user->id;
+        }
+
+        if (!($startDate instanceof Carbon)) {
+            $startDate = Carbon::parse($startDate)->startOfDay();
+        }
+
+        if (!($endDate instanceof Carbon)) {
+            $endDate = Carbon::parse($endDate)->startOfDay();
+        }
+
+        $isFirstTimePayroll = $this->isFirstTimePayroll($user);
+        if (!$isFirstTimePayroll) {
+            $joinDate = Carbon::parse($user->join_date);
+            if ($joinDate->between($startDate, $endDate)) {
+                $startDate = $joinDate;
+            }
+        }
+
+        $isCountNationalHoliday = false;
+        if($payrollSetting->prorate_setting->in([ProrateSetting::BASE_ON_WORKING_DAY, ProrateSetting::CUSTOM_ON_WORKING_DAY])){
+            $isCountNationalHoliday = $payrollSetting->prorate_national_holiday_as_working_day ?? false;
+        }
+
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $attendances = Attendance::where('user_id', $userId)
+            ->where(
+                fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff')
+            )
+            ->whereDate('date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('date', '<=', $endDate->format('Y-m-d'))
+            ->with([
+                'clockIn' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'clockOut' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'timeoff' => fn($q) => $q->select('id', 'is_cancelled'),
+            ])
+            ->get(['id', 'date', 'timeoff_id']);
+
+        $totalAttend = 0;
+        foreach ($dateRange as $date) {
+            $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff']);
+
+            $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
+
+            if ((!$todaySchedule?->shift || $todaySchedule?->shift->is_dayoff) && !$attendanceOnDate) {
+                continue;
+            }
+
+            $nationalHoliday = Event::whereNationalHoliday()
+                ->where('company_id', $user->company_id)
+                ->where(
+                    fn($q) => $q->whereDate('start_at', '<=', $date->format('Y-m-d'))
+                        ->whereDate('end_at', '>=', $date->format('Y-m-d'))
+                )
+                ->exists();
+
+            if (($nationalHoliday && $todaySchedule->is_overide_national_holiday == false) || $isCountNationalHoliday == false) {
+                $totalAttend++;
+                continue;
+            }
+
+            if ($attendanceOnDate?->timeoff && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
+                $totalAttend++;
+                continue;
+            }
+
+            if ($attendanceOnDate?->clockIn && $attendanceOnDate?->clockOut) {
+                $totalAttend++;
+                continue;
+            }
+        }
+
+        return $totalAttend;
     }
 }

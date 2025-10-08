@@ -28,7 +28,8 @@ return new class extends Migration
             $table->string('default_employee_salary_tax_setting')->nullable(); // DefaultEmployeeTaxSetting::class
             $table->string('default_oas_setting')->nullable(); // DefaultEmployeeTaxSetting::class
             $table->string('prorate_setting')->nullable();
-            $table->boolean('is_count_national_holiday_as_working_day')->nullable();
+            $table->tinyInteger('prorate_custom_working_day')->unsigned()->nullable();
+            $table->boolean('prorate_national_holiday_as_working_day')->nullable();
             $table->timestamps();
         });
     }

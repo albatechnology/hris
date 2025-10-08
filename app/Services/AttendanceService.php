@@ -298,7 +298,7 @@ class AttendanceService
                 )
                 ->exists();
             if ($nationalHoliday && $todaySchedule->is_overide_national_holiday == false) {
-                $totalAttend++;
+                // $totalAttend++;
                 continue;
             }
 

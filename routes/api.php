@@ -420,7 +420,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('reimbursements/{overtime_request}/approve', [ReimbursementController::class, 'approve']);
     Route::apiResource('reimbursements', ReimbursementController::class)->except('update');
 
-    Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
+    Route::get('test/attendance', [\App\Http\Controllers\Api\TestController::class, 'getAttendance']);
 
     Route::apiResource('levels',LevelController::class);
 });
