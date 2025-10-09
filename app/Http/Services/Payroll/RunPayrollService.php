@@ -312,6 +312,84 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         return $basicAmount;
     }
 
+    public function newProrate(int|float $basicAmount, int|float $updatePayrollComponentAmount, array $dataTotalAttendance, Carbon $startDate, Carbon $endDate, Carbon $startEffectiveDate, Carbon|null $endEffectiveDate): int|float
+    {
+        $endDate->startOfDay();
+
+        $totalPresent = $dataTotalAttendance['total_present'];
+        $totalPresentDates = collect($dataTotalAttendance['total_present_dates']);
+        $totalWorkingDays = $dataTotalAttendance['total_working_days'];
+        // $totalWorkingDaysDates = collect($dataTotalAttendance['total_working_days_dates']);
+
+        if ($startEffectiveDate->between($startDate, $endDate)) {
+            // ex: $startEffective = 2025-09-15 $endEffectiveDate = 2025-09-30, $startDate = 2025-09-01 $endDate = 2025-09-30
+
+            if ($endEffectiveDate && $endEffectiveDate->lessThanOrEqualTo($endDate)) {
+
+                if ($startEffectiveDate->equalTo($startDate)) {
+                    // $endEffectiveDate not null
+                    // ex: $startEffective = 2025-09-01 $endEffectiveDate = 2025-09-30 or less, $startDate = 2025-09-01 $endDate = 2025-09-30
+                    // ex: $startEffective = 2025-09-01 $endEffectiveDate = 2025-09-25, $startDate = 2025-09-01 $endDate = 2025-09-30
+
+                    $totalPresentFromStartEffectiveDateToEndEffectiveDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startEffectiveDate, $endEffectiveDate))->count();
+                    $startAmount = $totalPresentFromStartEffectiveDateToEndEffectiveDate / $totalWorkingDays * $updatePayrollComponentAmount;
+
+                    $totalPresentFromEndEffectiveDateTpEndDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($endEffectiveDate, $endDate))->count() - 1;
+                    $endAmount = $totalPresentFromEndEffectiveDateTpEndDate / $totalWorkingDays * $basicAmount;
+
+                    $basicAmount = $startAmount + $endAmount;
+                } else {
+                    // $endEffectiveDate not null
+                    // ex: $startEffective = 2025-09-15 $endEffectiveDate = 2025-09-30 or less, $startDate = 2025-09-01 $endDate = 2025-09-30
+                    // ex: $startEffective = 2025-09-10 $endEffectiveDate = 2025-09-20, $startDate = 2025-09-01 $endDate = 2025-09-30
+
+                    $totalPresentFromStartDateToStartEffectiveDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startDate, $startEffectiveDate))->count() - 1;
+                    $startAmount = $totalPresentFromStartDateToStartEffectiveDate / $totalWorkingDays * $basicAmount;
+
+                    $totalPresentFromStartEffectiveDateToEndEffectiveDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startEffectiveDate, $endEffectiveDate))->count();
+                    $middleAmount = $totalPresentFromStartEffectiveDateToEndEffectiveDate / $totalWorkingDays * $updatePayrollComponentAmount;
+
+                    $endAmount = 0;
+                    if ($endEffectiveDate->lessThan($endDate)) {
+                        $totalPresentFromEndEffectiveDateToEndDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startEffectiveDate, $endEffectiveDate))->count();
+                        $endAmount = $totalPresentFromEndEffectiveDateToEndDate / $totalWorkingDays * $basicAmount;
+                    }
+
+                    $basicAmount = $startAmount + $middleAmount + $endAmount;
+                }
+            } else {
+                // $endEffectiveDate is null or more than $endDate
+                // ex: $startEffective = 2025-09-15 $endEffectiveDate is null or more than $endDate, $startDate = 2025-09-01 $endDate = 2025-09-30
+                $totalPresentFromStartDateToStartEffectiveDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startDate, $startEffectiveDate))->count() - 1;
+                $totalPresentFromStartEffectiveDateToEndEffectiveDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startEffectiveDate, $endDate))->count();
+
+                $startAmount = $totalPresentFromStartDateToStartEffectiveDate / $totalWorkingDays * $basicAmount;
+                $endAmount = $totalPresentFromStartEffectiveDateToEndEffectiveDate / $totalWorkingDays * $updatePayrollComponentAmount;
+
+                $basicAmount = $startAmount + $endAmount;
+            }
+        } elseif ($startEffectiveDate->lessThan($startDate)) {
+            if ($endEffectiveDate && $endEffectiveDate->between($startDate, $endDate)) {
+                // ex: $startEffective = 2025-08-31 or less $endEffectiveDate = 2025-09-30, $startDate = 2025-09-01 $endDate = 2025-09-30
+                // ex: $startEffective = 2025-08-01 $endEffectiveDate = 2025-09-20, $startDate = 2025-09-01 $endDate = 2025-09-30
+
+                $totalPresentFromStartDateToEndEffectiveDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($startDate, $endEffectiveDate))->count();
+                $startAmount = $totalPresentFromStartDateToEndEffectiveDate / $totalWorkingDays * $updatePayrollComponentAmount;
+
+                $totalPresentFromEndEffectiveDateTpEndDate = $totalPresentDates->filter(fn($date) => Carbon::parse($date)->betweenIncluded($endEffectiveDate, $endDate))->count() - 1;
+                $endAmount = $totalPresentFromEndEffectiveDateTpEndDate / $totalWorkingDays * $basicAmount;
+
+                $basicAmount = $startAmount + $endAmount;
+            } else {
+                // ex: $startEffective = 2025-08-15 $endEffectiveDate = 2025-10-15, $startDate = 2025-09-01 $endDate = 2025-09-30
+                // or $endEffectiveDate = null
+                $basicAmount = $totalPresent / $totalWorkingDays * $updatePayrollComponentAmount;
+            }
+        }
+
+        return $basicAmount;
+    }
+
     /**
      * create run payroll details
      *
@@ -433,9 +511,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 // $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
                 // dump($totalWorkingDays);
                 // dump($totalPresent);
-                $getTotalAttendance = AttendanceHelper::getTotalAttendance($user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
-                $totalPresent = $getTotalAttendance['total_present'];
-                $totalWorkingDays = $getTotalAttendance['total_working_days'];
+                $dataTotalAttendance = AttendanceHelper::getTotalAttendance($user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
+                $totalPresent = $dataTotalAttendance['total_present'];
+                $totalWorkingDays = $dataTotalAttendance['total_working_days'];
 
                 $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
 
@@ -453,9 +531,10 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 // $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
                 // dump($cutOffStartDate);
                 // dump($cutOffEndDate);
-                $getTotalAttendance = AttendanceHelper::getTotalAttendance($user, $cutOffStartDate, $cutOffEndDate);
-                $totalPresent = $getTotalAttendance['total_present'];
-                $totalWorkingDays = $getTotalAttendance['total_working_days'];
+                $dataTotalAttendance = AttendanceHelper::getTotalAttendance($user, $cutOffStartDate, $cutOffEndDate);
+                // dd($dataTotalAttendance);
+                $totalPresent = $dataTotalAttendance['total_present'];
+                $totalWorkingDays = $dataTotalAttendance['total_working_days'];
                 dump($totalPresent);
                 dump($totalWorkingDays);
             }
@@ -479,27 +558,26 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             //     ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
 
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
+            // dump($basicSalaryComponent->toArray());
+            // dump($updatePayrollComponentDetail->toArray());
             // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
             //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
             // }
 
             if ($updatePayrollComponentDetail) {
                 $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
-                dump($startEffectiveDate);
 
                 // end_date / endEffectiveDate can be null
                 $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
-                dump($endEffectiveDate);
 
                 // calculate prorate
-                $userBasicSalary = $this->prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
-                dd($userBasicSalary);
+                $userBasicSalary = $this->newProrate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
             }
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
             $this->createComponent($runPayrollUser, $basicSalaryComponent, $amount);
             dump($amount);
-            dd($user->join_date);
+            dump($user->join_date);
 
             /**
              * five, calculate reimbursement
@@ -519,12 +597,13 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * second, calculate payroll component where not default
              */
-            // $payrollComponents = PayrollComponent::tenanted()
-            //     ->where('company_id', $runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->whereNotDefault()->get();
+            $payrollComponents = PayrollComponent::tenanted()
+                ->where('id', 127)
+                ->where('company_id', $runPayroll->company_id)
+                ->whenBranch($runPayroll->branch_id)
+                ->whereNotDefault()->get();
 
-            $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
+            $payrollComponents->each(function ($payrollComponent) use ($user, $dataTotalAttendance, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
                     $amount = FormulaService::calculate(user: $user, model: $payrollComponent, formulas: $payrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
@@ -532,9 +611,20 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $amount = $payrollComponent->amount;
                 }
 
+                dump($amount);
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-
+                dump($updatePayrollComponentDetail->toArray());
                 if ($updatePayrollComponentDetail) {
+                    $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+                    dump($startEffectiveDate);
+
+                    // end_date / endEffectiveDate can be null
+                    $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+
+                    // calculate prorate
+                    $amount = $this->newProrate(0, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
+
+
                     // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
                     // // end_date / endEffectiveDate can be null
@@ -543,12 +633,16 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     // calculate prorate
                     // $amount = $this->prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
 
-                    $amount = $this->calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
+                    // $amount = $this->calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
                 } else {
                     $amount = $this->calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                    if ($payrollComponent->is_prorate) {
+                        $amount = $this->newProrate(0, $amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                    }
                 }
                 $this->createComponent($runPayrollUser, $payrollComponent, $amount);
             });
+            dd('END');
             // END
 
             /**

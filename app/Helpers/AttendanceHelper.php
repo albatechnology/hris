@@ -102,13 +102,17 @@ class AttendanceHelper
                 ->exists();
 
             // jika nationalHoliday dan schedule tidak termasuk holiday maka dianggap masuk
+            // dump($nationalHoliday?->toArray());
+            // if($nationalHoliday){
+            //     dd($todaySchedule);
+            // }
             if ($nationalHoliday && $todaySchedule->is_overide_national_holiday == false) {
-                // $totalPresentDates[$date] = $date;
-                continue;
+                $totalWorkingDayWasAdded = true;
             }
 
-
-            $totalWorkingDayDates[$date] = $date;
+            if (!$totalWorkingDayWasAdded) {
+                $totalWorkingDayDates[$date] = $date;
+            }
 
             if ($attendanceOnDate?->timeoff && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
                 if (!$totalPresentWasAdded) {
