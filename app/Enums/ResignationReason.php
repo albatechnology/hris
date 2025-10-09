@@ -35,7 +35,9 @@ enum ResignationReason: string
     case EMPLOYEE_COMMITS_AN_URGENT_VIOLATION = "Employee commits an urgent violation as regulated in the employment agreement, company regulations, or other agreements";
 
         // all
-    case DID_NOT_PASS_PROBATION_PERIOD = "Did not pass the probation period";
+    // case DID_NOT_PASS_PROBATION_PERIOD = "Did not pass the probation period";
+    case DID_NOT_PASS_CONTRACT_PERIOD = "Did not pass the contract period";
+    case TERMINATED_BY_SUPERVISOR = "Terminated by supervisor";
     case COMPLETION_OF_FIXED_TERM_AGREEMENT = "Completion of a fixed-term employment agreement (PKWT)";
     case PASSED_AWAY = "Employee passed away";
     case REACHES_RETIREMENT_AGE = "Employee reaches retirement age";
