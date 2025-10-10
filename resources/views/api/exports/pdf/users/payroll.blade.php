@@ -60,7 +60,7 @@
                     </tr>
                     <tr>
                         <th class="text-left">ID/Name</th>
-                        <td>: {{ $user->nik . ' / ' . $user->full_name }}</td>
+                        <td>: {{ $user->nik . ' / ' . $user->name }}</td>
                     </tr>
                     <tr>
                         <th class="text-left">Job Position</th>

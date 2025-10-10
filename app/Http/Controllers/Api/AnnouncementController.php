@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\NotificationType;
+use App\Enums\MediaCollection;
 use App\Http\Requests\Api\Announcement\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Jobs\Announcement\BulkNotifyAnnouncement;
-use App\Jobs\Announcement\NotifyAnnouncement;
 use App\Models\Announcement;
 use App\Models\User;
-use App\Notifications\Announcement\AnnouncementBulkNotification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -30,7 +27,7 @@ class AnnouncementController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(Announcement::tenanted()->with([
-            'user' => function ($q) {
+            'createdBy' => function ($q) {
                 $q->select('users.id', 'users.name');
             },
             'branches' => function ($q) {
@@ -43,7 +40,8 @@ class AnnouncementController extends BaseController
         ]))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-            ])->allowedIncludes(['user', 'branches', 'positions'])
+            ])
+            ->allowedIncludes(['media'])
             ->allowedSorts([
                 'id',
                 'company_id'
@@ -56,7 +54,7 @@ class AnnouncementController extends BaseController
     public function show(int $id)
     {
         $announcement = QueryBuilder::for(Announcement::tenanted()->where('id', $id)->with([
-            'user' => function ($q) {
+            'createdBy' => function ($q) {
                 $q->select('users.id', 'users.name');
             },
             'branches' => function ($q) {
@@ -66,9 +64,8 @@ class AnnouncementController extends BaseController
                 $q->select('positions.id', 'positions.name');
             },
             'jobLevels',
-        ]))
-            ->allowedIncludes(['user', 'branches', 'positions'])
-            ->firstOrFail();
+            'media',
+        ]))->firstOrFail();
 
         return new DefaultResource($announcement);
     }
@@ -77,7 +74,12 @@ class AnnouncementController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $announcement = auth('sanctum')->user()->announcements()->create($request->validated());
+            $announcement = Announcement::create($request->validated());
+            if ($request->hasFile('file') && $request->file('file')->isValid()) {
+                $mediaCollection = MediaCollection::REPRIMAND->value;
+                $announcement->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+            }
+
             $query = User::select('id', 'fcm_token')->whereNotNull('fcm_token')->tenanted();
 
             if ($request->branch_ids) {
@@ -112,7 +114,9 @@ class AnnouncementController extends BaseController
 
             $users = $query->get();
 
-            BulkNotifyAnnouncement::dispatch($announcement, $users);
+            if ($users->count()) {
+                BulkNotifyAnnouncement::dispatch($announcement, $users);
+            }
 
             DB::commit();
         } catch (\Exception $e) {
@@ -121,9 +125,6 @@ class AnnouncementController extends BaseController
         }
 
         return new DefaultResource($announcement->load([
-            'user' => function ($q) {
-                $q->select('users.id', 'users.name');
-            },
             'branches' => function ($q) {
                 $q->select('branches.id', 'branches.name');
             },

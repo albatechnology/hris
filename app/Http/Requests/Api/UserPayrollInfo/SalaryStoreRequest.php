@@ -13,13 +13,7 @@ use Illuminate\Validation\Rule;
 
 class SalaryStoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -30,12 +24,15 @@ class SalaryStoreRequest extends FormRequest
     {
         return [
             'basic_salary' => 'required|integer',
+            'total_working_days' => 'required|integer',
             'salary_type' => ['required', Rule::enum(SalaryType::class)],
             'payment_schedule' => ['required', Rule::enum(PaymentSchedule::class)],
             'prorate_setting' => ['nullable', Rule::enum(ProrateSetting::class)],
             'overtime_setting' => ['required', Rule::enum(OvertimeSetting::class)],
             'cost_center_category' => ['nullable', Rule::enum(CostCenterCategory::class)],
             'currency' => ['required', Rule::enum(CurrencyCode::class)],
+            'epf_no'=>'nullable|string',
+            'tabungan_haji_no'=>'nullable|string',
         ];
     }
 }

@@ -3,51 +3,61 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\UserContact\StoreRequest;
-use App\Http\Resources\UserContact\UserContactResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\User;
 use App\Models\UserContact;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserContactController extends BaseController
 {
-    public function index(User $user)
+    public function index(int $id)
     {
-        $data = QueryBuilder::for(UserContact::tenanted()->where('user_id', $user->id))
+        $data = QueryBuilder::for(UserContact::where('user_id', $id))
             ->allowedFilters([
-                'type', 'name', 'id_number', 'email', 'phone',
+                'type',
+                'name',
+                'id_number',
+                'email',
+                'phone',
             ])
             ->allowedSorts([
-                'id', 'type', 'name', 'id_number', 'email', 'phone', 'created_at',
+                'id',
+                'type',
+                'name',
+                'id_number',
+                'email',
+                'phone',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
-        return UserContactResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
-    public function show(User $user, int $id)
+    public function show(int $id, int $contactId)
     {
-        $contact = UserContact::findTenanted($id);
-        return new UserContactResource($contact);
+        $contact = UserContact::findOrFail($contactId);
+        return new DefaultResource($contact);
     }
 
     public function store(User $user, StoreRequest $request)
     {
         $contact = $user->contacts()->create($request->validated());
 
-        return new UserContactResource($contact);
+        return new DefaultResource($contact);
     }
 
-    public function update(User $user, StoreRequest $request, int $id)
+    public function update(int $id, StoreRequest $request, int $contactId)
     {
-        $contact = UserContact::findTenanted($id);
+        $contact = UserContact::findOrFail($contactId);
         $contact->update($request->validated());
 
-        return new UserContactResource($contact);
+        return new DefaultResource($contact);
     }
 
-    public function destroy(User $user, int $id)
+    public function destroy(int $id, int $contactId)
     {
-        $contact = UserContact::findTenanted($id);
+        $contact = UserContact::findOrFail($contactId);
         $contact->delete();
 
         return $this->deletedResponse();

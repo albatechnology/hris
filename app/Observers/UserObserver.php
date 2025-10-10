@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Enums\UserType;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class UserObserver
 {
@@ -23,6 +24,10 @@ class UserObserver
      */
     public function creating(User $user): void
     {
+        if (empty($user->password)) {
+            $user->password = Str::random(12);
+        }
+
         if (empty($user->type)) {
             $user->type = UserType::USER;
         }
@@ -33,10 +38,6 @@ class UserObserver
 
         if (empty($user->sign_date)) {
             $user->sign_date = $user->join_date;
-        }
-
-        if ($user->company_id) {
-            $user->overtime_id = \App\Models\Overtime::where('company_id', $user->company_id)->first(['id'])?->id ?? null;
         }
     }
 

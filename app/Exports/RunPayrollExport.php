@@ -30,16 +30,16 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
         $deductions = $payrollComponents->where('type', PayrollComponentType::DEDUCTION);
         $benefits = $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]);
 
-        $runPayrollUsers = $this->runPayroll->users;
+        // $runPayrollUsers = $this->runPayroll->users;
 
-        $cutOffStartDate = Carbon::parse($this->runPayroll->cut_off_start_date);
-        $cutOffEndDate = Carbon::parse($this->runPayroll->cut_off_end_date);
+        $payrollStartDate = Carbon::parse($this->runPayroll->payroll_start_date);
+        $payrollEndDate = Carbon::parse($this->runPayroll->payroll_end_date);
 
-        $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($cutOffStartDate, $cutOffEndDate) {
-            return $item->user->resign_date && Carbon::parse($item->user->resign_date)->between($cutOffStartDate, $cutOffEndDate) ? 'resign' : (Carbon::parse($item->user->join_date)->between($cutOffStartDate, $cutOffEndDate) ? 'new' : 'active');
+        $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($payrollStartDate, $payrollEndDate) {
+            return $item->user->resign_date && (Carbon::parse($item->user->resign_date)->between($payrollStartDate, $payrollEndDate)) ? 'resign' : (Carbon::parse($item->user->join_date)->between($payrollStartDate, $payrollEndDate) ? 'new' : 'active');
         });
-        // $runPayrollUsers = $this->runPayroll->users->groupBy(fn($item, $key) => 'active');
 
+        // $runPayrollUsers = $this->runPayroll->users->groupBy(fn($item, $key) => 'active');
         $activeUsers = $runPayrollUsers->get('active')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
         $resignUsers = $runPayrollUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
         $newUsers = $runPayrollUsers->get('new')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
@@ -64,7 +64,14 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             return $carry + $item; // Menggabungkan array dengan mempertahankan key
         }, []);
 
-        return view('api.exports.payroll.run-payroll', [
+        $viewName = 'api.exports.payroll.run-payroll';
+        $totalColumns = 21;
+        if (config('app.name') == 'LUMORA') {
+            $viewName = 'api.exports.payroll.run-payroll-lumora';
+            $totalColumns = 19;
+        }
+
+        return view($viewName, [
             'runPayroll' => $this->runPayroll,
             'activeUsers' => $activeUsers,
             'resignUsers' => $resignUsers,
@@ -76,7 +83,7 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             'totalAllowancesStorages' => $totalAllowancesStorages,
             'totalDeductionsStorages' => $totalDeductionsStorages,
             'totalBenefitsStorages' => $totalBenefitsStorages,
-            'totalColumns' =>  21 +  $allowances->count() + $deductions->count() + $benefits->count()
+            'totalColumns' =>  $totalColumns +  $allowances->count() + $deductions->count() + $benefits->count()
         ]);
     }
 

@@ -9,12 +9,16 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
+     /**
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'compensation_rate_per_day' => $this->compensation_rate_per_day ?? 0,
+        ]);
     }
 
     /**

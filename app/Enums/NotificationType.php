@@ -36,6 +36,9 @@ enum NotificationType: string
 
     case SETUP_PASSWORD = 'setup_password';
 
+    case REQUEST_REIMBURSEMENT = 'request_reimbursement';
+    case REQUEST_REIMBURSEMENT_APPROVED = 'request_reimbursement_approved';
+
     public function getNotificationClass(): string
     {
         return match ($this) {
@@ -57,6 +60,8 @@ enum NotificationType: string
             self::REQUEST_SCHEDULE_APPROVED => \App\Notifications\RequestSchedule\RequestScheduleApproved::class,
             self::REQUEST_SHIFT => \App\Notifications\RequestShift\RequestShift::class,
             self::REQUEST_SHIFT_APPROVED => \App\Notifications\RequestShift\RequestShiftApproved::class,
+            self::REQUEST_REIMBURSEMENT => \App\Notifications\Reimbursement\RequestReimbursement::class,
+            self::REQUEST_REIMBURSEMENT_APPROVED => \App\Notifications\Reimbursement\RequestReimbursementApproved::class,
             self::SETUP_PASSWORD => \App\Notifications\User\SetupPasswordNotification::class,
         };
     }
@@ -82,6 +87,8 @@ enum NotificationType: string
             self::REQUEST_SCHEDULE_APPROVED => 'Your schedule request has been %s.', // approved/rejected
             self::REQUEST_SHIFT => 'Requesting shift',
             self::REQUEST_SHIFT_APPROVED => 'Your shift request has been %s.', // approved/rejected
+            self::REQUEST_REIMBURSEMENT => '%s Requesting reimbursement',
+            self::REQUEST_REIMBURSEMENT_APPROVED => '%s %s your reimbursement request', // approved/rejected
             default => null,
         };
     }

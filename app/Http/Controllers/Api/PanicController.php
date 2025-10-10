@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MediaCollection;
 use App\Http\Requests\Api\Panic\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Panic;
@@ -11,6 +12,11 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Enums\PanicStatus;
 use App\Http\Requests\Api\Panic\UpdateRequest;
+use App\Models\Setting;
+use App\Models\User;
+use App\Notifications\Panic\PanicNotification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PanicController extends BaseController
 {
@@ -27,14 +33,18 @@ class PanicController extends BaseController
     public function index()
     {
         $data = QueryBuilder::for(Panic::tenanted()->with('user'))
+            ->allowedIncludes([
+                'user',
+                'media'
+            ])
             ->allowedFilters([
-                AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('status'),
             ])
             ->allowedSorts([
                 'id',
-                'company_id',
+                'branch_id',
                 'user_id',
                 'status',
                 'created_at',
@@ -47,19 +57,43 @@ class PanicController extends BaseController
     public function show(int $id)
     {
         $panic = Panic::findTenanted($id);
-        return new DefaultResource($panic->load('user'));
+        return new DefaultResource($panic->load(
+            'user',
+            'branch',
+            'media',
+        ));
     }
 
     public function store(StoreRequest $request)
     {
+        $user = auth('sanctum')->user();
+        DB::beginTransaction();
         try {
-            $panic = auth('sanctum')->user()->panics()->create([
-                'company_id' => $request->company_id,
-                'lat' => $request->lat,
-                'lng' => $request->lng,
-                'status' => PanicStatus::PANIC,
-            ]);
+            $panic = $user->panics()->create($request->validated());
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    if ($file->isValid()) {
+                        $panic->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                    }
+                }
+            }
+
+            $supervisors = User::select('id', 'fcm_token', 'name')->whereIn('id', $user->supervisors?->pluck('supervisor_id'))->get();
+            if ($supervisors->count() == 0) {
+                $supervisors = User::where('id', Setting::where('key', 'request_approver')->where('company_id', $user->company_id)->first()?->value)->get();
+            }
+
+            $users = User::select('id', 'fcm_token', 'name')->permission('allow_get_emergency_notification')->get();
+
+            $supervisors->push(...$users);
+
+            if ($supervisors->count()) {
+                Notification::sendNow($supervisors, new PanicNotification($panic));
+            }
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
@@ -71,6 +105,14 @@ class PanicController extends BaseController
         $panic = Panic::findTenanted($id);
         try {
             $panic->update($request->validated());
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    if ($file->isValid()) {
+                        $panic->addMedia($file)->toMediaCollection(MediaCollection::PANIC_SOLVED->value);
+                    }
+                }
+            }
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
         }

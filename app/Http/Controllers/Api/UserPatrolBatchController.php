@@ -9,6 +9,8 @@ use App\Models\UserPatrolBatch;
 use App\Http\Requests\Api\UserPatrolBatch\StoreRequest;
 use App\Http\Requests\Api\UserPatrolBatch\SyncRequest;
 use App\Http\Requests\Api\UserPatrolBatch\UpdateRequest;
+use App\Models\UserPatrolMovement;
+use App\Models\UserPatrolTask;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,14 +29,12 @@ class UserPatrolBatchController extends BaseController
 
     public function index(Request $request)
     {
-        $date = null;
-        if (isset($request->filter['date']) && !empty($request->filter['date'])) {
-            $date = date('Y-m-d', strtotime($request->filter['date']));
-        }
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? $startDate;
 
         $data = QueryBuilder::for(
             UserPatrolBatch::with(['user' => fn($q) => $q->select('id', 'name', 'nik')])
-                ->when($date, fn($q) => $q->whereDate('datetime', $date))
+                ->where(fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate))
         )
             ->allowedIncludes([
                 'patrol'
@@ -61,7 +61,15 @@ class UserPatrolBatchController extends BaseController
             $userPatrolBatch = UserPatrolBatch::create($request->validated());
 
             foreach ($request->tasks ?? [] as $task) {
-                $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create($task);
+                // $userPatrolTask = $userPatrolBatch->userPatrolTasks()->create([
+                //     'user_patrol_batch_id' => $userPatrolBatch->id,
+                //     ...$task
+                // ]);
+
+                $userPatrolTask = UserPatrolTask::create([
+                    'user_patrol_batch_id' => $userPatrolBatch->id,
+                    ...$task
+                ]);
                 foreach ($task['images'] ?? [] as $image) {
                     if ($image->isValid()) {
                         $userPatrolTask->addMedia($image)->toMediaCollection();
@@ -70,8 +78,20 @@ class UserPatrolBatchController extends BaseController
             }
 
             foreach ($request->locations ?? [] as $location) {
-                $userPatrolBatch->userPatrolMovements()->create($location);
+                // $userPatrolBatch->userPatrolMovements()->create([
+                //     'user_patrol_batch_id' => $userPatrolBatch->id,
+                //     ...$location
+                // ]);
+                UserPatrolMovement::create([
+                    'user_patrol_batch_id' => $userPatrolBatch->id,
+                    ...$location
+                ]);
             }
+
+            $userPatrolBatch->update([
+                'datetime' => $request->locations[0]['datetime'] ?? null,
+                'end_at' => $request->locations[count($request->locations)-1]['datetime'] ?? null,
+            ]);
 
             DB::commit();
         } catch (Exception $e) {
@@ -114,6 +134,27 @@ class UserPatrolBatchController extends BaseController
         $userPatrolBatch = UserPatrolBatch::findTenanted($id);
         $userPatrolBatch->delete();
 
-        return new DefaultResource($userPatrolBatch);
+        return $this->deletedResponse();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $userPatrolBatch = UserPatrolBatch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            UserPatrolTask::select('id')->where('user_patrol_batch_id', $id)->get()->each(function ($userPatrolTask) {
+                $userPatrolTask->media()->forceDelete();
+                $userPatrolTask->forceDelete();
+            });
+            UserPatrolMovement::where('user_patrol_batch_id', $id)->forceDelete();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
+        $userPatrolBatch->forceDelete();
+
+        return $this->deletedResponse();
     }
 }

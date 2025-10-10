@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use App\Enums\Gender;
 use App\Enums\ScheduleType;
 use App\Enums\UserType;
 use App\Interfaces\TenantedInterface;
 use App\Services\UserService;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CreatedUpdatedInfo;
+use App\Traits\Models\CustomSoftDeletes;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,11 +18,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
-// use Kalnoy\Nestedset\NodeTrait;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
@@ -31,7 +28,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
 {
-    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, SoftDeletes, CreatedUpdatedInfo, BelongsToClient;
+    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToBranch;
 
     /**
      * The attributes that are mass assignable.
@@ -42,11 +39,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'group_id',
         'company_id',
         'branch_id',
-        'client_id',
+        'level_id',
         'live_attendance_id',
-        'overtime_id',
-        // 'approval_id',
-        // 'parent_id',
         'name',
         'last_name',
         'email',
@@ -63,8 +57,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'end_contract_date',
         'resign_date',
         'rehire_date',
-        'total_timeoff',
-        'total_remaining_timeoff',
+        // 'total_remaining_timeoff',
     ];
 
     /**
@@ -104,8 +97,12 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         //         ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
         // }
 
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-        $query->whereIn('company_id', $companyIds);
+        if (config('app.name') == 'SUNSHINE') {
+            $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
+            $query->whereIn('company_id', $companyIds);
+        } else {
+            $query->where('group_id', $user->group_id);
+        }
 
         if ($user->is_admin) {
             return $query;
@@ -146,7 +143,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $query->first();
     }
 
-    public function scopeActivePatrolClientId(Builder $query, int $clientId)
+    public function scopeActivePatrolBranchId(Builder $query, int $branchId)
     {
         $query->whereHas('schedules', function ($q) {
             $q->where('schedules.type', ScheduleType::PATROL);
@@ -154,9 +151,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             $q->orderBy('schedules.effective_date', 'desc');
         })->whereHas('detail', function ($q) {
             $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes(15)->toDateTimeString());
-        })->whereHas('patrols.client', function ($q) use ($clientId) {
+        })->whereHas('patrols.branch', function ($q) use ($branchId) {
             $q->tenanted();
-            $q->where('clients.id', $clientId);
+            $q->where('branches.id', $branchId);
         });
     }
 
@@ -221,10 +218,28 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         $query->where(fn($q) => $q->whereDate($column, '>=', $startDate)->whereDate($column, '<=', $endDate));
     }
 
+    public function scopeWhereResignDateAfter(Builder $query, string $value)
+    {
+        $query->where(fn($q) => $q->whereDate('resign_date', '>=', date('Y-m-d', strtotime($value)))->orWhereNull('resign_date'));
+    }
+
+    public function scopeWhereResignDateBefore(Builder $query, string $value)
+    {
+        $query->where(fn($q) => $q->whereDate('resign_date', '<=', date('Y-m-d', strtotime($value)))->orWhereNull('resign_date'));
+    }
+
+    public function scopeShowResignUsers(Builder $query, ?bool $value = null)
+    {
+        $query->where(
+            fn($q) => $q->whereNull('resign_date')
+                ->when(isset($value) && $value == true, fn($q) => $q->orWhereNotNull('resign_date'))
+        );
+    }
+
     protected function password(): Attribute
     {
         return Attribute::make(
-            set: fn(?string $value) => bcrypt($value ?? 'alba#123'),
+            set: fn(?string $value) => bcrypt($value),
         );
     }
 
@@ -251,6 +266,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
     }
 
     public function detail(): HasOne
@@ -316,6 +336,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function positions(): HasMany
     {
         return $this->hasMany(UserDepartmentPosition::class);
+    }
+
+    public function reimbursementCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(ReimbursementCategory::class, 'user_reimbursement_categories')->withPivot('limit_amount');
     }
 
     public function overtimes(): BelongsToMany
@@ -411,6 +436,16 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsToMany(Patrol::class, UserPatrol::class);
     }
 
+    public function userPatrols(): HasMany
+    {
+        return $this->hasMany(UserPatrol::class);
+    }
+
+    public function patrolBatches(): HasMany
+    {
+        return $this->hasMany(UserPatrolBatch::class);
+    }
+
     // public function userPatrolSchedules(): BelongsToMany
     // {
     //     return $this->belongsToMany(UserPatrolSchedule::class, UserPatrol::class, 'user_id', 'id');
@@ -441,9 +476,9 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(TimeoffQuota::class);
     }
 
-    public function timeoffHistories(): HasMany
+    public function timeoffs(): HasMany
     {
-        return $this->hasMany(UserTimeoffHistory::class);
+        return $this->hasMany(Timeoff::class);
     }
 
     public function requestSchedules(): HasMany
@@ -548,5 +583,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             'url' => $url,
             'preview' => $preview
         ];
+    }
+
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
     }
 }

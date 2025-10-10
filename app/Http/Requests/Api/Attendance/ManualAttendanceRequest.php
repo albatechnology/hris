@@ -15,13 +15,7 @@ class ManualAttendanceRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    
 
     protected function prepareForValidation()
     {
@@ -60,6 +54,8 @@ class ManualAttendanceRequest extends FormRequest
             'clock_out' => 'nullable|date_format:H:i',
             'type' => ['required', Rule::enum(AttendanceType::class)],
             'is_offline_mode' => 'required|boolean',
+            'lat' => 'nullable|string',
+            'lng' => 'nullable|string',
         ];
     }
 }

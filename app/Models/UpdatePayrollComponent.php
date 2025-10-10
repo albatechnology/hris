@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UpdatePayrollComponentType;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class UpdatePayrollComponent extends BaseModel
 {
-    use CompanyTenanted, BelongsToClient;
+    use CompanyTenanted, BelongsToBranch;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        'branch_id',
         'transaction_id',
         'type',
         'description',
@@ -80,6 +80,11 @@ class UpdatePayrollComponent extends BaseModel
         }
 
         $q->where(fn($q2) => $q2->whereDate('end_date', '>=', $endDate)->orWhereNull('end_date'))
-            ->whereDate('effective_date', '<=', $startDate);
+            ->where(
+                fn($q2) => $q2->whereDate('effective_date', '<=', $startDate)
+                    ->orWhere(
+                        fn($q) => $q->where('effective_date', '>=', $startDate)->where('effective_date', '<=', $endDate)
+                    )
+            );
     }
 }

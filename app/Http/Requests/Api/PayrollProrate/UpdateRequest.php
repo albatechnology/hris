@@ -2,16 +2,28 @@
 
 namespace App\Http\Requests\Api\PayrollProrate;
 
+use App\Enums\ProrateSetting;
+use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $prorateSetting = ProrateSetting::from($this->prorate_setting);
+        $this->merge([
+            'prorate_custom_working_day' => $prorateSetting->hasProrateCustomWorkingDay() ? $this->prorate_custom_working_day : null,
+            'prorate_national_holiday_as_working_day' => $prorateSetting->hasCountNationalHolidayAsWorkingDay() ? $this->toBoolean($this->prorate_national_holiday_as_working_day) : false,
+        ]);
     }
 
     /**
@@ -22,8 +34,10 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'prorate_setting' => 'required',
-            'is_count_national_holiday_as_working_day' => 'nullable|boolean',
+            'company_id' => ['required', new CompanyTenantedRule()],
+            'prorate_setting' => ['required', Rule::enum(ProrateSetting::class)],
+            'prorate_custom_working_day' => 'nullable|integer|min:0|max:31',
+            'prorate_national_holiday_as_working_day' => 'nullable|boolean',
         ];
     }
 }

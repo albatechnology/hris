@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ClientLocation;
 use App\Models\IncidentType;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -17,7 +16,6 @@ return new class extends Migration
         Schema::create('incidents', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
-            $table->foreignIdFor(ClientLocation::class)->constrained();
             $table->foreignIdFor(IncidentType::class)->constrained();
             $table->text('description');
             $table->timestamps();

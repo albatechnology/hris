@@ -9,11 +9,16 @@ use Illuminate\Validation\Rule;
 class UpdateRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'solved_by_id' => auth('sanctum')->id(),
+            'solved_at' => now()
+        ]);
     }
 
     /**
@@ -25,6 +30,13 @@ class UpdateRequest extends FormRequest
     {
         return [
             'status' => ['required', Rule::enum(PanicStatus::class)],
+            'solved_by_id' => ['nullable', 'integer'],
+            'solved_at' => ['required'],
+            'solved_lat' => ['nullable', 'string'],
+            'solved_lng' => ['nullable', 'string'],
+            'solved_description' => ['nullable', 'string'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['required', 'mimes:' . config('app.file_mimes_types')],
         ];
     }
 }

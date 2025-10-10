@@ -6,7 +6,7 @@ use App\Http\Requests\Api\PatrolLocation\AttendRequest;
 use App\Http\Requests\Api\PatrolLocation\ScanQrCodeRequest;
 use App\Http\Requests\Api\PatrolLocation\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\ClientLocation;
+use App\Models\BranchLocation;
 use App\Models\Patrol;
 use App\Models\PatrolLocation;
 use Exception;
@@ -32,15 +32,16 @@ class PatrolLocationController extends BaseController
 
     public function index(int $patrolId)
     {
-        $data = QueryBuilder::for(PatrolLocation::where('patrol_id', $this->patrol->id)->with('clientLocation'))
+        $query = PatrolLocation::where('patrol_id', $this->patrol->id)->with('branchLocation');
+        $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('patrol_id'),
-                AllowedFilter::exact('client_location_id'),
+                AllowedFilter::exact('branch_location_id'),
             ])
             ->allowedSorts([
                 'id',
                 'patrol_id',
-                'client_location_id',
+                'branch_location_id',
                 'created_at',
             ])
             ->paginate($this->per_page);
@@ -51,7 +52,10 @@ class PatrolLocationController extends BaseController
     public function show(int $patrolId, int $id)
     {
         $patrolLocation = $this->patrol->patrolLocations()->findOrFail($id);
-        $patrolLocation->load(['patrol', 'clientLocation']);
+        $patrolLocation->load([
+            'patrol',
+            'branchLocation',
+        ]);
 
         return new DefaultResource($patrolLocation);
     }
@@ -159,13 +163,18 @@ class PatrolLocationController extends BaseController
         $type = $splittedToken[0] ?? null;
         $uuid = $splittedToken[1] ?? null;
 
-        $clientLocation = ClientLocation::tenanted()->firstWhere('uuid', $uuid);
 
-        if (!$clientLocation) {
+        $branchLocation = BranchLocation::tenanted()->firstWhere('uuid', $uuid);
+
+        if (!$branchLocation) {
             return $this->errorResponse('Invalid token');
         }
 
-        $patrolLocation = PatrolLocation::whereHas('clientLocation', fn($q) => $q->where('client_locations.uuid', $uuid))
+        $patrolLocation = PatrolLocation::query()
+            ->whereHas(
+                'branchLocation',
+                fn($q) => $q->where('branch_locations.uuid', $uuid)
+            )
             ->whereHas('patrol', function ($q) use ($user) {
                 $q->whereDate('patrols.start_date', '<=', now());
                 $q->whereDate('patrols.end_date', '>=', now());

@@ -3,22 +3,11 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\ApprovalStatus;
-use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ApproveAttendanceRequest extends FormRequest
 {
-    use RequestToBoolean;
-
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Prepare inputs for validation.
      *

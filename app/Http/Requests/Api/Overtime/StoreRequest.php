@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Overtime;
 
 use App\Enums\FormulaComponentEnum;
 use App\Enums\RateType;
-use App\Models\Client;
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -15,14 +15,6 @@ class StoreRequest extends FormRequest
     use RequestToBoolean;
 
     /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
      * Prepare inputs for validation.
      *
      * @return void
@@ -30,6 +22,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'compensation_rate_per_day' => $this->compensation_rate_per_day ?? 0,
             'company_id' => $this->company_id ? $this->company_id : auth('sanctum')->user()->company_id,
             'is_rounding' => $this->toBoolean($this->is_rounding),
         ]);
@@ -44,8 +37,12 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
-            'name' => 'required|string',
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'name' => ['required', 'string', function ($attribute, $value, \Closure $fail) {
+                if (in_array(strtolower($value), ['ob', 'ob_sun_english', 'OB_SUN_ENGLISH'])) {
+                    $fail($attribute . ' is reserved');
+                }
+            }],
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',
             'rate_type' => ['nullable', Rule::enum(RateType::class)],

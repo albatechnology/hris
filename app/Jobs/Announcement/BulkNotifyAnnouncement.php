@@ -29,6 +29,6 @@ class BulkNotifyAnnouncement implements ShouldQueue
     {
         $notificationType = NotificationType::ANNOUNCEMENT;
 
-        Notification::send($this->announcement->user, new AnnouncementBulkNotification($notificationType, $this->announcement, $this->users->pluck('fcm_token')->toArray()));
+        Notification::send($this->announcement->createdBy, new AnnouncementBulkNotification($notificationType, $this->announcement, $this->users->pluck('fcm_token')->toArray()));
     }
 }

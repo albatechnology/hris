@@ -3,10 +3,12 @@
 namespace App\Http\Requests\Api\User;
 
 use App\Enums\BloodType;
+use App\Enums\BpjsKesehatanFamilyNo;
 use App\Enums\CostCenterCategory;
 use App\Enums\CurrencyCode;
 use App\Enums\EmploymentStatus;
 use App\Enums\Gender;
+use App\Enums\JaminanPensiunCost;
 use App\Enums\MaritalStatus;
 use App\Enums\NppBpjsKetenagakerjaan;
 use App\Enums\OvertimeSetting;
@@ -21,22 +23,14 @@ use App\Enums\TaxSalary;
 use App\Enums\UserType;
 use App\Models\Bank;
 use App\Models\Branch;
-use App\Models\Client;
 use App\Models\Overtime;
+use App\Models\Schedule;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Prepare inputs for validation.
      *
@@ -53,16 +47,26 @@ class RegisterRequest extends FormRequest
             }
         }
 
+        $emailVerifiedAt = null;
+        if ($this->password) $emailVerifiedAt = date('Y-m-d H:i:s');
+        if ($this->email_verified_at) $emailVerifiedAt = date('Y-m-d H:i:s', strtotime($this->email_verified_at));
+
+        $user = auth()->user();
         $data = [
+            'group_id' => $this->group_id ?? $user->group_id,
+            'company_id' => $this->company_id ?? $user->company_id,
+            'branch_id' => $this->branch_id ?? $user->branch_id,
             'email' => $email,
+            'bank_id' => $this->bank_id ?? Bank::where('company_id', $this->company_id)->first(['id'])?->id,
             'month' => $this->month ?? date('m'),
             'year' => $this->year ?? date('Y'),
-            'email_verified_at' => $this->email_verified_at ? date('Y-m-d H:i:s', strtotime($this->email_verified_at)) : null,
+            'email_verified_at' => $emailVerifiedAt,
+            'bpjs_kesehatan_family_no' => $this->bpjs_kesehatan_family_no ?? 0,
             'currency' => $this->currency ?? CurrencyCode::IDR->value,
         ];
 
-        if ($this->company_id) {
-            $data['overtime_id'] = \App\Models\Overtime::where('company_id', $this->company_id)->first(['id'])?->id;
+        if (config('app.name') == 'SUNSHINE') {
+            $data['nik'] = null;
         }
 
         $this->merge($data);
@@ -75,9 +79,11 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
+        $countryId = optional($this->user()->company)->country_id;
+
         return [
-            'group_id' => 'nullable|exists:groups,id',
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'group_id' => 'required|exists:groups,id',
+            'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'overtime_id' => ['nullable', new CompanyTenantedRule(Overtime::class, 'Overtime data not found')],
@@ -86,10 +92,11 @@ class RegisterRequest extends FormRequest
             'name' => 'required|string',
             // 'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
+            'work_email' => 'nullable|email',
             'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',
             'password' => 'nullable|string',
             'type' => ['required', Rule::enum(UserType::class)],
-            'nik' => 'nullable',
+            'nik' => 'nullable|unique:users,nik',
             'phone' => 'nullable',
             'gender' => ['required', Rule::enum(Gender::class)],
             'join_date' => 'nullable|date',
@@ -98,7 +105,14 @@ class RegisterRequest extends FormRequest
             'resign_date' => 'nullable|date',
             'photo_profile' => 'nullable|mimes:' . config('app.file_mimes_types'),
 
-            'no_ktp' => 'required|string',
+            'no_ktp' => [
+                'required',
+                 'string',
+                Rule::when(
+                    $countryId == 2,
+                    ['required', 'regex:/^\d{6}-\d{2}-\d{4}$/']
+                )
+                ],
             'kk_no' => 'nullable|string',
             'postal_code' => 'nullable|string',
             'address' => 'required|string',
@@ -127,6 +141,9 @@ class RegisterRequest extends FormRequest
             'bank_name' => 'nullable|string',
             'bank_account_no' => 'nullable|string',
             'bank_account_holder' => 'nullable|string',
+            'secondary_bank_name' => 'nullable|string',
+            'secondary_bank_account_no' => 'nullable|string',
+            'secondary_bank_account_holder' => 'nullable|string',
             'npwp' => 'nullable|string',
             'ptkp_status' => ['nullable', Rule::enum(PtkpStatus::class)],
             'tax_method' => ['nullable', Rule::enum(TaxMethod::class)],
@@ -139,11 +156,11 @@ class RegisterRequest extends FormRequest
             'npp_bpjs_ketenagakerjaan' => ['nullable', Rule::enum(NppBpjsKetenagakerjaan::class)],
             'bpjs_ketenagakerjaan_date' => 'nullable|date',
             'bpjs_kesehatan_no' => 'nullable|string',
-            'bpjs_kesehatan_family_no' => 'nullable|string',
+            'bpjs_kesehatan_family_no' => ['nullable', Rule::enum(BpjsKesehatanFamilyNo::class)],
             'bpjs_kesehatan_date' => 'nullable|date',
             'bpjs_kesehatan_cost' => ['nullable', Rule::enum(PaidBy::class)],
             'jht_cost' => ['nullable', Rule::enum(PaidBy::class)],
-            'jaminan_pensiun_cost' => ['nullable', Rule::enum(PaidBy::class)],
+            'jaminan_pensiun_cost' => ['nullable', Rule::enum(JaminanPensiunCost::class)],
             'jaminan_pensiun_date' => 'nullable|date',
 
             'positions' => 'nullable|array',
@@ -157,6 +174,16 @@ class RegisterRequest extends FormRequest
             'company_ids.*' => ['required', new CompanyTenantedRule()],
             'branch_ids' => 'nullable|array',
             'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+
+            'issue_date' => 'nullable|date'
+            // 'directorate_code'=>'nullable'
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'no_ktp.regex' => "Invalid Identity Number Format"
         ];
     }
 }

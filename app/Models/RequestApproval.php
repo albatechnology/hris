@@ -38,11 +38,30 @@ class RequestApproval extends BaseModel
 
                     // if approved, kirim notif ke atasan kalo ada
                     if ($model->approval_status->is(ApprovalStatus::APPROVED)) {
-                        $supervisor = \App\Classes\SupervisorUtility::build($user, auth()->user())->getSupervisor();
+                        $supervisorUtility = \App\Classes\SupervisorUtility::build($user, auth()->user());
 
-                        if ($supervisor) {
-                            $requestable->sendRequestNotification($supervisor->supervisor, $user);
-                            // RequestApprovalService::sendNotification($supervisor->supervisor, $user, $requestable);
+                        $supervisorSubordinates = $supervisorUtility->getSupervisorSubordinates();
+                        if ($supervisorSubordinates->count()) {
+                            self::where('requestable_id', $model->requestable_id)
+                                ->where('requestable_type', $model->requestable_type)
+                                ->whereIn('user_id', $supervisorSubordinates->pluck('supervisor_id'))
+                                ->update([
+                                    'approval_status' => ApprovalStatus::APPROVED,
+                                    'approved_at' => now(),
+                                ]);
+                        }
+
+                        $nextSupervisor = $supervisorUtility->getSupervisor();
+                        if ($nextSupervisor) {
+                            $requestable->sendRequestNotification($nextSupervisor->supervisor, $user);
+                        } else {
+                            self::where('requestable_id', $model->requestable_id)
+                                ->where('requestable_type', $model->requestable_type)
+                                ->where('approval_status', '!=', ApprovalStatus::APPROVED)
+                                ->update([
+                                    'approval_status' => ApprovalStatus::APPROVED,
+                                    'approved_at' => now(),
+                                ]);
                         }
                     }
 

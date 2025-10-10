@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TaskHour extends BaseModel implements TenantedInterface
 {
+    use CustomSoftDeletes;
+
     protected $fillable = [
         'task_id',
         'name',

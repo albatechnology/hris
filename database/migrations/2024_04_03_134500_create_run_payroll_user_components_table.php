@@ -18,6 +18,7 @@ return new class extends Migration
             $table->double('amount', 13, 2)->unsigned()->nullable();
             $table->boolean('is_editable')->default(0);
             $table->json('payroll_component');
+            $table->json('context')->nullable();
             $table->timestamps();
         });
     }

@@ -4,35 +4,17 @@ namespace App\Http\Requests\Api\UserTransfer;
 
 use App\Enums\EmploymentStatus;
 use App\Enums\TransferType;
-use App\Traits\Requests\RequestToBoolean;
+use App\Models\Branch;
+use App\Models\Department;
+use App\Models\Position;
+use App\Models\User;
+use App\Rules\CompanyTenantedRule;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    use RequestToBoolean;
-
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Prepare inputs for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'is_notify_manager' => $this->toBoolean($this->is_notify_manager),
-            'is_notify_user' => $this->toBoolean($this->is_notify_user),
-        ]);
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -41,23 +23,56 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => ['required', 'exists:users,id'],
             'type' => ['required', Rule::enum(TransferType::class)],
-            'effective_date' => 'required|date',
+            'effective_date' => ['required', 'date'],
+            'company_id' => ['nullable', new CompanyTenantedRule()],
+            'branch_id' => ['nullable', function ($attribute, $value, Closure $fail) {
+                if (
+                    Branch::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    ->doesntExist()
+                ) {
+                    $fail("Branch not found");
+                };
+            }],
+            'supervisor_id' => ['nullable', function ($attribute, $value, Closure $fail) {
+                if (
+                    User::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    ->doesntExist()
+                ) {
+                    $fail("Supervisor not found");
+                };
+            }],
+            'position_id' => ['required_with:department_id', function ($attribute, $value, Closure $fail) {
+                if (
+                    Position::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    ->doesntExist()
+                ) {
+                    $fail("Position not found");
+                };
+            }],
+            'department_id' => ['required_with:position_id', function ($attribute, $value, Closure $fail) {
+                if (
+                    Department::tenanted()->where('id', $value)
+                    ->when($this->company_id, fn($q) => $q->whereHas('division', fn($q) => $q->where('company_id', $this->company_id)))
+                    ->doesntExist()
+                ) {
+                    $fail("Department not found");
+                };
+            }],
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
-            'approval_id' => 'nullable|exists:users,id',
-            'parent_id' => 'nullable|exists:users,id',
-            'reason' => 'nullable|string',
-            'is_notify_manager' => 'nullable|boolean',
-            'is_notify_user' => 'nullable|boolean',
-            'file' => 'required|mimes:' . config('app.file_mimes_types'),
+            'reason' => ['required', 'string'],
+            'file' => ['nullable', 'mimes:' . config('app.file_mimes_types')],
 
-            'branch_ids' => 'nullable|array',
-            'branch_ids.*' => 'required|exists:branches,id',
+            // 'branch_ids' => 'nullable|array',
+            // 'branch_ids.*' => 'required|exists:branches,id',
 
-            'positions' => 'nullable|array',
-            'positions.*.position_id' => 'required|exists:positions,id',
-            'positions.*.department_id' => 'required|exists:departments,id',
+            // 'positions' => 'nullable|array',
+            // 'positions.*.position_id' => 'required|exists:positions,id',
+            // 'positions.*.department_id' => 'required|exists:departments,id',
         ];
     }
 }

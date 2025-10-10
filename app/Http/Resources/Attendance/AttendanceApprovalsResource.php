@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Attendance;
 
-use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

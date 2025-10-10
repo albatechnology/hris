@@ -34,6 +34,15 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         return $this->morphMany(RequestApproval::class, 'requestable');
     }
 
+    public function scopeWhereBranch(Builder $q, int $value)
+    {
+        $q->whereHas('user', fn($q) => $q->where('branch_id', $value));
+    }
+    public function scopeWhereUserName(Builder $q, string $value)
+    {
+        $q->whereHas('user', fn($q) => $q->whereLike('name', $value));
+    }
+
     public function scopeApproved(Builder $query)
     {
         $query->has('approvals')
@@ -48,6 +57,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
             return $query
                 ->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::PENDING))
                 ->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::REJECTED, ApprovalStatus::APPROVED]));
+        } elseif ($status == ApprovalStatus::ON_PROGRESS->value) {
+            return $query->whereHas('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::APPROVED]))
+                ->whereDoesntHave('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::REJECTED));
         } elseif ($status == ApprovalStatus::APPROVED->value) {
             return $query->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED]));
         } elseif ($status == ApprovalStatus::REJECTED->value) {
@@ -57,8 +69,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         }
 
         // on_progress
-        return $query->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::PENDING))
-            ->whereHas('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::APPROVED, ApprovalStatus::REJECTED]));
+        return $query;
+        // return $query->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::PENDING))
+        //     ->whereHas('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::APPROVED, ApprovalStatus::REJECTED]));
     }
 
     public function scopeMyApprovals(Builder $query): void
@@ -114,6 +127,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         } elseif ($this instanceof RequestShift) {
             if ($isApproved) return NotificationType::REQUEST_SHIFT_APPROVED;
             return NotificationType::REQUEST_SHIFT;
+        } elseif ($this instanceof Reimbursement) {
+            if ($isApproved) return NotificationType::REQUEST_REIMBURSEMENT_APPROVED;
+            return NotificationType::REQUEST_REIMBURSEMENT;
         }
     }
 
@@ -132,8 +148,11 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         return ApprovalStatus::ON_PROGRESS->value;
     }
 
-    public function isDescendantApproved(?User $user = null): mixed
+    public function isDescendantApproved(?User $user = null): bool
     {
+        return true;
+
+        // need to create setting for direct approver
         if (!$user) $user = auth()->user();
         $descendant = SupervisorUtility::build(RequestApprovalService::getUser($this), $user)->getSupervisor(false);
         if (!$descendant) return true;

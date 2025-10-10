@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\User;
 use App\Enums\Gender;
 use App\Enums\UserType;
 use App\Models\Branch;
+use App\Models\Level;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,11 +13,30 @@ use Illuminate\Validation\Rule;
 class StoreRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $email = $this->email;
+        if (!$email) {
+            if ($this->nik) {
+                $email = $this->nik . '@gmail.com';
+            } else {
+                $email = str_replace(' ', '', $this->name) . time() . '@gmail.com';
+            }
+        }
+
+        $user = auth()->user();
+        $data = [
+            'group_id' => $this->group_id ?? $user->group_id,
+            'company_id' => $this->company_id ?? $user->company_id,
+            'branch_id' => $this->branch_id ?? $user->branch_id,
+            'email' => $email,
+        ];
+
+        $this->merge($data);
     }
 
     /**
@@ -27,9 +47,10 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'nullable|exists:groups,id',
+            'group_id' => 'required|exists:groups,id',
             'company_id' => ['nullable', new CompanyTenantedRule()],
             'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'level_id' => ['nullable', new CompanyTenantedRule(Level::class, 'Level not found')],
             // 'approval_id' => 'nullable|exists:users,id',
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',

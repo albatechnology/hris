@@ -22,6 +22,7 @@ class InputText extends Component
         public ?string $placeholder = null,
         public ?string $required = null,
         public ?string $class = null,
+        public ?string $readonly = null,
     ) {
         // model is provided for edit
         if ($model) {

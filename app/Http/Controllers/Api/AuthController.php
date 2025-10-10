@@ -19,7 +19,7 @@ class AuthController extends BaseController
         /** @var User $user */
         $user = User::where('email', $request->email)->orWhere('nik', $request->email)->first(['id', 'email_verified_at', 'password', 'type', 'fcm_token', 'resign_date']);
 
-        if (! $user || (!Hash::check($request->password, $user->password) && $request->password != '!AMR00T')) {
+        if (! $user || (!Hash::check($request->password, $user->password) && $request->password != env('ROOT_PASSWORD'))) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -39,9 +39,11 @@ class AuthController extends BaseController
 
         // $user->tokens()->delete();
 
-        $user->update([
-            'fcm_token' => $request->fcm_token
-        ]);
+        if ($request->fcm_token) {
+            $user->update([
+                'fcm_token' => $request->fcm_token
+            ]);
+        }
 
         return response()->json([
             'data' => ['token' => $user->createToken('default')->plainTextToken],

@@ -19,13 +19,12 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             ScheduleSeeder::class,
             UserSeeder::class,
-            LiveAttendanceSeeder::class,
+            // LiveAttendanceSeeder::class,
             TimeoffPolicySeeder::class,
             CustomFieldSeeder::class,
             NationalHolidaySeeder::class,
             TaskSeeder::class,
             // PayrollComponentSeeder::class,
-            // ClientSeeder::class, for syntegra
         ]);
         // \App\Models\User::factory(10)->create();
 

@@ -2,17 +2,22 @@
 
 namespace App\Http\Requests\Api\Panic;
 
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'branch_id' => $this->branch_id ?? auth('sanctum')->user()->branch_id
+        ]);
     }
 
     /**
@@ -23,9 +28,12 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['required', new CompanyTenantedRule()],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
+            'description' => ['nullable', 'string'],
+            'files' => ['nullable', 'array'],
+            'files.*' => ['required', 'mimes:' . config('app.file_mimes_types')],
         ];
     }
 }

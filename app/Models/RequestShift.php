@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
@@ -11,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RequestShift extends RequestedBaseModel implements TenantedInterface
 {
-    use CustomSoftDeletes, CreatedUpdatedInfo, BelongsToUser, TenantedThroughUser;
+    use CustomSoftDeletes, CreatedUpdatedInfo, TenantedThroughUser;
 
     protected $fillable = [
         'user_id',

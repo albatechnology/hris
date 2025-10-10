@@ -16,13 +16,7 @@ class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Prepare inputs for validation.
@@ -33,6 +27,7 @@ class StoreRequest extends FormRequest
     {
         $this->merge([
             'is_after_shift' => $this->toBoolean($this->is_after_shift),
+            'real_duration' => $this->duration,
         ]);
     }
 
@@ -54,11 +49,13 @@ class StoreRequest extends FormRequest
                 }
             ],
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
-            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found')],
+            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'))],
+            // 'shift_id' => ['required', 'exists:shifts,id'],
             // 'type' => ['required', Rule::enum(OvertimeRequestType::class)],
             'date' => 'required|date',
             'is_after_shift' => 'required|boolean',
             'duration' => 'required|date_format:H:i',
+            'real_duration' => 'required|date_format:H:i',
             // 'start_at' => 'required|date_format:Y-m-d H:i',
             // 'end_at' => 'required|date_format:Y-m-d H:i',
             'note' => 'nullable|string',

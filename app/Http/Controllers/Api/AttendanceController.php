@@ -2,41 +2,41 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
+use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Event;
+use Carbon\CarbonPeriod;
+use App\Models\Attendance;
+use App\Enums\ScheduleType;
 use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
+use App\Services\TaskService;
 use App\Enums\MediaCollection;
-use App\Enums\ScheduleType;
-use App\Events\Attendance\AttendanceRequested;
-use App\Exports\AttendanceReport;
-use App\Http\Requests\Api\Attendance\ChildrenRequest;
-use App\Http\Requests\Api\Attendance\ExportReportRequest;
-use App\Http\Requests\Api\Attendance\IndexRequest;
-use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
-use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
-use App\Http\Requests\Api\Attendance\StoreRequest;
-use App\Http\Requests\Api\BulkApproveRequest;
-use App\Http\Requests\Api\NewApproveRequest;
-use App\Http\Resources\Attendance\AttendanceApprovalsResource;
-use App\Http\Resources\Attendance\AttendanceDetailResource;
-use App\Http\Resources\Attendance\AttendanceResource;
-use App\Http\Resources\DefaultResource;
-use App\Models\Attendance;
 use App\Models\AttendanceDetail;
-use App\Models\DatabaseNotification;
-use App\Models\Event;
-use App\Models\User;
-use App\Services\AttendanceService;
+use App\Exports\AttendanceReport;
 use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
-use App\Services\TaskService;
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
-use Exception;
 use Illuminate\Support\Facades\DB;
+use App\Services\AttendanceService;
+use App\Models\DatabaseNotification;
 use Maatwebsite\Excel\Facades\Excel;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Spatie\QueryBuilder\AllowedFilter;
+use App\Http\Resources\DefaultResource;
+use Spatie\QueryBuilder\AllowedInclude;
+use App\Http\Requests\Api\NewApproveRequest;
+use App\Http\Requests\Api\BulkApproveRequest;
+use App\Events\Attendance\AttendanceRequested;
+use App\Http\Requests\Api\Attendance\IndexRequest;
+use App\Http\Requests\Api\Attendance\StoreRequest;
+use App\Http\Requests\Api\Attendance\ChildrenRequest;
+use App\Http\Resources\Attendance\AttendanceResource;
+use App\Http\Requests\Api\Attendance\ExportReportRequest;
+use App\Http\Resources\Attendance\AttendanceDetailResource;
+use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
+use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
+use App\Http\Resources\Attendance\AttendanceApprovalsResource;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -47,6 +47,7 @@ class AttendanceController extends BaseController
     public function __construct()
     {
         parent::__construct();
+
         // $this->middleware('permission:attendance_access', ['only' => ['index', 'show', 'restore']]);
         $this->middleware('permission:attendance_access', ['only' => ['restore']]);
         $this->middleware('permission:attendance_read', ['only' => ['index', 'show', 'report', 'employees', 'employeesSummary']]);
@@ -61,16 +62,16 @@ class AttendanceController extends BaseController
         $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
-        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
         $users = User::tenanted(true)
             ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
@@ -79,36 +80,42 @@ class AttendanceController extends BaseController
             $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
             $user->setAppends([]);
-            $attendances = Attendance::where('user_id', $user->id)
-                ->with([
-                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'time_dispensation']),
-                    'timeoff.timeoffPolicy',
-                    'clockIn' => fn($q) => $q->approved(),
-                    'clockOut' => fn($q) => $q->approved(),
-                ])
-                ->whereDateBetween($startDate, $endDate)
-                ->get(['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date']);
+
+            $attendances = AttendanceService::getUserAttendancesInPeriod(
+                $user,
+                $startDate,
+                $endDate,
+                [
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(['is_enable_grace_period', 'clock_in_dispensation', 'clock_out_dispensation', 'time_dispensation'])
+                ],
+                ['id', 'user_id', 'schedule_id', 'shift_id', 'timeoff_id', 'event_id', 'code', 'date']
+            );
 
             $dataAttendance = [];
             foreach ($dateRange as $date) {
                 $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'name', 'is_dayoff', 'clock_in', 'clock_out']);
-                $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
 
-                if ($attendance?->clockIn) {
-                    $attendance->clock_in = $attendance?->clockIn;
-                }
-                if ($attendance?->clockOut) {
-                    $attendance->clock_out = $attendance?->clockOut;
-                }
-                if ($attendance?->timeoff) {
-                    $attendance->timeoff = $attendance?->timeoff;
-                    if ($attendance->timeoff->timeoffPolicy) {
-                        $attendance->timeoff->timeoffPolicy = $attendance?->timeoff->timeoffPolicy;
-                    }
-                }
+                // if (!$schedule || !$schedule->shift) {
+                //     continue;
+                // }
+
+                $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
 
                 if ($attendance) {
                     $shift = $attendance->shift;
+
+                    // if ($attendance->clockIn) {
+                    //     $attendance->clock_in = $attendance->clockIn;
+                    // }
+                    // if ($attendance->clockOut) {
+                    //     $attendance->clock_out = $attendance->clockOut;
+                    // }
+                    // if ($attendance->timeoff) {
+                    //     $attendance->timeoff = $attendance->timeoff;
+                    //     if ($attendance->timeoff->timeoffPolicy) {
+                    //         $attendance->timeoff->timeoffPolicy = $attendance->timeoff->timeoffPolicy;
+                    //     }
+                    // }
 
                     // load overtime
                     $overtimeDurationBeforeShift = AttendanceService::getSumOvertimeDuration(user: $user, startDate: $date, formatText: false, query: fn($q) => $q->where('is_after_shift', false));
@@ -121,20 +128,15 @@ class AttendanceController extends BaseController
                     $totalTask = TaskService::getSumDuration($user, $date);
                     $attendance->total_task = $totalTask;
 
-                    // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_late_in && $attendance->clockIn) {
                     $remainingTime = 0;
-                    if ($attendance->clockIn) {
-                        // $attendance->late_in = getIntervalTime($attendance->shift->clock_in, date('H:i:s', strtotime($attendance->clockIn->time)), true);
-                        // $attendance->late_in = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
+                    $attendance->late_in = "00:00:00";
+                    if ($attendance->clockIn && !$attendance->shift->is_dayoff) {
                         list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $shift);
                         $attendance->late_in = $diffInTime;
                     }
-                    // dump('remainingTime OKE', $remainingTime);
-                    // if (!$attendance->schedule->is_flexible && $attendance->schedule->is_include_early_out && $attendance->clockOut) {
-                    if ($attendance->clockOut) {
-                        // dump('clockOut clockOut clockOut clockOut');
-                        // $attendance->early_out = getIntervalTime(date('H:i:s', strtotime($attendance->clockOut->time)), $attendance->shift->clock_out, true);
-                        // $attendance->early_out = AttendanceService::getTotalLateTime($attendance->clockOut, $shift);
+
+                    $attendance->early_out = "00:00:00";
+                    if ($attendance->clockOut && !$attendance->shift->is_dayoff) {
                         list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockOut, $shift, $remainingTime);
                         $attendance->early_out = $diffInTime;
 
@@ -181,7 +183,6 @@ class AttendanceController extends BaseController
                     unset($shift->pivot);
 
                     $dataAttendance[] = [
-                        // 'user' => $user,
                         'date' => $date->format('Y-m-d'),
                         'shift_type' => $shiftType,
                         'shift' => $shift,
@@ -214,24 +215,16 @@ class AttendanceController extends BaseController
     public function index(IndexRequest $request)
     {
         if (isset($request->filter['user_id'])) {
-            $user = User::where('id', $request->filter['user_id'])->firstOrFail(['id', 'company_id']);
+            $user = User::where('id', $request->filter['user_id'])->with('payrollInfo', fn($q) => $q->select('user_id', 'is_ignore_alpa'))->firstOrFail(['id', 'company_id']);
         } else {
             $user = auth('sanctum')->user();
         }
-
-        // $timeoffRegulation = TimeoffRegulation::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
-        // $payrollSetting = PayrollSetting::where('company_id', $user->company_id)->first(['id', 'cut_off_date']);
 
         $month = date('m');
 
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
-        // if (date('d') <= $payrollSetting->cut_off_date) {
-        //     $month -= 1;
-        // }
 
-        // $startDate = date(sprintf('%s-%s-%s', $year, $month, $payrollSetting->cut_off_date));
-        // $endDate = date('Y-m-d', strtotime($startDate . '+1 month'));
         $startDate = Carbon::createFromDate($year, $month, 1);
         $endDate = $startDate->copy()->endOfMonth();
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -245,27 +238,9 @@ class AttendanceController extends BaseController
         $summaryNotPresentAbsent = 0;
         $summaryNotPresentNoClockIn = 0;
         $summaryNotPresentNoClockOut = 0;
-        $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
-        // $schedule = ScheduleService::getTodaySchedule($user, $startDate)?->load(['shifts' => fn($q) => $q->orderBy('order')]);
-        // $schedule = ScheduleService::getTodaySchedule($user, $endDate, ['id'], ['id']);
-        // if ($schedule) {
-        // $order = $schedule->shifts->where('id', $schedule->shift->id);
-        // $orderKey = array_keys($order->toArray())[0];
-        // $totalShifts = $schedule->shifts->count();
-
-        $attendances = Attendance::where('user_id', $user->id)
-            ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
-            ->with([
-                'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                'timeoff.timeoffPolicy',
-                'clockIn' => fn($q) => $q->approved(),
-                'clockOut' => fn($q) => $q->approved(),
-                'details' => fn($q) => $q->approved()->orderBy('created_at')
-            ])
-            ->whereDateBetween($startDate, $endDate)
-            ->get();
+        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $startDate, $endDate, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
 
         $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
         $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
@@ -279,6 +254,35 @@ class AttendanceController extends BaseController
             // 5. kalo ngambil timeoff, shfitnya tetap pake shift hari itu, munculin data timeoffnya
             $date = $date->format('Y-m-d');
             $attendance = $attendances->firstWhere('date', $date);
+
+            $shiftType = 'shift';
+
+            $companyHoliday = null;
+            $isHoliday = false;
+            if ($schedule?->is_overide_company_holiday == false) {
+                $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                    return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
+                });
+
+                if ($companyHoliday) {
+                    $isHoliday = true;
+                    $shift = $companyHoliday;
+                    $shiftType = 'company_holiday';
+                }
+            }
+
+            if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
+                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                });
+
+                if ($nationalHoliday) {
+                    $isHoliday = true;
+                    $shift = $nationalHoliday;
+                    $shiftType = 'national_holiday';
+                }
+            }
+
             if ($attendance) {
                 $shift = $attendance->shift;
 
@@ -322,7 +326,7 @@ class AttendanceController extends BaseController
                 }
 
                 // calculate timeoff
-                if ($attendance->timeoff) {
+                if ($attendance->timeoff && $attendance->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY)) {
                     $summaryAwayTimeOff += 1;
                 }
 
@@ -335,30 +339,11 @@ class AttendanceController extends BaseController
                 // $attendance->total_task = $totalTask;
             } else {
                 $shift = $schedule?->shift;
-                $summaryNotPresentAbsent += 1;
-            }
-            $shiftType = 'shift';
 
-            $companyHoliday = null;
-            if ($schedule?->is_overide_company_holiday == false) {
-                $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
-                    return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
-                });
-
-                if ($companyHoliday) {
-                    $shift = $companyHoliday;
-                    $shiftType = 'company_holiday';
-                }
-            }
-
-            if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
-                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
-                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
-                });
-
-                if ($nationalHoliday) {
-                    $shift = $nationalHoliday;
-                    $shiftType = 'national_holiday';
+                if (
+                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                ) {
+                    $summaryNotPresentAbsent += 1;
                 }
             }
 
@@ -370,14 +355,7 @@ class AttendanceController extends BaseController
                 'shift' => $shift,
                 'attendance' => $attendance
             ];
-
-            // if (($orderKey + 1) === $totalShifts) {
-            //     $orderKey = 0;
-            // } else {
-            //     $orderKey++;
-            // }
         }
-        // }
 
         return response()->json([
             'summary' => [
@@ -393,7 +371,6 @@ class AttendanceController extends BaseController
                     'no_clock_out' => $summaryNotPresentNoClockOut,
                 ],
                 'away' => [
-                    'day_off' => $summaryAwayDayOff,
                     'time_off' => $summaryAwayTimeOff,
                 ]
             ],
@@ -405,17 +382,18 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
-        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
-                'branch' => fn($q) => $q->select('id', 'name')
+                'branch' => fn($q) => $q->select('id', 'name'),
+                'payrollInfo' => fn($q) => $q->select('user_id', 'is_ignore_alpa'),
             ]);
 
         $date = $request->filter['date'];
@@ -427,13 +405,15 @@ class AttendanceController extends BaseController
             });
         }
 
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
+
         $summaryPresentOnTime = 0;
         $summaryPresentLateClockIn = 0;
         $summaryPresentEarlyClockOut = 0;
         $summaryNotPresentAbsent = 0;
         $summaryNotPresentNoClockIn = 0;
         $summaryNotPresentNoClockOut = 0;
-        $summaryAwayDayOff = 0;
         $summaryAwayTimeOff = 0;
 
         foreach ($query->get() as $user) {
@@ -441,12 +421,9 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                ->whereHas('schedule', function ($q) {
-                    $q->where('schedules.type', $request->filter['schedule_type'] ?? ScheduleType::ATTENDANCE->value);
-                })
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->select('id', 'clock_in', 'clock_out'),
-                    'timeoff' => fn($q) => $q->select('id'),
+                    'timeoff' => fn($q) => $q->approved()->select('id', 'request_type'),
                     'clockIn' => fn($q) => $q->select('attendance_id', 'time'),
                     'clockOut' => fn($q) => $q->select('attendance_id', 'time'),
                 ])->first();
@@ -490,41 +467,40 @@ class AttendanceController extends BaseController
                 }
 
                 // calculate timeoff
-                if ($attendance->timeoff) {
+                if ($attendance->timeoff && $attendance->timeoff->request_type->is(\App\Enums\TimeoffRequestType::FULL_DAY)) {
                     $summaryAwayTimeOff += 1;
                 }
             } else {
                 $shift = $schedule?->shift ?? null;
-                $summaryNotPresentAbsent += 1;
+
+                $companyHoliday = null;
+                $isHoliday = false;
+                if ($schedule?->is_overide_company_holiday == false) {
+                    $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
+                        return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
+                    });
+
+                    if ($companyHoliday) {
+                        $isHoliday = true;
+                    }
+                }
+
+                if ($schedule?->is_overide_national_holiday == false && !$isHoliday) {
+                    $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                        return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                    });
+
+                    if ($nationalHoliday) {
+                        $isHoliday = true;
+                    }
+                }
+
+                if (
+                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                ) {
+                    $summaryNotPresentAbsent += 1;
+                }
             }
-            // $shiftType = 'shift';
-
-            // $companyHolidayData = null;
-            // if ($schedule?->is_overide_company_holiday == false) {
-            //     $companyHolidayData = $companyHolidays->first(function ($companyHoliday) use ($date) {
-            //         return date('Y-m-d', strtotime($companyHoliday->start_at)) <= $date && date('Y-m-d', strtotime($companyHoliday->end_at)) >= $date;
-            //     });
-
-            //     if ($companyHolidayData) {
-            //         $shift = $companyHolidayData;
-            //         $shiftType = 'company_holiday';
-            //     }
-            // }
-
-            // if ($schedule?->is_overide_national_holiday == false && is_null($companyHolidayData)) {
-            //     $nationalHoliday = $nationalHolidays->firstWhere('date', $date);
-            //     if ($nationalHoliday) {
-            //         $shift = $nationalHoliday;
-            //         $shiftType = 'national_holiday';
-            //     }
-            // }
-
-            // unset($shift->pivot);
-
-            // $user->date = $date;
-            // $user->shift_type = $shiftType;
-            // $user->shift = $shift;
-            // $user->attendance = $attendance;
         }
 
         $summary = [
@@ -539,7 +515,6 @@ class AttendanceController extends BaseController
                 'no_clock_out' => $summaryNotPresentNoClockOut,
             ],
             'away' => [
-                'day_off' => $summaryAwayDayOff,
                 'time_off' => $summaryAwayTimeOff,
             ]
         ];
@@ -549,20 +524,25 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
+        $user = auth('sanctum')->user();
+
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
-        $clientId = isset($request['filter']['client_id']) && !empty($request['filter']['client_id']) ? $request['filter']['client_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
+            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
 
         $date = $request->filter['date'];
+
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
+        // $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereNationalHoliday()->get();
 
         $users = QueryBuilder::for($query)
             ->allowedFilters([
@@ -585,28 +565,13 @@ class AttendanceController extends BaseController
 
             $attendance = $user->attendances()
                 ->where('date', $date)
-                // ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
                 ->with([
                     'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                    'timeoff.timeoffPolicy',
+                    'timeoff' => fn($q) => $q->approved()->with('timeoffPolicy', fn($q) => $q->select('id', 'type', 'name', 'code')),
                     'clockIn' => fn($q) => $q->approved(),
                     'clockOut' => fn($q) => $q->approved(),
-                    // 'details' => fn ($q) => $q->orderBy('created_at')
                 ])->first();
 
-            if ($attendance) {
-                $shift = $attendance->shift;
-
-                // load overtime
-                $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
-                $attendance->total_overtime = $totalOvertime;
-
-                // load task
-                // $totalTask = TaskService::getSumDuration($user, $date);
-                // $attendance->total_task = $totalTask;
-            } else {
-                $shift = $schedule?->shift ?? null;
-            }
             $shiftType = 'shift';
 
             $companyHoliday = null;
@@ -630,6 +595,20 @@ class AttendanceController extends BaseController
                     $shift = $nationalHoliday;
                     $shiftType = 'national_holiday';
                 }
+            }
+
+            if ($attendance) {
+                $shift = $attendance->shift;
+
+                // load overtime
+                $totalOvertime = AttendanceService::getSumOvertimeDuration($user, $date);
+                $attendance->total_overtime = $totalOvertime;
+
+                // load task
+                // $totalTask = TaskService::getSumDuration($user, $date);
+                // $attendance->total_task = $totalTask;
+            } else {
+                $shift = $schedule?->shift ?? null;
             }
 
             unset($shift->pivot);
@@ -682,6 +661,10 @@ class AttendanceController extends BaseController
     public function store(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
+
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
 
         if ($request->is_offline_mode) {
             $attendance = AttendanceService::getTodayAttendance(date: $request->time, user: $user, isCheckByDetails: false);
@@ -742,6 +725,20 @@ class AttendanceController extends BaseController
         return new AttendanceResource($attendance);
     }
 
+    // public function store(StoreRequest $request)
+    // {
+    //     try {
+    //         $user = auth('sanctum')->user();
+    //         // dd($request->validated());
+    //         $attendance = $this->attendanceService->storeAttendance($request->validated(),$user);
+    //         return new AttendanceResource($attendance);
+    //     } catch (\DomainException $e) {
+    //         return $this->errorResponse($e->getMessage());
+    //     }catch(Exception $e){
+    //         return $this->errorResponse($e->getMessage());
+    //     }
+    // }
+
     public function manualAttendance(ManualAttendanceRequest $request)
     {
         /**
@@ -754,6 +751,10 @@ class AttendanceController extends BaseController
          *
          */
         $user = User::find($request->user_id);
+
+        if (AttendanceService::inLockAttendance($request->date, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
 
         $schedule = ScheduleService::getTodaySchedule($user, $request->date);
 
@@ -789,6 +790,8 @@ class AttendanceController extends BaseController
                     'is_clock_in' => true,
                     'time' => $request->date . ' ' . $request->clock_in,
                     'type' => $request->type,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                     // 'approval_status' => ApprovalStatus::APPROVED,
                     // 'approved_at' => now(),
                     // 'approved_by' => auth('sanctum')->id(),
@@ -801,6 +804,8 @@ class AttendanceController extends BaseController
                     'is_clock_in' => false,
                     'time' => $request->date . ' ' . $request->clock_out,
                     'type' => $request->type,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                     // 'approval_status' => ApprovalStatus::APPROVED,
                     // 'approved_at' => now(),
                     // 'approved_by' => auth('sanctum')->id(),
@@ -819,6 +824,11 @@ class AttendanceController extends BaseController
     public function update(StoreRequest $request)
     {
         $user = auth('sanctum')->user();
+
+        if (AttendanceService::inLockAttendance($request->time, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         $attendance = AttendanceService::getTodayAttendance($request->time, $request->schedule_id, $request->shift_id, $user);
 
         if (config('app.enable_face_rekognition') === true) {
@@ -880,6 +890,14 @@ class AttendanceController extends BaseController
          *
          */
 
+        if ($request->user_id) {
+            $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
+        }
+
+        if (AttendanceService::inLockAttendance($request->date, $user ?? null)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         // pemeriksaan kehadiran hri ini
         $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('sanctum')->user(), false);
 
@@ -896,6 +914,8 @@ class AttendanceController extends BaseController
                     'time' => $request->date . ' ' . $request->clock_in_hour,
                     'type' => $request->type,
                     'note' => $request->note,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                 ]);
                 // AttendanceRequested::dispatchIf($attendanceDetailClockIn->type->is(AttendanceType::MANUAL), $attendanceDetailClockIn);
             }
@@ -906,6 +926,8 @@ class AttendanceController extends BaseController
                     'time' => $request->date . ' ' . $request->clock_out_hour,
                     'type' => $request->type,
                     'note' => $request->note,
+                    'lat' => $request->lat ?? null,
+                    'lng' => $request->lng ?? null,
                 ]);
                 // AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
@@ -946,7 +968,11 @@ class AttendanceController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = AttendanceDetail::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -955,15 +981,20 @@ class AttendanceController extends BaseController
     {
         $query = AttendanceDetail::where('type', AttendanceType::MANUAL)
             ->myApprovals()
-            ->with('attendance', fn($q) => $q->with([
-                'user' => fn($q) => $q->select('id', 'name'),
-                'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
-                'schedule' => fn($q) => $q->select('id', 'name')
-            ]));
+            ->with([
+                'attendance' => fn($q) => $q->with([
+                    'user' => fn($q) => $q->select('id', 'name'),
+                    'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+                    'schedule' => fn($q) => $q->select('id', 'name'),
+                ]),
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
+            ]);
 
         $attendances = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
                 'created_at',
             ])
             ->allowedSorts([
@@ -975,11 +1006,19 @@ class AttendanceController extends BaseController
         return AttendanceApprovalsResource::collection($attendances);
     }
 
+    // public function approvals(Request $request)
+    // {
+    //     $attendances = $this->attendanceService->getApprovals(
+    //         [],
+    //         $this->per_page
+    //     );
+    //     return AttendanceApprovalsResource::collection($attendances);
+    // }
+
     public function showApproval(AttendanceDetail $attendanceDetail)
     {
         $attendanceDetail->load(
             [
-                // 'attendance' => fn($q) => $q->select('id', 'user_id', 'shift_id', 'schedule_id')
                 'attendance' => fn($q) => $q
                     ->with([
                         'user' => fn($q) => $q->select('id', 'name'),
@@ -991,6 +1030,13 @@ class AttendanceController extends BaseController
 
         return new AttendanceDetailResource($attendanceDetail);
     }
+
+    // public function showApproval(AttendanceDetail $attendanceDetail)
+    // {
+    //     $detail = $this->attendanceService->getApprovalDetail($attendanceDetail);
+
+    //     return new AttendanceDetailResource($detail);
+    // }
 
     public function approveValidate(int $id, ?int $approverId = null)
     {

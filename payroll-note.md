@@ -57,5 +57,5 @@ step run payroll
 updates
 - remove setting / PayrollComponentSetting from payroll_components
 - remove is_daily_default, daily_maximum_amount_type, daily_maximum_amount from payroll_components
-- remove cutoff_attendance_start_date, cutoff_attendance_end_date from payroll_setting
+- remove cut_off_attendance_start_date, cut_off_attendance_end_date from payroll_setting
 - change payroll_schedule_date to cut_off_date from payroll_setting, for determine payroll cut off date

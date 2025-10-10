@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Branch\StoreRequest;
 use App\Http\Requests\Api\Branch\UpdateRequest;
 use App\Http\Resources\Branch\BranchResource;
+use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\Branch\BranchServiceInterface;
 use App\Models\Branch;
+use App\Models\BranchLocation;
+use App\Models\User;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class BranchController extends BaseController
 {
-    public function __construct()
+    public function __construct(private BranchServiceInterface $service)
     {
         parent::__construct();
         $this->middleware('permission:branch_access', ['only' => ['restore']]);
@@ -59,8 +63,8 @@ class BranchController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $branch = Branch::create($request->validated());
-
+        $branch = $this->service->create($request->validated());
+        // $branch = Branch::create($request->validated());
         return new BranchResource($branch);
     }
 
@@ -94,5 +98,20 @@ class BranchController extends BaseController
         $branch->restore();
 
         return new BranchResource($branch);
+    }
+
+    public function summary()
+    {
+        $branchCount = Branch::tenanted()->count();
+        $branchLocationCount = BranchLocation::whereHas('branch', fn($q) => $q->tenanted())->count();
+        $userCount = User::tenanted()->whereNull('resign_date')->count();
+
+        $summary = [
+            'branch' => $branchCount,
+            'branch_location' => $branchLocationCount,
+            'active_user' => $userCount,
+        ];
+
+        return new DefaultResource($summary);
     }
 }

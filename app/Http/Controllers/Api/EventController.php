@@ -29,11 +29,14 @@ class EventController extends BaseController
         $event = QueryBuilder::for(Event::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('branch_id'),
                 AllowedFilter::scope('where_year_month', 'whereYearMonth')
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes(['company', 'branch'])
             ->allowedSorts([
                 'id',
+                'company_id',
+                'branch_id',
                 'name',
                 'type',
                 'start_at',
@@ -101,9 +104,11 @@ class EventController extends BaseController
         // }
 
         $companyId = $request->company_id ?? auth()->user()->company_id;
+        $branchId = $request->filter['branch_id'] ?? null;
 
         $events = Event::tenanted()
             ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             // ->orWhere(fn($q) => $q->whereNationalHoliday())
             // ->when(
             //     $fullDate,
@@ -147,6 +152,7 @@ class EventController extends BaseController
 
         $birthdays = User::tenanted()
             ->whereHas('detail', fn($q) => $q->whereMonth('birthdate', $request->filter['month']))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->with('detail', fn($q) => $q->select('user_id', 'birthdate'))
             ->get(['id', 'name']);
 
@@ -160,6 +166,7 @@ class EventController extends BaseController
         }
 
         $timeoffs = Timeoff::tenanted()->approved()
+            ->when($branchId, fn($q) => $q->whereHas('user', fn($q) => $q->where('branch_id', $branchId)))
             ->whereYear('start_at', $request->filter['year'])
             ->where(fn($q) => $q->whereMonth('start_at', $request->filter['month'])->orWhereMonth('end_at', $request->filter['month']))
             ->with([

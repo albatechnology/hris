@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\SettingKey;
 use App\Models\AttendanceDetail;
+use App\Models\DatabaseNotification;
+use App\Models\RequestApproval;
 use App\Models\RequestedBaseModel;
 use App\Models\User;
 use App\Models\UserSupervisor;
@@ -92,6 +94,18 @@ class RequestApprovalService
         }
 
         return $approvers;
+    }
+
+    public static function deleteByType(int $requestableId, string $requestableType, array $notificationClasses = [])
+    {
+        try {
+            RequestApproval::where('requestable_id', $requestableId)->where('requestable_type', $requestableType)->delete();
+            if (count($notificationClasses)) {
+                DatabaseNotification::deleteByData($requestableId, $notificationClasses);
+            }
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 
     // /**

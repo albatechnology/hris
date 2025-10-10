@@ -1,13 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\AbsenceReminderController;
 use App\Http\Controllers\Api\AdvancedLeaveRequestController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankController;
 use App\Http\Controllers\Api\BranchController;
-use App\Http\Controllers\Api\ClientController;
-use App\Http\Controllers\Api\ClientLocationController;
+use App\Http\Controllers\Api\BranchLocationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\DepartmentController;
@@ -18,9 +18,12 @@ use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\GuestBookController;
 use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\IncidentTypeController;
+use App\Http\Controllers\Api\LevelController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\LoanController;
+use App\Http\Controllers\Api\LockAttendanceController;
+use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NationalHolidayController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NppController;
@@ -35,6 +38,8 @@ use App\Http\Controllers\Api\PayrollProrateController;
 use App\Http\Controllers\Api\PayrollScheduleController;
 use App\Http\Controllers\Api\PayrollSettingController;
 use App\Http\Controllers\Api\PositionController;
+use App\Http\Controllers\Api\ReimbursementCategoryController;
+use App\Http\Controllers\Api\ReimbursementController;
 use App\Http\Controllers\Api\ReprimandController;
 use App\Http\Controllers\Api\RequestChangeDataAllowesController;
 use App\Http\Controllers\Api\RequestChangeDataController;
@@ -47,6 +52,7 @@ use App\Http\Controllers\Api\RunThrController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\SupervisorRequestScheduleController;
 use App\Http\Controllers\Api\SupervisorTypeController;
 use App\Http\Controllers\Api\TaskController;
@@ -75,6 +81,10 @@ use App\Http\Controllers\Api\UserPayrollInfoController;
 use App\Http\Controllers\Api\UserTransferController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('atara/contact', [\App\Http\Controllers\Api\AtaraController::class, 'contact']);
+Route::post('subscriptions', [SubscriptionController::class, 'store']);
+Route::get('subscriptions/info',[SubscriptionController::class,'quotaInfo']);
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
     Route::post('token', 'login');
@@ -111,6 +121,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('thr', [UserController::class, 'thr']);
         Route::get('companies', [UserController::class, 'companies']);
         Route::get('branches', [UserController::class, 'branches']);
+
+        Route::get('reimbursement-balance', [ReimbursementCategoryController::class, 'getUserBalance']);
 
         Route::get('timeoff-quotas', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuota']);
         Route::get('timeoff-quotas/{timeoff_policy}', [TimeoffQuotaController::class, 'getUserTimeoffPolicyQuotaHistories']);
@@ -155,7 +167,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('companies', CompanyController::class)->except('destroy');
 
+    Route::get('branches/summaries', [BranchController::class, 'summary']);
     Route::apiResource('branches', BranchController::class);
+    Route::post('branch-locations/generate-qr-code', [BranchLocationController::class, 'generateQrCode']);
+    Route::apiResource('branch-locations', BranchLocationController::class);
+
     Route::apiResource('positions', PositionController::class);
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('departments', DepartmentController::class);
@@ -205,6 +221,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::get('timeoff-quotas/users', [TimeoffQuotaController::class, 'users']);
     Route::get('timeoff-quotas/me/{timeoff_policy}', [TimeoffQuotaController::class, 'meDetails']);
+    Route::post('timeoff-quotas/revaluate-timeoff-discipline', [TimeoffQuotaController::class, 'revaluateTimeoffDiscipline']);
     Route::apiResource('timeoff-quotas', TimeoffQuotaController::class);
 
     Route::apiResource('timeoff-quota-histories', TimeoffQuotaHistoryController::class)->only('index', 'show');
@@ -221,10 +238,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('overtimes', OvertimeController::class);
     Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);
 
+    Route::get('overtime-requests/report', [OvertimeRequestController::class, 'report']);
     Route::get('overtime-requests/approvals', [OvertimeRequestController::class, 'approvals']);
     Route::get('overtime-requests/approvals/count-total', [OvertimeRequestController::class, 'countTotalApprovals']);
-    Route::apiResource('overtime-requests', OvertimeRequestController::class)->except('update');
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
+    Route::apiResource('overtime-requests', OvertimeRequestController::class)->except('update');
 
     Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);
     // Route::get('live-attendances/locations', [LiveAttendanceController::class, 'locations']);
@@ -276,6 +294,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('run-payrolls/{run_payroll}/export', [RunPayrollController::class, 'export']);
     Route::get('run-payrolls/{run_payroll}/export/ocbc', [RunPayrollController::class, 'exportOcbc']);
     Route::get('run-payrolls/{run_payroll}/export/bca', [RunPayrollController::class, 'exportBca']);
+    Route::delete('run-payrolls/bulk-delete', [RunPayrollController::class, 'bulkDestroy']);
     Route::apiResource('run-payrolls', RunPayrollController::class);
 
     Route::put('run-thrs/user-components/{run_thr_user}', [RunThrController::class, 'updateUserComponent']);
@@ -331,15 +350,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 
     Route::apiResource('incident-types', IncidentTypeController::class);
+
+    Route::get('incidents/export', [IncidentController::class, 'export']);
     Route::apiResource('incidents', IncidentController::class);
 
-    Route::get('clients/summaries', [ClientController::class, 'summary']);
-    Route::apiResource('clients', ClientController::class);
-    Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
-    Route::apiResource('client-locations', ClientLocationController::class);
+    // Route::get('clients/summaries', [ClientController::class, 'summary']);
+    // Route::apiResource('clients', ClientController::class);
+    // Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
+    // Route::apiResource('client-locations', ClientLocationController::class);
+
+    Route::get('guest-books/export', [GuestBookController::class, 'export']);
     Route::apiResource('guest-books', GuestBookController::class);
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
+    Route::get('patrols/test-export', [PatrolController::class, 'testExport']);
+    Route::get('patrols/users-location', [PatrolController::class, 'usersLocation']);
     Route::group(['prefix' => 'patrols/{patrol}'], function () {
         Route::get('export', [PatrolController::class, 'export']);
         Route::get('users', [PatrolController::class, 'userIndex']);
@@ -360,6 +385,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('user-patrols', UserPatrolController::class);
 
     Route::post('user-patrol-batches/sync', [UserPatrolBatchController::class, 'sync']);
+    Route::delete('user-patrol-batches/{user_patrol_batch}/force-delete', [UserPatrolBatchController::class, 'forceDelete']);
     Route::apiResource('user-patrol-batches', UserPatrolBatchController::class);
     Route::apiResource('user-patrol-movements', UserPatrolMovementController::class);
 
@@ -367,6 +393,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('settings', SettingController::class);
     Route::apiResource('banks', BankController::class);
+    Route::group(['prefix' => 'banks/{bank}'], function () {
+        Route::put('restore', [BankController::class, 'restore']);
+        Route::delete('force-delete', [BankController::class, 'forceDelete']);
+    });
 
     Route::get('extra-offs/users', [ExtraOffController::class, 'users']);
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
@@ -374,4 +404,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('loans', LoanController::class);
     Route::apiResource('run-reprimands', RunReprimandController::class);
     Route::apiResource('reprimands', ReprimandController::class);
+    Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
+    Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
+    Route::apiResource('media', MediaController::class)->only(['index', 'show', 'destroy']);
+
+    Route::get('lock-attendances/{lock_attendance}/details', [LockAttendanceController::class, 'details']);
+    Route::apiResource('lock-attendances', LockAttendanceController::class);
+
+    Route::get('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'getUsers']);
+    Route::post('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'addUsers']);
+    Route::put('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'editUser']);
+    Route::delete('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'deleteUsers']);
+    Route::apiResource('reimbursement-categories', ReimbursementCategoryController::class);
+
+    Route::get('reimbursements/approvals', [ReimbursementController::class, 'approvals']);
+    Route::get('reimbursements/approvals/count-total', [ReimbursementController::class, 'countTotalApprovals']);
+    Route::put('reimbursements/{overtime_request}/approve', [ReimbursementController::class, 'approve']);
+    Route::apiResource('reimbursements', ReimbursementController::class)->except('update');
+
+    Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
+
+    Route::apiResource('levels',LevelController::class);
 });

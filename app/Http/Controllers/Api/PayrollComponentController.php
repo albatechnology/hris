@@ -33,19 +33,21 @@ class PayrollComponentController extends BaseController
         $data = QueryBuilder::for(PayrollComponent::tenanted()->where('is_hidden', false))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::scope('has_formulas'),
+                AllowedFilter::scope('available_for_update_payroll_component'),
             ])
             ->allowedIncludes(['company'])
             ->allowedSorts([
                 'id',
                 'company_id',
-                'client_id',
+                'branch_id',
                 'name',
                 'type',
                 'amount',
                 'is_taxable',
+                'is_prorate',
                 'period_type',
                 'is_monthly_prorate',
                 // 'is_daily_default',

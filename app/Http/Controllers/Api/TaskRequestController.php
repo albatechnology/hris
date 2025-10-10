@@ -9,6 +9,8 @@ use App\Http\Requests\Api\TaskRequest\StoreRequest;
 use App\Http\Requests\Api\TaskRequest\ApproveRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\TaskRequest;
+use App\Models\User;
+use App\Services\AttendanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class TaskRequestController extends BaseController
 {
@@ -57,6 +60,11 @@ class TaskRequestController extends BaseController
 
     public function store(StoreRequest $request): DefaultResource|JsonResponse
     {
+        $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
+        if (AttendanceService::inLockAttendance($request->start_at, $user) || AttendanceService::inLockAttendance($request->end_at, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         DB::beginTransaction();
         try {
             $taskRequest = TaskRequest::create($request->validated());
@@ -109,12 +117,24 @@ class TaskRequestController extends BaseController
 
     public function destroy(int $id)
     {
-        $taskRequest = TaskRequest::findTenanted($id);
-        if (!$taskRequest->approval_status->is(\App\Enums\ApprovalStatus::PENDING)) {
-            return $this->errorResponse(message: 'Task request can not be deleted', code: 400);
+        $taskRequest = TaskRequest::select('id')->findTenanted($id);
+        // if (!$taskRequest->approval_status->is(\App\Enums\ApprovalStatus::PENDING)) {
+        //     return $this->errorResponse(message: 'Task request can not be deleted', code: 400);
+        // }
+
+        DB::beginTransaction();
+        try {
+            TaskRequest::withoutGlobalScopes()->where('id', $id)->forceDelete($taskRequest);
+            \App\Services\RequestApprovalService::deleteByType($id, TaskRequest::class, [
+                \App\Notifications\Task\RequestTask::class,
+                \App\Notifications\Task\TaskApproved::class
+            ]);
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
 
-        $taskRequest->delete();
         return $this->deletedResponse();
     }
 
@@ -150,7 +170,11 @@ class TaskRequestController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = TaskRequest::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -167,6 +191,9 @@ class TaskRequestController extends BaseController
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedIncludes([
                 AllowedInclude::callback('taskHour', fn($q) => $q->select('id', 'name', 'task_id')->with('task', fn($q) => $q->select('id', 'name'))),

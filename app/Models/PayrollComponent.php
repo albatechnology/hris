@@ -6,7 +6,7 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToClient;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
@@ -16,17 +16,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollComponent extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted, BelongsToClient, MorphManyFormulas, CustomSoftDeletes, CreatedUpdatedInfo;
+    use CompanyTenanted, BelongsToBranch, MorphManyFormulas, CustomSoftDeletes, CreatedUpdatedInfo;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        'branch_id',
         'name',
         'type',
         'category',
         // 'setting',
         'amount',
         'is_taxable',
+        'is_prorate',
         'period_type',
         'is_monthly_prorate',
         // 'is_daily_default',
@@ -45,6 +46,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
         // 'setting' => PayrollComponentSetting::class,
         'amount' => 'double',
         'is_taxable' => 'boolean',
+        'is_prorate' => 'boolean',
         'period_type' => PayrollComponentPeriodType::class,
         'is_monthly_prorate' => 'boolean',
         // 'is_daily_default' => 'boolean',
@@ -68,6 +70,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
             ->whereNotIn('category', [
                 PayrollComponentCategory::BASIC_SALARY,
                 PayrollComponentCategory::OVERTIME,
+                PayrollComponentCategory::REIMBURSEMENT,
                 PayrollComponentCategory::ALPA,
                 PayrollComponentCategory::LOAN,
                 PayrollComponentCategory::INSURANCE,
@@ -81,6 +84,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
                 PayrollComponentCategory::EMPLOYEE_JHT,
                 PayrollComponentCategory::COMPANY_JP,
                 PayrollComponentCategory::EMPLOYEE_JP,
+                PayrollComponentCategory::BPJS_KESEHATAN_FAMILY,
             ]);
     }
 
@@ -107,6 +111,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
             PayrollComponentCategory::EMPLOYEE_JHT,
             PayrollComponentCategory::COMPANY_JP,
             PayrollComponentCategory::EMPLOYEE_JP,
+            PayrollComponentCategory::BPJS_KESEHATAN_FAMILY,
         ]);
     }
 
@@ -124,5 +129,18 @@ class PayrollComponent extends BaseModel implements TenantedInterface
             PayrollComponentCategory::COMPANY_JP,
             PayrollComponentCategory::EMPLOYEE_JP,
         ]);
+    }
+
+    public function scopeAvailableForUpdatePayrollComponent(Builder $query, $value): void
+    {
+        if ((bool)$value) {
+            $query->whereNotIn('category', [
+                PayrollComponentCategory::REIMBURSEMENT,
+                PayrollComponentCategory::LOAN,
+                PayrollComponentCategory::INSURANCE,
+                PayrollComponentCategory::OVERTIME,
+                PayrollComponentCategory::TASK_OVERTIME,
+            ]);
+        }
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ClientLocation;
 use App\Models\Patrol;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +15,6 @@ return new class extends Migration
         Schema::create('patrol_locations', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Patrol::class)->constrained();
-            $table->foreignIdFor(ClientLocation::class)->constrained();
             $table->text('description')->nullable();
             $table->timestamps();
         });

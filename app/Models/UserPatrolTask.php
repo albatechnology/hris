@@ -81,4 +81,13 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
     {
         return $this->belongsTo(UserPatrolBatch::class);
     }
+
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->fit(\Spatie\Image\Enums\Fit::Max, 160, 160)
+            ->quality(100)
+            ->nonOptimized()
+            ->queued();
+    }
 }

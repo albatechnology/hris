@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api\Overtime;
 
 use App\Enums\RateType;
-use App\Models\Client;
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
@@ -15,14 +15,6 @@ class UpdateRequest extends FormRequest
     use RequestToBoolean;
 
     /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
      * Prepare inputs for validation.
      *
      * @return void
@@ -30,6 +22,7 @@ class UpdateRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            'compensation_rate_per_day' => $this->compensation_rate_per_day ?? 0,
             'company_id' => $this->company_id ? $this->company_id : auth('sanctum')->user()->company_id,
             'is_rounding' => $this->toBoolean($this->is_rounding),
         ]);
@@ -44,7 +37,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'name' => 'required|string',
             'is_rounding' => 'required|boolean',
             'compensation_rate_per_day' => 'nullable|numeric',
@@ -72,7 +65,11 @@ class UpdateRequest extends FormRequest
                 'integer',
                 function ($attribute, int $value, Closure $fail) {
                     $index = explode('.', $attribute)[1];
-                    if ($index > 0 && $value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) {
+                    if (
+                        ($index > 0) &&
+                        ($value <= (int)$this->overtime_multipliers[$index - 1]['end_hour']) &&
+                        ($this->overtime_multipliers[$index - 1]['is_weekday'] == $this->overtime_multipliers[$index]['is_weekday'])
+                    ) {
                         $fail($attribute . ' must be greater than ' . $this->overtime_multipliers[$index - 1]['end_hour']);
                     }
                 }

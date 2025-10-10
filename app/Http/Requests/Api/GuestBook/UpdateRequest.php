@@ -6,13 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,7 +16,6 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
             // 'is_check_out' => 'nullable|boolean',
             // 'name' => 'required|string|min:2|max:100',
             // 'address' => 'required|string|min:2|max:200',

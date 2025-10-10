@@ -3,19 +3,13 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Models\Branch;
-use App\Models\Client;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ChildrenRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    use RequestToBoolean;
 
     /**
      * Prepare inputs for validation.
@@ -28,6 +22,7 @@ class ChildrenRequest extends FormRequest
             'filter' => [
                 ...($this->filter ?? []),
                 'date' => !empty($this->filter['date']) ? $this->filter['date'] : date('Y-m-d'),
+                'is_show_resign_users' => $this->is_show_resign_users ? $this->toBoolean($this->is_show_resign_users) : null,
             ],
         ]);
     }
@@ -41,9 +36,9 @@ class ChildrenRequest extends FormRequest
     {
         return [
             'filter' => 'nullable|array',
-            'filter.client_id' => ['nullable', new CompanyTenantedRule(Client::class, 'Client not found')],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'filter.date' => 'nullable|date',
+            'filter.is_show_resign_users' => 'nullable|boolean',
             'sort' => 'nullable|string',
         ];
     }

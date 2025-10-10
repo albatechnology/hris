@@ -39,9 +39,14 @@ class UserDetail extends BaseModel
         'speed',
         'battery',
         'detected_at',
+        'last_absence_reminder_at',
+        'issue_date'
     ];
 
     protected $casts = [
+        'no_ktp' => 'string',
+        'kk_no' => 'string',
+        'passport_no' => 'string',
         'employment_status' => EmploymentStatus::class,
         'job_level' => JobLevel::class,
         'blood_type' => BloodType::class,

@@ -11,14 +11,6 @@ use Illuminate\Validation\Rule;
 class UpdateRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
      * Prepare inputs for validation.
      *
      * @return void
@@ -27,7 +19,7 @@ class UpdateRequest extends FormRequest
     {
         $details = collect($this->details ?? [])->reject(fn($detail) => $detail['basic_payment'] <= 0);
         $this->merge([
-            'installment' => $details->count(),
+            // 'installment' => $details->count(),
             'details' => $details->toArray(),
         ]);
     }
@@ -44,7 +36,7 @@ class UpdateRequest extends FormRequest
             'user_contact_id' => ['nullable', new CompanyTenantedRule(UserContact::class, 'Family of user not found')],
             'effective_date' => 'nullable|date',
             'type' => ['nullable', Rule::enum(LoanType::class)],
-            'installment' => 'required|integer',
+            // 'installment' => 'required|integer',
             'interest' => 'nullable|numeric',
             'amount' => 'required|numeric',
             'description' => 'nullable|string',

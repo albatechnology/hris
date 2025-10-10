@@ -290,12 +290,6 @@ class PermissionService
                 'incident_edit',
                 'incident_delete',
             ],
-            'client_access' => [
-                'client_read',
-                'client_create',
-                'client_edit',
-                'client_delete',
-            ],
             'patrol_access' => [
                 'patrol_read',
                 'patrol_create',
@@ -318,11 +312,23 @@ class PermissionService
                 'reprimand_edit',
                 'reprimand_delete',
             ],
+            'absence_reminder_access' => [
+                // 'absence_reminder_read',
+                // 'absence_reminder_create',
+                'absence_reminder_edit',
+                // 'absence_reminder_delete',
+            ],
             'bank_access' => [
                 'bank_read',
                 'bank_create',
                 'bank_edit',
                 'bank_delete',
+            ],
+            'lock_attendances_access' => [
+                'lock_attendances_read',
+                'lock_attendances_create',
+                'lock_attendances_edit',
+                'lock_attendances_delete',
             ],
             'extra_off_access' => [
                 'extra_off_read',
@@ -330,6 +336,19 @@ class PermissionService
                 // 'extra_off_edit',
                 // 'extra_off_delete',
             ],
+            'reimbursement_category_access' => [
+                'reimbursement_category_read',
+                'reimbursement_category_create',
+                'reimbursement_category_edit',
+                'reimbursement_category_delete',
+            ],
+            'loan_access' => [
+                'loan_read',
+                'loan_create',
+                'loan_edit',
+                'loan_delete',
+            ],
+            'allow_get_emergency_notification' => []
         ];
     }
 
@@ -567,12 +586,6 @@ class PermissionService
                 'incident_create',
                 'incident_edit',
                 'incident_delete',
-            ],
-            'client_access' => [
-                'client_read',
-                // 'client_create',
-                // 'client_edit',
-                // 'client_delete',
             ],
             'patrol_access' => [
                 'patrol_read',

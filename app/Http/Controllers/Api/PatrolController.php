@@ -2,21 +2,26 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exports\PatrolTaskExport;
-use App\Http\Requests\Api\Patrol\StoreRequest;
-use App\Http\Requests\Api\Patrol\UserStoreRequest;
-use App\Http\Requests\Api\Patrol\UserUpdateRequest;
-use App\Http\Resources\DefaultResource;
-use App\Models\Patrol;
-use App\Models\UserPatrol;
 use Exception;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Patrol;
+use App\Models\PatrolTask;
+use App\Models\UserPatrol;
 use Illuminate\Http\Response;
+use App\Models\PatrolLocation;
+use App\Models\UserPatrolBatch;
+use App\Exports\PatrolTaskExport;
 use Illuminate\Support\Facades\DB;
+use App\Exports\TestPatrolTaskExport;
+use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Support\Facades\Schema;
 use Spatie\QueryBuilder\AllowedFilter;
+use App\Http\Resources\DefaultResource;
 use Spatie\QueryBuilder\AllowedInclude;
-use Spatie\QueryBuilder\QueryBuilder;
+use App\Http\Requests\Api\Patrol\StoreRequest;
+use App\Http\Requests\Api\Patrol\UserIndexRequest;
+use App\Http\Requests\Api\Patrol\UserStoreRequest;
+use App\Http\Requests\Api\Patrol\UserUpdateRequest;
 
 class PatrolController extends BaseController
 {
@@ -33,16 +38,17 @@ class PatrolController extends BaseController
     private function getAllowedIncludes()
     {
         return [
-            AllowedInclude::callback('client', function ($query) {
+            'patrolHours',
+            AllowedInclude::callback('branch', function ($query) {
                 $query->selectMinimalist();
             }),
             AllowedInclude::callback('users', function ($query) {
                 $query->with('user', fn($q) => $q->select('id', 'name', 'nik'));
             }),
             AllowedInclude::callback('patrolLocations', function ($query) {
-                $query->select('id', 'patrol_id', 'client_location_id', 'description')
+                $query->select('id', 'patrol_id', 'branch_location_id', 'description')
                     ->with([
-                        'clientLocation' => fn($q) => $q->select('id', 'client_id', 'name', 'lat', 'lng', 'address', 'description'),
+                        'branchLocation' => fn($q) => $q->select('id', 'branch_id', 'name', 'lat', 'lng', 'address', 'description'),
                         'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description'),
                     ]);
             }),
@@ -57,14 +63,14 @@ class PatrolController extends BaseController
                 AllowedFilter::callback('has_user_id', function ($query, $value) {
                     $query->whereHas('users', fn($q) => $q->where('user_id', $value));
                 }),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('branch_id'),
                 'name',
                 'start_date',
                 'end_date',
             ])
             ->allowedSorts([
                 'id',
-                'client_id',
+                'branch_id',
                 'name',
                 'start_date',
                 'end_date',
@@ -80,25 +86,13 @@ class PatrolController extends BaseController
     public function show(int $id)
     {
         $patrol = QueryBuilder::for(
-            Patrol::select('id', 'client_id', 'name', 'start_date', 'end_date', 'lat', 'lng', 'description', 'created_at')
+            Patrol::selectMinimalist()
                 ->tenanted()->where('id', $id)
         )
             ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 
         return new DefaultResource($patrol);
-
-        // $patrol = Patrol::findTenanted($id);
-        // return new DefaultResource($patrol->load([
-        //     'users' => [
-        //         'user',
-        //         // 'userPatrolSchedules.schedule',
-        //     ],
-        //     'patrolLocations' => [
-        //         'clientLocation',
-        //         'tasks',
-        //     ],
-        // ]));
     }
 
     public function store(StoreRequest $request)
@@ -107,7 +101,7 @@ class PatrolController extends BaseController
         try {
             // patrol
             $patrol = Patrol::create([
-                'client_id' => $request->client_id,
+                'branch_id' => $request->branch_id,
                 'name' => $request->name,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
@@ -117,27 +111,15 @@ class PatrolController extends BaseController
             ]);
 
             $patrol->patrolHours()->createMany($request->hours);
-
-            // user patrol
-            if ($request->users) {
-                foreach ($request->users as $reqUser) {
-                    $userPatrol = $patrol->users()->create([
-                        'user_id' => $reqUser['id'],
-                    ]);
-
-                    // foreach ($reqUser['schedules'] as $reqUserSchedule) {
-                    //     $userPatrol->userPatrolSchedules()->create([
-                    //         'schedule_id' => $reqUserSchedule['id'],
-                    //     ]);
-                    // }
-                }
-            }
+            $patrol->users()->createMany(collect($request->users)->map(fn($id) => [
+                'user_id' => $id,
+            ]));
 
             // patrol location
             if ($request->locations) {
                 foreach ($request->locations as $reqLocation) {
                     $patrolLocation = $patrol->patrolLocations()->create([
-                        'client_location_id' => $reqLocation['client_location_id'],
+                        'branch_location_id' => $reqLocation['branch_location_id'],
                     ]);
 
                     foreach ($reqLocation['tasks'] as $reqLocationTask) {
@@ -161,20 +143,21 @@ class PatrolController extends BaseController
                 // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
-                'clientLocation',
+                'branchLocation',
                 'tasks',
             ],
         ]));
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(StoreRequest $request, int $id)
     {
-        $patrol = Patrol::findTenanted($id);
+        $patrol = Patrol::where('id', $id)->firstOrFail();
+
         DB::beginTransaction();
         try {
             // patrol
             $patrol->update([
-                'client_id' => $request->client_id,
+                'branch_id' => $request->branch_id,
                 'name' => $request->name,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
@@ -186,40 +169,62 @@ class PatrolController extends BaseController
             $patrol->patrolHours()->delete();
             $patrol->patrolHours()->createMany($request->hours);
 
-            // user patrol
-            // $patrol->users()->each(fn($userPatrol) => $userPatrol->userPatrolSchedules()->delete());
             $patrol->users()->delete();
-            if ($request->users) {
-                foreach ($request->users as $reqUser) {
-                    $userPatrol = $patrol->users()->create([
-                        'user_id' => $reqUser['id'],
+            $patrol->users()->createMany(collect($request->users)->map(fn($id) => [
+                'user_id' => $id,
+            ]));
+
+            $patrolLocationIds = $patrol->patrolLocations->pluck('id');
+            $patrolTaskIds = $patrol->patrolLocations->pluck('tasks')->flatten(1)->pluck('id');
+            $updatedPatrolLocationIds = [];
+            $updatedPatrolTaskIds = [];
+            foreach ($request->locations ?? [] as $location) {
+                if (!empty($location['id'])) {
+                    $updatedPatrolLocationIds[] = $location['id'];
+                    $patrolLocation = PatrolLocation::findOrFail($location['id']);
+                    $patrolLocation->update([
+                        'branch_location_id' => $location['branch_location_id'],
                     ]);
-
-                    // foreach ($reqUser['schedules'] as $reqUserSchedule) {
-                    //     $userPatrol->userPatrolSchedules()->create([
-                    //         'schedule_id' => $reqUserSchedule['id'],
-                    //     ]);
-                    // }
-                }
-            }
-
-            // patrol location
-            $patrol->patrolLocations()->each(fn($patrolLocation) => $patrolLocation->tasks()->delete());
-            $patrol->patrolLocations()->delete();
-            if ($request->locations) {
-                foreach ($request->locations as $reqLocation) {
+                } else {
                     $patrolLocation = $patrol->patrolLocations()->create([
-                        'client_location_id' => $reqLocation['client_location_id'],
+                        'branch_location_id' => $location['branch_location_id'],
                     ]);
+                }
 
-                    foreach ($reqLocation['tasks'] as $reqLocationTask) {
+                foreach ($location['tasks'] ?? [] as $task) {
+                    if (!empty($task['id'])) {
+                        $updatedPatrolTaskIds[] = $task['id'];
+                        $patrolTask = PatrolTask::findOrFail($task['id']);
+                        $patrolTask->update([
+                            'name' => $task['name'],
+                            'description' => $task['description'],
+                        ]);
+                    } else {
+
                         $patrolLocation->tasks()->create([
-                            'name' => $reqLocationTask['name'],
-                            'description' => $reqLocationTask['description'],
+                            'name' => $task['name'],
+                            'description' => $task['description'],
                         ]);
                     }
                 }
             }
+
+            $patrol->patrolLocations->each(function ($patrolLocation) use ($patrolTaskIds, $updatedPatrolTaskIds) {
+                $patrolLocation->tasks
+                    ->whereIn('id', $patrolTaskIds)
+                    ->whereNotIn('id', $updatedPatrolTaskIds)
+                    ->each(fn(PatrolTask $patrolTask) => $patrolTask->userPatrolTasks()->delete());
+
+                $patrolLocation->tasks()
+                    ->whereIn('id', $patrolTaskIds)
+                    ->whereNotIn('id', $updatedPatrolTaskIds)
+                    ->delete();
+            });
+
+            $patrol->patrolLocations()
+                ->whereIn('id', $patrolLocationIds)
+                ->whereNotIn('id', $updatedPatrolLocationIds)
+                ->delete();
 
             DB::commit();
         } catch (Exception $e) {
@@ -233,7 +238,7 @@ class PatrolController extends BaseController
                 // 'userPatrolSchedules.schedule',
             ],
             'patrolLocations' => [
-                'clientLocation',
+                'branchLocation',
                 'tasks',
             ],
         ])))->response()->setStatusCode(Response::HTTP_ACCEPTED);
@@ -241,7 +246,7 @@ class PatrolController extends BaseController
 
     public function destroy(int $id)
     {
-        $patrol = Patrol::findTenanted($id);
+        $patrol = Patrol::where('id', $id)->firstOrFail();
 
         DB::beginTransaction();
         try {
@@ -262,27 +267,64 @@ class PatrolController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function userIndex(int $patrolId)
+    public function userIndex(UserIndexRequest $request, int $patrolId)
     {
-        $data = QueryBuilder::for(UserPatrol::where('patrol_id', $patrolId)->with('user'))
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? $startDate;
+
+        $data = QueryBuilder::for(
+            User::select('id', 'name', 'nik')
+                ->whereHas('userPatrols', fn($q) => $q->where('patrol_id', $patrolId))
+                ->withCount(['patrolBatches' =>  fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)])
+                ->withMax('patrolBatches as last_activity', 'datetime')
+                ->orderByDesc('last_activity')
+        )
             ->allowedFilters([
-                AllowedFilter::exact('user_id'),
-                AllowedFilter::exact('patrol_id'),
-                'start_time',
-                'end_time',
-            ])
-            ->allowedSorts([
-                'id',
-                'user_id',
-                'patrol_id',
-                'start_time',
-                'end_time',
-                'created_at',
+                AllowedFilter::exact('id'),
+                AllowedFilter::scope('search', 'whereName'),
             ])
             ->paginate($this->per_page);
 
         return DefaultResource::collection($data);
     }
+
+    // public function userIndex(UserIndexRequest $request, int $patrolId)
+    // {
+    //     $startDate = $request->filter['start_date'] ?? null;
+    //     $endDate = $request->filter['end_date'] ?? null;
+    //     $data = QueryBuilder::for(
+    //         UserPatrol::where('patrol_id', $patrolId)
+    //             ->with(['user' => function ($query) {
+    //                 $query->select('id', 'name', 'nik')
+    //                     ->withMax('patrolBatches as last_activity', 'created_at');
+    //             }])
+    //             ->when(
+    //                 $startDate && $endDate,
+    //                 fn($q) => $q->whereHas('user', fn($q) => $q->whereHas(
+    //                     'patrolBatches',
+    //                     fn($q) => $q->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
+    //                 ))
+    //             )
+    //     )
+    //         ->allowedFilters([
+    //             AllowedFilter::exact('user_id'),
+    //             AllowedFilter::exact('patrol_id'),
+    //             AllowedFilter::callback('search', function ($query, string $value) {
+    //                 $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
+    //             }),
+    //         ])
+    //         ->allowedSorts([
+    //             'id',
+    //             'user_id',
+    //             'patrol_id',
+    //             'start_time',
+    //             'end_time',
+    //             'created_at',
+    //         ])
+    //         ->paginate($this->per_page);
+
+    //     return DefaultResource::collection($data);
+    // }
 
     public function userShow(int $patrolId, int $userPatrolId)
     {
@@ -343,30 +385,95 @@ class PatrolController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function export(Request $request, int $id)
+    public function export(UserIndexRequest $request, int $id)
     {
-        $date = $request->filter['date'] ?? date('Y-m-d');
-        $patrol = Patrol::findTenanted($id);
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? date('Y-m-d');
+        $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
+
         $patrol->load([
-            'patrolLocations' => function ($q) use ($date) {
-                $q
-                    ->select('id', 'patrol_id', 'client_location_id', 'description')
-                    ->with('clientLocation', fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'))
-                    ->with('tasks', function ($q) use ($date) {
-                        $q
-                            ->select('id', 'patrol_location_id', 'name', 'description')
-                            ->with('userPatrolTasks', function ($q) use ($date) {
-                                $q->whereDate('created_at', $date)
-                                    ->with('user', fn($q) => $q->select('id', 'name'))
-                                    ->with('schedule', fn($q) => $q->select('id', 'name'))
-                                    ->with('shift', fn($q) => $q->select('id', 'name'));
-                            });
-                    });
-            }
+            'patrolLocations' => function ($q) {
+                $q->select('id', 'patrol_id', 'branch_location_id', 'description')
+                    ->with([
+                        'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
+                    ]);
+            },
+            'users' => fn($q) => $q->with(
+                'user',
+                fn($q) => $q->select('id', 'name', 'nik')
+                    ->with('patrolBatches', function ($q) use ($id, $startDate, $endDate) {
+                        $q->where('patrol_id', $id)
+                            ->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
+                            ->with(
+                                'userPatrolTasks',
+                                fn($q) => $q->with([
+                                    'media',
+                                    'patrolTask' => fn($q) => $q->select('id', 'patrol_location_id', 'name')->with('patrolLocation', fn($q) => $q->select('id', 'branch_location_id')->with('branchLocation', fn($q) => $q->select('id', 'name'))),
+                                ])
+                            );
+                    })
+            ),
         ]);
 
-        return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
+        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::HTML, [
+            'Content-Type' => 'application/vnd.ms-excel',
+        ]);
+    }
 
-        return $patrol;
+    public function testExport()
+    {
+        if (request()->has('preview')) {
+            $userPatrolBatch = UserPatrolBatch::with('userPatrolTasks.media')->find(449);
+            return $userPatrolBatch;
+        }
+        return (new TestPatrolTaskExport(449))->download('test-report-patroli.xls', \Maatwebsite\Excel\Excel::HTML);
+    }
+
+    // public function export(Request $request, int $id)
+    // {
+    //     $date = $request->filter['date'] ?? date('Y-m-d');
+    //     $patrol = Patrol::where('id',$id)->firstOrFail();;
+    //     $patrol->load([
+    //         'patrolLocations' => function ($q) use ($date) {
+    //             $q
+    //                 ->with('tasks', function ($q) use ($date) {
+    //                     $q
+    //                         ->select('id', 'patrol_location_id', 'name', 'description')
+    //                         ->with('userPatrolTasks', function ($q) use ($date) {
+    //                             $q->whereDate('created_at', $date)
+    //                                 // ->with('user', fn($q) => $q->select('id', 'name'))
+    //                                 ->with('schedule', fn($q) => $q->select('id', 'name'))
+    //                                 ->with('shift', fn($q) => $q->select('id', 'name'));
+    //                         });
+    //                 });
+    //         }
+    //     ]);
+
+    //     return (new PatrolTaskExport($patrol))->download('report-patroli.xlsx');
+
+    //     return $patrol;
+    // }
+
+    public function usersLocation()
+    {
+        $query = QueryBuilder::for(
+            User::tenanted(request()->filter['is_my_descendant'] ?? false)
+                ->select('id', 'name')
+                ->with('detail', fn($q) => $q->select('user_id', 'detected_at', 'lat', 'lng'))
+        )
+            ->allowedFilters([
+                AllowedFilter::exact('branch_id'),
+                AllowedFilter::scope('name', 'whereName'),
+            ])
+            ->orderByDesc(
+                \App\Models\UserDetail::select('detected_at')
+                    ->whereColumn('user_id', 'users.id')
+                    ->latest()
+                    ->take(1)
+            );
+
+        $users = $query->paginate($this->per_page);
+        return DefaultResource::collection($users);
     }
 }

@@ -2,18 +2,12 @@
 
 namespace App\Http\Requests\Api\Company;
 
+use App\Models\Group;
+use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,7 +16,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => ['required', new CompanyTenantedRule(Group::class, 'Group not found')],
             'name' => 'required|string',
             'country_id' => 'nullable|integer',
             'country' => 'nullable|string',
@@ -32,6 +26,7 @@ class UpdateRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'address' => 'nullable|string',
+            'employee_prefix' => 'nullable|string'
         ];
     }
 }

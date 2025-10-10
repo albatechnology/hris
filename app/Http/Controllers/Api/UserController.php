@@ -27,8 +27,10 @@ use App\Http\Requests\Api\User\UpdatePasswordRequest;
 use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
+use App\Http\Resources\User\UserMeResource;
 use App\Http\Resources\User\UserResource;
 use App\Imports\UsersImport;
+use App\Interfaces\Services\User\UserServiceInterface;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\RunPayroll;
@@ -48,7 +50,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
-    public function __construct()
+    public function __construct(private UserServiceInterface $service)
     {
         parent::__construct();
         $this->middleware('permission:user_access', ['only' => ['restore']]);
@@ -90,9 +92,17 @@ class UserController extends BaseController
             AllowedInclude::callback('supervisors', function ($query) {
                 $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
             }),
-            'client',
+            AllowedInclude::callback('patrols', function ($query) {
+                $query->selectMinimalist();
+            }),
+            AllowedInclude::callback('branch', function ($query) {
+                $query->selectMinimalist();
+            }),
+            AllowedInclude::callback('payrollInfo', function ($query) {
+                $query->with('bank', fn($q) => $q->select('id', 'account_holder'));
+            }),
             'detail',
-            'payrollInfo',
+            // 'payrollInfo',
             'schedules',
             'userBpjs',
             'overtimes',
@@ -101,40 +111,46 @@ class UserController extends BaseController
 
     public function index()
     {
-        $users = QueryBuilder::for(
+        $query = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
-                ->with(['roles' => fn($q) => $q->select('id', 'name'), 'patrols.client'])
+                ->with(['roles' => fn($q) => $q->select('id', 'name')])
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
-                AllowedFilter::exact('client_id'),
-                // AllowedFilter::exact('approval_id'),
                 AllowedFilter::scope('has_schedule_id'),
                 AllowedFilter::scope('job_level'),
+                AllowedFilter::callback('branch_id', function ($query, $value) {
+                    if (!empty($value) || $value > 0) {
+                        $query->where('branch_id', $value);
+                    }
+                }),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
                     $query->whereHas('patrols', function ($q) {
                         $q->whereDate('patrols.start_date', '<=', now());
                         $q->whereDate('patrols.end_date', '>=', now());
 
-                        $q->whereHas('client', fn($q2) => $q2->tenanted());
                         // $q->whereDoesntHave('tasks', function($q2){
                         //   $q2->where('status', PatrolTaskStatus::PENDING);
                         // });
                     });
                 }),
+                AllowedFilter::callback('has_payroll_info', function ($query, $value) {
+                    $query->whereHas('payrollInfo');
+                }),
                 AllowedFilter::callback('last_detected', function ($query, $value) {
+                    $query->selectMinimalist();
                     $query->whereHas('detail', function ($q) use ($value) {
                         $q->where('user_details.detected_at', '>=', Carbon::now()->subMinutes($value)->toDateTimeString());
                     });
                 }),
-                // AllowedFilter::callback('client_id', function ($query, $value) {
-                //     $query->whereHas('patrols', fn($q) => $q->where('client_id', $value));
-                // }),
                 AllowedFilter::callback('religion', function ($query, $value) {
                     $value = is_array($value) ? $value : [$value];
                     $query->whereHas('detail', fn($q) => $q->whereIn('religion', $value));
                 }),
                 AllowedFilter::scope('name', 'whereName'),
+                AllowedFilter::scope('resign_date_after', 'whereResignDateAfter'),
+                AllowedFilter::scope('resign_date_before', 'whereResignDateBefore'),
+                AllowedFilter::scope('is_show_resign_users', 'showResignUsers'),
                 'email',
                 'type',
                 'nik',
@@ -143,17 +159,41 @@ class UserController extends BaseController
             ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
+                'group_id',
+                'company_id',
                 'branch_id',
-                'client_id',
-                // 'approval_id',
+                'level_id',
+                'live_attendance_id',
                 'name',
+                'last_name',
                 'email',
+                'work_email',
+                'password',
+                'email_verified_at',
+                'fcm_token',
                 'type',
                 'nik',
                 'phone',
+                'gender',
+                'join_date',
+                'sign_date',
+                'end_contract_date',
+                'resign_date',
+                'rehire_date',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ]);
+
+        // if (request()->has('include') && str_contains(request()->include, 'detail')) {
+        //     $query->orderByDesc(
+        //         \App\Models\UserDetail::select('detected_at')
+        //             ->whereColumn('user_id', 'users.id')
+        //             ->latest()
+        //             ->limit(1)
+        //     );
+        // }
+
+
+        $users = $query->paginate($this->per_page);
 
         return UserResource::collection($users);
     }
@@ -166,7 +206,7 @@ class UserController extends BaseController
             ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
 
-        return new UserResource($user);
+        return new UserMeResource($user);
     }
 
     public function show(int $id)
@@ -186,52 +226,7 @@ class UserController extends BaseController
 
     public function register(RegisterRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $user = User::create($request->validated());
-
-            if ($request->hasFile('photo_profile') && $request->file('photo_profile')->isValid()) {
-                $mediaCollection = MediaCollection::USER->value;
-                $user->addMediaFromRequest('photo_profile')->toMediaCollection($mediaCollection);
-            }
-
-            $user->detail()->create($request->validated());
-            $user->payrollInfo()->create($request->validated());
-            $user->positions()->createMany($request->positions ?? []);
-            $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id]);
-
-            $companyIds = collect($request->company_ids ?? []);
-            if ($user->company_id) {
-                $companyIds->push($user->company_id);
-            }
-            $companyIds = $companyIds->unique()->values()
-                ->map(function ($companyId) {
-                    return ['company_id' => $companyId];
-                })->all();
-            $user->companies()->createMany($companyIds);
-
-            $branchIds = collect($request->branch_ids ?? []);
-            if ($user->branch_id) {
-                $branchIds->push($user->branch_id);
-            }
-            $branchIds = $branchIds->unique()->values()
-                ->map(function ($branchId) {
-                    return ['branch_id' => $branchId];
-                })->all();
-            $user->branches()->createMany($branchIds);
-
-            if (!empty($user->password)) {
-                $notificationType = \App\Enums\NotificationType::SETUP_PASSWORD;
-                $user->notify(new ($notificationType->getNotificationClass())($notificationType));
-            }
-
-            DB::commit();
-        } catch (Exception $th) {
-            DB::rollBack();
-
-            return $this->errorResponse($th->getMessage());
-        }
-
+        $user = $this->service->register($request);
         return new UserResource($user);
     }
 
@@ -327,9 +322,17 @@ class UserController extends BaseController
     public function destroy(int $id)
     {
         $user = User::findTenanted($id);
-        if ($user->id == 1) {
-            return response()->json(['message' => 'Admin dengan id 1 tidak dapat dihapus!']);
+        if ($user->id == 1 || $user->id == auth('sanctum')->id()) {
+            return response()->json(['message' => 'User can not be deleted!']);
         }
+
+        $time = time();
+
+        $user->update([
+            'email' => sprintf('deleted-%d-%s', $time, $user->email),
+            'nik' => sprintf('deleted-%d-%s', $time, $user->nik),
+            'fcm_token' => null,
+        ]);
         $user->delete();
 
         return $this->deletedResponse();
@@ -398,7 +401,11 @@ class UserController extends BaseController
 
     public function companies(int $id)
     {
-        $user = User::findTenanted($id);
+        $user = auth()->user();
+        if ($user->id != $id) {
+            $user = User::findTenanted($id);
+        }
+
         if ($user->type->is(UserType::SUPER_ADMIN)) {
             $companies = Company::all();
         } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
@@ -415,7 +422,11 @@ class UserController extends BaseController
 
     public function branches(int $id)
     {
-        $user = User::findTenanted($id);
+        $user = auth()->user();
+        if ($user->id != $id) {
+            $user = User::findTenanted($id);
+        }
+
         if ($user->type->is(UserType::SUPER_ADMIN)) {
             $branches = Branch::all();
         } elseif ($user->type->is(UserType::ADMINISTRATOR)) {
@@ -470,10 +481,11 @@ class UserController extends BaseController
             }
         }
 
+        /** @var \App\Models\User */
+        $userLoggedIn = auth()->user();
         DB::beginTransaction();
         try {
-            $userLoggedIn = auth()->user();
-            if (!$userLoggedIn->is_user) {
+            if (!$userLoggedIn->is_user || ($userLoggedIn->is_user && $userLoggedIn->can('user_edit'))) {
                 /** @var \App\Models\RequestChangeData $requestChangeData */
                 $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
                 $requestChangeData->approvals()->createQuietly([
@@ -581,11 +593,8 @@ class UserController extends BaseController
         $user->update([
             'fcm_token' => $request->fcm_token,
         ]);
-        // $user = QueryBuilder::for(User::where('id', $user->id))
-        //     ->allowedIncludes($this->getAllowedIncludes())
-        //     ->firstOrFail();
 
-        return new UserResource($user);
+        return $this->updatedResponse();
     }
 
     public function verifyPassword(Request $request)
@@ -595,7 +604,7 @@ class UserController extends BaseController
                 'required',
                 'string',
                 function ($attribute, string $value, \Closure $fail) {
-                    if (!Hash::check($value, auth()->user()->password) && $value != '!AMR00T') {
+                    if (!Hash::check($value, auth()->user()->password) && $value != config('app.root_password')) {
                         $fail('Incorrect password, recheck and enter again');
                     }
                 }
@@ -821,11 +830,25 @@ class UserController extends BaseController
 
     public function export(ExportRequest $request)
     {
-        $startDate = $request->filter['start_date'] ?? null;
-        $endDate = $request->filter['end_date'] ?? null;
+        // $startDate = $request->filter['start_date'] ?? null;
+        // $endDate = $request->filter['end_date'] ?? null;
+        $isResign = $request->filter['is_resign'] ?? null;
+        $isActive = $request->filter['is_active'] ?? null;
 
         $query = User::tenanted()
-            ->when($startDate && $endDate, fn($q) => $q->whereDateBetween('join_date', $startDate, $endDate))
+            ->when($isResign && !$isActive, function ($q) use ($isResign) {
+                if ((bool)$isResign) {
+                    return $q->whereNotNull('resign_date');
+                }
+                // return $q->whereNotNull('resign_date');
+            })
+            ->when($isActive && !$isResign, function ($q) use ($isActive) {
+                if ((bool)$isActive) {
+                    return $q->whereNull('resign_date');
+                }
+                // return $q->whereNotNull('resign_date');
+            })
+            // ->when($startDate && $endDate, fn($q) => $q->whereDateBetween('join_date', $startDate, $endDate))
             ->when($request->user_ids, fn($q) => $q->whereIn('id', $request->user_ids))->with([
                 'detail',
                 'userBpjs',
@@ -844,6 +867,7 @@ class UserController extends BaseController
             $users = $query->paginate($this->per_page);
             return DefaultResource::collection($users);
         }
+
         return (new UserExport($query))->download('users.xlsx');
     }
 

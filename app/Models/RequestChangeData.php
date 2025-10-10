@@ -11,7 +11,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class RequestChangeData extends RequestedBaseModel implements HasMedia, TenantedInterface
 {
-    use BelongsToUser, InteractsWithMedia, TenantedThroughUser;
+    use InteractsWithMedia, TenantedThroughUser;
 
     protected $table = 'request_change_data';
 

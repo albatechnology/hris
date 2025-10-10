@@ -27,33 +27,14 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
     protected $casts = [
         'is_clock_in' => 'boolean',
         'type' => AttendanceType::class,
-        // 'approval_status' => ApprovalStatus::class,
     ];
 
     protected $appends = ['approval_status', 'image'];
-
-    // protected static function booted(): void
-    // {
-    //     parent::booted();
-
-    //     // static::creating(function (self $model) {
-    //     //     if ($model->type->is(AttendanceType::MANUAL)) {
-    //     //         $model->approved_by = $model->attendance->user->approval?->id ?? null;
-    //     //     } elseif ($model->type->is(AttendanceType::AUTOMATIC)) {
-    //     //         $model->approval_status = ApprovalStatus::APPROVED;
-    //     //     }
-    //     // });
-    // }
 
     public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class);
     }
-
-    // public function approvedBy(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'approved_by');
-    // }
 
     public function scopeApproved(Builder $q)
     {
@@ -67,20 +48,32 @@ class AttendanceDetail extends RequestedBaseModel implements HasMedia
         // );
     }
 
+    public function scopeWhereBranch(Builder $q, int $value)
+    {
+        $q->whereHas('attendance', fn($q) => $q->whereHas('user', fn($q) => $q->where('branch_id', $value)));
+    }
+    public function scopeWhereUserName(Builder $q, string $value)
+    {
+        $q->whereHas('attendance', fn($q) => $q->whereHas('user', fn($q) => $q->whereLike('name', $value)));
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(\App\Enums\MediaCollection::ATTENDANCE->value)
+            ->onlyKeepLatest(1)
+            ->registerMediaConversions(function (\Spatie\MediaLibrary\MediaCollections\Models\Media $media) {
+                $this->addMediaConversion('preview')
+                    ->fit(\Spatie\Image\Enums\Fit::Contain, 100, 100)
+                    ->nonQueued();
+            });
+    }
+
     public function getImageAttribute()
     {
         $file = $this->getFirstMedia(\App\Enums\MediaCollection::ATTENDANCE->value);
-        if ($file) {
-            $url = $file->getUrl();
-            // $preview = $file->getUrl('preview');
-        } else {
-            $url = null;
-            // $preview = asset('img/user-icon.png');
-        }
-
         return [
-            'url' => $url,
-            // 'preview' => $preview
+            'url' => $file?->getUrl() ?? null,
+            'preview' => $file?->getUrl('preview') ?? null
         ];
     }
 }

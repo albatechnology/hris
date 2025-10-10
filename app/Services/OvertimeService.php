@@ -7,6 +7,7 @@ use App\Enums\EventType;
 use App\Enums\FormulaAmountType;
 use App\Enums\FormulaComponentEnum;
 use App\Enums\RateType;
+use App\Models\Event;
 use App\Models\Formula;
 use App\Models\Overtime;
 use App\Models\OvertimeRequest;
@@ -20,17 +21,39 @@ use Illuminate\Database\Eloquent\Collection;
 
 class OvertimeService
 {
+
+    public static function roundingOvertimeMinutes(int|float $minutes): int|float
+    {
+        $minutes = (int) $minutes; // pastikan integer
+
+        if ($minutes >= 15 && $minutes <= 29) {
+            return 0.25;
+        } elseif ($minutes >= 30 && $minutes <= 44) {
+            return 0.5;
+        } elseif ($minutes >= 45 && $minutes <= 59) {
+            return 0.75;
+        }
+
+        return 0;
+    }
+
+    public static function calculateOvertimeDuration(string $duration): int|float
+    {
+        $realDuration = Carbon::parse($duration);
+        $durationInHours = $realDuration->hour;
+        $durationInMinutes = self::roundingOvertimeMinutes($realDuration->minute);
+
+        return $durationInHours + $durationInMinutes;
+    }
+
     public static function calculateOb(User $user, Collection $overtimeRequests): int|float
     {
         $umk = $user->branch?->umk ?? 0;
         $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
-
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            $start = Carbon::parse($overtimeRequest->start_at);
-            $end = Carbon::parse($overtimeRequest->end_at);
-            $hour = $end->diffInHours($start);
-            $totalDurationInHours += ($hour > 9 ? 9 : $hour);
+            $durationInHours = self::calculateOvertimeDuration($overtimeRequest->real_duration);
+            $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
         return ($basicSalary / 160) * $totalDurationInHours;
@@ -40,13 +63,11 @@ class OvertimeService
     {
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {
-            $start = Carbon::parse($overtimeRequest->start_at);
-            $end = Carbon::parse($overtimeRequest->end_at);
-            $hour = $end->diffInHours($start);
-            $totalDurationInHours += ($hour > 9 ? 9 : $hour);
+            $durationInHours = self::calculateOvertimeDuration($overtimeRequest->real_duration);
+            $totalDurationInHours += ($durationInHours > 9 ? 9 : $durationInHours);
         }
 
-        $rate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 12500;
+        $rate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 17500;
 
         return $rate * $totalDurationInHours;
     }
@@ -56,19 +77,22 @@ class OvertimeService
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));
 
-        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob')) {
+        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'ob' || strtolower($ov->name) == 'ob_sun_english')) {
+            $totalAmount = 0;
             $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $user->overtimes->whereIn('name', ['ob', 'OB'])->value('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
-            return self::calculateOb($user, $overtimeRequests);
-        }
+            $totalAmount += self::calculateOb($user, $overtimeRequests);
 
-        if ($user->overtimes->contains(fn($ov) => strtolower($ov->name) == 'OB_SUN_ENGLISH')) {
-            $overtime = $user->overtimes->where('name', 'OB_SUN_ENGLISH')->first();
+            // =================================
+
+            $overtime = $user->overtimes->whereIn('name', ['OB_SUN_ENGLISH', 'ob_sun_english'])->first();
             if ($overtime) {
                 $overtimeRequests = $user->overtimeRequests()->where('overtime_id', $overtime->id)->whereDateBetween($startPeriod, $endPeriod)->approved()->get();
-                return self::calculateObSunEnglish($user, $overtime, $overtimeRequests);
+                $totalAmount += self::calculateObSunEnglish($user, $overtime, $overtimeRequests);
             } else {
-                return 0;
+                $totalAmount += 0;
             }
+
+            return $totalAmount;
         }
 
         $overtimeRequestGroups = $user->overtimeRequests()->whereIn('overtime_id', $user->overtimes->pluck('id'))->whereDateBetween($startPeriod, $endPeriod)->approved()->get()->groupBy(['overtime_id', fn($data) => $data->date]);
@@ -91,15 +115,17 @@ class OvertimeService
                 $overtimeDate = Carbon::parse($overtimeDate);
 
                 // set overtime duration to minutes. 02:00:00 become 120
-                // $overtimeDuration = Carbon::parse($overtimeRequest->duration)->diffInMinutes(Carbon::parse('00:00:00'), true);
-                $overtimeDuration = $overtimeRequests->sum(fn($d) => Carbon::parse($d->duration)->diffInMinutes(Carbon::parse('00:00:00'), true));
+                // $overtimeDuration = Carbon::parse($overtimeRequest->real_duration)->diffInMinutes(Carbon::parse('00:00:00'), true);
+                $overtimeDuration = $overtimeRequests->sum(fn($d) => Carbon::parse($d->real_duration)->diffInMinutes(Carbon::parse('00:00:00'), true));
 
                 if ($overtimeRounding = $overtime->overtimeRoundings->where('start_minute', '<=', $overtimeDuration)->where('end_minute', '>=', $overtimeDuration)->first()) {
                     $overtimeDuration = $overtimeRounding->rounded;
                 }
 
                 // set overtime duration to hour. 120 become 2
-                $overtimeDuration = round($overtimeDuration / 60);
+                // $durationInHours = round($overtimeDuration / 60);
+                $durationInHours = floor($overtimeDuration / 60);
+                $durationInHours += self::roundingOvertimeMinutes($overtimeDuration % 60);
 
                 // dd($overtime->overtimeMultipliers?->toArray());
                 $overtimeMultipliers = collect([
@@ -108,13 +134,41 @@ class OvertimeService
                         'multiply' => 1,
                     ]
                 ]);
+
                 if ($overtime->overtimeMultipliers->count()) {
-                    if ($overtimeDate->isWeekday()) {
-                        $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
+                    if (config('app.name') == 'LUMORA') {
+                        $nationalHolidays = Event::select('id', 'company_id', 'start_at', 'end_at')
+                            ->whereNationalHoliday()
+                            ->where('company_id', $user->company_id)
+                            ->whereDateBetween($startPeriod, $endPeriod)
+                            ->get();
+
+                        $inNationalHoliday = $nationalHolidays->contains(function ($nh) use ($overtimeDate) {
+                            $start = Carbon::parse($nh->start_at)->startOfDay();
+                            $end = Carbon::parse($nh->end_at)->endOfDay();
+                            return $overtimeDate->between($start, $end);
+                        });
+
+                        if (!$inNationalHoliday) {
+                            $schedule = ScheduleService::getTodaySchedule(user: $user, datetime: $overtimeDate, scheduleColumn: ['id'], shiftColumn: ['id', 'is_dayoff']);
+                        }
+
+                        if ($inNationalHoliday) {
+                            $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                        } elseif (!$inNationalHoliday && $schedule?->shift?->is_dayoff) {
+                            $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                        } else {
+                            $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
+                        }
                     } else {
-                        $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                        if ($overtimeDate->isWeekday()) {
+                            $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', true)->sortBy('start_hour');
+                        } else {
+                            $overtimeMultipliers = $overtime->overtimeMultipliers->where('is_weekday', false)->sortBy('start_hour');
+                        }
                     }
-                    $overtimeMultipliers = self::calculateOvertimeBreakdown($overtimeDuration, $overtimeMultipliers);
+
+                    $overtimeMultipliers = self::calculateOvertimeBreakdown($durationInHours, $overtimeMultipliers);
                 }
 
                 $overtimeAmountMultiply = 0;
@@ -151,7 +205,7 @@ class OvertimeService
 
                             break;
                     }
-                    // $amount += ($overtimeDuration * $multiply) * $overtimeAmountMultiply;
+                    // $amount += ($durationInHours * $multiply) * $overtimeAmountMultiply;
                 }
 
                 if ($overtimeMultipliers->count()) {
@@ -329,7 +383,7 @@ class OvertimeService
     }
 
 
-    public static function calculateTaskOvertime(User $user, string $startPeriod = null, string $endPeriod = null)
+    public static function calculateTaskOvertime(User $user, ?string $startPeriod = null, ?string $endPeriod = null)
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
         if (!is_null($endPeriod)) $endPeriod = date('Y-m-d', strtotime($endPeriod));

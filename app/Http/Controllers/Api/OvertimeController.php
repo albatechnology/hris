@@ -36,13 +36,16 @@ class OvertimeController extends BaseController
         $data = QueryBuilder::for(Overtime::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('client_id'),
+                AllowedFilter::exact('branch_id'),
             ])
-            ->allowedIncludes(['company', 'client'])
+            ->allowedIncludes([
+                'company',
+                'branch',
+            ])
             ->allowedSorts([
                 'id',
                 'company_id',
-                'client_id',
+                'branch_id',
                 'is_rounding',
                 'compensation_rate_per_day',
                 'rate_type',

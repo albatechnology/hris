@@ -46,6 +46,17 @@ class SupervisorUtility
 
         return $supervisor;
     }
+
+    public function getSupervisorSubordinates(): Collection
+    {
+        $supervisor = $this->supervisorLines->firstWhere('supervisor_id', $this->supervisor->id);
+        if (!$supervisor) {
+            return collect([]);
+        }
+
+        $data = $this->supervisorLines->where('order', '<', $supervisor->order);
+        return $data;
+    }
     // ENABLE THIS METHOD IF NEEDED
     // public function getTopAscendant(bool $isLoadUser = true): UserSupervisor|null
     // {

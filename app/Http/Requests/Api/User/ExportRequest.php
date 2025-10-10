@@ -4,16 +4,26 @@ namespace App\Http\Requests\Api\User;
 
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ExportRequest extends FormRequest
 {
+    use RequestToBoolean;
+
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'filter' => [
+                'is_resign' => !empty($this->filter['is_resign']) ? $this->toBoolean($this->is_resign) : null,
+                'is_active' => !empty($this->filter['is_active']) ? $this->toBoolean($this->is_active) : null,
+            ],
+        ]);
     }
 
     /**
@@ -27,8 +37,10 @@ class ExportRequest extends FormRequest
             'is_json' => ['nullable', 'boolean'],
             'user_ids' => ['nullable', 'array'],
             'user_ids.*' => ['required', new CompanyTenantedRule(User::class, 'User not found')],
-            'filter.start_date' => 'nullable|date',
-            'filter.end_date' => 'nullable|date',
+            // 'filter.start_date' => 'nullable|date',
+            // 'filter.end_date' => 'nullable|date',
+            'filter.is_resign' => 'nullable|boolean',
+            'filter.is_active' => 'nullable|boolean',
         ];
     }
 }

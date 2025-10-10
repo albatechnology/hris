@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use App\Enums\RateType;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\MorphManyFormulas;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Overtime extends BaseModel
 {
-    use CompanyTenanted, MorphManyFormulas;
+    use CompanyTenanted, MorphManyFormulas, BelongsToBranch;
 
     protected $fillable = [
         'company_id',
-        'client_id',
+        'branch_id',
         'name',
         'is_rounding',
         'compensation_rate_per_day',
@@ -30,11 +30,6 @@ class Overtime extends BaseModel
         'rate_type' => RateType::class,
         'rate_amount' => 'double',
     ];
-
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
-    }
 
     public function overtimeAllowances(): HasMany
     {

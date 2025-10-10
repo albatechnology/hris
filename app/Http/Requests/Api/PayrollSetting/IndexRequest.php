@@ -2,20 +2,14 @@
 
 namespace App\Http\Requests\Api\PayrollSetting;
 
-use App\Models\Client;
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class IndexRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+
 
     /**
      * Prepare inputs for validation.
@@ -24,16 +18,15 @@ class IndexRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // client_id is for SMART
-        $clientId = $this->filter['client_id'] ?? null;
+        $branchId = $this->filter['branch_id'] ?? null;
         $companyId = $this->filter['company_id'] ?? null;
-        if ($clientId) {
-            $companyId = Client::tenanted()->where('id', $clientId)->first(['company_id'])->company_id;
+        if ($branchId) {
+            $companyId = Branch::tenanted()->where('id', $branchId)->first(['company_id'])?->company_id;
         }
 
         $this->merge([
             'filter' => [
-                'client_id' => $clientId,
+                'branch_id' => $branchId,
                 'company_id' => $companyId,
             ]
         ]);
@@ -46,9 +39,8 @@ class IndexRequest extends FormRequest
      */
     public function rules(): array
     {
-        // 'filter.company_id' => 'required',
         return [
-            'filter.client_id' => Rule::requiredIf(config('app.name') === "SMART"),
+            'filter.branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
             'filter.company_id' => ['required', new CompanyTenantedRule()],
         ];
     }

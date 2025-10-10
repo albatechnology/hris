@@ -10,6 +10,8 @@ use App\Http\Requests\Api\Timeoff\StoreRequest;
 use App\Http\Resources\Timeoff\TimeoffResource;
 use App\Models\Timeoff;
 use App\Models\TimeoffQuota;
+use App\Models\User;
+use App\Services\AttendanceService;
 use App\Services\ScheduleService;
 use App\Services\TimeoffService;
 use Exception;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class TimeoffController extends BaseController
 {
@@ -81,6 +84,11 @@ class TimeoffController extends BaseController
 
     public function store(StoreRequest $request)
     {
+        $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
+        if (AttendanceService::inLockAttendance($request->start_at, $user) || AttendanceService::inLockAttendance($request->end_at, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
+        }
+
         $request = TimeoffService::requestTimeoffValidation($request);
 
         DB::beginTransaction();
@@ -103,7 +111,7 @@ class TimeoffController extends BaseController
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
-            return $this->errorResponse(message: $e->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
 
         return $this->createdResponse();
@@ -124,7 +132,7 @@ class TimeoffController extends BaseController
 
     public function destroy(int $id)
     {
-        $timeoff = Timeoff::findTenanted($id);
+        $timeoff = Timeoff::select('id')->findTenanted($id);
         $timeoff->delete();
 
         return $this->deletedResponse();
@@ -153,7 +161,7 @@ class TimeoffController extends BaseController
          *
          */
 
-        if ($timeoff->approval_status != ApprovalStatus::APPROVED->value && date('Y-m-d', strtotime($timeoff->start_at)) < date('Y-m-d')) {
+        if ($timeoff->approval_status == ApprovalStatus::APPROVED->value && date('Y-m-d', strtotime($timeoff->start_at)) < date('Y-m-d')) {
             return $this->errorResponse(message: 'Cannot cancel past leave', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -243,24 +251,6 @@ class TimeoffController extends BaseController
             }
         }
 
-        // if (!in_array($request->approval_status, [ApprovalStatus::PENDING->value, ApprovalStatus::REJECTED->value])) {
-        //     // untuk history timeoff
-        //     $value = 0.5;
-        //     if ($timeoff->request_type->is(TimeoffRequestType::FULL_DAY)) {
-        //         $startDate = new \DateTime($timeoff->start_at);
-        //         $endDate = new \DateTime($timeoff->end_at);
-        //         if ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')) {
-        //             $value = 1;
-        //         } else {
-        //             $interval = $startDate->diff($endDate);
-        //             $value = $interval->days;
-        //         }
-        //     }
-
-        //     if ($value > $timeoff->user->total_timeoff) {
-        //         return response()->json(['message' => 'Leave request exceeds leave quota.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        //     }
-        // }
         DB::beginTransaction();
         try {
             $requestApproval->update($request->validated());
@@ -284,7 +274,11 @@ class TimeoffController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = Timeoff::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -307,6 +301,9 @@ class TimeoffController extends BaseController
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'request_type',
                 'is_cancelled',
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedIncludes([
                 AllowedInclude::callback('timeoffPolicy', fn($query) => $query->selectMinimalist()),

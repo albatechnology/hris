@@ -7,7 +7,7 @@
         <div class="input-group-prepend">
             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
         </div>
-        <input type="email" name="{{ $name }}" class="form-control {{ $errors->has($name) ? 'is-invalid' : null }} {{ $name }}" aria-describedby="{{ $name }}-error" id="{{ $name }}" placeholder="{{ $placeholder }}" minlength="{{ $minlength }}" {{ $required ? 'required' : null }} value="{{ old($name, $value) }}">
+        <input type="email" name="{{ $name }}" class="form-control {{ $errors->has($name) ? 'is-invalid' : null }} {{ $name }}" aria-describedby="{{ $name }}-error" id="{{ $name }}" placeholder="{{ $placeholder }}" minlength="{{ $minlength }}" {{ $required ? 'required' : null }} value="{{ old($name, $value) }}" readonly="{{ $readonly }}">
     </div>
 
     @if($errors->has($name))

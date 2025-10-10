@@ -29,7 +29,7 @@ class UserPatrolMovementController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(UserPatrolMovement::query())
+        $data = QueryBuilder::for(UserPatrolMovement::orderBy('datetime'))
             ->allowedIncludes(['userPatrolBatch'])
             ->allowedFilters([
                 AllowedFilter::exact('user_patrol_batch_id'),

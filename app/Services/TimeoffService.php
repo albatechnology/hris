@@ -164,6 +164,7 @@ class TimeoffService
 
         // get timeoffs request that is still in progress
         $timeoffs = Timeoff::where('user_id', $user->id)
+            ->where('is_cancelled', false)
             ->whereApprovalStatus(ApprovalStatus::ON_PROGRESS->value)
             ->whereBetweenStartEnd($request->start_at, $request->end_at)
             ->exists();

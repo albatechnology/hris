@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\DailyAttendance;
 use App\Enums\EventType;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
 use App\Models\Event;
-use App\Models\RunPayrollUser;
+use App\Models\LockAttendance;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -50,41 +51,6 @@ class AttendanceService
         return $attendance;
     }
 
-    // public static function getTodayAttendance(int|string $scheduleId, int|string $shiftId, ?User $user = null, $date = null, $isCheckByDetails = true): ?Attendance
-    // {
-    //     /**
-    //      *
-    //      * kenapa ngecheck nya whereHas('details', fn($q) => $q->whereDate('time', $date)) ?
-    //      * kenapa bukan where('date', $date) ?
-    //      * hmmm masih menjadi misteri
-    //      *
-    //      * oke ganti dulu ke where('date', $date)
-    //      */
-    //     if (!$user) {
-    //         /** @var User $user */
-    //         $user = auth('sanctum')->user();
-    //     }
-
-    //     $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
-
-    //     $attendance = Attendance::where('schedule_id', $scheduleId)
-    //         ->when($user, fn($q) => $q->where('user_id', $user->id))
-    //         ->where('shift_id', $shiftId)
-    //         ->when(
-    //             $isCheckByDetails,
-    //             fn($q) => $q->whereHas('details', fn($q) => $q->whereDate('time', $date)),
-    //             fn($q) => $q->whereDate('date', $date)
-    //         )
-    //         ->first();
-
-    //     if (!$attendance) {
-    //         return null;
-    //     }
-
-    //     return $attendance;
-    // }
-
-    // public static function getSumOvertimeDuration(User|int $user, $date, OvertimeRequestType $requestType = null)
     public static function getSumOvertimeDuration(User|int $user, $startDate, $endDate = null, bool $formatText = true, callable $query = null)
     {
         if ($user instanceof User) {
@@ -100,7 +66,7 @@ class AttendanceService
                 fn($q) => $q->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)
             )
             ->when($query, $query)
-            ->get(['duration']);
+            ->get(['real_duration']);
 
         if ($overtimeRequests->count() <= 0) return null;
 
@@ -112,7 +78,7 @@ class AttendanceService
 
             // $totalSeconds += ((int)$interval->format('%d') * 3600 * 24) + ((int)$interval->format('%h') * 3600) + ((int)$interval->format('%s') * 60) + (int)$interval->format('%s');
 
-            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->duration);
+            list($hours, $minutes, $seconds) = explode(':', $overtimeRequest->real_duration);
             $totalSeconds += ($hours * 3600) + ($minutes * 60) + $seconds;
         }
 
@@ -165,12 +131,6 @@ class AttendanceService
             ->count();
 
         return $totalAttendance;
-
-        // if ($dailyAttendance == DailyAttendance::PRESENT) return $totalAttendance;
-
-        // $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
-
-        // return abs($totalAttendance - $totalWorkingDays);
     }
 
     public static function getTotalWorkingDays(User|int $user, $startDate, $endDate): int
@@ -194,40 +154,167 @@ class AttendanceService
         foreach ($dateRange as $date) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
 
-            if (!$schedule || !$schedule->shift || $schedule->shift->is_dayoff) {
+            if (!$schedule || !$schedule->shift) {
                 continue;
             }
 
-            if (!$schedule->shift->is_dayoff && !$schedule->is_overide_national_holiday && !$schedule->is_overide_company_holiday) {
-                $totalWorkingDays++;
+            $totalWorkingDays++;
+
+            if ($schedule->shift->is_dayoff) {
+                $totalWorkingDays--;
                 continue;
             };
 
-            if ($schedule->is_overide_national_holiday) {
+
+            if (!$schedule->is_overide_national_holiday) {
+                $date = $date->format('Y-m-d');
                 $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
                     return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
                 });
 
                 if ($nationalHoliday) {
-                    $totalWorkingDays++;
+                    $totalWorkingDays--;
                 }
+            }
+
+            // if (!$schedule->shift->is_dayoff && !$schedule->is_overide_national_holiday && !$schedule->is_overide_company_holiday) {
+            //     $totalWorkingDays++;
+            //     continue;
+            // };
+
+            // if ($schedule->is_overide_national_holiday) {
+            //     $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+            //         return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+            //     });
+
+            //     if ($nationalHoliday) {
+            //         $totalWorkingDays++;
+            //     }
+            // }
+        }
+
+        return $totalWorkingDays;
+    }
+
+    public static function getTotalWorkingDaysNewUser(User|int $user, $startDate, $endDate): int
+    {
+        if (!$user instanceof User) {
+            $user = User::find($user, ['id', 'type', 'group_id']);
+        }
+
+        $startDate = Carbon::createFromDate($startDate);
+        $endDate = Carbon::createFromDate($endDate);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+
+        // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+
+        $totalWorkingDays = 0;
+        foreach ($dateRange as $date) {
+            $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
+
+            if (!$schedule || !$schedule->shift) {
+                continue;
+            }
+
+            $totalWorkingDays++;
+
+            if (!$schedule->is_overide_national_holiday) {
+                $date = $date->format('Y-m-d');
+                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+                });
+
+                if ($nationalHoliday) {
+                    $totalWorkingDays--;
+                    continue;
+                }
+            }
+
+            if (
+                $schedule->shift->is_dayoff
+                && (!isset($schedule->shift->is_request_shift) || $schedule->shift->is_request_shift == false)
+            ) {
+                $totalWorkingDays--;
+                continue;
             }
         }
 
         return $totalWorkingDays;
     }
 
-    // public static function getTotalAlpa(User|int $user, $startDate, $endDate): int
-    // {
-    //     if (!$user instanceof User) {
-    //         $user = User::find($user, ['id', 'type', 'group_id']);
-    //     }
+    public static function getTotalAttend(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
+    {
+        $userId = $user;
+        if ($user instanceof User) {
+            $userId = $user->id;
+        }
 
-    //     $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $startDate, $endDate);
-    //     $totalPresent = self::getTotalPresent($user, $startDate, $endDate);
+        if (!($startDate instanceof Carbon)) {
+            $startDate = Carbon::parse($startDate)->startOfDay();
+        }
 
-    //     return max($totalWorkingDays - $totalPresent, 0);
-    // }
+        if (!($endDate instanceof Carbon)) {
+            $endDate = Carbon::parse($endDate)->startOfDay();
+        }
+
+        $isFirstTimePayroll = RunPayrollService::isFirstTimePayroll($user);
+        if (!$isFirstTimePayroll) {
+            $joinDate = Carbon::parse($user->join_date);
+            if ($joinDate->between($startDate, $endDate)) {
+                $startDate = $joinDate;
+            }
+        }
+
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $attendances = Attendance::where('user_id', $userId)
+            ->where(
+                fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff')
+            )
+            ->whereDate('date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('date', '<=', $endDate->format('Y-m-d'))
+            ->with([
+                'clockIn' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'clockOut' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                'timeoff' => fn($q) => $q->select('id', 'is_cancelled'),
+            ])
+            ->get(['id', 'date', 'timeoff_id']);
+
+        $totalAttend = 0;
+        foreach ($dateRange as $date) {
+            $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff']);
+
+            $attendanceOnDate = $attendances->firstWhere('date', $date->format('Y-m-d'));
+
+            if ((!$todaySchedule?->shift || $todaySchedule?->shift->is_dayoff) && !$attendanceOnDate) {
+                continue;
+            }
+
+            $nationalHoliday = Event::whereNationalHoliday()
+                ->where('company_id', $user->company_id)
+                ->where(
+                    fn($q) => $q->whereDate('start_at', '<=', $date->format('Y-m-d'))
+                        ->whereDate('end_at', '>=', $date->format('Y-m-d'))
+                )
+                ->exists();
+            if ($nationalHoliday && $todaySchedule->is_overide_national_holiday == false) {
+                $totalAttend++;
+                continue;
+            }
+
+            if ($attendanceOnDate?->timeoff  && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
+                $totalAttend++;
+                continue;
+            }
+
+            if ($attendanceOnDate?->clockIn && $attendanceOnDate?->clockOut) {
+                $totalAttend++;
+                continue;
+            }
+        }
+
+        return $totalAttend;
+    }
 
     public static function getTotalAlpa(User|int $user, Carbon | string $startDate, Carbon | string $endDate)
     {
@@ -244,10 +331,8 @@ class AttendanceService
             $endDate = Carbon::parse($endDate)->startOfDay();
         }
 
-        $hasPayroll = RunPayrollUser::query()->where('user_id', $user->id)
-            ->whereHas('runPayroll', fn($q) => $q->release())
-            ->exists();
-        if ($hasPayroll) {
+        $isFirstTimePayroll = RunPayrollService::isFirstTimePayroll($user);
+        if (!$isFirstTimePayroll) {
             $joinDate = Carbon::parse($user->join_date);
             if ($joinDate->between($startDate, $endDate)) {
                 $startDate = $joinDate;
@@ -292,7 +377,7 @@ class AttendanceService
                 continue;
             }
 
-            if ($attendanceOnDate->timeoff && $attendanceOnDate->timeoff->is_cancelled == false) {
+            if ($attendanceOnDate?->timeoff  && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
                 continue;
             }
 
@@ -440,88 +525,71 @@ class AttendanceService
         ];
     }
 
-    // public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, bool $isFormatTime = true, ?int $remainingTime = null): array
-    // {
-    //     /**
-    //      *
-    //      * dispensasi keterlambatan hanya berlaku jika is_enable_grace_period == true. selain itu dihitung terlambat
-    //      * hitung waktu terlambat berdasarkan selisih waktu absen baik itu clock_in atau clock_out($endTime) dengan
-    //      * jadwal masuk/clockin atau pulang/clockout ($startTime).
-    //      *
-    //      *
-    //      *
-    //      * clock_in_dispensation = 10 menit
-    //      * clock_out_dispensation = 10 menit
-    //      * time_dispensation = 10 menit
-    //      * jadwal 09:00 - 18:00
-    //      *
-    //      * masuk jam 09:05
-    //      * pulang jam 17:55 . $remainingTime 5 menitdiffInMinutes
-    //      *
-    //      */
+    public static function inLockAttendance(string $date, ?User $user = null): bool
+    {
+        if (config('app.name') != 'SUNSHINE') return false;
 
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
+        }
 
-    //     $remainingTime = $remainingTime && $remainingTime > 0 ? $remainingTime : 0;
-    //     $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+        return LockAttendance::whereCompany($user->company_id)
+            ->whereDateIn($date)
+            ->exists();
+    }
 
-    //     if ($attendanceDetail->is_clock_in) {
-    //         $tolerance = $shift->clock_in_dispensation;
-    //         $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
+    /**
+     * base query is for GET /api/attendances
+     * if you want to custom load, you can pass it in $load params
+     */
+    public static function getUserAttendancesInPeriod(User|int $user, $startDate, $endDate, array $load = [], array $select = ['*'])
+    {
+        $userId = $user;
+        if ($user instanceof User) {
+            $userId = $user->id;
+        }
 
-    //         if ($endTime->lessThanOrEqualTo($startTime)) {
-    //             $diffInSeconds = 0;
-    //         } else {
-    //             $diffInSeconds = $startTime->diffInSeconds($endTime);
-    //         }
-    //     } else {
-    //         $tolerance = $shift->clock_out_dispensation;
-    //         $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+        $loads = [
+            'shift' => fn($q) => $q->withTrashed()->selectMinimalist(),
+            'timeoff' => fn($q) => $q->approved()->with('timeoffPolicy', fn($q) => $q->select('id', 'type', 'name', 'code')),
+            'clockIn' => fn($q) => $q->approved(),
+            'clockOut' => fn($q) => $q->approved(),
+        ];
 
-    //         if ($endTime->lessThanOrEqualTo($startTime)) {
-    //             $diffInSeconds = $endTime->diffInSeconds($startTime);
-    //         } else {
-    //             $diffInSeconds = 0;
-    //         }
-    //     }
+        if (isset($load['shift'])) {
+            $loads['shift'] = $load['shift'];
+            unset($load['shift']);
+        }
 
-    //     $diffInTime = "00:00:00";
-    //     $diffInMinutes = floor($diffInSeconds / 60);
+        if (isset($load['timeoff'])) {
+            $loads['timeoff'] = $load['timeoff'];
+            unset($load['timeoff']);
+        }
 
-    //     if ($shift->is_enable_grace_period === true) {
-    //         $timeDispensation = $shift->time_dispensation <= 0 ? 0 : $shift->time_dispensation;
-    //         $remainingTime = $timeDispensation <= 0 ? 0 : $timeDispensation - $diffInMinutes;
+        if (isset($load['clockIn'])) {
+            $loads['clockIn'] = $load['clockIn'];
+            unset($load['clockIn']);
+        }
 
+        if (isset($load['clockOut'])) {
+            $loads['clockOut'] = $load['clockOut'];
+            unset($load['clockOut']);
+        }
 
-    //         if ($diffInMinutes > $tolerance) {
-    //             $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //             $diffInMinutes = 0;
-    //         }
+        foreach ($load as $key => $item) {
+            if (is_int($key) && is_string($item)) {
+                $loads[$item] = fn($q) => $q;
+            } elseif (is_string($key) && $item instanceof \Closure) {
+                $loads[$key] = $item;
+            }
+        }
 
-    //         // if ($timeDispensation && $timeDispensation > 0) {
-    //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
-    //         // }
-
-    //         // if ($isFormatTime === false) return $diffInMinutes > $tolerance ? $diffInMinutes : 0;
-    //         // if ($isFormatTime === false) {
-    //         //     $diffInMinutes = $diffInMinutes > $tolerance ? $diffInMinutes : 0;
-    //         // }
-
-    //         // if (!$timeDispensation && $timeDispensation > 0) {
-    //         //     $diffInMinutes = $timeDispensation - $diffInMinutes;
-    //         // }
-
-    //         // $diffInTime = "00:00:00";
-    //         // if ($diffInMinutes > $tolerance) {
-    //         //     $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //         // }
-    //     } else {
-    //         $diffInTime = gmdate('H:i:s', $diffInSeconds);
-    //     }
-
-    //     return [
-    //         $diffInMinutes, // real data
-    //         $diffInTime,
-    //         $remainingTime,
-    //     ];
-    // }
+        return Attendance::select($select)
+            ->where('user_id', $userId)
+            ->where(fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff'))
+            ->whereDateBetween($startDate, $endDate)
+            ->with($loads)
+            ->get();
+    }
 }

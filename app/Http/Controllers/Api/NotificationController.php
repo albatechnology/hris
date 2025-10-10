@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\Notification\NotificationResource;
 use App\Models\DatabaseNotification;
-use App\Models\User;
-use App\Notifications\TestNotification;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;

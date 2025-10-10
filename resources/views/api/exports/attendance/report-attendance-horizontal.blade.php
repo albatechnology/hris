@@ -31,28 +31,28 @@
                             <td style="text-align: center; background-color: #00e1ff;">National Holiday</td>
                             <td style="text-align: center; background-color: #00e1ff;">National Holiday</td>
                         @elseif ($attendance && $attendance['attendance'] && $attendance['attendance']['timeoff'])
-                            @if ($attendance['attendance']['clock_in'])
+                            @if ($attendance['attendance']['clockIn'])
                                 <td style="background-color: pink;">
-                                    {{ date('H:i', strtotime($attendance['attendance']['clock_in']['time'])) }}
+                                    {{ date('H:i', strtotime($attendance['attendance']['clockIn']['time'])) }}
                                 </td>
                             @else
                                 <td style="background-color: pink;">Timeoff</td>
                             @endif
-                            @if ($attendance['attendance']['clock_out'])
+                            @if ($attendance['attendance']['clockOut'])
                                 <td style="background-color: pink;">
-                                    {{ date('H:i', strtotime($attendance['attendance']['clock_out']['time'])) }}
+                                    {{ date('H:i', strtotime($attendance['attendance']['clockOut']['time'])) }}
                                 </td>
                             @else
                                 <td style="background-color: pink;">Timeoff</td>
                             @endif
                         @elseif ($attendance && $attendance['attendance'])
-                            @if ($attendance['attendance']['clock_in'])
-                                <td>{{ date('H:i', strtotime($attendance['attendance']['clock_in']['time'])) }}</td>
+                            @if ($attendance['attendance']['clockIn'])
+                                <td>{{ date('H:i', strtotime($attendance['attendance']['clockIn']['time'])) }}</td>
                             @else
                                 <td style="background-color: red;"></td>
                             @endif
-                            @if ($attendance['attendance']['clock_out'])
-                                <td>{{ date('H:i', strtotime($attendance['attendance']['clock_out']['time'])) }}
+                            @if ($attendance['attendance']['clockOut'])
+                                <td>{{ date('H:i', strtotime($attendance['attendance']['clockOut']['time'])) }}
                                 </td>
                             @else
                                 <td style="background-color: red;"></td>

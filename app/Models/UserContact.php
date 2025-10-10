@@ -25,6 +25,10 @@ class UserContact extends BaseModel implements TenantedInterface
         'birthdate',
         'email',
         'phone',
+        'is_working',
+        'is_disabled',
+        'tax_identification_no',
+        'address'
     ];
 
     protected $casts = [
@@ -32,5 +36,7 @@ class UserContact extends BaseModel implements TenantedInterface
         'relationship' => RelationshipType::class,
         'gender' => Gender::class,
         'religion' => Religion::class,
+        'is_working' => 'boolean',
+        'is_disabled' => 'boolean',
     ];
 }

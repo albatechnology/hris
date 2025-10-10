@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Container\Attributes\Database;
 use Illuminate\Notifications\DatabaseNotification as NotificationsDatabaseNotification;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
@@ -38,5 +39,10 @@ class DatabaseNotification extends NotificationsDatabaseNotification
                 // }
             },
         );
+    }
+
+    public static function deleteByData(int $modelId, array $type)
+    {
+        dispatch(fn() => DatabaseNotification::whereIn('type', $type)->where('data->model_id', $modelId)->delete());
     }
 }

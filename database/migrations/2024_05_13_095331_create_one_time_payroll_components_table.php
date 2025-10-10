@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('payroll_component_id')->constrained();
+            $table->foreignId('run_payroll_id')->constrained();
             $table->timestamps();
         });
     }

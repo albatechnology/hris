@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Api\Patrol;
 
-use App\Models\Client;
-use App\Models\ClientLocation;
+use App\Models\Branch;
+use App\Models\BranchLocation;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,11 +11,15 @@ use Illuminate\Foundation\Http\FormRequest;
 class StoreRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Prepare inputs for validation.
+     *
+     * @return void
      */
-    public function authorize(): bool
+    protected function prepareForValidation()
     {
-        return true;
+        $this->merge([
+            'users' => array_unique($this->users)
+        ]);
     }
 
     /**
@@ -26,7 +30,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', new CompanyTenantedRule(Client::class, 'Client not found')],
+            'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'name' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
@@ -40,15 +44,16 @@ class StoreRequest extends FormRequest
             'hours.*.description' => 'nullable|string',
 
             'users' => 'required|array',
-            'users.*.id' => ['required', 'integer', new CompanyTenantedRule(User::class, 'User not found')],
+            'users.*' => ['required', 'integer', new CompanyTenantedRule(User::class, 'User not found')],
             // 'users.*.id' => 'required|integer|exists:users,id',
             // 'users.*.schedules' => 'required|array',
             // 'users.*.schedules.*.id' => 'required|exists:schedules,id',
 
             'locations' => 'required|array',
-            'locations.*.client_location_id' => ['required', new CompanyTenantedRule(ClientLocation::class, 'Location not found')],
-            // 'locations.*.client_location_id' => 'required|exists:client_locations,id',
+            'locations.*.id' => ['nullable', 'exists:patrol_locations,id'],
+            'locations.*.branch_location_id' => ['required', new CompanyTenantedRule(BranchLocation::class, 'Location not found')],
             'locations.*.tasks' => 'required|array',
+            'locations.*.tasks.*.id' => ['nullable', 'exists:patrol_tasks,id'],
             'locations.*.tasks.*.name' => 'required|string',
             'locations.*.tasks.*.description' => 'required|string',
         ];

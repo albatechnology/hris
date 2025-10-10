@@ -22,7 +22,7 @@ class RequestChangeDataController extends BaseController
 
         $this->middleware('permission:request_change_data_access', ['only' => ['restore']]);
         $this->middleware('permission:request_change_data_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:request_change_data_create', ['only' => 'store']);
+        // $this->middleware('permission:request_change_data_create', ['only' => 'store']);
     }
 
     public function index(): ResourceCollection
@@ -78,7 +78,11 @@ class RequestChangeDataController extends BaseController
     public function countTotalApprovals(ApprovalStatusRequest $request)
     {
         $total = RequestChangeData::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -92,7 +96,10 @@ class RequestChangeDataController extends BaseController
         $data = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('user_id'),
-                AllowedFilter::scope('approval_status', 'whereApprovalStatus')
+                AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedIncludes('details')
             ->allowedSorts([

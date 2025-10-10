@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
+use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
@@ -11,11 +13,11 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class GuestBook extends BaseModel implements HasMedia, TenantedInterface
 {
-    use BelongsToUser, InteractsWithMedia;
+    use BelongsToUser, InteractsWithMedia, BelongsToBranch, CustomSoftDeletes;
 
     protected $fillable = [
         'user_id',
-        'client_id',
+        'branch_id',
         'is_check_out',
         'name',
         'address',
@@ -46,7 +48,7 @@ class GuestBook extends BaseModel implements HasMedia, TenantedInterface
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
-        return $query->whereHas('client', fn($q) => $q->tenanted());
+        return $query->whereHas('branch', fn($q) => $q->tenanted());
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -81,21 +83,6 @@ class GuestBook extends BaseModel implements HasMedia, TenantedInterface
         }
 
         return $data;
-    }
-
-    public function scopeCreatedAtStart(Builder $query, $date)
-    {
-        $query->whereDate('created_at', '>=', date('Y-m-d', strtotime($date)));
-    }
-
-    public function scopeCreatedAtEnd(Builder $query, $date)
-    {
-        $query->whereDate('created_at', '<=', date('Y-m-d', strtotime($date)));
-    }
-
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(Client::class);
     }
 
     public function checkOutBy(): BelongsTo

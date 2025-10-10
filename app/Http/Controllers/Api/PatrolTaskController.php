@@ -31,7 +31,8 @@ class PatrolTaskController extends BaseController
 
     public function index(int $patrolId, int $patrolLocationId)
     {
-        $data = QueryBuilder::for(PatrolTask::where('patrol_location_id', $this->patrolLocation->id))->with('patrolLocation.clientLocation')
+        $data = QueryBuilder::for(PatrolTask::where('patrol_location_id', $this->patrolLocation->id))
+            ->with('patrolLocation.branchLocation')
             ->allowedFilters([
                 AllowedFilter::exact('patrol_location_id'),
                 'name'
@@ -50,7 +51,7 @@ class PatrolTaskController extends BaseController
     public function show(int $patrolId, int $patrolLocationId, int $id)
     {
         $patrolTask = $this->patrolLocation->tasks()->findOrFail($id);
-        $patrolTask->load('patrolLocation.clientLocation');
+        $patrolTask->load('patrolLocation.branchLocation');
 
         return new DefaultResource($patrolTask);
     }

@@ -15,13 +15,7 @@ class RequestAttendanceRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    
 
     /**
      * Prepare inputs for validation.
@@ -59,6 +53,8 @@ class RequestAttendanceRequest extends FormRequest
             'date' => 'required|date_format:Y-m-d',
             'type' => ['required', Rule::enum(AttendanceType::class)],
             'note' => 'nullable|string',
+            'lat' => 'nullable|string',
+            'lng' => 'nullable|string',
         ];
     }
 }

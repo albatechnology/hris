@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
+use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
@@ -15,6 +16,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class OvertimeRequestController extends BaseController
 {
@@ -63,18 +65,22 @@ class OvertimeRequestController extends BaseController
     {
         $user = User::findOrFail($request->user_id);
 
-        $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
-        if (!$attendance) {
-            return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (AttendanceService::inLockAttendance($request->date, $user)) {
+            throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
-        if ($attendance->clockIn()->doesntExist()) {
-            return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
+        // if (!$attendance) {
+        //     return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
-        if ($attendance->clockOut()->doesntExist()) {
-            return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        // if ($attendance->clockIn()->doesntExist()) {
+        //     return $this->errorResponse(message: 'Attendance clock in not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
+
+        // if ($attendance->clockOut()->doesntExist()) {
+        //     return $this->errorResponse(message: 'Attendance clock out not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
         try {
             $overtimeRequest = OvertimeRequest::create($request->validated());
@@ -125,7 +131,11 @@ class OvertimeRequestController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = OvertimeRequest::myApprovals()
-            ->whereApprovalStatus($request->filter['approval_status'])->count();
+            ->whereApprovalStatus($request->filter['approval_status'])
+            ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
+            ->when($request->name, fn($q) => $q->whereUserName($request->name))
+            ->when($request->created_at, fn($q) => $q->createdAt($request->created_at))
+            ->count();
 
         return response()->json(['message' => $total]);
     }
@@ -146,7 +156,10 @@ class OvertimeRequestController extends BaseController
                 AllowedFilter::exact('shift_id'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
                 'date',
-                'is_after_shift'
+                'is_after_shift',
+                AllowedFilter::scope('branch_id', 'whereBranch'),
+                AllowedFilter::scope('name', 'whereUserName'),
+                'created_at',
             ])
             ->allowedSorts([
                 'id',
@@ -158,5 +171,10 @@ class OvertimeRequestController extends BaseController
             ->paginate($this->per_page);
 
         return OvertimeRequestResource::collection($data);
+    }
+
+    public function report(ExportReportRequest $request)
+    {
+        return (new \App\Exports\Overtime\ExportOvertimeRequest($request))->download('overtime-requests.xlsx');
     }
 }
