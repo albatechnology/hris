@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UpdatePayrollComponentType;
 use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -67,26 +68,37 @@ class UpdatePayrollComponent extends BaseModel
 
     public function scopeWhereActive(Builder $q, $startDate = null, $endDate = null)
     {
-        if ($startDate) {
-            $startDate = date('Y-m-d', strtotime($startDate));
-        } else {
-            $startDate = date('Y-m-d');
-        }
+        $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::today()->startOfDay();
+        $end   = $endDate ? Carbon::parse($endDate)->startOfDay() : $start->copy();
 
-        if ($endDate) {
-            $endDate = date('Y-m-d', strtotime($endDate));
-        } else {
-            $endDate = $startDate;
-        }
+        $q->whereDate('effective_date', '<=', $end->toDateString())
+            ->where(function ($q2) use ($start) {
+                $q2->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $start->toDateString());
+            });
 
-        $q->where(
-            fn($q) => $q->where(fn($q2) => $q2->whereDate('end_date', '<=', $endDate)->orWhereNull('end_date'))
-                ->where(
-                    fn($q2) => $q2->whereDate('effective_date', '<=', $startDate)
-                        ->orWhere(
-                            fn($q) => $q->where('effective_date', '>=', $startDate)->where('effective_date', '<=', $endDate)
-                        )
-                )
-        )->orWhere(fn($q) => $q->where('effective_date', '<=', $startDate)->where('end_date', '>=', $endDate));
+        return $q;
+
+        // if ($startDate) {
+        //     $startDate = date('Y-m-d', strtotime($startDate));
+        // } else {
+        //     $startDate = date('Y-m-d');
+        // }
+
+        // if ($endDate) {
+        //     $endDate = date('Y-m-d', strtotime($endDate));
+        // } else {
+        //     $endDate = $startDate;
+        // }
+
+        // $q->where(
+        //     fn($q) => $q->where(fn($q2) => $q2->whereDate('end_date', '>=', $endDate)->orWhereNull('end_date'))
+        //         ->where(
+        //             fn($q2) => $q2->whereDate('effective_date', '<=', $startDate)
+        //                 ->orWhere(
+        //                     fn($q) => $q->where('effective_date', '>=', $startDate)->where('effective_date', '<=', $endDate)
+        //                 )
+        //         )
+        // )->orWhere(fn($q) => $q->where('effective_date', '<=', $startDate)->where('end_date', '>=', $endDate));
     }
 }

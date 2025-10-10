@@ -81,7 +81,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
     public function store(RunPayrollDTO $dto): RunPayroll
     {
-        // dd($dto);
 
         return $this->execute($dto);
 
@@ -400,7 +399,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
      */
     private function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, RunPayrollDTO $dto): JsonResponse
     {
-        // dump($payrollSetting->toArray());
         $company = $payrollSetting->company;
 
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
@@ -464,12 +462,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
 
-        // dump($runPayroll->toArray());
-        // dd($users->toArray());
 
         // calculate for each user
         // foreach ($userIds as $userId) {
-        // dump($runPayroll->toArray());
         foreach ($users as $user) {
             $cutOffStartDate = $runPayroll->cut_off_start_date;
             $cutOffEndDate = $runPayroll->cut_off_end_date;
@@ -509,16 +504,12 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
                 // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $startDate, $cutOffEndDate);
                 // $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-                // dump($totalWorkingDays);
-                // dump($totalPresent);
                 $dataTotalAttendance = AttendanceHelper::getTotalAttendance($user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
                 $totalPresent = $dataTotalAttendance['total_present'];
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
 
                 $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
 
-                dump($totalPresent);
-                dump($totalWorkingDays);
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
@@ -529,14 +520,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             } else {
                 // $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
                 // $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-                // dump($cutOffStartDate);
-                // dump($cutOffEndDate);
                 $dataTotalAttendance = AttendanceHelper::getTotalAttendance($user, $cutOffStartDate, $cutOffEndDate);
-                // dd($dataTotalAttendance);
                 $totalPresent = $dataTotalAttendance['total_present'];
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
-                dump($totalPresent);
-                dump($totalWorkingDays);
             }
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
@@ -558,8 +544,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             //     ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
 
             $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
-            // dump($basicSalaryComponent->toArray());
-            // dump($updatePayrollComponentDetail->toArray());
             // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
             //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
             // }
@@ -576,8 +560,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
             $this->createComponent($runPayrollUser, $basicSalaryComponent, $amount);
-            dump($amount);
-            dump($user->join_date);
 
             /**
              * five, calculate reimbursement
@@ -597,11 +579,11 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * second, calculate payroll component where not default
              */
-            $payrollComponents = PayrollComponent::tenanted()
-                ->where('id', 127)
-                ->where('company_id', $runPayroll->company_id)
-                ->whenBranch($runPayroll->branch_id)
-                ->whereNotDefault()->get();
+            // $payrollComponents = PayrollComponent::tenanted()
+            //     ->where('id', 127)
+            //     ->where('company_id', $runPayroll->company_id)
+            //     ->whenBranch($runPayroll->branch_id)
+            //     ->whereNotDefault()->get();
 
             $payrollComponents->each(function ($payrollComponent) use ($user, $dataTotalAttendance, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
@@ -611,12 +593,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $amount = $payrollComponent->amount;
                 }
 
-                dump($amount);
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-                dump($updatePayrollComponentDetail->toArray());
                 if ($updatePayrollComponentDetail) {
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
-                    dump($startEffectiveDate);
 
                     // end_date / endEffectiveDate can be null
                     $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
@@ -642,7 +621,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 }
                 $this->createComponent($runPayrollUser, $payrollComponent, $amount);
             });
-            dd('END');
             // END
 
             /**
@@ -654,15 +632,18 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 //     ->whenBranch($runPayroll->branch_id)
                 //     ->where('category', PayrollComponentCategory::ALPA)->first();
 
-                if ($alpaComponent) {
+                $totalWorkingDays = $dataTotalAttendance['total_working_days'];
+                $totalAlpa = $totalWorkingDays - $dataTotalAttendance['total_present'];
+
+                if ($alpaComponent && $totalAlpa > 0) {
                     $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
                     if ($alpaUpdateComponent) {
                         $amount = $alpaUpdateComponent->new_amount;
                     } else {
                         // get total alpa di range tgl cuttoff
                         // potongan = (totalAlpa/totalHariKerja)*(basicSalary+SUM(allowance))
-                        $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $cutOffStartDate, $cutOffEndDate);
-                        $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
+                        // $totalWorkingDays = ScheduleService::getTotalWorkingDaysInPeriod($user, $cutOffStartDate, $cutOffEndDate);
+                        // $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
                         $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::REIMBURSEMENT, PayrollComponentCategory::OVERTIME]))->sum('amount');
                         $amount = round(max(($totalAlpa / $totalWorkingDays) * ($userBasicSalary + $totalAllowance), 0));
                     }
