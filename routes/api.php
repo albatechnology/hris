@@ -402,7 +402,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
+    Route::get('runreprimands/{id}/all', [RunReprimandController::class, 'allReprimand']);
+    Route::get('reprimands/all', [ReprimandController::class, 'allReprimand']);
     Route::apiResource('run-reprimands', RunReprimandController::class);
+
     Route::apiResource('reprimands', ReprimandController::class);
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
     Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
@@ -425,4 +428,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
 
     Route::apiResource('levels',LevelController::class);
+    Route::get('reprimands/{reprimand}/test', [ReprimandController::class, 'getTotalLateTimeInMinutes']);
+
 });

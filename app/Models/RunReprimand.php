@@ -7,6 +7,7 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunReprimand extends Model implements TenantedInterface
 {
@@ -31,5 +32,10 @@ class RunReprimand extends Model implements TenantedInterface
                 $model->status = RunPayrollStatus::REVIEW;
             }
         });
+    }
+
+    public function reprimands(): HasMany
+    {
+        return $this->hasMany(Reprimand::class);
     }
 }

@@ -43,6 +43,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
         static::created(function (self $model) {
             $model->records()->create([
                 'user_id' => $model->user_id,
+                'date' => $model->effective_date,
             ]);
         });
     }

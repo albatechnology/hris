@@ -20,9 +20,12 @@ class RunReprimandService
         return DB::transaction(function () use ($request) {
             $runReprimand = RunReprimand::create($request->validated());
 
-            $this->createReprimand($request);
+            $results = $this->createReprimand($request);
 
-            return $runReprimand;
+            return [
+                'run' => $runReprimand,
+                'results' => $results,
+            ];
         });
     }
 
@@ -31,57 +34,155 @@ class RunReprimandService
      *
      * @param object{company_id: int, start_date: string, end_date: string, user_ids?: string} $request
      */
-    private function createReprimand(StoreRequest $request)
+    public function createReprimand(StoreRequest $request): array
     {
         $userIds = $request->user_ids ? explode(',', $request->user_ids) : null;
-
+        // dd($userIds);
         $users = User::select('id', 'name', 'join_date')
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->where('company_id', $request->company_id)
             ->get();
 
-
         $dateRange = CarbonPeriod::create($request->start_date, $request->end_date);
 
+        // preload attendances grouped by user
+        $attendances = Attendance::select('id', 'user_id', 'shift_id', 'date', 'timeoff_id')
+            ->whereDateBetween($request->start_date, $request->end_date)
+            ->where(function ($q) {
+                $q->whereNull('timeoff_id')
+                    ->orWhereHas('timeoff', fn($q) => $q->where('request_type', '!=', TimeoffRequestType::FULL_DAY));
+            })
+            ->withWhereHas('clockIn', fn($q) => $q->approved()->select('attendance_id', 'time', 'is_clock_in'))
+            ->withWhereHas('clockOut', fn($q) => $q->approved()->select('attendance_id', 'time', 'is_clock_in'))
+            ->withWhereHas('shift', fn($q) => $q->withTrashed()->where('is_dayoff', 0)->selectMinimalist(['is_enable_grace_period', 'time_dispensation', 'clock_in', 'clock_out']))
+            ->get()
+            ->groupBy('user_id');
+
+        $results = [];
+
         foreach ($users as $user) {
-            // hitung telat di range start_date - end_date
-            $attendances = Attendance::select('id', 'shift_id', 'date', 'timeoff_id')->where('user_id', $user->id)
-                ->whereDateBetween($request->start_date, $request->end_date)
-                ->where(function ($q) {
-                    $q->whereNull('timeoff_id')
-                        ->orWhereHas('timeoff', fn($q) => $q->where('request_type', '!=', TimeoffRequestType::FULL_DAY));
-                })
-                ->withWhereHas('clockIn', fn($q) => $q->approved()->select('attendance_id', 'time', 'is_clock_in'))
-                ->withWhereHas('clockOut', fn($q) => $q->approved()->select('attendance_id', 'time', 'is_clock_in'))
-                ->withWhereHas('shift', fn($q) => $q->withTrashed()->where('is_dayoff', 0)->selectMinimalist(['is_enable_grace_period', 'time_dispensation']))
-                ->get();
+            $userAttendances = $attendances->get($user->id) ?? collect();
 
-            $total = array_reduce($dateRange->toArray(), function (?int $carry, Carbon $date) use ($attendances) {
-                $attendance = $attendances->firstWhere('date', $date->format('Y-m-d'));
+            $userTotal = 0;
+            $perDay = [];
 
-                if ($attendance) {
+            foreach ($dateRange as $date) {
+                $attendance = $userAttendances->firstWhere('date', $date->format('Y-m-d'));
+                if (!$attendance || !$attendance->shift) continue;
 
-                    // Clock in
-                    list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $attendance->shift);
+                $remaining = 0;
+                $minutesIn = 0;
+                $minutesOut = 0;
 
-
-                    // Clock out
-                    list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockOut, $attendance->shift, $remainingTime);
-
-                    if ($attendance->clockIn) {
-                        list($diffInMinute, $diffInTime, $remainingTime) = AttendanceService::getTotalLateTime($attendance->clockIn, $attendance->shift, $diffInMinute);
-                    }
-
-                    return $carry + $remainingTime;
+                if ($attendance->clockIn) {
+                    list($minutesIn, $diffInTime, $remaining) = AttendanceService::getTotalLateTime($attendance->clockIn, $attendance->shift, $remaining);
                 }
 
-                return $carry + 0;
-            });
+                if ($attendance->clockOut) {
+                    list($minutesOut, $diffInTime2, $remaining) = AttendanceService::getTotalLateTime($attendance->clockOut, $attendance->shift, $remaining);
+                }
 
-            $workingMonth = UserService::getWorkingMonth($user);
+                $dayTotal = ($minutesIn ?? 0) + ($minutesOut ?? 0);
+                $userTotal += $dayTotal;
 
-            dump($workingMonth);
-            dd($total);
+                $perDay[$date->format('Y-m-d')] = [
+                    'in' => $minutesIn,
+                    'out' => $minutesOut,
+                    'total' => $dayTotal,
+                ];
+            }
+
+            $results[] = [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'total_minutes' => $userTotal,
+                'details' => $perDay,
+            ];
         }
+
+        return $results;
+    }
+
+    public function allReprimand(RunReprimand $runReprimand): array
+    {
+        $users = User::select('id', 'name', 'join_date')
+            // ->when($userIds, fn($q) => $q->whereIn('id', null))
+            ->where('company_id', $runReprimand->company_id)
+            ->get();
+
+        $dateRange = CarbonPeriod::create($runReprimand->start_date, $runReprimand->end_date);
+
+        // preload attendances grouped by user
+        $attendances = Attendance::select('id', 'user_id', 'shift_id', 'date', 'timeoff_id')
+            ->whereDateBetween($runReprimand->start_date, $runReprimand->end_date)
+            ->where(function ($q) {
+                $q->whereNull('timeoff_id')
+                    ->orWhereHas('timeoff', fn($q) => $q->where('request_type', '!=', TimeoffRequestType::FULL_DAY));
+            })
+            ->withWhereHas('clockIn', fn($q) => $q->approved()->select('attendance_id', 'time', 'is_clock_in'))
+            ->withWhereHas('clockOut', fn($q) => $q->approved()->select('attendance_id', 'time', 'is_clock_in'))
+            ->withWhereHas('shift', fn($q) => $q->withTrashed()->where('is_dayoff', 0)->selectMinimalist(['is_enable_grace_period', 'time_dispensation', 'clock_in', 'clock_out']))
+            ->get()
+            ->groupBy('user_id');
+
+        $results = [];
+
+        foreach ($users as $user) {
+            $userAttendances = $attendances->get($user->id) ?? collect();
+
+            $userTotal = 0;
+            $perDay = [];
+
+            foreach ($dateRange as $date) {
+                $attendance = $userAttendances->firstWhere('date', $date->format('Y-m-d'));
+                if (!$attendance || !$attendance->shift) continue;
+
+                $remaining = 0;
+                $minutesIn = 0;
+                $minutesOut = 0;
+
+                if ($attendance->clockIn) {
+                    list($minutesIn, $diffInTime, $remaining) = AttendanceService::getTotalLateTime($attendance->clockIn, $attendance->shift, $remaining);
+                }
+
+                if ($attendance->clockOut) {
+                    list($minutesOut, $diffInTime2, $remaining) = AttendanceService::getTotalLateTime($attendance->clockOut, $attendance->shift, $remaining);
+                }
+
+                $dayTotal = ($minutesIn ?? 0) + ($minutesOut ?? 0);
+                $userTotal += $dayTotal;
+
+                $perDay[$date->format('Y-m-d')] = [
+                    'in' => $minutesIn,
+                    'out' => $minutesOut,
+                    'total' => $dayTotal,
+                ];
+            }
+
+            if($userTotal > 10){
+                $results[] = [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'total_minutes' => $userTotal,
+                'details' => $perDay,
+             ];
+             $runReprimand->reprimands()->create([
+                'user_id' => $user->id,
+                'type' => 'SP 1',
+                'effective_date' => $runReprimand->start_date,
+                'end_date' => $runReprimand->end_date,
+                'notes' => 'Accumulated late minutes: '.$userTotal,
+             ]);
+            }
+
+            // $results[] = [
+            //     'user_id' => $user->id,
+            //     'name' => $user->name,
+            //     'total_minutes' => $userTotal,
+            //     'details' => $perDay,
+            // ];
+
+        }
+        return $results;
     }
 }

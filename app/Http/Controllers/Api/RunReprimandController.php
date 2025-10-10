@@ -26,6 +26,13 @@ class RunReprimandController extends BaseController
         $this->middleware('permission:run_reprimand_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    public function allReprimand(int $id)
+    {
+        $runReprimand = RunReprimand::findTenanted($id);
+        $data = $this->runReprimandService->allReprimand($runReprimand);
+        return DefaultResource::collection($data);
+    }
+
     public function index()
     {
         $data = QueryBuilder::for(RunReprimand::tenanted())
@@ -58,9 +65,11 @@ class RunReprimandController extends BaseController
     public function store(StoreRequest $request)
     {
         $res = $this->runReprimandService->store($request);
-        dd($res);
 
-        return new DefaultResource($runReprimand);
+        return response()->json([
+            'run' => $res['run'],
+            'results' => $res['results'],
+        ]);
     }
 
     public function update(int $id, UpdateRequest $request)
