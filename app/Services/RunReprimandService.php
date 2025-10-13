@@ -7,6 +7,7 @@ use App\Http\Requests\Api\RunReprimand\StoreRequest;
 use App\Models\Attendance;
 use App\Models\RunReprimand;
 use App\Models\User;
+use App\Enums\ReprimandType;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
@@ -105,8 +106,10 @@ class RunReprimandService
 
     public function allReprimand(RunReprimand $runReprimand): array
     {
+        // preview-only: return calculation results without persisting
+        $results = [];
+
         $users = User::select('id', 'name', 'join_date')
-            // ->when($userIds, fn($q) => $q->whereIn('id', null))
             ->where('company_id', $runReprimand->company_id)
             ->get();
 
@@ -114,7 +117,7 @@ class RunReprimandService
 
         // preload attendances grouped by user
         $attendances = Attendance::select('id', 'user_id', 'shift_id', 'date', 'timeoff_id')
-            ->whereDateBetween($runReprimand->start_date, $runReprimand->end_date)
+            ->whereDateBetween($runReprimand->start_date, $runReprimand->end_reprimand ?? $runReprimand->end_date)
             ->where(function ($q) {
                 $q->whereNull('timeoff_id')
                     ->orWhereHas('timeoff', fn($q) => $q->where('request_type', '!=', TimeoffRequestType::FULL_DAY));
@@ -124,8 +127,6 @@ class RunReprimandService
             ->withWhereHas('shift', fn($q) => $q->withTrashed()->where('is_dayoff', 0)->selectMinimalist(['is_enable_grace_period', 'time_dispensation', 'clock_in', 'clock_out']))
             ->get()
             ->groupBy('user_id');
-
-        $results = [];
 
         foreach ($users as $user) {
             $userAttendances = $attendances->get($user->id) ?? collect();
@@ -159,30 +160,70 @@ class RunReprimandService
                 ];
             }
 
-            if($userTotal > 10){
+            if ($userTotal > 10) {
                 $results[] = [
-                'user_id' => $user->id,
-                'name' => $user->name,
-                'total_minutes' => $userTotal,
-                'details' => $perDay,
-             ];
-             $runReprimand->reprimands()->create([
-                'user_id' => $user->id,
-                'type' => 'SP 1',
-                'effective_date' => $runReprimand->start_date,
-                'end_date' => $runReprimand->end_date,
-                'notes' => 'Accumulated late minutes: '.$userTotal,
-             ]);
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'total_minutes' => $userTotal,
+                    'details' => $perDay,
+                ];
             }
-
-            // $results[] = [
-            //     'user_id' => $user->id,
-            //     'name' => $user->name,
-            //     'total_minutes' => $userTotal,
-            //     'details' => $perDay,
-            // ];
-
         }
+
         return $results;
     }
+
+    /**
+     * Persist all reprimands for a given RunReprimand using LateService rules.
+     * Returns created/updated rows summary.
+     *
+     * @param RunReprimand $runReprimand
+     * @param string $rulesetKey
+     * @return array
+     */
+    public function applyAllReprimand(RunReprimand $runReprimand, string $rulesetKey = 'month_1_violation_1'): array
+    {
+        $lateService = new LateService();
+
+        return DB::transaction(function () use ($runReprimand, $lateService, $rulesetKey) {
+            $results = [];
+
+            // reuse preview to compute totals
+            $preview = $this->allReprimand($runReprimand);
+
+            foreach ($preview as $row) {
+                $userId = $row['user_id'];
+                $total = (int) $row['total_minutes'];
+
+                // find matching rule
+                $rule = $lateService->findRuleForMinutes($total, $rulesetKey);
+
+                $type = $rule['type'] ?? ReprimandType::SP_1->value;
+
+                $existing = $runReprimand->reprimands()->where('user_id', $userId)->first();
+                if ($existing) {
+                    $existing->update([
+                        'type' => $type,
+                        'notes' => 'Accumulated late minutes: ' . $total,
+                        'effective_date' => $runReprimand->start_date,
+                        'end_date' => $runReprimand->end_date,
+                    ]);
+                    $results[] = ['user_id' => $userId, 'action' => 'updated', 'type' => $type];
+                } else {
+                    $runReprimand->reprimands()->create([
+                        'user_id' => $userId,
+                        'type' => $type,
+                        'effective_date' => $runReprimand->start_date,
+                        'end_date' => $runReprimand->end_date,
+                        'notes' => 'Accumulated late minutes: ' . $total,
+                    ]);
+                    $results[] = ['user_id' => $userId, 'action' => 'created', 'type' => $type];
+                }
+            }
+
+            return $results;
+        });
+    }
+
+    // determineReprimandType removed: mapping handled by LateService rules
 }

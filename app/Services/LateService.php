@@ -421,4 +421,25 @@ class LateService
             ]
         ];
     }
+
+    /**
+     * Return the matching rule entry for given total minutes and ruleset key.
+     *
+     * @param int $minutes
+     * @param string $setKey
+     * @return array|null
+     */
+    public function findRuleForMinutes(int $minutes, string $setKey = 'month_1_violation_1'): ?array
+    {
+        $rules = $this->rules();
+        if (!isset($rules[$setKey]) || !is_array($rules[$setKey])) return null;
+
+        foreach ($rules[$setKey] as $entry) {
+            if ($minutes >= $entry['start_minute'] && $minutes <= $entry['end_minute']) {
+                return $entry;
+            }
+        }
+
+        return null;
+    }
 }

@@ -33,6 +33,13 @@ class RunReprimandController extends BaseController
         return DefaultResource::collection($data);
     }
 
+    public function applyAllReprimand(int $id)
+    {
+        $runReprimand = RunReprimand::findTenanted($id);
+        $results = $this->runReprimandService->applyAllReprimand($runReprimand);
+        return response()->json(['results' => $results]);
+    }
+
     public function index()
     {
         $data = QueryBuilder::for(RunReprimand::tenanted())

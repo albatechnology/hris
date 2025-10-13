@@ -403,6 +403,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
     Route::get('runreprimands/{id}/all', [RunReprimandController::class, 'allReprimand']);
+    // POST to apply (persist) the previewed reprimands
+    Route::post('runreprimands/{id}/all', [RunReprimandController::class, 'applyAllReprimand']);
     Route::get('reprimands/all', [ReprimandController::class, 'allReprimand']);
     Route::apiResource('run-reprimands', RunReprimandController::class);
 
