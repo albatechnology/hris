@@ -162,11 +162,12 @@ class RunReprimandService
 
             if ($userTotal > 10) {
                 $results[] = [
-                    'user_id' => $user->id,
-                    'name' => $user->name,
-                    'total_minutes' => $userTotal,
-                    'details' => $perDay,
-                ];
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'total_minutes' => $userTotal,
+                'details' => $perDay,
+             ];
+
             }
         }
 
