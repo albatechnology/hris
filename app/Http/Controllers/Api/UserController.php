@@ -514,24 +514,25 @@ class UserController extends BaseController
                 /** @var \App\Models\RequestChangeData $requestChangeData */
                 $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
 
-                if (!is_null($photoProfile)) {
-                    $defaultApproverId = $user->company->settings()->where('key', SettingKey::PROFILE_PICTURE_APPROVER)->first(['value'])?->value;
+                // if (!is_null($photoProfile)) {
+                //     $defaultApproverId = $user->company->settings()->where('key', SettingKey::PROFILE_PICTURE_APPROVER)->first(['value'])?->value;
 
-                    /** @var User $defaultApprover */
-                    $defaultApprover = User::find($defaultApproverId, ['id']);
-                    if (!$defaultApprover) {
-                        $defaultApprover = User::where('company_id', $user->company_id)->where('type', UserType::ADMIN)->first(['id']);
-                    }
+                //     /** @var User $defaultApprover */
+                //     $defaultApprover = User::find($defaultApproverId, ['id']);
+                //     if (!$defaultApprover) {
+                //         $defaultApprover = User::where('company_id', $user->company_id)->where('type', UserType::ADMIN)->first(['id']);
+                //     }
 
-                    $approvers[] = [
-                        'user_id' => $defaultApprover->id,
-                    ];
+                //     $approvers[] = [
+                //         'user_id' => $defaultApprover->id,
+                //     ];
 
-                    $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
-                    RequestApprovalService::createApprovals($requestChangeData, $approvers);
-                } else {
-                    $requestChangeData = $user->requestChangeDatas()->create($request->validated());
-                }
+                //     $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
+                //     RequestApprovalService::createApprovals($requestChangeData, $approvers);
+                // } else {
+                //     $requestChangeData = $user->requestChangeDatas()->create($request->validated());
+                // }
+                $requestChangeData = $user->requestChangeDatas()->create($request->validated());
 
                 if (count($dataRequested) > 0) {
                     $mediaCollection = MediaCollection::REQUEST_CHANGE_DATA->value;
