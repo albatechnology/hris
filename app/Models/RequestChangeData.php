@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
