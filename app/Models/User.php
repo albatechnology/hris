@@ -386,6 +386,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsToMany(Event::class, 'user_events', 'user_id', 'event_id');
     }
 
+    public function taskRequests(): HasMany
+    {
+        return $this->hasMany(TaskRequest::class);
+    }
+
     public function tasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'user_tasks');
