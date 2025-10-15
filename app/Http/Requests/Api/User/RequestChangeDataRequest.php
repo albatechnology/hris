@@ -7,8 +7,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RequestChangeDataRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

@@ -464,7 +464,6 @@ class UserController extends BaseController
     public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
     {
         $requestChangeDataAllowes = \App\Models\RequestChangeDataAllowes::where('company_id', $user->company_id)->get();
-
         $dataRequested = [];
         $dataAllowedToUpdate = [];
         foreach ($request->details ?? [] as $type => $value) {
@@ -473,11 +472,13 @@ class UserController extends BaseController
                     'type' => $type,
                     'value' => $value,
                 ];
+                // dd($dataRequested);
             } elseif ($requestChangeDataAllow = $requestChangeDataAllowes->firstWhere('type.value', $type)) {
                 $dataAllowedToUpdate[] = [
                     'type' => $requestChangeDataAllow->type->value,
                     'value' => $value,
                 ];
+                // dd($dataAllowedToUpdate);
             }
         }
 
@@ -522,13 +523,15 @@ class UserController extends BaseController
                     if (!$defaultApprover) {
                         $defaultApprover = User::where('company_id', $user->company_id)->where('type', UserType::ADMIN)->first(['id']);
                     }
+                    // dd('defaultApprover:'.$defaultApprover);
 
                     $approvers[] = [
                         'user_id' => $defaultApprover->id,
                     ];
 
                     $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
-                    RequestApprovalService::createApprovals($requestChangeData, $approvers);
+
+                    $test = RequestApprovalService::createApprovals($requestChangeData, $approvers);
                 } else {
                     $requestChangeData = $user->requestChangeDatas()->create($request->validated());
                 }

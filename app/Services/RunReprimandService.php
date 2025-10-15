@@ -173,6 +173,116 @@ class RunReprimandService
 
         return $results;
     }
+    public function allReprimand(RunReprimand $runReprimand): array
+{
+    $results = [];
+
+    // Ambil semua user di perusahaan terkait
+    $users = User::select('id', 'name', 'join_date')
+        ->where('company_id', $runReprimand->company_id)
+        ->get();
+
+    // Rentang tanggal yang akan dihitung
+    $dateRange = CarbonPeriod::create($runReprimand->start_date, $runReprimand->end_date);
+
+    // Preload attendance + relasi terkait
+    $attendances = Attendance::select('id', 'user_id', 'shift_id', 'date', 'timeoff_id')
+        ->whereDateBetween($runReprimand->start_date, $runReprimand->end_reprimand ?? $runReprimand->end_date)
+        ->where(function ($q) {
+            $q->whereNull('timeoff_id')
+                ->orWhereHas('timeoff', fn($q) =>
+                    $q->where('request_type', '!=', TimeoffRequestType::FULL_DAY)
+                );
+        })
+        ->withWhereHas('clockIn', fn($q) =>
+            $q->approved()->select('attendance_id', 'time', 'is_clock_in')
+        )
+        ->withWhereHas('clockOut', fn($q) =>
+            $q->approved()->select('attendance_id', 'time', 'is_clock_in')
+        )
+        ->withWhereHas('shift', fn($q) =>
+            $q->withTrashed()
+              ->where('is_dayoff', 0)
+              ->selectMinimalist(['is_enable_grace_period', 'time_dispensation', 'clock_in', 'clock_out'])
+        )
+        ->get()
+        ->groupBy('user_id');
+
+    // Loop semua user
+    foreach ($users as $user) {
+        $userAttendances = $attendances->get($user->id) ?? collect();
+
+        $userTotal = 0;
+        $perDay = [];
+
+        foreach ($dateRange as $date) {
+            $attendance = $userAttendances->firstWhere('date', $date->format('Y-m-d'));
+            if (!$attendance || !$attendance->shift) continue;
+
+            $clockIn = $attendance->clockIn ?? null;
+            $clockOut = $attendance->clockOut ?? null;
+            $shift = $attendance->shift;
+
+            // --- Hitung keterlambatan gabungan ---
+            $tolerance = (int) $shift->time_dispensation;
+            $lateInMinutes = 0;
+            $earlyOutMinutes = 0;
+
+            $shiftClockIn = Carbon::createFromFormat('H:i:s', $shift->clock_in);
+            $shiftClockOut = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+
+            // Clock In
+            if ($clockIn) {
+                $actualIn = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($clockIn->time)));
+                if ($actualIn->greaterThan($shiftClockIn)) {
+                    $lateInMinutes = $actualIn->diffInMinutes($shiftClockIn);
+                }
+            }
+
+            // Clock Out
+            if ($clockOut) {
+                $actualOut = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($clockOut->time)));
+                if ($actualOut->lessThan($shiftClockOut)) {
+                    $earlyOutMinutes = $shiftClockOut->diffInMinutes($actualOut);
+                }
+            }
+
+            $totalLate = $lateInMinutes + $earlyOutMinutes;
+
+            // Terapkan grace period
+            if ($shift->is_enable_grace_period) {
+                if ($totalLate <= $tolerance) {
+                    $totalLate = 0;
+                } else {
+                    $totalLate -= $tolerance;
+                }
+            }
+
+            // Tambahkan ke total user
+            $userTotal += $totalLate;
+
+            // Simpan detail harian
+            $perDay[$date->format('Y-m-d')] = [
+                'in' => $lateInMinutes,
+                'out' => $earlyOutMinutes,
+                'total' => $totalLate,
+            ];
+        }
+
+        // Jika total melebihi ambang batas (misalnya 10 menit)
+        if ($userTotal > 10) {
+            $results[] = [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'total_minutes' => $userTotal,
+                'details' => $perDay,
+            ];
+        }
+    }
+
+    return $results;
+}
+
 
     /**
      * Persist all reprimands for a given RunReprimand using LateService rules.

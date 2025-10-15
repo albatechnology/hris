@@ -110,7 +110,7 @@ class RegisterRequest extends FormRequest
                  'string',
                 Rule::when(
                     $countryId == 2,
-                    ['required', 'regex:/^\d{6}-\d{2}-\d{4}$/']
+                    ['required', 'min:12', 'max:12']
                 )
                 ],
             'kk_no' => 'nullable|string',
