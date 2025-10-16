@@ -124,6 +124,11 @@ class UserController extends BaseController
                         $query->where('branch_id', $value);
                     }
                 }),
+                AllowedFilter::callback('company_id',function($query, $value) {
+                    if (!empty($value) || $value > 0) {
+                        $query->where('company_id', $value);
+                    }
+                }),
                 AllowedFilter::callback('has_active_patrol', function ($query, $value) {
                     $query->whereHas('patrols', function ($q) {
                         $q->whereDate('patrols.start_date', '<=', now());
