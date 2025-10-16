@@ -323,6 +323,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);
     Route::apiResource('request-shifts', RequestShiftController::class);
 
+    Route::get('task-requests/report', [TaskRequestController::class, 'report']);
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);
     Route::put('task-requests/{task_request}/approve', [TaskRequestController::class, 'approve']);

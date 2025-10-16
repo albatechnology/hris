@@ -19,6 +19,7 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 
 class TaskRequestController extends BaseController
 {
@@ -75,8 +76,8 @@ class TaskRequestController extends BaseController
                 }
             }
 
-            $notificationType = NotificationType::REQUEST_TASK;
-            $taskRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $taskRequest->user, $taskRequest));
+            // $notificationType = NotificationType::REQUEST_TASK;
+            // $taskRequest->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $taskRequest->user, $taskRequest));
             DB::commit();
         } catch (\Exception $th) {
             DB::rollBack();
@@ -205,5 +206,10 @@ class TaskRequestController extends BaseController
             ->paginate($this->per_page);
 
         return DefaultResource::collection($data);
+    }
+
+    public function report(ExportReportRequest $request)
+    {
+        return (new \App\Exports\Overtime\ExportTaskOvertimeRequest($request))->download('task-overtime-requests.xlsx');
     }
 }
