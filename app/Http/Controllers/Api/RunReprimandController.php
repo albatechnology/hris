@@ -75,7 +75,10 @@ class RunReprimandController extends BaseController
 
         return response()->json([
             'run' => $res['run'],
+<<<<<<< Updated upstream
             'results' => $res['results'],
+=======
+>>>>>>> Stashed changes
         ]);
     }
 

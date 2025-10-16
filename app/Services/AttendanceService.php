@@ -460,7 +460,53 @@ class AttendanceService
         return $totalAttendance;
     }
 
+<<<<<<< Updated upstream
     public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = 0): array
+=======
+<<<<<<< Updated upstream
+    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
+=======
+    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTolerance = 0): array
+{
+    $tolerance = $shift->time_dispensation ?? 0;
+
+    $recordedTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+
+    // Determine which scheduled time to compare against
+    if ($attendanceDetail->is_clock_in) {
+        $scheduledTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
+        $diffInMinutes = $recordedTime->greaterThan($scheduledTime)
+            ? $scheduledTime->diffInMinutes($recordedTime)
+            : 0; // Late in
+    } else {
+        $scheduledTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+        $diffInMinutes = $recordedTime->lessThan($scheduledTime)
+            ? $scheduledTime->diffInMinutes($recordedTime)
+            : 0; // Early out
+    }
+
+    // Apply grace period
+    if ($shift->is_enable_grace_period) {
+        $totalLateness = $diffInMinutes + $remainingTolerance;
+
+        if ($totalLateness <= $tolerance) {
+            // still within tolerance, no penalty
+            return [0, "00:00:00", $totalLateness];
+        } else {
+            // exceeded tolerance
+            $lateBeyondTolerance = $totalLateness - $tolerance;
+            return [$lateBeyondTolerance, gmdate('H:i:s', $lateBeyondTolerance * 60), 0];
+        }
+    }
+
+    // No grace period
+    return [$diffInMinutes, gmdate('H:i:s', $diffInMinutes * 60), 0];
+}
+
+
+    public static function getTotalLateTimeNiko(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = 0): array
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
     {
         /**
          *
@@ -486,6 +532,7 @@ class AttendanceService
         // if ($attendanceDetail->is_clock_in) {
         //     $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
 
+<<<<<<< Updated upstream
         //     if ($endTime->lessThanOrEqualTo($startTime)) {
         //         $diffInSeconds = 0;
         //     } else {
@@ -499,6 +546,16 @@ class AttendanceService
         //         $diffInSeconds = 0;
         //     }
         // }
+=======
+            if ($endTime->lessThanOrEqualTo($startTime)) {
+                $diffInSeconds = 0;
+            } else {
+                $diffInSeconds = $startTime->diffInSeconds($endTime);
+            }
+        } else {
+            $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
 
         // // $remainingTimeInSeconds = $remainingTime * 60;
         // $diffInTime = "00:00:00";
@@ -518,6 +575,7 @@ class AttendanceService
         //     $diffInTime = gmdate('H:i:s', $diffInSeconds);
         // }
 
+<<<<<<< Updated upstream
         // // if($shift->is_enable_grace_period === true){
         // //     // dump($diffInSeconds, ($tolerance * 60 + 60));
         // //     if($diffInSeconds <= (($tolerance * 60) + 59)){
@@ -537,6 +595,109 @@ class AttendanceService
         //     $diffInTime,
         //     $remainingTime,
         // ];
+=======
+        if ($shift->is_enable_grace_period === true) {
+            if (($remainingTime + $realDiffInMinute) > $tolerance) {
+                // $diffInMinutes += $remainingTime;
+                $remainingTime = 0;
+                $diffInTime = gmdate('H:i:s', $diffInSeconds);
+            } else {
+                $remainingTime = $tolerance - ($remainingTime + $realDiffInMinute);
+                $diffInMinutes = 0;
+            }
+        } else {
+            $diffInTime = gmdate('H:i:s', $diffInSeconds);
+        }
+=======
+            if ($endTime->lessThanOrEqualTo($startTime)) {
+                $diffInSeconds = $endTime->diffInSeconds($startTime);
+            } else {
+                $diffInSeconds = 0;
+            }
+        }
+
+        // $remainingTimeInSeconds = $remainingTime * 60;
+        $diffInTime = "00:00:00";
+        $realDiffInMinute = floor($diffInSeconds / 60);
+        $diffInMinutes = $realDiffInMinute;
+
+        if ($shift->is_enable_grace_period === true) {
+            if (($remainingTime + $realDiffInMinute) > $tolerance) {
+                // $diffInMinutes += $remainingTime;
+                $remainingTime = 0;
+                $diffInTime = gmdate('H:i:s', $diffInSeconds);
+            } else {
+                $remainingTime = $tolerance - ($remainingTime + $realDiffInMinute);
+                $diffInMinutes = 0;
+            }
+        } else {
+            $diffInTime = gmdate('H:i:s', $diffInSeconds);
+        }
+
+        // if($shift->is_enable_grace_period === true){
+        //     // dump($diffInSeconds, ($tolerance * 60 + 60));
+        //     if($diffInSeconds <= (($tolerance * 60) + 59)){
+        //         $diffInMinutes = 0;
+        //         $diffInTime = "00:00:00";
+        //     } else {
+        //        $diffInMinutes = floor($diffInSeconds / 60);
+        //        $diffInTime = gmdate('H:i:s', $diffInSeconds);
+        //     }
+        // } else {
+        //     $diffInMinutes = floor($diffInSeconds / 60);
+        //     $diffInTime = gmdate('H:i:s', $diffInSeconds);
+        // }
+
+        return [
+            $diffInMinutes, // real data
+            $diffInTime,
+            $remainingTime,
+        ];
+
+    }
+
+    public static function getTotalLateTimeMatt(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = 0): array
+    {
+        $tolerance = $shift->time_dispensation; // Ambil batas toleransi total keterlambatan
+        $endTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+
+        $clockInLate = 0;
+        $clockOutLate = 0;
+
+        if ($attendanceDetail->is_clock_in) {
+            $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
+            if ($endTime->greaterThan($startTime)) {
+                $clockInLate = $endTime->diffInMinutes($startTime); // Hitung keterlambatan clock-in
+            }
+        } else {
+            $startTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+            if ($endTime->lessThan($startTime)) {
+                $clockOutLate = $startTime->diffInMinutes($endTime); // Hitung keterlambatan clock-out
+            }
+        }
+
+        // Hitung total keterlambatan
+        $totalLate = $clockInLate + $clockOutLate;
+
+        // Terapkan grace period hanya jika total keterlambatan <= toleransi
+        if ($shift->is_enable_grace_period) {
+            if ($totalLate <= $tolerance) {
+                $remainingTime = $tolerance - $totalLate;
+                $totalLate = 0; // Keterlambatan diabaikan
+            } else {
+                $remainingTime = 0; // Tidak ada sisa toleransi
+                $totalLate -= $tolerance; // Kurangi total keterlambatan dengan toleransi
+            }
+        }
+
+        return [
+            'in' => $clockInLate,
+            'out' => $clockOutLate,
+            'total' => $totalLate,
+            'remaining' => $remainingTime,
+        ];
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
     }
 

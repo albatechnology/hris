@@ -73,6 +73,7 @@ class ExtraOffController extends BaseController
                 ->whereDate('created_at', '<=', $today->format('Y-m-d'))
                 ->whereHas('timeoffQuota.timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::EXTRA_OFF))
                 ->exists();
+            // dump('username:'.$fail);
             if ($fail) continue;
 
             $attendances = Attendance::where('user_id', $user->id)
@@ -123,6 +124,7 @@ class ExtraOffController extends BaseController
                 if ($attendanceClockIn->greaterThan($scheduleClockIn)) {
                     $time = $attendanceClockIn->diffInMinutes($scheduleClockIn);
                     $graceTotalLate += $time;
+                    // dump($graceTotalLate);
                     if ($graceTotalLate > 10) {
                         $totalLate += $time - 10;
                     }
@@ -225,7 +227,9 @@ class ExtraOffController extends BaseController
                 $timeoffQuota = TimeoffQuota::create([
                     'timeoff_policy_id' => $timeoffPolicyId,
                     'user_id' => $userId,
-                    'effective_start_date' => date('Y-m-d'),
+                    // 'effective_start_date' => date('Y-m-d'),
+                    'effective_start_date' => "2025-08-01",
+                    'effective_end_date' => "2025-12-31",
                     'quota' => 1,
                 ]);
 
