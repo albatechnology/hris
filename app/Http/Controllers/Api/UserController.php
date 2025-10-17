@@ -92,6 +92,9 @@ class UserController extends BaseController
             AllowedInclude::callback('supervisors', function ($query) {
                 $query->where('is_additional_supervisor', false)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
             }),
+            AllowedInclude::callback('additional_supervisors', function ($query) {
+                $query->where('is_additional_supervisor', true)->orderByDesc('order')->with('supervisor', fn($q) => $q->select('id', 'name'));
+            }),
             AllowedInclude::callback('patrols', function ($query) {
                 $query->selectMinimalist();
             }),
