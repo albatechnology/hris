@@ -526,6 +526,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(UserSupervisor::class)->orderBy('order');
     }
 
+     public function additional_supervisors()
+    {
+        return $this->hasMany(UserSupervisor::class)->where('is_additional_supervisor', true)->orderBy('order');
+    }
+
     public function getTotalWorkingMonth(?string $cutoffDate = null, bool $returnAllData = false): int|array
     {
         if ($cutoffDate == null) {
