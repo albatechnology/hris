@@ -202,6 +202,371 @@ class RunPayrollService
         return $basicAmount;
     }
 
+        /**
+     * create run payroll details
+     *
+     * @param  PayrollSetting   $payrollSetting
+     * @param  RunPayroll   $runPayroll
+     * @param  Request      $request
+     * @return JsonResponse
+     */
+
+    public static function createDetailsMatt($payrollSetting, $runPayroll,array  $request): JsonResponse
+    {
+        $company = $payrollSetting->company;
+        $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key',CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
+        $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
+
+        $userIds = isset($request['user_ids']) && !empty($request['user_ids'])
+            ?(is_array($request['user_ids']) ? $request['user_ids'] : explode(',', $request['user_ids']))
+            : User::where('company_id', $runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->pluck('id')->toArray();
+
+            if(empty($userIds)){
+                 return response()->json([
+            'success' => true,
+            'data' => null,
+        ]);
+            }
+
+        $users = User::whereIn('id',$userIds)
+            ->whereHas('payrollInfo')
+            ->with([
+                'payrollInfo',
+                'userBpjs'
+            ])->get()->keyBy('id');
+
+        if($users->isEmpty()){
+            return response()->json(['success' => true, 'data' => null]);
+        }
+
+        $updatePayrollComponentDetailsGrouped = UpdatePayrollComponentDetail::with('updatePayrollComponent')
+        ->whereIn('user_id',$users->keys()->toArray())
+        ->whereHas('updatePayrollComponent', fn($q)=> $q->whereCompany($runPayroll->company_id)
+        ->whenBranch($runPayroll->branch_id)
+        ->whereActive($runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
+        )
+        ->orderByDesc('id')
+        ->get()
+        ->groupBy('user_id');
+
+        $basicSalaryComponent = PayrollComponent::tenanted()
+            ->whereCompany($runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category', PayrollComponentCategory::BASIC_SALARY)
+            ->first();
+
+        $reimbursementComponent = PayrollComponent::tenanted()
+            ->whereCompany($runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category', PayrollComponentCategory::REIMBURSEMENT)
+            ->first();
+
+        $payrollComponents = PayrollComponent::tenanted()
+            ->where('company_id', $runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->whereNotDefault()
+            ->get();
+
+        $alpaComponent = PayrollComponent::tenanted()
+            ->where('company_id', $runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category', PayrollComponentCategory::ALPA)
+            ->first();
+
+        $loanComponent = PayrollComponent::tenanted()
+            ->where('company_id',$runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category',PayrollComponentCategory::LOAN)
+            ->first();
+
+        $insuranceComponent = PayrollComponent::tenanted()
+            ->where('company_id', $runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category', PayrollComponentCategory::INSURANCE)->first();
+
+        $bpjsPayrollComponents = PayrollComponent::tenanted()
+            ->whereCompany($runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->whereBpjs()->get();
+
+        $overtimePayrollComponent = PayrollComponent::tenanted()
+            ->whereCompany($runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category', PayrollComponentCategory::OVERTIME)->first();
+
+        $bpjsKesehatanFamilyComponent = PayrollComponent::tenanted()
+            ->whereCompany($runPayroll->company_id)
+            ->whenBranch($runPayroll->branch_id)
+            ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
+
+        foreach($users->chunk(50) as $chunk){
+            foreach($chunk as $user){
+                $cutOffStartDate = $runPayroll->cut_off_start_date;
+                $cutOffEndDate = $runPayroll->cut_off_end_date;
+                $startDate = $runPayroll->payroll_start_date;
+                $endDate = $runPayroll->payroll_end_date;
+
+                if(!$user->payrollInfo) continue;
+
+                $resignDate= null;
+
+                if($user->join_date){
+                    $joinDate = Carbon::parse($user->join_date);
+                    if($joinDate->greaterThan($endDate)){
+                        continue;
+                }
+            }
+                if($user->resign_date){
+                    $resignDate = Carbon::parse($user->resign_date);
+                    if($resignDate->lessThan($cutOffEndDate)){
+                        continue;
+                    }
+                }
+            $runPayrollUser = self::assignUser($runPayroll, $user->id);
+
+            $userBasicSalary = $user->payrollInfo?->basic_salary;
+            $isTaxable= $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
+
+            $isFirstTimePayroll = self::isFirstTimePayroll($user);
+            $joinDate = Carbon::parse($user->join_date);
+
+            if($isFirstTimePayroll && $joinDate->between($startDate, $endDate)){
+                $cutOffStartDate = $joinDate;
+                $cutOffEndDate = $endDate;
+                $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
+            }elseif($resignDate && $resignDate->between($startDate, $endDate)){
+                $cutOffStartDate = $startDate;
+                $cutOffEndDate = $resignDate;
+                $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
+                $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+
+                $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
+            }else{
+                $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+            }
+
+            $updatePayrollComponentDetails = $updatePayrollComponentDetailsGrouped->get($user->id) ?? collect();
+
+            if(!$basicSalaryComponent){
+                continue;
+            }
+
+            $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
+
+            if($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)){
+                $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
+            }
+
+            if($updatePayrollComponentDetail){
+                $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+                $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+                $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
+            }
+
+            $amount =self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
+            self::createComponent($runPayrollUser, $basicSalaryComponent, $amount);
+
+            if($reimbursementComponent){
+                $amount = app(\App\Http\Services\Reimbursement\ReimbursementService::class)
+                        ->getTotalReimbursementTaken(userId: $user, startDate: $cutOffStartDate, endDate: $cutOffEndDate);
+                self::createComponent($runPayrollUser, $reimbursementComponent, $amount);
+            }
+
+            $payrollComponents->each(function($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate){
+                if($payrollComponent->amount == 0 && count($payrollComponent->formulas)){
+                    $amount = FormulaService::calculate(user:$user, model: $payrollComponent, formulas: $payrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
+                }else{
+                    $amount = $payrollComponent->amount;
+                }
+
+                $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+
+                if($updatePayrollComponentDetail){
+                    $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
+                }else{
+                    $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                }
+                self::createComponent($runPayrollUser, $payrollComponent, $amount);
+            });
+
+            if($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && $alpaComponent){
+                $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id',$alpaComponent->id)->first();
+                if($alpaUpdateComponent){
+                    $amount = $alpaUpdateComponent->new_amount;
+                }else{
+                    $totalWorkingDaysForAlpa = ScheduleService::getTotalWorkingDaysInPeriod($user,$cutOffStartDate, $cutOffEndDate);
+                    $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
+                    $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q)=> $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category',[PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::REIMBURSEMENT, PayrollComponentCategory::OVERTIME]))->sum('amount');
+                    $amount = round(max(($totalAlpa/$totalWorkingDaysForAlpa) * ($userBasicSalary + $totalAllowance), 0));
+                }
+
+                $amount = self::calculatePayrollComponentPeriodType($alpaComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                self::createComponent($runPayrollUser, $alpaComponent, $amount);
+            }
+
+            if ($loanComponent) {
+                $whereHas = fn($q)=>$q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
+                $loans = Loan::where('user_id',$user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
+                if($loans->count()){
+                    $loans->load(['details'=>$whereHas]);
+                    $amount = $loans->sum(fn($loan)=> $loan->details->sum('total'));
+                    self::createComponent($runPayrollUser, $loanComponent, $amount, ["loans"=>$loans->toArray()]);
+                }
+            }
+
+             if ($insuranceComponent) {
+                    $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
+                    $insurances = Loan::where('user_id', $user->id)->whereInsurance()->whereHas('details', $whereHas)->get(['id']);
+                    if ($insurances->count()) {
+                        $insurances->load(['details' => $whereHas]);
+                        $amount = $insurances->sum(fn($loan) => $loan->details->sum('total'));
+                        self::createComponent($runPayrollUser, $insuranceComponent, $amount, ["insurances" => $insurances->toArray()]);
+                    }
+                }
+            if ($company->countryTable?->id == 1 && $user->userBpjs) {
+                    $isEligibleToCalculateBpjsKesehatan = false;
+                    if (
+                        !empty($user->userBpjs->bpjs_kesehatan_no)
+                        && !empty($user->userBpjs->bpjs_kesehatan_date)
+                        && (
+                            date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) < date('Y', strtotime($runPayroll->payroll_start_date))
+                            || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
+                        )
+                    ) {
+                        $isEligibleToCalculateBpjsKesehatan = true;
+                    }
+
+                    $isEligibleToCalculateBpjsKetenagakerjaan = false;
+                    if (
+                        !empty($user->userBpjs->bpjs_ketenagakerjaan_no)
+                        && !empty($user->userBpjs->bpjs_ketenagakerjaan_date)
+                        && (
+                            date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) < date('Y', strtotime($runPayroll->payroll_start_date))
+                            || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
+                        )
+                    ) {
+                        $isEligibleToCalculateBpjsKetenagakerjaan = true;
+                    }
+
+                    $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+                    if ($max_upahBpjsKesehatan && $current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
+
+                    $current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
+                    if ($max_jp && $current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
+
+                    $company_percentageBpjsKesehatan = (float) ($countrySettings[CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE] ?? 0);
+                    $employee_percentageBpjsKesehatan = (float) ($countrySettings[CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE] ?? 0);
+                    if (!$isTaxable) {
+                        $company_percentageBpjsKesehatan += $employee_percentageBpjsKesehatan;
+                        $employee_percentageBpjsKesehatan = 0;
+                    }
+
+                    $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
+                    $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
+                    if ($user->userBpjs->bpjs_kesehatan_cost->is(PaidBy::COMPANY)) {
+                        $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
+                        $employee_totalBpjsKesehatan = 0;
+                    }
+
+                    $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
+                    $company_totalJkk = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkk / 100);
+
+                    $company_percentageJkm = (float) ($countrySettings[CountrySettingKey::COMPANY_JKM_PERCENTAGE] ?? 0);
+                    $company_totalJkm = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkm / 100);
+
+                    $company_percentageJht = (float) ($countrySettings[CountrySettingKey::COMPANY_JHT_PERCENTAGE] ?? 0);
+                    $employee_percentageJht = (float) ($countrySettings[CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE] ?? 0);
+                    if (!$isTaxable) {
+                        $company_percentageJht += $employee_percentageJht;
+                        $employee_percentageJht = 0;
+                    }
+
+                    $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
+                    $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                    if ($user->userBpjs->jht_cost->is(PaidBy::COMPANY)) {
+                        $company_totalJht += $employee_totalJht;
+                        $employee_totalJht = 0;
+                    }
+
+                    $company_totalJp = 0;
+                    $employee_totalJp = 0;
+                    if (!$user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::NOT_PAID)) {
+                        $company_percentageJp = (float) ($countrySettings[CountrySettingKey::COMPANY_JP_PERCENTAGE] ?? 0);
+                        $employee_percentageJp = (float) ($countrySettings[CountrySettingKey::EMPLOYEE_JP_PERCENTAGE] ?? 0);
+                        if (!$isTaxable) {
+                            $company_percentageJp += $employee_percentageJp;
+                            $employee_percentageJp = 0;
+                        }
+
+                        $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
+                        $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+
+                        if ($user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::COMPANY)) {
+                            $company_totalJp += $employee_totalJp;
+                            $employee_totalJp = 0;
+                        }
+                    }
+
+                    foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
+                        $amount = 0;
+                        if ($isEligibleToCalculateBpjsKesehatan) {
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
+                        }
+
+                        if ($isEligibleToCalculateBpjsKetenagakerjaan) {
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
+                            if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+                        }
+
+                        $amount = self::calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                        self::createComponent($runPayrollUser, $bpjsPayrollComponent, $amount);
+                    }
+                }
+
+                // overtime
+                if ($overtimePayrollComponent && $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE)) {
+                    $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
+                    self::createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
+                }
+
+                // task overtime (app specific)
+                if (config('app.name') == 'SUNSHINE') {
+                    $taskOvertimePayrollComponent = PayrollComponent::tenanted()
+                        ->whereCompany($runPayroll->company_id)
+                        ->whenBranch($runPayroll->branch_id)
+                        ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
+
+                    if ($taskOvertimePayrollComponent) {
+                        $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
+                        self::createComponent($runPayrollUser, $taskOvertimePayrollComponent, $amount);
+                    }
+                }
+
+                // BPJS FAMILY
+                if ($user->userBpjs && !$user->userBpjs->bpjs_kesehatan_family_no->is(\App\Enums\BpjsKesehatanFamilyNo::ZERO) && $bpjsKesehatanFamilyComponent) {
+                    $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+                    if ($max_upahBpjsKesehatan && $current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
+
+                    $amount = ($current_upahBpjsKesehatan * 0.01) * $user->userBpjs->bpjs_kesehatan_family_no->value;
+                    self::createComponent($runPayrollUser, $bpjsKesehatanFamilyComponent, $amount);
+                }
+
+                // refresh totals
+                self::refreshRunPayrollUser($runPayrollUser);
+        }
+    }
+    return response()->json([
+            'success' => true,
+            'data' => null,
+        ]);
+}
     /**
      * create run payroll details
      *
