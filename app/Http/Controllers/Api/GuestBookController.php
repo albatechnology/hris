@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\MediaCollection;
 use App\Http\Requests\Api\GuestBook\StoreRequest;
 use App\Http\Requests\Api\GuestBook\UpdateRequest;
 use App\Http\Requests\Api\GuestBook\ExportRequest;
@@ -13,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class GuestBookController extends BaseController
 {
@@ -88,13 +89,34 @@ class GuestBookController extends BaseController
         try {
             $guestBook = GuestBook::create($request->validated());
 
+            // if ($request->hasFile('files')) {
+            //     foreach ($request->file('files') as $file) {
+            //         if ($file->isValid()) {
+            //             $guestBook->addMedia($file)->toMediaCollection(MediaCollection::GUEST_BOOK_CHECK_IN->value);
+            //         }
+            //     }
+            // }
+
             if ($request->hasFile('files')) {
+                $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
+
                 foreach ($request->file('files') as $file) {
                     if ($file->isValid()) {
-                        $guestBook->addMedia($file)->toMediaCollection(MediaCollection::GUEST_BOOK_CHECK_IN->value);
+                        // Resize & compress
+                        $optimized = $manager->read($file)
+                            ->scaleDown(1280)
+                            ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
+                        // dd($optimized);
+
+                        // Upload hasil optimized langsung ke S3
+                        $guestBook
+                            ->addMediaFromStream($optimized)
+                            ->usingFileName(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg')
+                            ->toMediaCollection(\App\Enums\MediaCollection::GUEST_BOOK_CHECK_IN->value);
                     }
                 }
             }
+
             DB::commit();
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage());
@@ -117,9 +139,21 @@ class GuestBookController extends BaseController
             ]);
 
             if ($request->hasFile('files')) {
+                $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
+
                 foreach ($request->file('files') as $file) {
                     if ($file->isValid()) {
-                        $guestBook->addMedia($file)->toMediaCollection(MediaCollection::GUEST_BOOK_CHECK_OUT->value);
+                        // Resize & compress
+                        $optimized = $manager->read($file)
+                            ->scaleDown(1280)
+                            ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
+                        // dd($optimized);
+
+                        // Upload hasil optimized langsung ke S3
+                        $guestBook
+                            ->addMediaFromStream($optimized)
+                            ->usingFileName(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg')
+                            ->toMediaCollection(\App\Enums\MediaCollection::GUEST_BOOK_CHECK_OUT->value);
                     }
                 }
             }
