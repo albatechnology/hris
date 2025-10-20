@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\DB;
 
 class IndexRequest extends FormRequest
 {
-    
 
     /**
      * Prepare inputs for validation.
@@ -60,6 +59,8 @@ class IndexRequest extends FormRequest
             }],
             'filter.month' => 'nullable|date_format:m',
             'filter.year' => 'nullable|date_format:Y',
+            'filter.start_date' => 'nullable|date_format:d',
+            'filter.end_date' => 'nullable|date_format:d',
             'sort' => 'nullable|string',
             'include' => 'nullable|string',
         ];
