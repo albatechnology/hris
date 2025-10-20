@@ -225,9 +225,20 @@ class AttendanceController extends BaseController
         $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
         $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
 
-        $startDate = Carbon::createFromDate($year, $month, 1);
-        $endDate = $startDate->copy()->endOfMonth();
-        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        // $startDate = Carbon::createFromDate($year, $month, 1);
+        // $endDate = $startDate->copy()->endOfMonth();
+
+        $dayStart= isset($request->filter['start_date']) ? $request->filter['start_date'] : '01';
+        $dayEnd = isset($request->filter['end_date']) ? $request->filter['end_date'] : date('d');
+        // $startDate = isset($request->filter['start_date'])? $request->filter['start_date'] : date('d');
+        // $endDate = isset($request->filter['end_date'])? $request->filter['end_date'] : date('d');
+
+        $dateStart = Carbon::createFromFormat('d-m-Y', "$dayStart-$month-$year");
+        $dateEnd = Carbon::createFromFormat('d-m-Y', "$dayEnd-$month-$year");
+
+        // $dateRange = CarbonPeriod::create($startDate, $endDate);
+         $dateRange = CarbonPeriod::create($dateStart, $dateEnd);
+        //  dd($dateRange);
 
         $data = [];
 
@@ -240,10 +251,10 @@ class AttendanceController extends BaseController
         $summaryNotPresentNoClockOut = 0;
         $summaryAwayTimeOff = 0;
 
-        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $startDate, $endDate, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
+        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $dateStart, $dateEnd, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
 
-        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
-        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereNationalHoliday()->get();
 
         foreach ($dateRange as $date) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
@@ -388,6 +399,7 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->whereIn('id',[16,17,18,22,23])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
@@ -532,6 +544,7 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->whereIn('id',[16,17,18,22,23])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
