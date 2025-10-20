@@ -28,7 +28,8 @@ class RequestTimeoff extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm'];
+        // return ['database', 'fcm'];
+        return ['database'];
     }
 
     /**
