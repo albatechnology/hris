@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Enums\JobLevel;
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\MediaLibrary\HasMedia;

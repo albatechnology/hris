@@ -175,6 +175,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('departments', DepartmentController::class);
 
+
+    Route::get('announcements/export', [AnnouncementController::class, 'export']);
     Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show', 'store', 'destroy']);
 
     Route::get('shifts/report-shift-users/{export?}', [ShiftController::class, 'reportShiftUsers']);
