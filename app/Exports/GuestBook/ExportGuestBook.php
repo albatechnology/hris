@@ -30,9 +30,12 @@ class ExportGuestBook implements FromQuery, WithHeadings, WithMapping, WithStyle
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($checkInStartDate, fn($q) => $q->whereDate('created_at', '>=', $checkInStartDate))
             ->when($checkInEndDate, fn($q) => $q->whereDate('created_at', '<=', $checkInEndDate))
-            ->with('branch', fn($q) => $q->withTrashed()->select('id', 'name'))
-            ->with('user', fn($q) => $q->withTrashed()->select('id', 'name'))
-            ->with('checkOutBy', fn($q) => $q->withTrashed()->select('id', 'name'));
+            ->with([
+                'branch' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'user' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'checkOutBy' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'media'
+            ]);
     }
 
     public function headings(): array

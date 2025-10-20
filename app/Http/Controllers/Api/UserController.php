@@ -127,7 +127,7 @@ class UserController extends BaseController
                         $query->where('branch_id', $value);
                     }
                 }),
-                AllowedFilter::callback('company_id',function($query, $value) {
+                AllowedFilter::callback('company_id', function ($query, $value) {
                     if (!empty($value) || $value > 0) {
                         $query->where('company_id', $value);
                     }
@@ -156,29 +156,29 @@ class UserController extends BaseController
                     $query->whereHas('detail', fn($q) => $q->whereIn('religion', $value));
                 }),
                 AllowedFilter::scope('name', 'whereName'),
-            //      AllowedFilter::callback('resign_date_after', function ($query, $value) {
-            //     $query->where(function ($q) use ($value) {
-            //         $q->whereNull('resign_date')
-            //           ->orWhere('resign_date', '>=', $value);
-            //     });
-            // }),
-            // AllowedFilter::callback('resign_date_before', function ($query, $value) {
-            //     $query->where(function ($q) use ($value) {
-            //         $q->whereNull('resign_date')
-            //           ->orWhere('resign_date', '<=', $value);
-            //     });
-            // }),
-            AllowedFilter::callback('active_in_period', function ($query, $value) {
-            // value = '2025-09-01' misalnya (tanggal awal periode payroll)
-            $periodStart = Carbon::parse($value)->startOfMonth();
-            $periodEnd = Carbon::parse($value)->endOfMonth();
+                //      AllowedFilter::callback('resign_date_after', function ($query, $value) {
+                //     $query->where(function ($q) use ($value) {
+                //         $q->whereNull('resign_date')
+                //           ->orWhere('resign_date', '>=', $value);
+                //     });
+                // }),
+                // AllowedFilter::callback('resign_date_before', function ($query, $value) {
+                //     $query->where(function ($q) use ($value) {
+                //         $q->whereNull('resign_date')
+                //           ->orWhere('resign_date', '<=', $value);
+                //     });
+                // }),
+                AllowedFilter::callback('active_in_period', function ($query, $value) {
+                    // value = '2025-09-01' misalnya (tanggal awal periode payroll)
+                    $periodStart = Carbon::parse($value)->startOfMonth();
+                    $periodEnd = Carbon::parse($value)->endOfMonth();
 
-            $query->whereDate('join_date', '<=', $periodEnd)
-                ->where(function ($q) use ($periodStart) {
-                    $q->whereNull('resign_date')
-                        ->orWhereDate('resign_date', '>=', $periodStart);
-                    });
-              }),
+                    $query->whereDate('join_date', '<=', $periodEnd)
+                        ->where(function ($q) use ($periodStart) {
+                            $q->whereNull('resign_date')
+                                ->orWhereDate('resign_date', '>=', $periodStart);
+                        });
+                }),
                 AllowedFilter::scope('resign_date_after', 'whereResignDateAfter'),
                 AllowedFilter::scope('resign_date_before', 'whereResignDateBefore'),
                 AllowedFilter::scope('is_show_resign_users', 'showResignUsers'),
