@@ -176,6 +176,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('departments', DepartmentController::class);
 
+
+    Route::get('announcements/export', [AnnouncementController::class, 'export']);
     Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show', 'store', 'destroy']);
 
     Route::get('shifts/report-shift-users/{export?}', [ShiftController::class, 'reportShiftUsers']);
@@ -347,6 +349,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('user-transfers', UserTransferController::class);
 
+    Route::get('panics/export', [PanicController::class, 'export']);
     Route::apiResource('panics', PanicController::class);
     Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 

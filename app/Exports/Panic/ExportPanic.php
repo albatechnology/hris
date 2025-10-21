@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Exports\GuestBook;
+namespace App\Exports\Panic;
 
-use App\Http\Requests\Api\GuestBook\ExportRequest;
-use App\Models\GuestBook;
+use App\Http\Requests\Api\Panic\ExportRequest;
+use App\Models\Panic;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -15,7 +15,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ExportGuestBook implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithDrawings
+class ExportPanic implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithDrawings
 {
     use Exportable;
 
@@ -27,18 +27,18 @@ class ExportGuestBook implements FromQuery, WithHeadings, WithMapping, WithStyle
     {
         $companyId = $this->request['filter']['company_id'] ?? null;
         $branchId = $this->request['filter']['branch_id'] ?? null;
-        $checkInStartDate = $this->request['filter']['check_in_start_date'] ?? null;
-        $checkInEndDate = $this->request['filter']['check_in_end_date'] ?? null;
+        $createdStartDate = $this->request['filter']['created_start_date'] ?? null;
+        $createdEndDate = $this->request['filter']['created_end_date'] ?? null;
 
-        $query = GuestBook::tenanted()
+        $query = Panic::tenanted()
             ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($checkInStartDate, fn($q) => $q->whereDate('created_at', '>=', $checkInStartDate))
-            ->when($checkInEndDate, fn($q) => $q->whereDate('created_at', '<=', $checkInEndDate))
+            ->when($createdStartDate, fn($q) => $q->whereDate('created_at', '>=', $createdStartDate))
+            ->when($createdEndDate, fn($q) => $q->whereDate('created_at', '<=', $createdEndDate))
             ->with([
                 'branch' => fn($q) => $q->withTrashed()->select('id', 'name'),
                 'user' => fn($q) => $q->withTrashed()->select('id', 'name'),
-                'checkOutBy' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'solvedBy' => fn($q) => $q->withTrashed()->select('id', 'name'),
                 'media'
             ]);
 
@@ -53,46 +53,41 @@ class ExportGuestBook implements FromQuery, WithHeadings, WithMapping, WithStyle
         return [
             'ID',
             'Branch',
-            'Name',
-            'Address',
-            'Room',
-            'Location Destination',
-            'Person Destination',
-            'Vehicle Number',
+            'User',
+            'LatLng Coordinate',
+            'Status',
             'Description',
-            'Check In By',
-            'Check In At',
-            'Check Out By',
-            'Check Out At',
+            'Created At',
+            'Solved By',
+            'Solved At',
+            'Solved LatLng Coordinate',
+            'Solved Description',
             'Photo',
         ];
     }
 
-    public function map($guestBook): array
+    public function map($panic): array
     {
         return [
-            $guestBook->id,
-            $guestBook->branch?->name ?? '',
-            $guestBook->name,
-            $guestBook->address,
-            $guestBook->room,
-            $guestBook->location_destination,
-            $guestBook->person_destination,
-            $guestBook->vehicle_number,
-            $guestBook->description,
-            $guestBook->user?->name ?? '',
-            $guestBook->created_at,
-            $guestBook->checkOutBy?->name ?? '',
-            $guestBook->check_out_at,
-            '',
+            $panic->id,
+            $panic->branch?->name ?? '',
+            $panic->user?->name ?? '',
+            '<a href="https://www.google.com/maps/search/' . $panic->lat . ',' . $panic->lng . '">Lihat Lokasi</a>',
+            $panic->status->value,
+            $panic->description,
+            $panic->created_at,
+            $panic->solvedBy?->name,
+            $panic->solved_at,
+            '<a href="https://www.google.com/maps/search/' . $panic->solved_lat . ',' . $panic->solved_lng . '">Lihat Lokasi</a>',
+            $panic->solved_description,
+            ''
         ];
     }
 
     public function drawings(): array
     {
         $drawings = [];
-        $startColumn = 'N'; // kolom awal untuk gambar
-
+        $startColumn = 'L'; // kolom awal untuk gambar
         foreach ($this->images as $index => $guestBook) {
             $row = $index + 2; // karena row 1 = heading
 
@@ -110,7 +105,7 @@ class ExportGuestBook implements FromQuery, WithHeadings, WithMapping, WithStyle
 
                 $drawing = new Drawing();
                 $drawing->setName("Photo {$guestBook->id} - {$mediaIndex}");
-                $drawing->setDescription('Guest photo');
+                $drawing->setDescription('Panic photo');
                 $drawing->setPath($tempPath);
                 $drawing->setHeight(60); // tinggi gambar (px)
                 $drawing->setCoordinates($col . $row);
@@ -134,7 +129,7 @@ class ExportGuestBook implements FromQuery, WithHeadings, WithMapping, WithStyle
         }
 
         // kolom untuk gambar
-        foreach (['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W'] as $col) {
+        foreach (['L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U'] as $col) {
             $sheet->getColumnDimension($col)->setWidth(18);
         }
 

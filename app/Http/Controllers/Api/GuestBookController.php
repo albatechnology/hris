@@ -99,14 +99,12 @@ class GuestBookController extends BaseController
 
             if ($request->hasFile('files')) {
                 $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
-
                 foreach ($request->file('files') as $file) {
                     if ($file->isValid()) {
                         // Resize & compress
                         $optimized = $manager->read($file)
                             ->scaleDown(1280)
                             ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
-                        // dd($optimized);
 
                         // Upload hasil optimized langsung ke S3
                         $guestBook
@@ -147,7 +145,6 @@ class GuestBookController extends BaseController
                         $optimized = $manager->read($file)
                             ->scaleDown(1280)
                             ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
-                        // dd($optimized);
 
                         // Upload hasil optimized langsung ke S3
                         $guestBook
