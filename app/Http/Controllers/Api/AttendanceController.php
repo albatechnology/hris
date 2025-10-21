@@ -220,25 +220,13 @@ class AttendanceController extends BaseController
             $user = auth('sanctum')->user();
         }
 
-        $month = date('m');
+        $startDateStr = $request->filter['start_date'] ?? now()->startOfMonth()->toDateString();
+        $endDateStr   = $request->filter['end_date']   ?? now()->endOfMonth()->toDateString();
 
-        $year = isset($request->filter['year']) ? $request->filter['year'] : date('Y');
-        $month = isset($request->filter['month']) ? $request->filter['month'] : $month;
+        $dateStart = Carbon::createFromFormat('Y-m-d', "$startDateStr");
+        $dateEnd = Carbon::createFromFormat('Y-m-d', "$endDateStr");
 
-        // $startDate = Carbon::createFromDate($year, $month, 1);
-        // $endDate = $startDate->copy()->endOfMonth();
-
-        $dayStart= isset($request->filter['start_date']) ? $request->filter['start_date'] : '01';
-        $dayEnd = isset($request->filter['end_date']) ? $request->filter['end_date'] : date('d');
-        // $startDate = isset($request->filter['start_date'])? $request->filter['start_date'] : date('d');
-        // $endDate = isset($request->filter['end_date'])? $request->filter['end_date'] : date('d');
-
-        $dateStart = Carbon::createFromFormat('d-m-Y', "$dayStart-$month-$year");
-        $dateEnd = Carbon::createFromFormat('d-m-Y', "$dayEnd-$month-$year");
-
-        // $dateRange = CarbonPeriod::create($startDate, $endDate);
          $dateRange = CarbonPeriod::create($dateStart, $dateEnd);
-        //  dd($dateRange);
 
         $data = [];
 
@@ -399,7 +387,6 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
-            ->whereIn('id',[16,17,18,22,23])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
@@ -544,7 +531,6 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
-            ->whereIn('id',[16,17,18,22,23])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
