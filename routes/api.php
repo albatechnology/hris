@@ -348,6 +348,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('user-transfers', UserTransferController::class);
 
+    Route::get('panics/export', [PanicController::class, 'export']);
     Route::apiResource('panics', PanicController::class);
     Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 

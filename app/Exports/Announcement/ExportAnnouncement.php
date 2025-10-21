@@ -30,7 +30,6 @@ class ExportAnnouncement implements FromQuery, WithHeadings, WithMapping, WithSt
             ->when($createdInEndDate, fn($q) => $q->whereDate('created_at', '<=', $createdInEndDate))
             ->with([
                 'createdBy' => fn($q) => $q->withTrashed()->select('id', 'name'),
-                'media'
             ]);
     }
 
@@ -51,7 +50,7 @@ class ExportAnnouncement implements FromQuery, WithHeadings, WithMapping, WithSt
         return [
             $announcement->id,
             $announcement->createdBy?->name,
-            $announcement->title,
+            $announcement->subject,
             $announcement->content,
             $announcement->created_at,
             $announcement->updated_at,

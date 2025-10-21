@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Announcement;
+namespace App\Http\Requests\Api\Panic;
 
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;

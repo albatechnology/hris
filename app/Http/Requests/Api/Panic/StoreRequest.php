@@ -33,7 +33,7 @@ class StoreRequest extends FormRequest
             'lng' => 'nullable|string',
             'description' => ['nullable', 'string'],
             'files' => ['nullable', 'array'],
-            'files.*' => ['required', 'mimes:' . config('app.file_mimes_types')],
+            'files.*' => ['required', 'mimes:' . config('app.image_mimes_types')],
         ];
     }
 }

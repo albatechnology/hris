@@ -11,12 +11,15 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Enums\PanicStatus;
+use App\Http\Requests\Api\Panic\ExportRequest;
 use App\Http\Requests\Api\Panic\UpdateRequest;
 use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\Panic\PanicNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class PanicController extends BaseController
 {
@@ -71,10 +74,29 @@ class PanicController extends BaseController
         try {
             $panic = $user->panics()->create($request->validated());
 
+            // if ($request->hasFile('files')) {
+            //     foreach ($request->file('files') as $file) {
+            //         if ($file->isValid()) {
+            //             $panic->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+            //         }
+            //     }
+            // }
+
             if ($request->hasFile('files')) {
+                $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
+
                 foreach ($request->file('files') as $file) {
                     if ($file->isValid()) {
-                        $panic->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                        // Resize & compress
+                        $optimized = $manager->read($file)
+                            ->scaleDown(1280)
+                            ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
+
+                        // Upload hasil optimized langsung ke S3
+                        $panic
+                            ->addMediaFromStream($optimized)
+                            ->usingFileName(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg')
+                            ->toMediaCollection(\App\Enums\MediaCollection::DEFAULT->value);
                     }
                 }
             }
@@ -106,10 +128,29 @@ class PanicController extends BaseController
         try {
             $panic->update($request->validated());
 
+            // if ($request->hasFile('files')) {
+            //     foreach ($request->file('files') as $file) {
+            //         if ($file->isValid()) {
+            //             $panic->addMedia($file)->toMediaCollection(MediaCollection::PANIC_SOLVED->value);
+            //         }
+            //     }
+            // }
+
             if ($request->hasFile('files')) {
+                $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
+
                 foreach ($request->file('files') as $file) {
                     if ($file->isValid()) {
-                        $panic->addMedia($file)->toMediaCollection(MediaCollection::PANIC_SOLVED->value);
+                        // Resize & compress
+                        $optimized = $manager->read($file)
+                            ->scaleDown(1280)
+                            ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
+
+                        // Upload hasil optimized langsung ke S3
+                        $panic
+                            ->addMediaFromStream($optimized)
+                            ->usingFileName(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg')
+                            ->toMediaCollection(\App\Enums\MediaCollection::PANIC_SOLVED->value);
                     }
                 }
             }
@@ -162,5 +203,10 @@ class PanicController extends BaseController
     {
         $panic = auth('sanctum')->user()->panics()->with('user')->where('status', PanicStatus::PANIC)->get();
         return new DefaultResource($panic);
+    }
+
+    public function export(ExportRequest $request)
+    {
+        return (new \App\Exports\Panic\ExportPanic($request))->download('panics.xlsx');
     }
 }
