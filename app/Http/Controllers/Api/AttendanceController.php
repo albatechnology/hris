@@ -387,7 +387,6 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
-            ->whereIn('id',[16,17,18,22,23])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
@@ -532,7 +531,6 @@ class AttendanceController extends BaseController
 
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
-            ->whereIn('id',[16,17,18,22,23])
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
