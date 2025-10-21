@@ -492,23 +492,44 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             $runPayrollUser = $this->assignUser($runPayroll, $user->id);
 
+            // dump($payrollSetting->toArray());
+            // dump($runPayroll->toArray());
             $userBasicSalary = $user->payrollInfo?->basic_salary;
+            // dump($userBasicSalary);
 
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $isFirstTimePayroll = $this->isFirstTimePayroll($user);
             $joinDate = Carbon::parse($user->join_date);
-            if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
-                $cutOffStartDate = $joinDate;
-                $cutOffEndDate = $endDate;
+            // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+            if ($isFirstTimePayroll) {
+                if ($joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+                    $cutOffStartDate = $joinDate;
+                    // $cutOffEndDate = $cutOffEndDate;
+                    // dump('SATU');
+                    $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
+                    $totalPresent = $dataTotalAttendance['total_present'];
+                    $totalWorkingDays = $dataTotalAttendance['total_working_days'];
+                    // dump($dataTotalAttendance);
+
+                    // $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
+                    // dd($userBasicSalary);
+                } elseif ($joinDate->between($startDate, $endDate)) {
+                    $cutOffStartDate = $joinDate;
+                    $cutOffEndDate = $endDate;
+                    // dump('DUA');
+
+                    $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $startDate, $cutOffEndDate, $joinDate);
+                    $totalPresent = $dataTotalAttendance['total_present'];
+                    $totalWorkingDays = $dataTotalAttendance['total_working_days'];
+                    // dump($dataTotalAttendance);
+
+                    // $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
+                    // dd($userBasicSalary);
+                }
                 // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
                 // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $startDate, $cutOffEndDate);
                 // $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-                $dataTotalAttendance = AttendanceHelper::getTotalAttendance($user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
-                $totalPresent = $dataTotalAttendance['total_present'];
-                $totalWorkingDays = $dataTotalAttendance['total_working_days'];
-
-                $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
 
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
@@ -520,7 +541,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             } else {
                 // $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
                 // $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-                $dataTotalAttendance = AttendanceHelper::getTotalAttendance($user, $cutOffStartDate, $cutOffEndDate);
+                $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
                 $totalPresent = $dataTotalAttendance['total_present'];
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
             }
@@ -556,6 +577,10 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                 // calculate prorate
                 $userBasicSalary = $this->newProrate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
+            } else {
+                if ($basicSalaryComponent->is_prorate) {
+                    $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                }
             }
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
