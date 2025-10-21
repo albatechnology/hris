@@ -59,8 +59,8 @@ class IndexRequest extends FormRequest
             }],
             'filter.month' => 'nullable|date_format:m',
             'filter.year' => 'nullable|date_format:Y',
-            'filter.start_date' => 'nullable|date_format:d',
-            'filter.end_date' => 'nullable|date_format:d',
+            'filter.start_date' => 'nullable|date_format:Y-m-d',
+            'filter.end_date' => 'nullable|date_format:Y-m-d',
             'sort' => 'nullable|string',
             'include' => 'nullable|string',
         ];
