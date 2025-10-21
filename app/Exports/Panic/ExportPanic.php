@@ -72,13 +72,13 @@ class ExportPanic implements FromQuery, WithHeadings, WithMapping, WithStyles, S
             $panic->id,
             $panic->branch?->name ?? '',
             $panic->user?->name ?? '',
-            '<a href="https://www.google.com/maps/search/' . $panic->lat . ',' . $panic->lng . '">Lihat Lokasi</a>',
+            '=HYPERLINK("https://www.google.com/maps/search/' . $panic->lat . ',' . $panic->lng . '", "Lihat Lokasi")',
             $panic->status->value,
             $panic->description,
             $panic->created_at,
             $panic->solvedBy?->name,
             $panic->solved_at,
-            '<a href="https://www.google.com/maps/search/' . $panic->solved_lat . ',' . $panic->solved_lng . '">Lihat Lokasi</a>',
+            '=HYPERLINK("https://www.google.com/maps/search/' . $panic->solved_lat . ',' . $panic->solved_lng . '", "Lihat Lokasi")',
             $panic->solved_description,
             ''
         ];
