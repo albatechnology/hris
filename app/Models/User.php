@@ -386,6 +386,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsToMany(Event::class, 'user_events', 'user_id', 'event_id');
     }
 
+    public function taskRequests(): HasMany
+    {
+        return $this->hasMany(TaskRequest::class);
+    }
+
     public function tasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'user_tasks');
@@ -519,6 +524,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function supervisors()
     {
         return $this->hasMany(UserSupervisor::class)->orderBy('order');
+    }
+
+     public function additional_supervisors()
+    {
+        return $this->hasMany(UserSupervisor::class)->where('is_additional_supervisor', true)->orderBy('order');
     }
 
     public function getTotalWorkingMonth(?string $cutoffDate = null, bool $returnAllData = false): int|array

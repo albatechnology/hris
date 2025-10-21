@@ -7,6 +7,7 @@ use App\Enums\PanicStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\TenantedThroughBranch;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -50,5 +51,10 @@ class Panic extends BaseModel implements TenantedInterface, HasMedia
             !$user->is_admin && !$hasPermission,
             fn($q) => $q->whereHas('user', fn($q) => $q->whereHas('supervisors', fn($q) => $q->where('supervisor_id', $user->id)))->orWhere('user_id', $user->id)
         );
+    }
+
+    public function solvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'solved_by_id');
     }
 }

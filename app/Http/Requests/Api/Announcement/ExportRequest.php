@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\GuestBook;
+namespace App\Http\Requests\Api\Announcement;
 
 use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
@@ -19,8 +19,8 @@ class ExportRequest extends FormRequest
             'filter' => 'nullable|array',
             'filter.company_id' => ['nullable', new CompanyTenantedRule()],
             'filter.branch_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'filter.check_in_start_date' => ['nullable', 'date'],
-            'filter.check_in_end_date' => ['nullable', 'date'],
+            'filter.created_start_date' => ['nullable', 'date'],
+            'filter.created_end_date' => ['nullable', 'date'],
         ];
     }
 }

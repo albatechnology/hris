@@ -142,4 +142,9 @@ class AnnouncementController extends BaseController
 
         return $this->deletedResponse();
     }
+
+    public function export(\App\Http\Requests\Api\Announcement\ExportRequest $request)
+    {
+        return (new \App\Exports\Announcement\ExportAnnouncement($request))->download('announcements.xlsx');
+    }
 }

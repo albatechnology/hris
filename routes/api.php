@@ -175,6 +175,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('departments', DepartmentController::class);
 
+
+    Route::get('announcements/export', [AnnouncementController::class, 'export']);
     Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show', 'store', 'destroy']);
 
     Route::get('shifts/report-shift-users/{export?}', [ShiftController::class, 'reportShiftUsers']);
@@ -322,6 +324,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);
     Route::apiResource('request-shifts', RequestShiftController::class);
 
+    Route::get('task-requests/report', [TaskRequestController::class, 'report']);
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);
     Route::put('task-requests/{task_request}/approve', [TaskRequestController::class, 'approve']);
@@ -345,6 +348,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::apiResource('user-transfers', UserTransferController::class);
 
+    Route::get('panics/export', [PanicController::class, 'export']);
     Route::apiResource('panics', PanicController::class);
     Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 
