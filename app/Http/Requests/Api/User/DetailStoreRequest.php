@@ -2,12 +2,7 @@
 
 namespace App\Http\Requests\Api\User;
 
-use App\Enums\BloodType;
-use App\Enums\ClothesSize;
 use App\Enums\EmploymentStatus;
-use App\Enums\JobLevel;
-use App\Enums\MaritalStatus;
-use App\Enums\Religion;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Position;
@@ -17,7 +12,7 @@ use Illuminate\Validation\Rule;
 
 class DetailStoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
