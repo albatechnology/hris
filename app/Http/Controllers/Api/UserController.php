@@ -417,6 +417,7 @@ class UserController extends BaseController
                 $user->positions()->delete();
                 $user->positions()->createMany($request->positions ?? []);
             }
+            $user->payrollInfo()->update(['is_ignore_alpa'=>$request->is_ignore_alpa]);
 
             DB::commit();
         } catch (Exception $e) {

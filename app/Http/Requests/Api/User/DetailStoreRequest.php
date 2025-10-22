@@ -17,7 +17,7 @@ use Illuminate\Validation\Rule;
 
 class DetailStoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -35,6 +35,7 @@ class DetailStoreRequest extends FormRequest
             'positions' => 'nullable|array',
             'positions.*.position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'positions.*.department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            'is_ignore_alpa'=>'nullable'
         ];
     }
 }
