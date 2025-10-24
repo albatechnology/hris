@@ -125,7 +125,7 @@ class RegisterRequest extends FormRequest
             'birth_place' => 'required|string',
             'birthdate' => 'required|date',
             'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
-            'blood_type' => ['required', Rule::enum(BloodType::class)],
+            'blood_type' => ['nullable', Rule::enum(BloodType::class)],
             'religion' => ['nullable', Rule::enum(Religion::class)],
             // 'batik_size' => 'required|string',
             // 'tshirt_size' => 'required|string',
