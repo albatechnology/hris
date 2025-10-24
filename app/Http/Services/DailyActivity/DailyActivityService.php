@@ -35,8 +35,11 @@ class DailyActivityService extends BaseService implements DailyActivityServiceIn
     public function update(string $id, array $data): bool
     {
         $model = $this->repository->findById($id);
+        if (!$model) {
+            return false;
+        }
 
-        DB::transaction(function () use($model, $data) {
+        return DB::transaction(function () use ($model, $data) {
             $this->repository->update($model->id, $data);
 
             if (isset($data['images']) && is_array($data['images'])) {
@@ -50,7 +53,7 @@ class DailyActivityService extends BaseService implements DailyActivityServiceIn
                 }
             }
 
-            return $model;
+            return true;
         });
     }
 }

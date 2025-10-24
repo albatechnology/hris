@@ -67,14 +67,15 @@ class DailyActivityController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        $this->service->findById($id);
-        $this->service->update($id, $request->validated());
+        if (!$this->service->update($id, $request->validated())) {
+            return $this->errorResponse('Daily Activity not found', code: 404);
+        }
+
         return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $this->service->findById($id);
         $this->service->delete($id);
 
         return $this->deletedResponse();
