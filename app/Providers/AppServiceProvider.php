@@ -18,6 +18,9 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Repositories\Company\CompanyRepositoryInterface::class => \App\Http\Repositories\Company\CompanyRepository::class,
         \App\Interfaces\Services\Company\CompanyServiceInterface::class => \App\Http\Services\Company\CompanyService::class,
 
+        \App\Interfaces\Repositories\DailyActivity\DailyActivityRepositoryInterface::class => \App\Http\Repositories\DailyActivity\DailyActivityRepository::class,
+        \App\Interfaces\Services\DailyActivity\DailyActivityServiceInterface::class => \App\Http\Services\DailyActivity\DailyActivityService::class,
+
         \App\Interfaces\Repositories\ReimbursementCategory\ReimbursementCategoryRepositoryInterface::class => \App\Http\Repositories\ReimbursementCategory\ReimbursementCategoryRepository::class,
         \App\Interfaces\Services\ReimbursementCategory\ReimbursementCategoryServiceInterface::class => \App\Http\Services\ReimbursementCategory\ReimbursementCategoryService::class,
 
