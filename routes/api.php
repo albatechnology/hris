@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\BranchLocationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CustomFieldController;
+use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\EventController;
@@ -427,4 +428,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
 
     Route::apiResource('levels',LevelController::class);
+
+    Route::apiResource('daily-activities', DailyActivityController::class);
 });
