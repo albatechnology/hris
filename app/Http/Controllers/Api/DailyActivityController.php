@@ -8,6 +8,7 @@ use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\DailyActivity\DailyActivityServiceInterface;
 use App\Models\DailyActivity;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class DailyActivityController extends BaseController
@@ -32,6 +33,11 @@ class DailyActivityController extends BaseController
                 AllowedFilter::scope('created_end_date', 'createdAtEnd'),
                 'description',
             ])
+            ->allowedIncludes(
+                AllowedInclude::callback('user', function ($query) {
+                    $query->select('id', 'name');
+                }),
+            )
             ->allowedSorts([
                 'id',
                 'user_id',
@@ -47,7 +53,10 @@ class DailyActivityController extends BaseController
     public function show(int $id)
     {
         $activity = $this->service->findById($id);
-        return new DefaultResource($activity->load('media'));
+        return new DefaultResource($activity->load([
+            'user' => fn($q) => $q->select('id', 'name'),
+            'media',
+        ]));
     }
 
     public function store(StoreRequest $request)
@@ -58,14 +67,15 @@ class DailyActivityController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        $this->service->findById($id);
-        $this->service->update($id, $request->validated());
+        if (!$this->service->update($id, $request->validated())) {
+            return $this->errorResponse('Daily Activity not found', code: 404);
+        }
+
         return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $this->service->findById($id);
         $this->service->delete($id);
 
         return $this->deletedResponse();

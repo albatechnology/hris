@@ -10,7 +10,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'description' => ['required','string'],
-            'images.*' => ['nullable','image','mimes:jpeg,png,jpg,gif','max:2048'] // max 2MB per image
+            'images.*' => ['nullable','image','mimes:jpeg,png,jpg,gif','max:5120'] // max 2MB per image
         ];
     }
 }
