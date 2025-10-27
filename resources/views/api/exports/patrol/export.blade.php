@@ -94,12 +94,12 @@
                             </td>
                             @foreach ($userPatrolTask->media as $media)
                                 <td>
-                                    {{-- <img src="{{ $media->original_url }}" alt="image" style="height: 100px; width: auto;" /> --}}
-                                    @if($media->hasGeneratedConversion('thumb'))
+                                    {{-- @if($media->hasGeneratedConversion('thumb'))
                                     <img src="{{ $media->getUrl('thumb') }}" alt="image"/>
                                     @else
                                     <a href="{{ $media->original_url }}">Lihat Gambar</a>
-                                    @endif
+                                    @endif --}}
+                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
                                 </td>
                             @endforeach
                             <td>

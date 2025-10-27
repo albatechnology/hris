@@ -8,13 +8,25 @@ use App\Enums\OvertimeSetting;
 use App\Enums\PaymentSchedule;
 use App\Enums\ProrateSetting;
 use App\Enums\SalaryType;
+use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class SalaryStoreRequest extends FormRequest
 {
+    use RequestToBoolean;
 
-
+    /**
+     * Prepare inputs for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_ignore_alpa' => $this->toBoolean($this->is_ignore_alpa) ?? false
+        ]);
+    }
     /**
      * Get the validation rules that apply to the request.
      *
@@ -31,8 +43,9 @@ class SalaryStoreRequest extends FormRequest
             'overtime_setting' => ['required', Rule::enum(OvertimeSetting::class)],
             'cost_center_category' => ['nullable', Rule::enum(CostCenterCategory::class)],
             'currency' => ['required', Rule::enum(CurrencyCode::class)],
-            'epf_no'=>'nullable|string',
-            'tabungan_haji_no'=>'nullable|string',
+            'epf_no' => 'nullable|string',
+            'tabungan_haji_no' => 'nullable|string',
+            'is_ignore_alpa' => 'required|boolean',
         ];
     }
 }

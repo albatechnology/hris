@@ -67,7 +67,7 @@ class AttendanceController extends BaseController
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
         $users = User::tenanted(true)
-            ->where('join_date', '<=', $startDate)
+            // ->where('join_date', '<=', $startDate)
             ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
@@ -220,13 +220,27 @@ class AttendanceController extends BaseController
             $user = auth('sanctum')->user();
         }
 
-        $startDateStr = $request->filter['start_date'] ?? now()->startOfMonth()->toDateString();
-        $endDateStr   = $request->filter['end_date']   ?? now()->endOfMonth()->toDateString();
+        $filterStartDate = $request->filter['start_date'] ?? null;
+        $filterEndDate   = $request->filter['end_date'] ?? null;
+        $filterMonth = !empty($request->filter['month']) ? $request->filter['month'] : null;
+        $filterYear = !empty($request->filter['year']) ? $request->filter['year'] : null;
+        if ($filterMonth) {
+            $filterYear = $filterYear ?? date('Y');
+            $startDate = Carbon::create($filterYear, $filterMonth, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+        } elseif ($filterYear && !$filterMonth) {
+            $filterMonth = $filterMonth ?? date('m');
+            $startDate = Carbon::create($filterYear, $filterMonth, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+        } elseif ($filterStartDate && $filterEndDate) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $filterStartDate);
+            $endDate = Carbon::createFromFormat('Y-m-d', $filterEndDate);
+        } else {
+            $startDate = now()->startOfMonth();
+            $endDate   = now()->endOfMonth();
+        }
 
-        $dateStart = Carbon::createFromFormat('Y-m-d', "$startDateStr");
-        $dateEnd = Carbon::createFromFormat('Y-m-d', "$endDateStr");
-
-         $dateRange = CarbonPeriod::create($dateStart, $dateEnd);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
 
@@ -239,10 +253,10 @@ class AttendanceController extends BaseController
         $summaryNotPresentNoClockOut = 0;
         $summaryAwayTimeOff = 0;
 
-        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $dateStart, $dateEnd, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
+        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $startDate, $endDate, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
 
-        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereCompanyHoliday()->get();
-        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereNationalHoliday()->get();
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
         foreach ($dateRange as $date) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);

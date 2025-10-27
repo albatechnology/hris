@@ -416,9 +416,19 @@ class PatrolController extends BaseController
             ),
         ]);
 
-        return (new PatrolTaskExport($patrol, $startDate, $endDate))->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::HTML, [
+        // $batch = $patrol->users[2]->user->patrolBatches[0]->userPatrolTasks[0];
+        // dump($batch->media[0]->getUrl('thumb'));
+        // dd($batch->toArray());
+
+        $headers = [
             'Content-Type' => 'application/vnd.ms-excel',
-        ]);
+            // 'Cache-Control' => 'max-age=0',
+            // 'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            // 'X-Content-Type-Options' => 'nosniff'
+        ];
+
+        return (new PatrolTaskExport($patrol, $startDate, $endDate))
+            ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
     }
 
     public function testExport()
