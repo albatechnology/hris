@@ -578,14 +578,15 @@ class RunPayrollService
     public static function createDetails(PayrollSetting $payrollSetting, RunPayroll $runPayroll, array $request): JsonResponse
     {
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
-        $company = $payrollSetting->company;
+        $company = $payrollSetting->company; //ambil id company user, ex: 1
 
-        $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
-        $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
+        $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value; //ambil valuebpjs_kesehatan_max_salary berdasarkan id negara dan id company
+        $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value; //ambil valu jaminan_pensiun
 
         $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->pluck('id')->toArray();
+        //ketika request_ids kosong makaambil semua user, sesuai dengan company_id dari runpayroll yang baru saja dibuat ke database ambil id user dan kembalikan dalam bentuk array
 
         // calculate for each user
         foreach ($userIds as $userId) {
@@ -603,6 +604,7 @@ class RunPayrollService
                 $joinDate = Carbon::parse($user->join_date);
                 if ($joinDate->greaterThan($endDate)) {
                     continue;
+                    //untuk user yang masa kontraknya sudah habis tidak perlu dihitung
                 }
             }
 
@@ -610,12 +612,13 @@ class RunPayrollService
                 $resignDate = Carbon::parse($user->resign_date);
                 if ($resignDate->lessThan($cutOffEndDate)) {
                     continue;
+                    //untuk user yang sudah resign sebelum cutoff tidak perlu dihitung
                 }
             }
 
             $runPayrollUser = self::assignUser($runPayroll, $userId);
 
-            $userBasicSalary = $user->payrollInfo?->basic_salary;
+            $userBasicSalary = $user->payrollInfo?->basic_salary; //ambil basic_salary dari payroll_info berdasarkan user_id
 
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
@@ -1001,6 +1004,7 @@ class RunPayrollService
     public static function assignUser(RunPayroll $runPayroll, string|int $userId): RunPayrollUser
     {
         return $runPayroll->users()->create(['user_id' => $userId]);
+        //buat user_id di tabel payroll
     }
 
     /**
