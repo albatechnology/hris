@@ -395,7 +395,7 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -403,7 +403,7 @@ class AttendanceController extends BaseController
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
+            ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name'),
                 'payrollInfo' => fn($q) => $q->select('user_id', 'is_ignore_alpa'),
@@ -484,10 +484,11 @@ class AttendanceController extends BaseController
                     $summaryAwayTimeOff += 1;
                 }
             } else {
+                // dump('test 1');
                 $shift = $schedule?->shift ?? null;
-
                 $companyHoliday = null;
                 $isHoliday = false;
+                //   dump($user->payrollInfo?->is_ignore_alpa, $shift?->is_dayoff, $isHoliday);
                 if ($schedule?->is_overide_company_holiday == false) {
                     $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
                         return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
@@ -509,7 +510,7 @@ class AttendanceController extends BaseController
                 }
 
                 if (
-                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                    $user->payrollInfo?->is_ignore_alpa === false && !$shift?->is_dayoff && !$isHoliday
                 ) {
                     $summaryNotPresentAbsent += 1;
                 }
@@ -537,17 +538,14 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $user = auth('sanctum')->user();
-
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
-
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);

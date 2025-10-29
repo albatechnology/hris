@@ -22,7 +22,7 @@ class ChildrenRequest extends FormRequest
             'filter' => [
                 ...($this->filter ?? []),
                 'date' => !empty($this->filter['date']) ? $this->filter['date'] : date('Y-m-d'),
-                'is_show_resign_users' => $this->is_show_resign_users ? $this->toBoolean($this->is_show_resign_users) : null,
+                'is_show_resign_users' => isset($this->filter['is_show_resign_users']) ? $this->toBoolean($this->filter['is_show_resign_users']) : null,
             ],
         ]);
     }
