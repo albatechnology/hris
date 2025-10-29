@@ -10,7 +10,9 @@ use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -20,7 +22,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
 
     protected $fillable = [
         'user_id',
-        // 'assign_to',
+        'run_reprimand_id',
         'type',
         'effective_date',
         'end_date',
@@ -36,6 +38,15 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
         'file'
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function (self $model) {
+            $model->records()->create([
+                'user_id' => $model->user_id,
+                'date' => $model->effective_date,
+            ]);
+        });
+    }
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
@@ -95,5 +106,15 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     public function watchers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'reprimand_watchers');
+    }
+
+    public function runReprimand(): BelongsTo
+    {
+        return $this->belongsTo(RunReprimand::class);
+    }
+
+    public function records(): HasMany
+    {
+        return $this->hasMany(ReprimandRecord::class);
     }
 }

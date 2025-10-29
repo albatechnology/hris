@@ -220,13 +220,27 @@ class AttendanceController extends BaseController
             $user = auth('sanctum')->user();
         }
 
-        $startDateStr = $request->filter['start_date'] ?? now()->startOfMonth()->toDateString();
-        $endDateStr   = $request->filter['end_date']   ?? now()->endOfMonth()->toDateString();
+        $filterStartDate = $request->filter['start_date'] ?? null;
+        $filterEndDate   = $request->filter['end_date'] ?? null;
+        $filterMonth = !empty($request->filter['month']) ? $request->filter['month'] : null;
+        $filterYear = !empty($request->filter['year']) ? $request->filter['year'] : null;
+        if ($filterMonth) {
+            $filterYear = $filterYear ?? date('Y');
+            $startDate = Carbon::create($filterYear, $filterMonth, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+        } elseif ($filterYear && !$filterMonth) {
+            $filterMonth = $filterMonth ?? date('m');
+            $startDate = Carbon::create($filterYear, $filterMonth, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+        } elseif ($filterStartDate && $filterEndDate) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $filterStartDate);
+            $endDate = Carbon::createFromFormat('Y-m-d', $filterEndDate);
+        } else {
+            $startDate = now()->startOfMonth();
+            $endDate   = now()->endOfMonth();
+        }
 
-        $dateStart = Carbon::createFromFormat('Y-m-d', "$startDateStr");
-        $dateEnd = Carbon::createFromFormat('Y-m-d', "$endDateStr");
-
-         $dateRange = CarbonPeriod::create($dateStart, $dateEnd);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
 
@@ -239,10 +253,10 @@ class AttendanceController extends BaseController
         $summaryNotPresentNoClockOut = 0;
         $summaryAwayTimeOff = 0;
 
-        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $dateStart, $dateEnd, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
+        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $startDate, $endDate, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
 
-        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereCompanyHoliday()->get();
-        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereNationalHoliday()->get();
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
         foreach ($dateRange as $date) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
@@ -381,7 +395,7 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -389,7 +403,7 @@ class AttendanceController extends BaseController
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
+            ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name'),
                 'payrollInfo' => fn($q) => $q->select('user_id', 'is_ignore_alpa'),
@@ -470,10 +484,11 @@ class AttendanceController extends BaseController
                     $summaryAwayTimeOff += 1;
                 }
             } else {
+                // dump('test 1');
                 $shift = $schedule?->shift ?? null;
-
                 $companyHoliday = null;
                 $isHoliday = false;
+                //   dump($user->payrollInfo?->is_ignore_alpa, $shift?->is_dayoff, $isHoliday);
                 if ($schedule?->is_overide_company_holiday == false) {
                     $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
                         return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
@@ -495,7 +510,7 @@ class AttendanceController extends BaseController
                 }
 
                 if (
-                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                    $user->payrollInfo?->is_ignore_alpa === false && !$shift?->is_dayoff && !$isHoliday
                 ) {
                     $summaryNotPresentAbsent += 1;
                 }
@@ -523,17 +538,14 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $user = auth('sanctum')->user();
-
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
-
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);

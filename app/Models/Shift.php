@@ -28,8 +28,8 @@ class Shift extends BaseModel implements TenantedInterface
         'clock_in_min_before',
         'clock_out_max_after',
         'is_enable_grace_period',
-        'clock_in_dispensation',
-        'clock_out_dispensation',
+        'clock_in_dispensation', // not used yet
+        'clock_out_dispensation', // not used yet
         'time_dispensation',
         'is_show_in_request',
         'is_show_in_request_for_all',

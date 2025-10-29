@@ -51,7 +51,7 @@ class StoreRequest extends FormRequest
                 'string',
                 function (string $attr, string $value, Closure $fail) {
                     collect(explode(',', $value))->each(function ($id) use ($fail) {
-                        $user = User::tenanted()->select('id', 'resign_date')->firstWHere('id', $id);
+                        $user = User::tenanted()->where('company_id', $this->company_id)->select('id', 'resign_date')->firstWHere('id', $id);
 
                         if (!$user) {
                             $fail('The selected user ids is invalid (' . $id . ')');

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -46,5 +47,23 @@ class UserService
         $userId = $user instanceof User ? $user->id : $user;
         $descendantId = $descendant instanceof User ? $descendant->id : $descendant;
         return DB::table('user_supervisors')->where('supervisor_id', $userId)->where('user_id', $descendantId)->limit(1)->exists();
+    }
+
+    public static function getWorkingMonth(User|int $user): int
+    {
+        if (!$user instanceof User) {
+            $user = User::select('id', 'join_date')->where('id', $user)->first();
+        }
+
+        $joinDate = Carbon::parse($user->join_date)->startOfDay();
+        dump($joinDate);
+        $endOfCurrentMonth = Carbon::now()->endOfMonth();
+        dump($endOfCurrentMonth);
+
+        if ($joinDate > $endOfCurrentMonth) {
+            return 0;
+        }
+        dd($joinDate->diffInMonths($endOfCurrentMonth));
+        return $joinDate->diffInMonths($endOfCurrentMonth) + 1;
     }
 }

@@ -300,6 +300,12 @@ class PermissionService
                 'setting_read',
                 'setting_edit',
             ],
+            'run_reprimand_access' => [
+                'run_reprimand_read',
+                'run_reprimand_create',
+                'run_reprimand_edit',
+                'run_reprimand_delete',
+            ],
             'reprimand_access' => [
                 'reprimand_read',
                 'reprimand_create',

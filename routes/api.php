@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\RequestScheduleController;
 use App\Http\Controllers\Api\RequestShiftController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RunPayrollController;
+use App\Http\Controllers\Api\RunReprimandController;
 use App\Http\Controllers\Api\RunThrController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SettingController;
@@ -406,6 +407,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
+    Route::get('runreprimands/{id}/all', [RunReprimandController::class, 'allReprimand']);
+    // POST to apply (persist) the previewed reprimands
+    Route::post('runreprimands/{id}/all', [RunReprimandController::class, 'applyAllReprimand']);
+    Route::get('reprimands/all', [ReprimandController::class, 'allReprimand']);
+    Route::apiResource('run-reprimands', RunReprimandController::class);
+
     Route::apiResource('reprimands', ReprimandController::class);
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
     Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);

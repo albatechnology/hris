@@ -460,7 +460,45 @@ class AttendanceService
         return $totalAttendance;
     }
 
-    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
+    public static function getTotalLateTime(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTolerance = 0): array
+{
+    $tolerance = $shift->time_dispensation ?? 0;
+
+    $recordedTime = Carbon::createFromFormat('H:i:s', date('H:i:s', strtotime($attendanceDetail->time)));
+
+    // Determine which scheduled time to compare against
+    if ($attendanceDetail->is_clock_in) {
+        $scheduledTime = Carbon::createFromFormat('H:i:s', $shift->clock_in);
+        $diffInMinutes = $recordedTime->greaterThan($scheduledTime)
+            ? $scheduledTime->diffInMinutes($recordedTime)
+            : 0; // Late in
+    } else {
+        $scheduledTime = Carbon::createFromFormat('H:i:s', $shift->clock_out);
+        $diffInMinutes = $recordedTime->lessThan($scheduledTime)
+            ? $scheduledTime->diffInMinutes($recordedTime)
+            : 0; // Early out
+    }
+
+    // Apply grace period
+    if ($shift->is_enable_grace_period) {
+        $totalLateness = $diffInMinutes + $remainingTolerance;
+
+        if ($totalLateness <= $tolerance) {
+            // still within tolerance, no penalty
+            return [0, "00:00:00", $totalLateness];
+        } else {
+            // exceeded tolerance
+            $lateBeyondTolerance = $totalLateness - $tolerance;
+            return [$lateBeyondTolerance, gmdate('H:i:s', $lateBeyondTolerance * 60), 0];
+        }
+    }
+
+    // No grace period
+    return [$diffInMinutes, gmdate('H:i:s', $diffInMinutes * 60), 0];
+}
+
+
+   public static function getTotalLateTimeNiko(AttendanceDetail $attendanceDetail, Shift $shift, ?int $remainingTime = null): array
     {
         /**
          *
@@ -526,6 +564,7 @@ class AttendanceService
             $remainingTime,
         ];
     }
+
 
     public static function inLockAttendance(string $date, ?User $user = null): bool
     {

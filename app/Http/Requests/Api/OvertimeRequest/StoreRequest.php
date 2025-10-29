@@ -16,8 +16,6 @@ class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
 
-
-
     /**
      * Prepare inputs for validation.
      *
