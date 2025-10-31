@@ -413,51 +413,18 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             ->with('payrollInfo')
             ->get();
 
-        $basicSalaryComponent = PayrollComponent::tenanted()
-            ->where('company_id', $runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+        $allPayrollComponents = PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->get();
 
-        $reimbursementComponent = PayrollComponent::tenanted()
-            ->whereCompany($runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::REIMBURSEMENT)->first();
+        $basicSalaryComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+        $reimbursementComponent = $allPayrollComponents->where('category', PayrollComponentCategory::REIMBURSEMENT)->first();
+        $alpaComponent = $allPayrollComponents->where('category', PayrollComponentCategory::ALPA)->first();
+        $loanComponent = $allPayrollComponents->where('category', PayrollComponentCategory::LOAN)->first();
+        $insuranceComponent = $allPayrollComponents->where('category', PayrollComponentCategory::INSURANCE)->first();
+        $overtimePayrollComponent = $allPayrollComponents->where('category', PayrollComponentCategory::OVERTIME)->first();
+        $bpjsKesehatanFamilyComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
 
-        $payrollComponents = PayrollComponent::tenanted()
-            ->where('company_id', $runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->whereNotDefault()->get();
-
-        $alpaComponent = PayrollComponent::tenanted()
-            ->where('company_id', $runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::ALPA)->first();
-
-        $loanComponent = PayrollComponent::tenanted()
-            ->where('company_id', $runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::LOAN)->first();
-
-        $insuranceComponent = PayrollComponent::tenanted()
-            ->where('company_id', $runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::INSURANCE)->first();
-
-        $bpjsPayrollComponents = PayrollComponent::tenanted()
-            ->whereCompany($runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->whereBpjs()->get();
-
-        $overtimePayrollComponent = PayrollComponent::tenanted()
-            ->whereCompany($runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::OVERTIME)->first();
-
-        $bpjsKesehatanFamilyComponent = PayrollComponent::tenanted()
-            ->whereCompany($runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
-
+        $payrollComponents =  PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
+        $bpjsPayrollComponents =  PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
 
         // calculate for each user
         // foreach ($userIds as $userId) {
