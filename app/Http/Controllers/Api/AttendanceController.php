@@ -37,6 +37,10 @@ use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
+use App\Imports\AttendanceImport;
+use Illuminate\Http\Client\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -220,13 +224,27 @@ class AttendanceController extends BaseController
             $user = auth('sanctum')->user();
         }
 
-        $startDateStr = $request->filter['start_date'] ?? now()->startOfMonth()->toDateString();
-        $endDateStr   = $request->filter['end_date']   ?? now()->endOfMonth()->toDateString();
+        $filterStartDate = $request->filter['start_date'] ?? null;
+        $filterEndDate   = $request->filter['end_date'] ?? null;
+        $filterMonth = !empty($request->filter['month']) ? $request->filter['month'] : null;
+        $filterYear = !empty($request->filter['year']) ? $request->filter['year'] : null;
+        if ($filterMonth) {
+            $filterYear = $filterYear ?? date('Y');
+            $startDate = Carbon::create($filterYear, $filterMonth, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+        } elseif ($filterYear && !$filterMonth) {
+            $filterMonth = $filterMonth ?? date('m');
+            $startDate = Carbon::create($filterYear, $filterMonth, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+        } elseif ($filterStartDate && $filterEndDate) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $filterStartDate);
+            $endDate = Carbon::createFromFormat('Y-m-d', $filterEndDate);
+        } else {
+            $startDate = now()->startOfMonth();
+            $endDate   = now()->endOfMonth();
+        }
 
-        $dateStart = Carbon::createFromFormat('Y-m-d', "$startDateStr");
-        $dateEnd = Carbon::createFromFormat('Y-m-d', "$endDateStr");
-
-         $dateRange = CarbonPeriod::create($dateStart, $dateEnd);
+        $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         $data = [];
 
@@ -239,10 +257,10 @@ class AttendanceController extends BaseController
         $summaryNotPresentNoClockOut = 0;
         $summaryAwayTimeOff = 0;
 
-        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $dateStart, $dateEnd, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
+        $attendances = AttendanceService::getUserAttendancesInPeriod($user, $startDate, $endDate, ['details' => fn($q) => $q->approved()->orderBy('created_at')]);
 
-        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereCompanyHoliday()->get();
-        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($dateStart, $dateEnd)->whereNationalHoliday()->get();
+        $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
+        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
         foreach ($dateRange as $date) {
             $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff', 'name', 'clock_in', 'clock_out']);
@@ -381,7 +399,7 @@ class AttendanceController extends BaseController
     {
         $user = auth('sanctum')->user();
 
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
@@ -389,7 +407,7 @@ class AttendanceController extends BaseController
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
+            ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name'),
                 'payrollInfo' => fn($q) => $q->select('user_id', 'is_ignore_alpa'),
@@ -470,10 +488,11 @@ class AttendanceController extends BaseController
                     $summaryAwayTimeOff += 1;
                 }
             } else {
+                // dump('test 1');
                 $shift = $schedule?->shift ?? null;
-
                 $companyHoliday = null;
                 $isHoliday = false;
+                //   dump($user->payrollInfo?->is_ignore_alpa, $shift?->is_dayoff, $isHoliday);
                 if ($schedule?->is_overide_company_holiday == false) {
                     $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
                         return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
@@ -495,7 +514,7 @@ class AttendanceController extends BaseController
                 }
 
                 if (
-                    $user->payrollInfo?->is_ignore_alpa == false && !$shift?->is_dayoff && !$isHoliday
+                    $user->payrollInfo?->is_ignore_alpa === false && !$shift?->is_dayoff && !$isHoliday
                 ) {
                     $summaryNotPresentAbsent += 1;
                 }
@@ -523,17 +542,14 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $user = auth('sanctum')->user();
-
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
-
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
+            ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
@@ -1106,5 +1122,128 @@ class AttendanceController extends BaseController
                 ->delete();
         }
         die('dono');
+    }
+
+    public function importExcel(Request $request): JsonResponse
+    {
+        // ═══════════════════════════════════════════════════════════
+        // STEP 1: Validate Request
+        // ═══════════════════════════════════════════════════════════
+        $validator = Validator::make($request->all(), [
+            'file' => [
+                'required',
+                'file',
+                'mimes:xlsx,xls,csv',
+                'max:10240', // Max 10MB
+            ],
+        ], [
+            'file.required' => 'File Excel wajib diupload',
+            'file.mimes' => 'File harus berformat Excel (.xlsx, .xls, atau .csv)',
+            'file.max' => 'Ukuran file maksimal 10MB',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 2: Initialize Import Class
+        // ═══════════════════════════════════════════════════════════
+        try {
+            $import = new AttendanceImport();
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 3: Execute Import
+            // ═══════════════════════════════════════════════════════════
+            Excel::import($import, $request->file('file'));
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 4: Get Import Statistics
+            // ═══════════════════════════════════════════════════════════
+            $stats = $import->getStats();
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 5: Return Response
+            // ═══════════════════════════════════════════════════════════
+            $hasErrors = count($stats['errors']) > 0;
+
+            return response()->json([
+                'success' => !$hasErrors || $stats['created'] > 0 || $stats['updated'] > 0,
+                'message' => $this->generateImportMessage($stats),
+                'data' => [
+                    'total_rows' => $stats['total'],
+                    'created' => $stats['created'],
+                    'updated' => $stats['updated'],
+                    'skipped' => $stats['skipped'],
+                    'errors' => $stats['errors'],
+                ],
+            ], $hasErrors && $stats['created'] === 0 && $stats['updated'] === 0 ? 422 : 200);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            // Handle Excel validation errors
+            $failures = $e->failures();
+            $errors = [];
+
+            foreach ($failures as $failure) {
+                $errors[] = [
+                    'row' => $failure->row(),
+                    'attribute' => $failure->attribute(),
+                    'errors' => $failure->errors(),
+                ];
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi data Excel gagal',
+                'errors' => $errors,
+            ], 422);
+
+        } catch (\Exception $e) {
+            // Handle general errors
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat import data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate user-friendly import message
+     *
+     * @param array $stats
+     * @return string
+     */
+    protected function generateImportMessage(array $stats): string
+    {
+        $messages = [];
+
+        if ($stats['created'] > 0) {
+            $messages[] = "{$stats['created']} data attendance berhasil dibuat";
+        }
+
+        if ($stats['updated'] > 0) {
+            $messages[] = "{$stats['updated']} data attendance berhasil diupdate";
+        }
+
+        if ($stats['skipped'] > 0) {
+            $messages[] = "{$stats['skipped']} data dilewati";
+        }
+
+        if (empty($messages)) {
+            return 'Tidak ada data yang diproses';
+        }
+
+        $message = implode(', ', $messages);
+
+        if (count($stats['errors']) > 0) {
+            $message .= '. Silakan cek detail error untuk informasi lengkap.';
+        }
+
+        return ucfirst($message);
     }
 }
