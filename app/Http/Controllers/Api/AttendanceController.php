@@ -37,6 +37,10 @@ use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
+use App\Imports\AttendanceImport;
+use Illuminate\Http\Client\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -1118,5 +1122,128 @@ class AttendanceController extends BaseController
                 ->delete();
         }
         die('dono');
+    }
+
+    public function importExcel(Request $request): JsonResponse
+    {
+        // ═══════════════════════════════════════════════════════════
+        // STEP 1: Validate Request
+        // ═══════════════════════════════════════════════════════════
+        $validator = Validator::make($request->all(), [
+            'file' => [
+                'required',
+                'file',
+                'mimes:xlsx,xls,csv',
+                'max:10240', // Max 10MB
+            ],
+        ], [
+            'file.required' => 'File Excel wajib diupload',
+            'file.mimes' => 'File harus berformat Excel (.xlsx, .xls, atau .csv)',
+            'file.max' => 'Ukuran file maksimal 10MB',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 2: Initialize Import Class
+        // ═══════════════════════════════════════════════════════════
+        try {
+            $import = new AttendanceImport();
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 3: Execute Import
+            // ═══════════════════════════════════════════════════════════
+            Excel::import($import, $request->file('file'));
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 4: Get Import Statistics
+            // ═══════════════════════════════════════════════════════════
+            $stats = $import->getStats();
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 5: Return Response
+            // ═══════════════════════════════════════════════════════════
+            $hasErrors = count($stats['errors']) > 0;
+
+            return response()->json([
+                'success' => !$hasErrors || $stats['created'] > 0 || $stats['updated'] > 0,
+                'message' => $this->generateImportMessage($stats),
+                'data' => [
+                    'total_rows' => $stats['total'],
+                    'created' => $stats['created'],
+                    'updated' => $stats['updated'],
+                    'skipped' => $stats['skipped'],
+                    'errors' => $stats['errors'],
+                ],
+            ], $hasErrors && $stats['created'] === 0 && $stats['updated'] === 0 ? 422 : 200);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            // Handle Excel validation errors
+            $failures = $e->failures();
+            $errors = [];
+
+            foreach ($failures as $failure) {
+                $errors[] = [
+                    'row' => $failure->row(),
+                    'attribute' => $failure->attribute(),
+                    'errors' => $failure->errors(),
+                ];
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi data Excel gagal',
+                'errors' => $errors,
+            ], 422);
+
+        } catch (\Exception $e) {
+            // Handle general errors
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat import data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate user-friendly import message
+     *
+     * @param array $stats
+     * @return string
+     */
+    protected function generateImportMessage(array $stats): string
+    {
+        $messages = [];
+
+        if ($stats['created'] > 0) {
+            $messages[] = "{$stats['created']} data attendance berhasil dibuat";
+        }
+
+        if ($stats['updated'] > 0) {
+            $messages[] = "{$stats['updated']} data attendance berhasil diupdate";
+        }
+
+        if ($stats['skipped'] > 0) {
+            $messages[] = "{$stats['skipped']} data dilewati";
+        }
+
+        if (empty($messages)) {
+            return 'Tidak ada data yang diproses';
+        }
+
+        $message = implode(', ', $messages);
+
+        if (count($stats['errors']) > 0) {
+            $message .= '. Silakan cek detail error untuk informasi lengkap.';
+        }
+
+        return ucfirst($message);
     }
 }
