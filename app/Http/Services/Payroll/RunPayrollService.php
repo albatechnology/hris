@@ -404,10 +404,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
 
-        // $userIds = isset($dto->user_ids) && !empty($dto->user_ids) ? explode(',', $dto->user_ids) : User::where('company_id', $runPayroll->company_id)
-        //     ->whenBranch($runPayroll->branch_id)
-        //     ->pluck('id')->toArray();
-
         $users = User::query()
             ->when(count($dto->array_user_ids), fn($q) => $q->whereIn('id', $dto->array_user_ids))
             ->whenBranch($runPayroll->branch_id)
@@ -492,51 +488,28 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             $runPayrollUser = $this->assignUser($runPayroll, $user->id);
 
-            // dump($payrollSetting->toArray());
-            // dump($runPayroll->toArray());
             $userBasicSalary = $user->payrollInfo?->basic_salary;
-            // dump($userBasicSalary);
 
             $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
             $isFirstTimePayroll = $this->isFirstTimePayroll($user);
             $joinDate = Carbon::parse($user->join_date);
-            // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
-            $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate, $joinDate);
 
-            $totalPresent = $dataTotalAttendance['total_present'];
-            $totalWorkingDays = $dataTotalAttendance['total_working_days'];
+            if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+                $cutOffStartDate = $joinDate;
+                // $cutOffEndDate = $cutOffEndDate;
+                $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
+                $totalPresent = $dataTotalAttendance['total_present'];
+                $totalWorkingDays = $dataTotalAttendance['total_working_days'];
 
-            if ($isFirstTimePayroll) {
-                // dd($dataTotalAttendance);
-                if ($joinDate->between($cutOffStartDate, $cutOffEndDate)) {
-                    $cutOffStartDate = $joinDate;
-                    // $cutOffEndDate = $cutOffEndDate;
-                    dump('SATU');
-                    $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
-                    $totalPresent = $dataTotalAttendance['total_present'];
-                    $totalWorkingDays = $dataTotalAttendance['total_working_days'];
-                    // dump($dataTotalAttendance);
+                // $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
+            } elseif ($isFirstTimePayroll && $joinDate->between($startDate, $endDate)) {
+                $cutOffStartDate = $joinDate;
+                $cutOffEndDate = $endDate;
 
-                    // $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
-                    // dd($userBasicSalary);
-                } elseif ($joinDate->between($startDate, $endDate)) {
-                    $cutOffStartDate = $joinDate;
-                    $cutOffEndDate = $endDate;
-                    // dump('DUA');
-
-                    $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $startDate, $cutOffEndDate, $joinDate);
-                    $totalPresent = $dataTotalAttendance['total_present'];
-                    $totalWorkingDays = $dataTotalAttendance['total_working_days'];
-                    // dump($dataTotalAttendance);
-
-                    // $userBasicSalary = $totalPresent / $totalWorkingDays * $userBasicSalary;
-                    // dd($userBasicSalary);
-                }
-                // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
-                // $totalWorkingDays = $this->getTotalWDNewUser($payrollSetting, $user, $startDate, $cutOffEndDate);
-                // $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-
+                $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $startDate, $cutOffEndDate, $joinDate);
+                $totalPresent = $dataTotalAttendance['total_present'];
+                $totalWorkingDays = $dataTotalAttendance['total_working_days'];
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
