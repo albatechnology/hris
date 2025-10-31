@@ -502,11 +502,17 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             $isFirstTimePayroll = $this->isFirstTimePayroll($user);
             $joinDate = Carbon::parse($user->join_date);
             // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+            $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate, $joinDate);
+
+            $totalPresent = $dataTotalAttendance['total_present'];
+            $totalWorkingDays = $dataTotalAttendance['total_working_days'];
+
             if ($isFirstTimePayroll) {
+                // dd($dataTotalAttendance);
                 if ($joinDate->between($cutOffStartDate, $cutOffEndDate)) {
                     $cutOffStartDate = $joinDate;
                     // $cutOffEndDate = $cutOffEndDate;
-                    // dump('SATU');
+                    dump('SATU');
                     $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $runPayroll->cut_off_start_date, $cutOffEndDate, $joinDate);
                     $totalPresent = $dataTotalAttendance['total_present'];
                     $totalWorkingDays = $dataTotalAttendance['total_working_days'];
