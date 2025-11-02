@@ -9,14 +9,17 @@ use App\Models\Event;
 use Carbon\CarbonPeriod;
 use App\Models\Attendance;
 use App\Enums\ScheduleType;
+use Illuminate\Http\Request;
 use App\Enums\ApprovalStatus;
 use App\Enums\AttendanceType;
 use App\Services\TaskService;
 use App\Enums\MediaCollection;
 use App\Models\AttendanceDetail;
 use App\Exports\AttendanceReport;
+use App\Imports\AttendanceImport;
 use App\Services\Aws\Rekognition;
 use App\Services\ScheduleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Services\AttendanceService;
 use App\Models\DatabaseNotification;
@@ -25,6 +28,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
 use App\Http\Resources\DefaultResource;
 use Spatie\QueryBuilder\AllowedInclude;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\BulkApproveRequest;
 use App\Events\Attendance\AttendanceRequested;
@@ -37,10 +41,6 @@ use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
-use App\Imports\AttendanceImport;
-use Illuminate\Http\Client\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -1162,9 +1162,9 @@ class AttendanceController extends BaseController
             Excel::import($import, $request->file('file'));
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 4: Get Import Statistics
+            // STEP 4: Get Import Statistics & normalize (filter summary rows)
             // ═══════════════════════════════════════════════════════════
-            $stats = $import->getStats();
+            $stats = $this->normalizeImportStats($import->getStats());
 
             // ═══════════════════════════════════════════════════════════
             // STEP 5: Return Response
@@ -1179,6 +1179,8 @@ class AttendanceController extends BaseController
                     'created' => $stats['created'],
                     'updated' => $stats['updated'],
                     'skipped' => $stats['skipped'],
+                    'skipped_summary' => $stats['skipped_summary'] ?? 0,
+                    'skipped_invalid' => $stats['skipped_invalid'] ?? $stats['skipped'],
                     'errors' => $stats['errors'],
                 ],
             ], $hasErrors && $stats['created'] === 0 && $stats['updated'] === 0 ? 422 : 200);
@@ -1230,8 +1232,15 @@ class AttendanceController extends BaseController
             $messages[] = "{$stats['updated']} data attendance berhasil diupdate";
         }
 
-        if ($stats['skipped'] > 0) {
-            $messages[] = "{$stats['skipped']} data dilewati";
+        $skippedSummary = $stats['skipped_summary'] ?? 0;
+        $skippedInvalid = $stats['skipped_invalid'] ?? ($stats['skipped'] ?? 0);
+
+        if ($skippedInvalid > 0) {
+            $messages[] = "$skippedInvalid data tidak valid dilewati";
+        }
+
+        if ($skippedSummary > 0) {
+            $messages[] = "$skippedSummary baris ringkasan (TOTAL FOR EMPLOYEE) dilewati";
         }
 
         if (empty($messages)) {
@@ -1245,5 +1254,50 @@ class AttendanceController extends BaseController
         }
 
         return ucfirst($message);
+    }
+
+    /**
+     * Normalize import stats by filtering out summary rows (e.g., "TOTAL FOR EMPLOYEE : ...").
+     * We don't change importer logic; only adjust the response payload here.
+     */
+    protected function normalizeImportStats(array $stats): array
+    {
+        $errors = $stats['errors'] ?? [];
+        $filtered = [];
+        $summaryCount = 0;
+
+        foreach ($errors as $err) {
+            // values['nik'] when coming from Excel validator; fallback to top-level 'nik'
+            $nik = $err['values']['nik'] ?? $err['nik'] ?? null;
+            $isSummary = false;
+            if (is_string($nik)) {
+                $val = trim($nik);
+                if (preg_match('/^TOTAL\s+FOR\s+EMPLOYEE\s*:/i', $val)) {
+                    $isSummary = true;
+                }
+            }
+
+            // As a backup heuristic: empty date but lots of totals-like columns
+            if (!$isSummary) {
+                $dateVal = $err['values']['date'] ?? $err['date'] ?? null;
+                if ((empty($dateVal) || $dateVal === 'N/A') && is_string($nik) && str_contains(strtoupper($nik), 'TOTAL FOR EMPLOYEE')) {
+                    $isSummary = true;
+                }
+            }
+
+            if ($isSummary) {
+                $summaryCount++;
+                continue; // drop from real errors list
+            }
+
+            $filtered[] = $err;
+        }
+
+        $stats['errors'] = $filtered;
+        // Keep original skipped but expose split metrics
+        $stats['skipped_summary'] = $summaryCount;
+        $stats['skipped_invalid'] = max(($stats['skipped'] ?? 0) - $summaryCount, 0);
+
+        return $stats;
     }
 }

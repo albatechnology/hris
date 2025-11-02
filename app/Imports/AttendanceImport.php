@@ -6,6 +6,8 @@ namespace App\Imports;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\AttendanceDetail;
+use App\Services\ScheduleService;
+use App\Enums\AttendanceType;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -53,6 +55,7 @@ class AttendanceImport implements
             ->whereNotNull('nik')
             ->get(['id', 'nik', 'company_id'])
             ->keyBy('nik');
+        // dd($this->usersByNik);
     }
 
     /**
@@ -105,6 +108,8 @@ class AttendanceImport implements
         $date = $this->parseDate($row['date'] ?? '');
         $checkIn = $this->parseTime($row['check_in'] ?? '');
         $checkOut = $this->parseTime($row['check_out'] ?? '');
+        $lat = $row['clock_in_coordinate'] ?? '';
+        $lng = $row['clock_out_coordinate'] ?? '';
 
         // Skip jika NIK atau tanggal kosong
         if (empty($nik) || empty($date)) {
@@ -134,6 +139,7 @@ class AttendanceImport implements
         // STEP 2: Find User by NIK
         // ═══════════════════════════════════════════════════════════
         $user = $this->usersByNik->get($nik);
+        // dd($user);
 
         if (!$user) {
             $this->stats['skipped']++;
@@ -147,7 +153,15 @@ class AttendanceImport implements
         }
 
         // ═══════════════════════════════════════════════════════════
-        // STEP 3: Find or Create Attendance
+        // STEP 3: Resolve schedule/shift for the date (if available)
+        // ═══════════════════════════════════════════════════════════
+        $schedule = ScheduleService::getTodaySchedule($user, $date, ['id'], ['id']);
+        $scheduleId = $schedule?->id;
+        $shiftId = $schedule?->shift?->id;
+        
+
+        // ═══════════════════════════════════════════════════════════
+        // STEP 4: Find or Create Attendance (idempotent per user+date)
         // ═══════════════════════════════════════════════════════════
         $attendance = Attendance::firstOrCreate(
             [
@@ -157,16 +171,29 @@ class AttendanceImport implements
             [
                 'user_id' => $user->id,
                 'date' => $date,
-                // Tambahkan field lain jika ada default value
-                // 'shift_id' => null,
-                // 'schedule_id' => null,
+                'schedule_id' => $scheduleId,
+                'shift_id' => $shiftId,
+                
             ]
         );
 
-        $wasRecentlyCreated = $attendance->wasRecentlyCreated;
+        $wasRecentlyCreated = $attendance->wasRecentlyCreated; //fungsi eloquent laravel
+        // Backfill schedule/shift if attendance existed without them
+        if (!$wasRecentlyCreated) {
+            $dirty = false; //flag
+            if (is_null($attendance->schedule_id) && $scheduleId) {
+                $attendance->schedule_id = $scheduleId; $dirty = true;
+            }
+            if (is_null($attendance->shift_id) && $shiftId) {
+                $attendance->shift_id = $shiftId; $dirty = true;
+            }
+            if ($dirty) {
+                $attendance->save();
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════
-        // STEP 4: Update or Create Attendance Details
+        // STEP 5: Update or Create Attendance Details
         // ═══════════════════════════════════════════════════════════
 
         // Handle Check In (is_clock_in = true)
@@ -179,10 +206,11 @@ class AttendanceImport implements
                 [
                     'attendance_id' => $attendance->id,
                     'is_clock_in' => true,
-                    'time' => $checkIn,
-                    // Tambahkan field lain jika ada
-                    // 'type' => AttendanceType::CLOCK_IN,
-                    // 'approval_status' => ApprovalStatus::APPROVED,
+                    'time' => $date . ' ' . $checkIn,
+                    'type' => AttendanceType::AUTOMATIC->value,
+                    'note' => 'Imported',
+                    'lat'=> $lat,
+                    'lng'=> $lng,
                 ]
             );
         }
@@ -197,16 +225,17 @@ class AttendanceImport implements
                 [
                     'attendance_id' => $attendance->id,
                     'is_clock_in' => false,
-                    'time' => $checkOut,
-                    // Tambahkan field lain jika ada
-                    // 'type' => AttendanceType::CLOCK_OUT,
-                    // 'approval_status' => ApprovalStatus::APPROVED,
+                    'time' => $date . ' ' . $checkOut,
+                    'type' => AttendanceType::AUTOMATIC->value,
+                    'note' => 'Imported',
+                    'lat'=> $lat,
+                    'lng'=> $lng,
                 ]
             );
         }
 
         // ═══════════════════════════════════════════════════════════
-        // STEP 5: Update Statistics
+        // STEP 6: Update Statistics
         // ═══════════════════════════════════════════════════════════
         if ($wasRecentlyCreated) {
             $this->stats['created']++;
@@ -303,7 +332,7 @@ class AttendanceImport implements
     public function rules(): array
     {
         return [
-            'nik' => ['required', 'string'],
+            'nik' => ['required'],
             'date' => ['required'],
             // Check in dan check out optional, minimal salah satu harus ada
         ];

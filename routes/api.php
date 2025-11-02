@@ -204,7 +204,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('employees', [AttendanceController::class, 'employees']);
         Route::get('logs', [AttendanceController::class, 'logs']);
         Route::get('report/{export?}', [AttendanceController::class, 'report']);
-        Route::get('report/{import?}', [AttendanceController::class, 'importExcel']);
+        // Correct import endpoint
+        Route::post('import', [AttendanceController::class, 'importExcel']);
         Route::post('manual-attendances', [AttendanceController::class, 'manualAttendance']);
         Route::post('request', [AttendanceController::class, 'request']);
         Route::get('approvals', [AttendanceController::class, 'approvals']);
