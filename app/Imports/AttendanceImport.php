@@ -108,8 +108,8 @@ class AttendanceImport implements
         $date = $this->parseDate($row['date'] ?? '');
         $checkIn = $this->parseTime($row['check_in'] ?? '');
         $checkOut = $this->parseTime($row['check_out'] ?? '');
-        $lat = $row['clock_in_coordinate'] ?? '';
-        $lng = $row['clock_out_coordinate'] ?? '';
+        $lat = $this->parseLatLng($row['clock_in_coordinate'] ?? '');
+        $lng = $this->parseLatLng($row['clock_out_coordinate'] ?? '');
 
         // Skip jika NIK atau tanggal kosong
         if (empty($nik) || empty($date)) {
@@ -322,6 +322,14 @@ class AttendanceImport implements
         } catch (\Exception $e) {
             throw new \Exception("Format waktu tidak valid: {$value}");
         }
+    }
+
+    protected function parseLatLng($value)
+    {
+        if(empty($value) || $value == ","){
+            return null;
+        }
+        return $value;
     }
 
     /**
