@@ -27,7 +27,15 @@ class TimeoffService
         $timeoffQuota = self::getTotalBalanceQuota($userId, $timeoffPolicyId, $startAt, $endAt);
         if ($timeoffQuota >= $totalRequestDay) return true;
 
-        $timeoffQuota = self::getTotalBalanceQuota($userId, $timeoffPolicyId, date('Y-m-d', strtotime($startAt . '+3 month')), date('Y-m-d', strtotime($endAt . '+3 month')));
+        $startDate = date('Y-m-d', strtotime($startAt . '+3 month'));
+        $endDate = date('Y-m-d', strtotime($endAt . '+3 month'));
+
+        if (date('Y', strtotime($startDate)) == date('Y', strtotime("+1 year"))) {
+            $startDate = date('Y-12-31');
+            $endDate = $startDate;
+        }
+        $timeoffQuota = self::getTotalBalanceQuota($userId, $timeoffPolicyId, $startDate, $endDate);
+        // $timeoffQuota = self::getTotalBalanceQuota($userId, $timeoffPolicyId, date('Y-m-d', strtotime($startAt . '+3 month')), date('Y-m-d', strtotime($endAt . '+3 month')));
         if ($timeoffQuota >= $totalRequestDay) return true;
 
         return false;
@@ -269,7 +277,7 @@ class TimeoffService
                         'old_balance' => $oldBalance,
                         'new_balance' => $timeoffQuota->quota - $timeoffQuota->used_quota,
                     ]);
-                    // dd(array_merge($timeoff->timeoff_quota_histories ?? [], [$timeoffQuotaHistory->toArray()]));
+
                     $timeoff->timeoff_quota_histories = array_merge($timeoff->timeoff_quota_histories ?? [], [$timeoffQuotaHistory->toArray()]);
                     $timeoff->saveQuietly();
 
