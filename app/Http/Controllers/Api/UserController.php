@@ -697,7 +697,9 @@ class UserController extends BaseController
 
         if (!is_null($order)) {
             $name = $request->filter['name'] ?? null;
-            $users = User::select('id', 'name')->tenanted()->where('id', '!=', $user->id)
+            $users = User::select('id', 'name')
+                ->tenanted()->where('id', '!=', $user->id)
+                ->when($request->filter['company_id'] ?? null, fn($q) => $q->where('company_id', $request->filter['company_id']))
                 ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
 
             if ($name) {
