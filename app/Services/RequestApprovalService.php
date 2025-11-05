@@ -8,6 +8,7 @@ use App\Models\DatabaseNotification;
 use App\Models\OvertimeRequest;
 use App\Models\RequestApproval;
 use App\Models\RequestedBaseModel;
+use App\Models\TaskRequest;
 use App\Models\User;
 use App\Models\UserSupervisor;
 use Exception;
@@ -76,7 +77,10 @@ class RequestApprovalService
         $approvers = [];
 
         // for sunshine and OvertimeRequest id [7, 8, 9, 13] only
-        if (config('app.name') == "SUNSHINE" && $requestedbaseModel instanceof OvertimeRequest && in_array($requestedbaseModel->overtime_id, [7, 8, 9, 13])) {
+        if (
+            config('app.name') == "SUNSHINE" &&
+            (($requestedbaseModel instanceof OvertimeRequest && in_array($requestedbaseModel->overtime_id, [7, 8, 9, 13])) || $requestedbaseModel instanceof TaskRequest)
+        ) {
             return [
                 [
                     'user_id' => 119 // lisa id's
