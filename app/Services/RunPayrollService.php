@@ -202,7 +202,7 @@ class RunPayrollService
         return $basicAmount;
     }
 
-        /**
+    /**
      * create run payroll details
      *
      * @param  PayrollSetting   $payrollSetting
@@ -211,45 +211,47 @@ class RunPayrollService
      * @return JsonResponse
      */
 
-    public static function createDetailsMatt($payrollSetting, $runPayroll,array  $request): JsonResponse
+    public static function createDetailsMatt($payrollSetting, $runPayroll, array  $request): JsonResponse
     {
         $company = $payrollSetting->company;
-        $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key',CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
+        $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
 
         $userIds = isset($request['user_ids']) && !empty($request['user_ids'])
-            ?(is_array($request['user_ids']) ? $request['user_ids'] : explode(',', $request['user_ids']))
+            ? (is_array($request['user_ids']) ? $request['user_ids'] : explode(',', $request['user_ids']))
             : User::where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->pluck('id')->toArray();
 
-            if(empty($userIds)){
-                 return response()->json([
-            'success' => true,
-            'data' => null,
-        ]);
-            }
+        if (empty($userIds)) {
+            return response()->json([
+                'success' => true,
+                'data' => null,
+            ]);
+        }
 
-        $users = User::whereIn('id',$userIds)
+        $users = User::whereIn('id', $userIds)
             ->whereHas('payrollInfo')
             ->with([
                 'payrollInfo',
                 'userBpjs'
             ])->get()->keyBy('id');
 
-        if($users->isEmpty()){
+        if ($users->isEmpty()) {
             return response()->json(['success' => true, 'data' => null]);
         }
 
         $updatePayrollComponentDetailsGrouped = UpdatePayrollComponentDetail::with('updatePayrollComponent')
-        ->whereIn('user_id',$users->keys()->toArray())
-        ->whereHas('updatePayrollComponent', fn($q)=> $q->whereCompany($runPayroll->company_id)
-        ->whenBranch($runPayroll->branch_id)
-        ->whereActive($runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
-        )
-        ->orderByDesc('id')
-        ->get()
-        ->groupBy('user_id');
+            ->whereIn('user_id', $users->keys()->toArray())
+            ->whereHas(
+                'updatePayrollComponent',
+                fn($q) => $q->whereCompany($runPayroll->company_id)
+                    ->whenBranch($runPayroll->branch_id)
+                    ->whereActive($runPayroll->payroll_start_date, $runPayroll->payroll_end_date)
+            )
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('user_id');
 
         $basicSalaryComponent = PayrollComponent::tenanted()
             ->whereCompany($runPayroll->company_id)
@@ -276,9 +278,9 @@ class RunPayrollService
             ->first();
 
         $loanComponent = PayrollComponent::tenanted()
-            ->where('company_id',$runPayroll->company_id)
+            ->where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
-            ->where('category',PayrollComponentCategory::LOAN)
+            ->where('category', PayrollComponentCategory::LOAN)
             ->first();
 
         $insuranceComponent = PayrollComponent::tenanted()
@@ -301,122 +303,122 @@ class RunPayrollService
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
 
-        foreach($users->chunk(50) as $chunk){
-            foreach($chunk as $user){
+        foreach ($users->chunk(50) as $chunk) {
+            foreach ($chunk as $user) {
                 $cutOffStartDate = $runPayroll->cut_off_start_date;
                 $cutOffEndDate = $runPayroll->cut_off_end_date;
                 $startDate = $runPayroll->payroll_start_date;
                 $endDate = $runPayroll->payroll_end_date;
 
-                if(!$user->payrollInfo) continue;
+                if (!$user->payrollInfo) continue;
 
-                $resignDate= null;
+                $resignDate = null;
 
-                if($user->join_date){
+                if ($user->join_date) {
                     $joinDate = Carbon::parse($user->join_date);
-                    if($joinDate->greaterThan($endDate)){
-                        continue;
-                }
-            }
-                if($user->resign_date){
-                    $resignDate = Carbon::parse($user->resign_date);
-                    if($resignDate->lessThan($cutOffEndDate)){
+                    if ($joinDate->greaterThan($endDate)) {
                         continue;
                     }
                 }
-            $runPayrollUser = self::assignUser($runPayroll, $user->id);
+                if ($user->resign_date) {
+                    $resignDate = Carbon::parse($user->resign_date);
+                    if ($resignDate->lessThan($cutOffEndDate)) {
+                        continue;
+                    }
+                }
+                $runPayrollUser = self::assignUser($runPayroll, $user->id);
 
-            $userBasicSalary = $user->payrollInfo?->basic_salary;
-            $isTaxable= $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
+                $userBasicSalary = $user->payrollInfo?->basic_salary;
+                $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
 
-            $isFirstTimePayroll = self::isFirstTimePayroll($user);
-            $joinDate = Carbon::parse($user->join_date);
+                $isFirstTimePayroll = self::isFirstTimePayroll($user);
+                $joinDate = Carbon::parse($user->join_date);
 
-            if($isFirstTimePayroll && $joinDate->between($startDate, $endDate)){
-                $cutOffStartDate = $joinDate;
-                $cutOffEndDate = $endDate;
-                $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
-            }elseif($resignDate && $resignDate->between($startDate, $endDate)){
-                $cutOffStartDate = $startDate;
-                $cutOffEndDate = $resignDate;
-                $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
-                $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+                if ($isFirstTimePayroll && $joinDate->between($startDate, $endDate)) {
+                    $cutOffStartDate = $joinDate;
+                    $cutOffEndDate = $endDate;
+                    $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
+                } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
+                    $cutOffStartDate = $startDate;
+                    $cutOffEndDate = $resignDate;
+                    $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
+                    $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
 
-                $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
-            }else{
-                $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-            }
+                    $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
+                } else {
+                    $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+                }
 
-            $updatePayrollComponentDetails = $updatePayrollComponentDetailsGrouped->get($user->id) ?? collect();
+                $updatePayrollComponentDetails = $updatePayrollComponentDetailsGrouped->get($user->id) ?? collect();
 
-            if(!$basicSalaryComponent){
-                continue;
-            }
+                if (!$basicSalaryComponent) {
+                    continue;
+                }
 
-            $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
+                $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
 
-            if($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)){
-                $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
-            }
+                if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+                    $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
+                }
 
-            if($updatePayrollComponentDetail){
-                $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
-                $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
-                $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
-            }
+                if ($updatePayrollComponentDetail) {
+                    $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+                    $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+                    $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
+                }
 
-            $amount =self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
-            self::createComponent($runPayrollUser, $basicSalaryComponent, $amount);
+                $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
+                self::createComponent($runPayrollUser, $basicSalaryComponent, $amount);
 
-            if($reimbursementComponent){
-                $amount = app(\App\Http\Services\Reimbursement\ReimbursementService::class)
+                if ($reimbursementComponent) {
+                    $amount = app(\App\Http\Services\Reimbursement\ReimbursementService::class)
                         ->getTotalReimbursementTaken(userId: $user, startDate: $cutOffStartDate, endDate: $cutOffEndDate);
-                self::createComponent($runPayrollUser, $reimbursementComponent, $amount);
-            }
-
-            $payrollComponents->each(function($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate){
-                if($payrollComponent->amount == 0 && count($payrollComponent->formulas)){
-                    $amount = FormulaService::calculate(user:$user, model: $payrollComponent, formulas: $payrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
-                }else{
-                    $amount = $payrollComponent->amount;
+                    self::createComponent($runPayrollUser, $reimbursementComponent, $amount);
                 }
 
-                $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+                $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runPayrollUser, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
+                    if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
+                        $amount = FormulaService::calculate(user: $user, model: $payrollComponent, formulas: $payrollComponent->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
+                    } else {
+                        $amount = $payrollComponent->amount;
+                    }
 
-                if($updatePayrollComponentDetail){
-                    $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
-                }else{
-                    $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                    $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
+
+                    if ($updatePayrollComponentDetail) {
+                        $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
+                    } else {
+                        $amount = self::calculatePayrollComponentPeriodType($payrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                    }
+                    self::createComponent($runPayrollUser, $payrollComponent, $amount);
+                });
+
+                if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && $alpaComponent) {
+                    $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
+                    if ($alpaUpdateComponent) {
+                        $amount = $alpaUpdateComponent->new_amount;
+                    } else {
+                        $totalWorkingDaysForAlpa = ScheduleService::getTotalWorkingDaysInPeriod($user, $cutOffStartDate, $cutOffEndDate);
+                        $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
+                        $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q) => $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::REIMBURSEMENT, PayrollComponentCategory::OVERTIME]))->sum('amount');
+                        $amount = round(max(($totalAlpa / $totalWorkingDaysForAlpa) * ($userBasicSalary + $totalAllowance), 0));
+                    }
+
+                    $amount = self::calculatePayrollComponentPeriodType($alpaComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                    self::createComponent($runPayrollUser, $alpaComponent, $amount);
                 }
-                self::createComponent($runPayrollUser, $payrollComponent, $amount);
-            });
 
-            if($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && $alpaComponent){
-                $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id',$alpaComponent->id)->first();
-                if($alpaUpdateComponent){
-                    $amount = $alpaUpdateComponent->new_amount;
-                }else{
-                    $totalWorkingDaysForAlpa = ScheduleService::getTotalWorkingDaysInPeriod($user,$cutOffStartDate, $cutOffEndDate);
-                    $totalAlpa = AttendanceService::getTotalAlpa($user, $cutOffStartDate, $cutOffEndDate);
-                    $totalAllowance = $runPayrollUser->components()->whereHas('payrollComponent', fn($q)=> $q->where('type', PayrollComponentType::ALLOWANCE)->whereNotIn('category',[PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::REIMBURSEMENT, PayrollComponentCategory::OVERTIME]))->sum('amount');
-                    $amount = round(max(($totalAlpa/$totalWorkingDaysForAlpa) * ($userBasicSalary + $totalAllowance), 0));
+                if ($loanComponent) {
+                    $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
+                    $loans = Loan::where('user_id', $user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
+                    if ($loans->count()) {
+                        $loans->load(['details' => $whereHas]);
+                        $amount = $loans->sum(fn($loan) => $loan->details->sum('total'));
+                        self::createComponent($runPayrollUser, $loanComponent, $amount, ["loans" => $loans->toArray()]);
+                    }
                 }
 
-                $amount = self::calculatePayrollComponentPeriodType($alpaComponent, $amount, $totalWorkingDays, $runPayrollUser);
-                self::createComponent($runPayrollUser, $alpaComponent, $amount);
-            }
-
-            if ($loanComponent) {
-                $whereHas = fn($q)=>$q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
-                $loans = Loan::where('user_id',$user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
-                if($loans->count()){
-                    $loans->load(['details'=>$whereHas]);
-                    $amount = $loans->sum(fn($loan)=> $loan->details->sum('total'));
-                    self::createComponent($runPayrollUser, $loanComponent, $amount, ["loans"=>$loans->toArray()]);
-                }
-            }
-
-             if ($insuranceComponent) {
+                if ($insuranceComponent) {
                     $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
                     $insurances = Loan::where('user_id', $user->id)->whereInsurance()->whereHas('details', $whereHas)->get(['id']);
                     if ($insurances->count()) {
@@ -425,7 +427,7 @@ class RunPayrollService
                         self::createComponent($runPayrollUser, $insuranceComponent, $amount, ["insurances" => $insurances->toArray()]);
                     }
                 }
-            if ($company->countryTable?->id == 1 && $user->userBpjs) {
+                if ($company->countryTable?->id == 1 && $user->userBpjs) {
                     $isEligibleToCalculateBpjsKesehatan = false;
                     if (
                         !empty($user->userBpjs->bpjs_kesehatan_no)
@@ -560,13 +562,13 @@ class RunPayrollService
 
                 // refresh totals
                 self::refreshRunPayrollUser($runPayrollUser);
+            }
         }
-    }
-    return response()->json([
+        return response()->json([
             'success' => true,
             'data' => null,
         ]);
-}
+    }
     /**
      * create run payroll details
      *

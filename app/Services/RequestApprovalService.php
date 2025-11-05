@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\SettingKey;
 use App\Models\AttendanceDetail;
 use App\Models\DatabaseNotification;
+use App\Models\OvertimeRequest;
 use App\Models\RequestApproval;
 use App\Models\RequestedBaseModel;
 use App\Models\User;
@@ -73,6 +74,15 @@ class RequestApprovalService
         /** @var User $user this is user requester */
         $user = self::getUser($requestedbaseModel);
         $approvers = [];
+
+        // for sunshine and OvertimeRequest id [7, 8, 9, 13] only
+        if (config('app.name') == "SUNSHINE" && $requestedbaseModel instanceof OvertimeRequest && in_array($requestedbaseModel->overtime_id, [7, 8, 9, 13])) {
+            return [
+                [
+                    'user_id' => 119 // lisa id's
+                ]
+            ];
+        }
 
         // find user supervisors to be approvers. if default approver has been set, use it. else find from settings where key REQUEST_APPROVER
         $user->load(['supervisors' => fn($q) => $q->where('is_additional_supervisor', 0)->orderBy('order')]);
