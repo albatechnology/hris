@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\RunReprimand;
 use App\Models\User;
 use App\Enums\ReprimandType;
+use App\Models\Reprimand;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
@@ -108,11 +109,15 @@ class RunReprimandService
     {
         // preview-only: return calculation results without persisting
         $results = [];
-
+        $rulesetKey = "month_1_violation_1";
         $users = User::select('id', 'name', 'join_date')
             ->where('company_id', $runReprimand->company_id)
             ->get();
-
+        $reprimandCountByUser = Reprimand::
+             select('user_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('user_id')
+            ->pluck('total','user_id');
+        // dd($reprimandCountByUser);
         $dateRange = CarbonPeriod::create($runReprimand->start_date, $runReprimand->end_date);
 
         // preload attendances grouped by user
@@ -127,6 +132,8 @@ class RunReprimandService
             ->withWhereHas('shift', fn($q) => $q->withTrashed()->where('is_dayoff', 0)->selectMinimalist(['is_enable_grace_period', 'time_dispensation', 'clock_in', 'clock_out']))
             ->get()
             ->groupBy('user_id');
+
+        $lateService = new LateService();
 
         foreach ($users as $user) {
             $userAttendances = $attendances->get($user->id) ?? collect();
@@ -159,14 +166,29 @@ class RunReprimandService
                     'total' => $dayTotal,
                 ];
             }
+            $total = (int) $userTotal;
 
-            if ($userTotal > 10) {
-                $results[] = [
+            $rule = $lateService->findRuleForMinutes($total, $rulesetKey);
+            $type = data_get($rule, 'type');
+            $cut = data_get($rule, 'total_cut_leave');
+            // $message = $this->generateReprimandMessage($type);
+            $message = LateService::messageFor($type, $cut);
+
+            $row = [
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'total_minutes' => $userTotal,
+                'count'=>(int) ($reprimandCountByUser[$user->id] ?? 0),
                 'details' => $perDay,
-             ];
+            ];
+
+            if($message !== ''){
+                $row['reprimand_type'] = $type;
+                $row['preview_message'] = $message;
+            }
+
+            if ($userTotal > 10) {
+                $results[] = $row;
 
             }
         }
@@ -257,12 +279,17 @@ class RunReprimandService
     {
         $lateService = new LateService();
 
+
         return DB::transaction(function () use ($runReprimand, $lateService, $rulesetKey) {
             $results = [];
 
             // reuse preview to compute totals
             $preview = $this->allReprimand($runReprimand);
-
+            try {
+                $runReprimand->update(['status' => 'release']);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
             foreach ($preview as $row) {
                 $userId = $row['user_id'];
                 $total = (int) $row['total_minutes'];
@@ -295,6 +322,22 @@ class RunReprimandService
 
             return $results;
         });
+    }
+
+    public function generateReprimandMessage($type)
+    {
+        $lateService = new LateService();
+        switch($type){
+            case LateService::LATE_WARNING_LETTER:
+                return "Jangan telat lagi!";
+            case LateService::LATE_WARNING_LETTER_AND_CALL_TO_HR:
+                return "Yang bersangkutan diharap menghadap HRD!";
+            case LateService::CUT_LEAVE_AND_WARNING_LETTER:
+                return "Yang bersangkutan ga dapet libur dan mendapat surat teguran";
+            default:
+                return "";
+        }
+
     }
 
     // determineReprimandType removed: mapping handled by LateService rules

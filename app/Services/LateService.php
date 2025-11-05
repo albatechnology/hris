@@ -442,4 +442,37 @@ class LateService
 
         return null;
     }
+
+        public static function messages(): array
+    {
+        return [
+            self::TOLERANCE                           => 'Terlambat masih dalam toleransi. Tidak ada tindakan.',
+            self::NO_EXTRA_OFF                        => 'Tidak mendapat Extra Off.',
+            self::LATE_WARNING_LETTER                 => 'Jangan telat lagi! (Surat teguran).',
+            self::LATE_WARNING_LETTER_AND_CALL_TO_HR  => 'Yang bersangkutan wajib menghadap HRD!',
+            self::SP_1                                => 'Surat Peringatan 1 (SP1).',
+            self::SP_2                                => 'Surat Peringatan 2 (SP2).',
+            self::SP_3                                => 'Surat Peringatan 3 (SP3).',
+            self::CUT_LEAVE_AND_WARNING_LETTER        => 'Pemotongan cuti :cut hari dan surat teguran.',
+            self::CUT_LEAVE_AND_SP_1                  => 'Pemotongan cuti :cut hari dan SP1.',
+            self::CUT_LEAVE_AND_SP_2                  => 'Pemotongan cuti :cut hari dan SP2.',
+            self::CUT_LEAVE_AND_SP_3                  => 'Pemotongan cuti :cut hari dan SP3.',
+        ];
+    }
+
+        public static function messageFor(?string $type, ?float $cutLeave = null): string
+    {
+        if (!$type) return '';
+        $map = self::messages();
+        $msg = $map[$type] ?? '';
+        if ($msg === '') return '';
+        // render placeholder :cut jika ada informasi potong cuti
+        if (str_contains($msg, ':cut')) {
+            $cut = $cutLeave ?? 0;
+            // format 0.5 / 1 / 2.5 tanpa trailing zero berlebih
+            $cutStr = rtrim(rtrim(number_format($cut, 2, '.', ''), '0'), '.');
+            $msg = str_replace(':cut', $cutStr, $msg);
+        }
+        return $msg;
+    }
 }
