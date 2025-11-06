@@ -345,7 +345,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 
     public function overtimes(): BelongsToMany
     {
-        return $this->belongsToMany(Overtime::class, 'user_overtimes');
+        return $this->belongsToMany(Overtime::class, 'user_overtimes')->withPivot(['is_default']);
     }
 
     public function timeoffPolicies(): BelongsToMany

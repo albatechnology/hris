@@ -69,9 +69,18 @@ class OvertimeRequestController extends BaseController
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
-        $overtimeRequest = OvertimeRequest::where('user_id', $request->user_id)->where('date', $request->date)->approved()->exists();
-        if ($overtimeRequest) {
-            return $this->errorResponse(message: 'You already have an approved overtime request on ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+         if (OvertimeRequest::hasPendingOnDate($request->user_id, $request->date)) {
+            return $this->errorResponse(
+                message: 'You already have an pending overtime request on ' . $request->date,
+                code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
+        if (OvertimeRequest::hasApprovedOnDate($request->user_id, $request->date)) {
+            return $this->errorResponse(
+                message: 'You already have an approved overtime request on ' . $request->date,
+                code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);

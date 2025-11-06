@@ -44,11 +44,12 @@ class OvertimeService
         $durationInMinutes = self::roundingOvertimeMinutes($realDuration->minute);
 
         return $durationInHours + $durationInMinutes;
+        //output 4 + 0.75 = 4.75
     }
 
     public static function calculateOb(User $user, Collection $overtimeRequests): int|float
     {
-        $umk = $user->branch?->umk ?? 0;
+        $umk = $user->branch?->umk ?? 0; //Rp5.067.381, basicSal = 5.500.000
         $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
         $totalDurationInHours = 0;
         foreach ($overtimeRequests as $overtimeRequest) {

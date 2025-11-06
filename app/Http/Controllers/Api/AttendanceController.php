@@ -41,6 +41,8 @@ use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
+use App\Models\OvertimeRequest;
+use App\Services\OvertimeService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -729,6 +731,43 @@ class AttendanceController extends BaseController
                 $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
 
+            $end = Carbon::parse($attendanceDetail->time); //ambil dari tanggal dan jam request yang dikirim
+            $start = Carbon::parse($attendance->shift->clock_out); //otomatis ambil tanggal hari ini karena baru di create
+
+            $diff = $end->diffInMinutes($start);
+            $defaultOvertime = $user->overtimes()->wherePivot('is_default', true)->first();
+            $defaultFlag = (bool) ($defaultOvertime?->pivot?->is_default ?? false);
+
+            $diffMinutes = $end->diffInMinutes($start, false); // pakai false jika butuh signed
+            $hours = intdiv(abs($diffMinutes), 60);
+            $mins  = abs($diffMinutes) % 60;
+            $durationStr = sprintf('%02d:%02d:00', $hours, $mins);
+            $hoursDecimal = OvertimeService::calculateOvertimeDuration($durationStr);
+            //case 1
+            if ($attendanceDetail->is_clock_in == false && $defaultFlag == true) {
+                $dataDefaultOvertime = $defaultOvertime->toArray();
+                $overtimeMinute = $dataDefaultOvertime["min_auto_overtime_minute"];
+                if ($diff >= $overtimeMinute) {
+                    $dateOvertime = Carbon::parse($attendanceDetail->time)->toDateString();
+                    if(OvertimeRequest::hasPendingOnDate($user->id, $dateOvertime)){
+                        return $this->errorResponse(message: 'Silahkan buat ulang overtime request', code: 422);
+                    }
+
+                    OvertimeRequest::create([
+                        'overtime_id' => $dataDefaultOvertime["pivot"]["overtime_id"],
+                        'user_id' => $user->id,
+                        'schedule_id' => $request->schedule_id,
+                        'shift_id' => $request->shift_id,
+                        'is_after_shift' => true,
+                        'date' => $dateOvertime,
+                        'duration' => $durationStr,
+                        'real_duration' => $durationStr,
+                        'note' => 'AUTOMATED FROM SYSTEM'
+                    ]);
+                }
+            }
+
+
             // moved to AttendanceDetail booted created
             // AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
             DB::commit();
@@ -904,7 +943,7 @@ class AttendanceController extends BaseController
          * masalah nya ada disitu. kalo schedule_id atau shift_id nya beda, maka akan membuat attendance baru.
          *
          */
-
+        $user = auth('sanctum')->user();
         if ($request->user_id) {
             $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
         }
@@ -915,6 +954,9 @@ class AttendanceController extends BaseController
 
         // pemeriksaan kehadiran hri ini
         $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('sanctum')->user(), false);
+        //request overtime
+        $defaultOvertime = $user->overtimes()->wherePivot('is_default', true)->first();
+        $defaultFlag = (bool) ($defaultOvertime?->pivot?->is_default ?? false);
 
         DB::beginTransaction();
         try {
@@ -944,6 +986,31 @@ class AttendanceController extends BaseController
                     'lat' => $request->lat ?? null,
                     'lng' => $request->lng ?? null,
                 ]);
+
+                $end = Carbon::parse($request->clock_out_hour);
+                $start = Carbon::parse($attendance->shift->clock_out);
+                $diff = $end->diffInMinutes($start);
+                if ($defaultFlag) {
+                    $dataDefaultOvertime = $defaultOvertime->toArray();
+                    if ($diff >= $dataDefaultOvertime["min_auto_overtime_minute"]) {
+                        if(OvertimeRequest::hasPendingOnDate($user->id, $request->date)){
+                            return $this->errorResponse(message: 'Silahkan buat ulang overtime request', code: 422);
+                        }
+                        OvertimeRequest::create([
+                            'overtime_id' => $dataDefaultOvertime["pivot"]["overtime_id"],
+                            'user_id' => $user->id,
+                            'schedule_id' => $request->schedule_id,
+                            'shift_id' => $request->shift_id,
+                            'is_after_shift' => true,
+                            'date' => $request->date,
+                            'duration' => $request->clock_out_hour,
+                            'real_duration' => $request->clock_out_hour,
+                            'note' => 'AUTOMATED FROM SYSTEM'
+                        ]);
+                    }
+                    // dd($dataDefaultOvertime);
+                }
+                // dd("ga ada default overtime");
                 // AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
             DB::commit();
@@ -1184,7 +1251,6 @@ class AttendanceController extends BaseController
                     'errors' => $stats['errors'],
                 ],
             ], $hasErrors && $stats['created'] === 0 && $stats['updated'] === 0 ? 422 : 200);
-
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             // Handle Excel validation errors
             $failures = $e->failures();
@@ -1203,7 +1269,6 @@ class AttendanceController extends BaseController
                 'message' => 'Validasi data Excel gagal',
                 'errors' => $errors,
             ], 422);
-
         } catch (\Exception $e) {
             // Handle general errors
             return response()->json([

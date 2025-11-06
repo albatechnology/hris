@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\TenantedThroughUser;
@@ -108,4 +109,26 @@ class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
     // {
     //     return $this->belongsTo(User::class, 'approved_by');
     // }
+    public static function hasApprovedOnDate(int $userId, string $date) :bool
+    {
+        return self::where('user_id', $userId)
+            ->where('date',$date)
+            ->approved()
+            ->exists();
+    }
+
+    public static function hasPendingOnDate(int $userId, string $date): bool
+    {
+        return self::where('user_id', $userId)
+            ->where('date', $date)
+            ->whereApprovalStatus(ApprovalStatus::PENDING)
+            ->exists();
+    }
+
+    public static function hasAnyOnDate(int $userId, string $date):bool
+    {
+        return self::where('user_id', $userId)
+            ->where('date', $date)
+            ->exists();
+    }
 }
