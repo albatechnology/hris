@@ -535,10 +535,11 @@ class RunThrService
             $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth)/100);
             $taxThr =round($taxAfter - $tax);
             $thpThr = round($thrProrate - $taxThr);
-            $basicSalary = $thrProrate;
+            $basicSalaryPersisted = $thrProrate;
+            
 
         $runThrUser->update([
-            'basic_salary' => $basicSalary,
+            'basic_salary' => $basicSalaryPersisted,
             'gross_salary' => $grossSalary,
             'allowance' => $allowanceTaxable + $allowanceNonTaxable,
             'additional_earning' => $additionalEarning,

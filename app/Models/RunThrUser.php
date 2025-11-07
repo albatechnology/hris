@@ -45,11 +45,19 @@ class RunThrUser extends BaseModel
         'total_deduction',
         'total_month',
         'thr_prorate',
+        'base_salary_original',
         'total_beban_month',
         'total_tax_month',
         'tax_thr',
         'thp_thr',
     ];
+
+    public function getBaseSalaryOriginalAttribute(): int
+    {
+        return (int) $this->components()
+            ->whereHas('payrollComponent', fn($q) => $q->where('category', PayrollComponentCategory::BASIC_SALARY))
+            ->sum('amount');
+    }
 
     public function getTotalMonthAttribute(): int
     {
@@ -66,7 +74,8 @@ class RunThrUser extends BaseModel
         $fullMonths  = intdiv($diffDays, 30);
         $thrMultiplier = $fullMonths >= 12 ? 1 : (($fullMonths + 1) / 12);
 
-        return (int) round($thrMultiplier * $this->basic_salary);
+        // return (int) round($thrMultiplier * $this->basic_salary);
+        return $thrMultiplier * $this->base_salary_original;
     }
 
     public function getTotalBebanMonthAttribute(): int
@@ -98,7 +107,8 @@ class RunThrUser extends BaseModel
 
     public function getTotalEarningAttribute(): int
     {
-        return round($this->basic_salary + $this->allowance + $this->additional_earning);
+        // return round($this->basic_salary + $this->allowance + $this->additional_earning);
+        return round($this->base_salary_original + $this->allowance + $this->additional_earning);
     }
 
     public function getTotalDeductionAttribute(): int

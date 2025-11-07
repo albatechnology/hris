@@ -76,7 +76,8 @@
             @foreach ($group as $runThrUser)
                 @php
                     $totalThrProrate += $runThrUser->thr_prorate;
-                    $totalBasicSalary += $runThrUser->basic_salary;
+                    // $totalBasicSalary += $runThrUser->basic_salary;
+                     $totalBasicSalary += $runThrUser->base_salary_original;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
