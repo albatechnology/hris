@@ -34,8 +34,8 @@ enum ResignationReason: string
     case EMPLOYEE_IS_DETAINED_AND_FOUND_GUILTY_BUT_DOES_NOT_CAUSE_LOSS = "Employee is detained and found guilty but does not cause loss to the company";
     case EMPLOYEE_COMMITS_AN_URGENT_VIOLATION = "Employee commits an urgent violation as regulated in the employment agreement, company regulations, or other agreements";
 
-        // all
-    // case DID_NOT_PASS_PROBATION_PERIOD = "Did not pass the probation period";
+    // all
+    case DID_NOT_PASS_PROBATION_PERIOD = "Did not pass the probation period";
     case DID_NOT_PASS_CONTRACT_PERIOD = "Did not pass the contract period";
     case TERMINATED_BY_SUPERVISOR = "Terminated by supervisor";
     case COMPLETION_OF_FIXED_TERM_AGREEMENT = "Completion of a fixed-term employment agreement (PKWT)";
