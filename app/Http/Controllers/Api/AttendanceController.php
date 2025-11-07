@@ -545,15 +545,16 @@ class AttendanceController extends BaseController
         $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+        $companyId = isset($request['filter']['company_id']) && !empty($request['filter']['company_id']) ? $request['filter']['company_id'] : null;
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
-
         $date = $request->filter['date'];
 
         // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
@@ -563,6 +564,7 @@ class AttendanceController extends BaseController
             ->allowedFilters([
                 AllowedFilter::callback('has_attendance', fn($query, $value) => $query->when($value == 1, fn($q) => $q->whereHas('attendance', fn($q) => $q->whereDate('date', $date)))),
                 AllowedFilter::scope('schedule_type'),
+                AllowedFilter::exact('company_id'),
                 'nik',
                 'name',
             ])
