@@ -511,6 +511,32 @@ class RunThrService
             $tax = $grossSalary * ($taxPercentage / 100);
         }
 
+        //NEW THR Prorate disimpan ke dalam kolom baru di database
+        $benefitForTotalMonth = $runThrUser->components()
+            ->whereHas('payrollComponent', fn($q) => $q->whereIn('category', [
+                PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+                PayrollComponentCategory::COMPANY_JKK,
+                PayrollComponentCategory::COMPANY_JKM,
+            ]))
+            ->sum('amount');
+
+            $totalEarning = round($basicSalary + ($allowanceTaxable + $allowanceNonTaxable) + $additionalEarning);
+            $totalMonth = round($totalEarning + $benefitForTotalMonth);
+
+            //Hitung Prorate
+            $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
+            $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
+            $days = $joinDate->diffInDays($thrDate);
+            $months = intdiv($days,30);
+            $thrMultiplier = $months >= 12 ? 1 :(($months + 1)/12);
+            $thrProrate = round($thrMultiplier * $basicSalary);
+
+            $totalBebanMonth = round($totalMonth + $thrProrate);
+            $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth)/100);
+            $taxThr =round($taxAfter - $tax);
+            $thpThr = round($thrProrate - $taxThr);
+            $basicSalary = $thrProrate;
+
         $runThrUser->update([
             'basic_salary' => $basicSalary,
             'gross_salary' => $grossSalary,
