@@ -520,23 +520,23 @@ class RunThrService
             ]))
             ->sum('amount');
 
-            $totalEarning = round($basicSalary + ($allowanceTaxable + $allowanceNonTaxable) + $additionalEarning);
-            $totalMonth = round($totalEarning + $benefitForTotalMonth);
+        $totalEarning = round($basicSalary + ($allowanceTaxable + $allowanceNonTaxable) + $additionalEarning);
+        $totalMonth = round($totalEarning + $benefitForTotalMonth);
 
-            //Hitung Prorate
-            $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
-            $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
-            $days = $joinDate->diffInDays($thrDate);
-            $months = intdiv($days,30);
-            $thrMultiplier = $months >= 12 ? 1 :(($months + 1)/12);
-            $thrProrate = round($thrMultiplier * $basicSalary);
+        //Hitung Prorate
+        $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
+        $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
+        $days = $joinDate->diffInDays($thrDate);
+        $months = intdiv($days, 30);
+        $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
+        $thrProrate = round($thrMultiplier * $basicSalary);
 
-            $totalBebanMonth = round($totalMonth + $thrProrate);
-            $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth)/100);
-            $taxThr =round($taxAfter - $tax);
-            $thpThr = round($thrProrate - $taxThr);
-            $basicSalaryPersisted = $thrProrate;
-            
+        $totalBebanMonth = round($totalMonth + $thrProrate);
+        $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth) / 100);
+        $taxThr = round($taxAfter - $tax);
+        $thpThr = round($thrProrate - $taxThr);
+        $basicSalaryPersisted = $thrProrate;
+
 
         $runThrUser->update([
             'basic_salary' => $basicSalaryPersisted,
