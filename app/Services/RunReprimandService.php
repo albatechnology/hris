@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\RunReprimand;
 use App\Models\User;
 use App\Enums\ReprimandType;
+use App\Models\Reprimand;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
@@ -108,11 +109,23 @@ class RunReprimandService
     {
         // preview-only: return calculation results without persisting
         $results = [];
-
+        $rulesetKey = "month_1_violation_1";
         $users = User::select('id', 'name', 'join_date')
             ->where('company_id', $runReprimand->company_id)
             ->get();
+        $reprimandCountByUser = Reprimand::
+             select('user_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('user_id')
+            ->pluck('total','user_id');
 
+        // Hitung apakah user punya reprimand pada bulan sebelumnya (berdasarkan start_date run ini)
+        $prevMonthStart = Carbon::parse($runReprimand->start_date)->copy()->subMonthNoOverflow()->startOfMonth()->toDateString();
+        $prevMonthEnd = Carbon::parse($runReprimand->start_date)->copy()->subMonthNoOverflow()->endOfMonth()->toDateString();
+        $reprimandPrevMonthByUser = Reprimand::select('user_id', DB::raw('COUNT(*) as total'))
+            ->whereBetween('effective_date', [$prevMonthStart, $prevMonthEnd])
+            ->groupBy('user_id')
+            ->pluck('total', 'user_id');
+        
         $dateRange = CarbonPeriod::create($runReprimand->start_date, $runReprimand->end_date);
 
         // preload attendances grouped by user
@@ -128,7 +141,10 @@ class RunReprimandService
             ->get()
             ->groupBy('user_id');
 
+        $lateService = new LateService();
+
         foreach ($users as $user) {
+            
             $userAttendances = $attendances->get($user->id) ?? collect();
 
             $userTotal = 0;
@@ -159,14 +175,35 @@ class RunReprimandService
                     'total' => $dayTotal,
                 ];
             }
+            $total = (int) $userTotal;
 
-            if ($userTotal > 10) {
-                $results[] = [
+            $rule = $lateService->findRuleForMinutes($total, $rulesetKey);
+            $type = data_get($rule, 'type');
+            $cut = data_get($rule, 'total_cut_leave');
+            // $message = $this->generateReprimandMessage($type);
+            $message = LateService::messageFor($type, $cut);
+
+            $row = [
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'total_minutes' => $userTotal,
+                'count'=>(int) ($reprimandCountByUser[$user->id] ?? 0),
                 'details' => $perDay,
-             ];
+            ];
+
+            // Tambahkan indikator apakah user pernah telat (punya reprimand) di bulan sebelumnya
+            $hadPrevMonthReprimand = ((int) ($reprimandPrevMonthByUser[$user->id] ?? 0)) > 0;
+            $row['is_late_prev_month_ago'] = $hadPrevMonthReprimand; // true/false
+            // Jika butuh format string: 'ya' / 'tidak', gunakan baris di bawah ini
+            // $row['is_late_prev_month_ago_label'] = $hadPrevMonthReprimand ? 'ya' : 'tidak';
+
+            if($message !== ''){
+                $row['reprimand_type'] = $type;
+                $row['preview_message'] = $message;
+            }
+
+            if ($userTotal > 10) {
+                $results[] = $row;
 
             }
         }
@@ -257,12 +294,17 @@ class RunReprimandService
     {
         $lateService = new LateService();
 
+
         return DB::transaction(function () use ($runReprimand, $lateService, $rulesetKey) {
             $results = [];
 
             // reuse preview to compute totals
             $preview = $this->allReprimand($runReprimand);
-
+            try {
+                $runReprimand->update(['status' => 'release']);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
             foreach ($preview as $row) {
                 $userId = $row['user_id'];
                 $total = (int) $row['total_minutes'];
@@ -295,6 +337,22 @@ class RunReprimandService
 
             return $results;
         });
+    }
+
+    public function generateReprimandMessage($type)
+    {
+        $lateService = new LateService();
+        switch($type){
+            case LateService::LATE_WARNING_LETTER:
+                return "Jangan telat lagi!";
+            case LateService::LATE_WARNING_LETTER_AND_CALL_TO_HR:
+                return "Yang bersangkutan diharap menghadap HRD!";
+            case LateService::CUT_LEAVE_AND_WARNING_LETTER:
+                return "Yang bersangkutan ga dapet libur dan mendapat surat teguran";
+            default:
+                return "";
+        }
+
     }
 
     // determineReprimandType removed: mapping handled by LateService rules

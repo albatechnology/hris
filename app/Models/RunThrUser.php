@@ -67,12 +67,14 @@ class RunThrUser extends BaseModel
 
     public function getThrProrateAttribute(): int
     {
-        // prorate basic salary
         $joinDate = Carbon::parse($this->user->join_date)->startOfDay();
-        $totalWorkingMonths = $joinDate->diffInDays($this->runThr->thr_date);
-        $totalWorkingMonths = intdiv($totalWorkingMonths, 30);
-        $thrMultiplier = $totalWorkingMonths >= 12 ? 1 : (($totalWorkingMonths + 1) / 12);
+        $thrDate  = Carbon::parse($this->runThr->thr_date)->startOfDay();
 
+        $diffDays    = $joinDate->diffInDays($thrDate);
+        $fullMonths  = intdiv($diffDays, 30);
+        $thrMultiplier = $fullMonths >= 12 ? 1 : (($fullMonths + 1) / 12);
+
+        // return (int) round($thrMultiplier * $this->basic_salary);
         return $thrMultiplier * $this->base_salary_original;
     }
 
@@ -105,6 +107,7 @@ class RunThrUser extends BaseModel
 
     public function getTotalEarningAttribute(): int
     {
+        // return round($this->basic_salary + $this->allowance + $this->additional_earning);
         return round($this->base_salary_original + $this->allowance + $this->additional_earning);
     }
 

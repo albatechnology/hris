@@ -511,7 +511,7 @@ class RunThrService
             $tax = $grossSalary * ($taxPercentage / 100);
         }
 
-        //NEW THR Prorate masih bisa diesuaikan
+        //NEW THR Prorate disimpan ke dalam kolom baru di database
         $benefitForTotalMonth = $runThrUser->components()
             ->whereHas('payrollComponent', fn($q) => $q->whereIn('category', [
                 PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
