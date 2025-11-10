@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use function PHPUnit\Framework\returnSelf;
+
 class LateService
 {
     const TOLERANCE = 'tolerance';
@@ -422,6 +424,52 @@ class LateService
         ];
     }
 
+    public const MINUTES_TRESHOLD = 10;
+
+    public function resolveRulesetKey(int $stage, int $violation = 1): string
+    {
+        $rules = $this->rules();
+        $preferred = "month_{$stage}_violation";
+        if (isset($rules[$preferred])) return $preferred;
+
+        $fallback = "month_{$stage}_violation_1";
+        if (isset($rules[$fallback])) return $fallback;
+
+        return "month_1_violation_1";
+    }
+
+    public function maxStage(): int
+    {
+        $max = 1;
+        foreach (array_keys($this->rules()) as $key) {
+            if (preg_match('/^month_(\d+)_violation_\d+$/', $key, $m)) {
+                $max = max($max, (int)$m[1]);
+            }
+        }
+        return $max;
+    }
+
+    public function evaluatePenalty(int $totalMinutes, int $stage, int $violation = 1):array
+    {
+        $maxStage = $this->maxStage();
+        $stage = max(1, min($stage, $maxStage));
+
+        $rulesetKey = $this->resolveRulesetKey($stage,$violation);
+        $rule = $this->findRuleForMinutes($totalMinutes, $rulesetKey);
+
+        $type = $rule['type'] ?? null;
+        $cut = $rule['total_cut_leave'] ?? null;
+        $message = self::messageFor($type, $cut);
+
+        return [
+            'ruleset_key' => $rulesetKey,
+            'rule' => $rule,
+            'type' => $type,
+            'cut' => $cut,
+            'message' => $message
+        ];
+    }
+
     /**
      * Return the matching rule entry for given total minutes and ruleset key.
      *
@@ -443,7 +491,7 @@ class LateService
         return null;
     }
 
-        public static function messages(): array
+    public static function messages(): array
     {
         return [
             self::TOLERANCE                           => 'Terlambat masih dalam toleransi. Tidak ada tindakan.',
@@ -460,7 +508,7 @@ class LateService
         ];
     }
 
-        public static function messageFor(?string $type, ?float $cutLeave = null): string
+    public static function messageFor(?string $type, ?float $cutLeave = null): string
     {
         if (!$type) return '';
         $map = self::messages();
