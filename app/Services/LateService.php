@@ -10,9 +10,9 @@ class LateService
     const NO_EXTRA_OFF = 'no_extra_off';
     const LATE_WARNING_LETTER = 'late_warning_letter';
     const LATE_WARNING_LETTER_AND_CALL_TO_HR = 'late_warning_letter_and_call_to_HR';
-    const SP_1 = 'SP_1';
-    const SP_2 = 'SP_2';
-    const SP_3 = 'SP_3';
+    const SP_1 = 'SP 1';
+    const SP_2 = 'SP 2';
+    const SP_3 = 'SP 3';
     const CUT_LEAVE_AND_WARNING_LETTER = 'cut_leave_and_warning_letter';
     const CUT_LEAVE_AND_SP_1 = 'cut_leave_and_SP_1';
     const CUT_LEAVE_AND_SP_2 = 'cut_leave_and_SP_2';

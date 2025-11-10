@@ -148,7 +148,7 @@ class RunReprimandService
             foreach ($preview as $row) {
                 $userId = $row['user_id'];
                 $total = (int)$row['total_minutes'];
-                $type = $row['reprimand_type'] ?? ReprimandType::SP_1->value; // fallback aman
+                $type = $row['reprimand_type'] ?? '-'; // fallback aman
                 $notes = trim('Accumulated late minutes: ' . $total . ($row['total_cut_leave'] ? " | cut leave: {$row['total_cut_leave']}" : ''));
 
                 $existing = $runReprimand->reprimands()->where('user_id', $userId)->first();
