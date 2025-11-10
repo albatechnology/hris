@@ -268,7 +268,6 @@ class OvertimeService
                                 break;
                             default:
                                 //
-
                                 break;
                         }
                     }
@@ -308,6 +307,7 @@ class OvertimeService
                     return $amount;
             }
         }
+        return $amount;
     }
 
     public static function sumAmount(PayrollComponent|Overtime $model, Formula $formula, string|DateTime $startPeriod, string|DateTime $endPeriod, ?User $user = null): int|float
