@@ -86,6 +86,7 @@ class ExportTaskOvertimeRequest implements FromCollection, WithMapping, WithHead
             $user->company->name,
             $user->detail->employment_status?->value,
         ];
+        $datas = [];
 
         foreach ($this->taskHours as $taskHour) {
             $task = $tasks->where('id', $taskHour->task_id)->first();
