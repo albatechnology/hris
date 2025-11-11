@@ -90,18 +90,76 @@
                             <td style="height: 100px">{{ $userPatrolTask->description }}</td>
                             <td style="width: 130px;">{{ $userPatrolTask->datetime }}</td>
                             <td>
-                                <a href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat Lokasi</a>
+                                <a
+                                    href="https://www.google.com/maps/search/{{ $userPatrolTask->lat . ',' . $userPatrolTask->lng }}">Lihat
+                                    Lokasi</a>
                             </td>
-                            @foreach ($userPatrolTask->media as $media)
-                                <td>
-                                    {{-- @if($media->hasGeneratedConversion('thumb'))
-                                    <img src="{{ $media->getUrl('thumb') }}" alt="image"/>
+                            {{-- @php
+                                $useSigned = $useSigned ?? false;
+                            @endphp
+                            @if ($userPatrolTask->media && $userPatrolTask->media->count())
+                                @foreach ($userPatrolTask->media as $media)
+                                    @php
+                                        $hasXls = $media->hasGeneratedConversion('xls_thumb');
+                                        $hasThumb = $media->hasGeneratedConversion('thumb');
+                                        if ($useSigned) {
+                                            $imgUrl = $hasXls
+                                                ? $media->getTemporaryUrl(now()->addHours(12), 'xls_thumb')
+                                                : ($hasThumb
+                                                    ? $media->getTemporaryUrl(now()->addHours(12), 'thumb')
+                                                    : $media->getTemporaryUrl(now()->addHours(12)));
+                                        } else {
+                                            $imgUrl = $hasXls
+                                                ? $media->getUrl('xls_thumb')
+                                                : ($hasThumb
+                                                    ? $media->getUrl('thumb')
+                                                    : $media->getUrl());
+                                        }
+                                    @endphp
+
+                                @endif
+
+                                <td> --}}
+                            {{-- @if ($media->hasGeneratedConversion('thumb'))
+                                        <img src="{{ $media->getUrl('thumb') }}" alt="image" />
                                     @else
-                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
+                                        <a href="{{ $media->original_url }}">Lihat Gambar</a>
                                     @endif --}}
-                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
-                                </td>
-                            @endforeach
+                            {{-- <a href="{{ $media->original_url }}">Lihat Gambar</a> --}}
+                            {{-- </td>
+                            @endforeach --}}
+                            <td>
+                                @php
+                                    $useSigned = $useSigned ?? false;
+                                @endphp
+                                @if ($userPatrolTask->media && $userPatrolTask->media->count())
+                                    <div style="display:flex; flex-wrap:wrap; gap:4px; max-width:420px;">
+                                        @foreach ($userPatrolTask->media as $media)
+                                            @php
+                                                $hasXls = $media->hasGeneratedConversion('xls_thumb');
+                                                $hasThumb = $media->hasGeneratedConversion('thumb');
+                                                if ($useSigned) {
+                                                    $imgUrl = $hasXls
+                                                        ? $media->getTemporaryUrl(now()->addHours(12), 'xls_thumb')
+                                                        : ($hasThumb
+                                                            ? $media->getTemporaryUrl(now()->addHours(12), 'thumb')
+                                                            : $media->getTemporaryUrl(now()->addHours(12)));
+                                                } else {
+                                                    $imgUrl = $hasXls
+                                                        ? $media->getUrl('xls_thumb')
+                                                        : ($hasThumb
+                                                            ? $media->getUrl('thumb')
+                                                            : $media->getUrl());
+                                                }
+                                            @endphp
+                                            <img src="{{ $imgUrl }}" alt="img"
+                                                style="max-width:100px; max-height:100px; display:block;" />
+                                        @endforeach
+                                    </div>
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td>
                                 <h1 style="margin-bottom: 100px">'</h1>
                                 <h1 style="margin-bottom: 100px">&nbsp;</h1>

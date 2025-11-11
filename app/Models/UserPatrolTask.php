@@ -89,5 +89,12 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
             ->quality(100)
             ->nonOptimized()
             ->queued();
+
+        $this->addMediaConversion('xls_thumb')     // kecil untuk export HTML-XLS
+            ->format('jpg')
+            ->fit(\Spatie\Image\Enums\Fit::Max, 96, 96)
+            ->quality(30)
+            ->nonOptimized()
+            ->nonQueued();
     }
 }

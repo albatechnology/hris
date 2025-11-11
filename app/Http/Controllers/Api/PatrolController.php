@@ -22,6 +22,8 @@ use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserIndexRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
+use App\Services\PatrolExcelExportService;
+use Illuminate\Support\Facades\Log;
 
 class PatrolController extends BaseController
 {
@@ -391,6 +393,16 @@ class PatrolController extends BaseController
         $endDate = $request->filter['end_date'] ?? date('Y-m-d');
         $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
 
+        // $embedImages = $request->boolean('embed_images', false);
+        // $maxImagesPerTask = $request->integer('max_images',1);
+
+        // $exportService = new PatrolExcelExportService(
+        //     maxImagesPerTask: $maxImagesPerTask,
+        //     chunkSize: 500,
+        //     downloadTimeout:15,
+        //     maxImageSize:153600000
+        // );
+
         $patrol->load([
             'patrolLocations' => function ($q) {
                 $q->select('id', 'patrol_id', 'branch_location_id', 'description')
@@ -416,19 +428,127 @@ class PatrolController extends BaseController
             ),
         ]);
 
+        $useSigned = config('filesystems.disks.s3.visibility', 'private') !== 'public';
+
+        // $htmlContent = $exportService->generateExcelHtml($patrol, $startDate, $endDate);
+
         // $batch = $patrol->users[2]->user->patrolBatches[0]->userPatrolTasks[0];
         // dump($batch->media[0]->getUrl('thumb'));
         // dd($batch->toArray());
+        // $fileName = 'patrol_report_' . $patrol->id . '_' . date('Ymd') . '.xls';
+
+        // return response($htmlContent)
+        //     ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+        //     ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+        //     ->header('Cache-Control', 'max-age=0')
+        //     ->header('Pragma', 'public');
+
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel; charset=utf-8',
+            'Cache-Control' => 'max-age=0; no-cahce; no-store; must-revalidate',
+            'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            'X-Content-Type-Options' => 'nosniff',
+            'Expires' => '0',
+            'Pragma' => 'no-cache'
+        ];
+
+        return (new PatrolTaskExport($patrol, $startDate, $endDate,$useSigned))
+            ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
+    }
+
+    public function exportOriginal(UserIndexRequest $request, int $id)
+    {
+
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? date('Y-m-d');
+        $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
+
+        $patrol->load([
+            'patrolLocations' => function ($q) {
+                $q->select('id', 'patrol_id', 'branch_location_id', 'description')
+                    ->with([
+                        'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
+                    ]);
+            },
+            'users' => fn($q) => $q->with(
+                'user',
+                fn($q) => $q->select('id', 'name', 'nik')
+                    ->with('patrolBatches', function ($q) use ($id, $startDate, $endDate) {
+                        $q->where('patrol_id', $id)
+                            ->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
+                            ->with(
+                                'userPatrolTasks',
+                                fn($q) => $q->with([
+                                    'media',
+                                    'patrolTask' => fn($q) => $q->select('id', 'patrol_location_id', 'name')->with('patrolLocation', fn($q) => $q->select('id', 'branch_location_id')->with('branchLocation', fn($q) => $q->select('id', 'name'))),
+                                ])
+                            );
+                    })
+            ),
+        ]);
+
 
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel',
-            // 'Cache-Control' => 'max-age=0',
-            // 'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
-            // 'X-Content-Type-Options' => 'nosniff'
+            'Cache-Control' => 'max-age=0',
+            'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            'X-Content-Type-Options' => 'nosniff'
         ];
 
         return (new PatrolTaskExport($patrol, $startDate, $endDate))
             ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
+    }
+
+    public function exportOptimized(UserIndexRequest $request, int $id)
+    {
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? date('Y-m-d');
+        $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
+
+        // Load relasi WITH media untuk embed gambar
+        $patrol->load([
+            'patrolLocations' => function ($q) {
+                $q->select('id', 'patrol_id', 'branch_location_id', 'description')
+                    ->with([
+                        'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
+                    ]);
+            },
+            'users' => fn($q) => $q->with(
+                'user',
+                fn($q) => $q->select('id', 'name', 'nik')
+                    ->with('patrolBatches', function ($q) use ($id, $startDate, $endDate) {
+                        $q->where('patrol_id', $id)
+                            ->whereDate('datetime', '>=', $startDate)
+                            ->whereDate('datetime', '<=', $endDate)
+                            ->with(
+                                'userPatrolTasks',
+                                fn($q) => $q->with([
+                                    // Load media untuk embed ke Excel
+                                    'media',
+                                    'patrolTask' => fn($q) => $q->select('id', 'patrol_location_id', 'name')
+                                        ->with('patrolLocation', fn($q) => $q->select('id', 'branch_location_id')
+                                            ->with('branchLocation', fn($q) => $q->select('id', 'name'))),
+                                ])
+                            );
+                    })
+            ),
+        ]);
+
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Cache-Control' => 'max-age=0',
+            'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            'X-Content-Type-Options' => 'nosniff'
+        ];
+
+        // Set memory limit untuk handle image processing
+        ini_set('memory_limit', '512M');
+        set_time_limit(300); // 5 minutes
+
+        return (new PatrolTaskExport($patrol, $startDate, $endDate))
+            ->download('report-patroli-' . date('Y-m-d') . '.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
     }
 
     public function testExport()
