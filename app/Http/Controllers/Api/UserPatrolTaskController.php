@@ -170,13 +170,28 @@ class UserPatrolTaskController extends BaseController
         try {
             // $userPatrolTask->update($request->validated());
 
-            if ($request->hasFile('file')) {
-                foreach ($request->file('file') as $file) {
-                    if ($file->isValid()) {
-                        $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+            if (count($request->ids)) {
+                foreach ($request->ids as $id) {
+                    if ($request->hasFile('file')) {
+                        $userPatrolTask = UserPatrolTask::find($id);
+                        if ($userPatrolTask) {
+                            foreach ($request->file('file') as $file) {
+                                if ($file->isValid()) {
+                                    $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                                }
+                            }
+                        }
                     }
                 }
             }
+
+            // if ($request->hasFile('file')) {
+            //     foreach ($request->file('file') as $file) {
+            //         if ($file->isValid()) {
+            //             $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+            //         }
+            //     }
+            // }
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
