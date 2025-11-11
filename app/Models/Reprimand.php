@@ -23,6 +23,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     protected $fillable = [
         'user_id',
         'run_reprimand_id',
+        'month',
         'type',
         'effective_date',
         'end_date',
@@ -30,6 +31,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     ];
 
     protected $casts = [
+        'month' => ReprimandMonth::class,
         'type' => ReprimandType::class,
     ];
 

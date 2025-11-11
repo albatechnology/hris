@@ -7,7 +7,6 @@ use App\Http\Requests\Api\RunReprimand\StoreRequest;
 use App\Http\Requests\Api\RunReprimand\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RunReprimand;
-use App\Models\User;
 use App\Services\RunReprimandService;
 use Exception;
 use Illuminate\Http\Response;
@@ -15,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class RunReprimandController extends BaseController
+class RunReprimandControllerBackup extends BaseController
 {
     public function __construct(public RunReprimandService $runReprimandService)
     {
@@ -72,9 +71,11 @@ class RunReprimandController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $this->runReprimandService->store($request);
+        $res = $this->runReprimandService->store($request);
 
-        return $this->createdResponse();
+        return response()->json([
+            'run' => $res['run'],
+        ]);
     }
 
     public function update(int $id, UpdateRequest $request)
