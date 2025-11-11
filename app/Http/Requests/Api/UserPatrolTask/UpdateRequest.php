@@ -16,7 +16,7 @@ class UpdateRequest extends FormRequest
         return [
             // 'patrol_task_id' => 'required|exists:patrol_tasks,id',
             // 'description' => 'required|string',
-            'file' => 'required|array|min:3',
+            'file' => 'required|array|min:1',
             'file.*' => 'required|mimes:' . config('app.file_mimes_types'),
         ];
     }
