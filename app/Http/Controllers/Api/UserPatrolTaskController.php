@@ -170,8 +170,9 @@ class UserPatrolTaskController extends BaseController
         try {
             // $userPatrolTask->update($request->validated());
 
-            if (count($request->ids)) {
-                foreach ($request->ids as $id) {
+            if ($request->ids) {
+                $ids = explode(",", $request->ids);
+                foreach ($ids as $id) {
                     if ($request->hasFile('file')) {
                         $userPatrolTask = UserPatrolTask::find($id);
                         if ($userPatrolTask) {
