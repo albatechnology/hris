@@ -164,7 +164,7 @@ class UserPatrolTaskController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->where('id', $id)->firstOrFail();
+        $userPatrolTask = UserPatrolTask::findOrFail($id);
 
         DB::beginTransaction();
         try {
