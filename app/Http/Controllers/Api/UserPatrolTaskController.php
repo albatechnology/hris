@@ -12,6 +12,7 @@ use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -163,11 +164,22 @@ class UserPatrolTaskController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->firstWhere('id', $id);
+        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->where('id', $id)->firstOrFail();
 
+        DB::beginTransaction();
         try {
-            $userPatrolTask->update($request->validated());
+            // $userPatrolTask->update($request->validated());
+
+            if ($request->hasFile('file')) {
+                foreach ($request->file('file') as $file) {
+                    if ($file->isValid()) {
+                        $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                    }
+                }
+            }
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
