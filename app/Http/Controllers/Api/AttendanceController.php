@@ -719,7 +719,8 @@ class AttendanceController extends BaseController
                 $attendance = Attendance::create([
                     'user_id' => $user->id,
                     'date' => date('Y-m-d', strtotime($request->time)),
-                    'schedule_id' => $request->shift_id
+                    'schedule_id' => $request->schedule_id,
+                    'shift_id' => $request->shift_id
                 ]);
             }
 
