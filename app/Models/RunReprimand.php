@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\RunPayrollStatus;
+use App\Enums\RunReprimandStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
@@ -22,14 +22,14 @@ class RunReprimand extends Model implements TenantedInterface
 
     protected $casts = [
         'company_id' => 'integer',
-        'status' => RunPayrollStatus::class,
+        'status' => RunReprimandStatus::class,
     ];
 
     protected static function booted(): void
     {
         static::creating(function (self $model) {
             if (empty($model->status)) {
-                $model->status = RunPayrollStatus::REVIEW;
+                $model->status = RunReprimandStatus::REVIEW;
             }
         });
     }

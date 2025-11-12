@@ -3,6 +3,8 @@
 namespace App\Notifications\Reprimand;
 
 use App\Enums\NotificationType;
+use App\Mail\Reprimand\WarningLetterMail;
+use App\Mail\Reprimand\WarningLetterMailable;
 use App\Models\Reprimand;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,12 +19,11 @@ class ReprimandNotification extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private Reprimand $reprimand)
+    public function __construct(private NotificationType $notificationType, private Reprimand $reprimand, private ?string $mailClass = null)
     {
-        $this->message = $this->notificationType->is(NotificationType::REPRIMAND_WATCHER) ? sprintf($this->notificationType->getMessage(), $this->reprimand->user->name, $this->reprimand->type->value) : sprintf($this->notificationType->getMessage(), $this->reprimand->type->value);
+        $this->message = sprintf($this->notificationType->getMessage(), "COBACOBA");
 
-        $this->body = $this->notificationType->is(NotificationType::REPRIMAND_WATCHER) ?
-            $this->message : ($this->reprimand->notes ? $this->reprimand->notes : $this->message);
+        $this->body = "THIS iS BODU BRO";
     }
 
     /**
@@ -32,7 +33,11 @@ class ReprimandNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm'];
+        $via = ['database', 'fcm'];
+        if($this->mailClass){
+            $via[] = "mail";
+        }
+        return $via;
     }
 
     /**
@@ -49,6 +54,12 @@ class ReprimandNotification extends Notification implements ShouldQueue
             'user_id' => $notifiable->id,
             'model_id' => $this->reprimand->id
         ];
+    }
+
+    public function toMail(object $notifiable)
+    {
+        return (new WarningLetterMail($notifiable, $this->reprimand))->to($notifiable->email);
+        // return (new $this->mailClass($notifiable, $this->reprimand))->to($notifiable->email);
     }
 
     /**

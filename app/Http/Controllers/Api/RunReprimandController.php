@@ -65,6 +65,12 @@ class RunReprimandController extends BaseController
     public function show(int $id)
     {
         $runReprimand = RunReprimand::findTenanted($id);
+
+        // $data = ['runReprimand' => $runReprimand];
+
+        // $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.run-reprimand.warning-lette-one', $data)->setPaper('a4');
+        // return $pdf->download(sprintf("run-reprimand-%s-%s.pdf", $runReprimand->start_date, $runReprimand->end_date));
+
         return new DefaultResource($runReprimand->loadMissing([
             'company',
         ]));
@@ -77,28 +83,35 @@ class RunReprimandController extends BaseController
         return $this->createdResponse();
     }
 
-    public function update(int $id, UpdateRequest $request)
+    public function update(UpdateRequest $request, int $id)
     {
-        $runReprimand = RunReprimand::findTenanted($id);
+        $this->runReprimandService->update($id, $request->validated());
 
-        DB::beginTransaction();
-        try {
-            $runReprimand->update($request->validated());
-            $runReprimand->watchers()->sync($request->watcher_ids);
-
-            if ($request->hasFile('file') && $request->file('file')->isValid()) {
-                $mediaCollection = MediaCollection::RunREPRIMAND->value;
-                $runReprimand->clearMediaCollection($mediaCollection);
-                $runReprimand->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
-            }
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return (new DefaultResource($runReprimand))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
+
+    // public function update(int $id, UpdateRequest $request)
+    // {
+    //     $runReprimand = RunReprimand::findTenanted($id);
+
+    //     DB::beginTransaction();
+    //     try {
+    //         $runReprimand->update($request->validated());
+    //         $runReprimand->watchers()->sync($request->watcher_ids);
+
+    //         if ($request->hasFile('file') && $request->file('file')->isValid()) {
+    //             $mediaCollection = MediaCollection::RunREPRIMAND->value;
+    //             $runReprimand->clearMediaCollection($mediaCollection);
+    //             $runReprimand->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+    //         }
+    //         DB::commit();
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         return $this->errorResponse($e->getMessage());
+    //     }
+
+    //     return (new DefaultResource($runReprimand))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+    // }
 
     public function destroy(int $id)
     {

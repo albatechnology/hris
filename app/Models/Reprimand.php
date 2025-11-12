@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MediaCollection;
+use App\Enums\ReprimandMonthType;
 use App\Enums\ReprimandType;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
@@ -23,21 +24,24 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     protected $fillable = [
         'user_id',
         'run_reprimand_id',
-        'month',
+        'month_type',
         'type',
+        'total_late_minutes',
         'effective_date',
         'end_date',
         'notes',
+        'details',
     ];
 
     protected $casts = [
-        'month' => ReprimandMonth::class,
+        'month_type' => ReprimandMonthType::class,
         'type' => ReprimandType::class,
+        'details' => 'json',
     ];
 
     protected $appends = [
         'status',
-        'file'
+        // 'file'
     ];
 
     protected static function booted(): void
