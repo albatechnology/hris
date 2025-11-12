@@ -135,25 +135,21 @@
                                 @if ($userPatrolTask->media && $userPatrolTask->media->count())
                                     <div style="display:flex; flex-wrap:wrap; gap:4px; max-width:420px;">
                                         @foreach ($userPatrolTask->media as $media)
-                                            @php
-                                                $hasXls = $media->hasGeneratedConversion('xls_thumb');
-                                                $hasThumb = $media->hasGeneratedConversion('thumb');
-                                                if ($useSigned) {
-                                                    $imgUrl = $hasXls
-                                                        ? $media->getTemporaryUrl(now()->addHours(12), 'xls_thumb')
-                                                        : ($hasThumb
-                                                            ? $media->getTemporaryUrl(now()->addHours(12), 'thumb')
-                                                            : $media->getTemporaryUrl(now()->addHours(12)));
-                                                } else {
-                                                    $imgUrl = $hasXls
-                                                        ? $media->getUrl('xls_thumb')
-                                                        : ($hasThumb
-                                                            ? $media->getUrl('thumb')
-                                                            : $media->getUrl());
-                                                }
-                                            @endphp
-                                            <img src="{{ $imgUrl }}" alt="img"
-                                                style="max-width:100px; max-height:100px; display:block;" />
+                                            @if ($media->hasGeneratedConversion('thumb'))
+                                                @php
+                                                    $base64 = $userPatrolTask->getBase64Image('thumb');
+                                                @endphp
+                                                @if ($base64)
+                                                    <img src="{{ $base64 }}" alt="image"
+                                                        style="max-width: 80px; max-height: 80px;" />
+                                                @else
+                                                    <a href="{{ $media->getUrl('thumb') }}">Lihat Gambar</a>
+                                                @endif
+                                            @else
+                                                <a href="{{ $media->original_url }}">Lihat Gambar</a>
+                                            @endif
+                                            {{-- <img src="{{ $imgUrl }}" alt="img"
+                                                style="max-width:100px; max-height:100px; display:block;" /> --}}
                                         @endforeach
                                     </div>
                                 @else

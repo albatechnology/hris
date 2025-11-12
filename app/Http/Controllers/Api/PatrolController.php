@@ -453,7 +453,7 @@ class PatrolController extends BaseController
         ];
 
         return (new PatrolTaskExport($patrol, $startDate, $endDate,$useSigned))
-            ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
+            ->download('new-report-patroli.xlsx', \Maatwebsite\Excel\Excel::XLSX, $headers);
     }
 
     public function exportOriginal(UserIndexRequest $request, int $id)
