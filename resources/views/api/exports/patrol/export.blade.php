@@ -1,4 +1,14 @@
-<div>
+
+<html xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+  table, th, td { border: 1px solid black; border-collapse: collapse; }
+  th { background-color: #b4c7dc; }
+</style>
+</head>
+<body>
+  <div>
     <table>
         <tr>
             <th style="font-weight: bold; background: #b4c7dc;">Nama Patroli</th>
@@ -104,9 +114,13 @@
                                     <img src="{{ $url }}" alt="Gambar"
                                         style="max-width:80px; max-height:80px;"> --}}
                                     @if ($media->hasGeneratedConversion('thumb'))
-                                    <img src="{{ $media->getUrl('thumb') }}" alt="image"/>
+                                        {{-- <img src="{{ $media->getUrl('thumb') }}" alt="image"/> --}}
+                                        <v:shape id="img-tes" type="#_x0000_t75"
+                                            style='width:80pt;height:80pt'>
+                                            <v:imagedata src="{{ $media->getUrl('thumb') }}" o:title="" />
+                                        </v:shape>
                                     @else
-                                    <a href="{{ $media->original_url }}">Lihat Gambar</a>
+                                        <a href="{{ $media->original_url }}">Lihat Gambar</a>
                                     @endif
                                     {{-- <a href="{{ $media->original_url }}">Lihat Gambar</a> --}}
                                 </td>
@@ -160,3 +174,5 @@
         @endforeach
     @endforeach --}}
 </div>
+</body>
+</html>
