@@ -22,6 +22,8 @@ use App\Http\Requests\Api\Patrol\StoreRequest;
 use App\Http\Requests\Api\Patrol\UserIndexRequest;
 use App\Http\Requests\Api\Patrol\UserStoreRequest;
 use App\Http\Requests\Api\Patrol\UserUpdateRequest;
+use App\Services\PatrolExcelExportService;
+use Illuminate\Support\Facades\Log;
 
 class PatrolController extends BaseController
 {
@@ -385,7 +387,7 @@ class PatrolController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function export(UserIndexRequest $request, int $id)
+    public function export123(UserIndexRequest $request, int $id)
     {
         $startDate = $request->filter['start_date'] ?? date('Y-m-d');
         $endDate = $request->filter['end_date'] ?? date('Y-m-d');
@@ -416,19 +418,67 @@ class PatrolController extends BaseController
             ),
         ]);
 
-        // $batch = $patrol->users[2]->user->patrolBatches[0]->userPatrolTasks[0];
-        // dump($batch->media[0]->getUrl('thumb'));
-        // dd($batch->toArray());
+        $useSigned = config('filesystems.disks.s3.visibility', 'private') !== 'public';
 
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel',
-            // 'Cache-Control' => 'max-age=0',
-            // 'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
-            // 'X-Content-Type-Options' => 'nosniff'
+            'Cache-Control' => 'max-age=0',
+            'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            'X-Content-Type-Options' => 'nosniff',
         ];
 
-        return (new PatrolTaskExport($patrol, $startDate, $endDate))
+        return (new PatrolTaskExport($patrol, $startDate, $endDate, $useSigned))
             ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
+    }
+
+    public function export(UserIndexRequest $request, int $id)
+    {
+
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? date('Y-m-d');
+        $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
+        $useSigned = config('filesystems.disks.s3.visibility', 'private') !== 'public';
+        $patrol->load([
+            'patrolLocations' => function ($q) {
+                $q->select('id', 'patrol_id', 'branch_location_id', 'description')
+                    ->with([
+                        'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
+                    ]);
+            },
+            'users' => fn($q) => $q->with(
+                'user',
+                fn($q) => $q->select('id', 'name', 'nik')
+                    ->with('patrolBatches', function ($q) use ($id, $startDate, $endDate) {
+                        $q->where('patrol_id', $id)
+                            ->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
+                            ->with(
+                                'userPatrolTasks',
+                                fn($q) => $q->with([
+                                    'media',
+                                    'patrolTask' => fn($q) => $q->select('id', 'patrol_location_id', 'name')->with('patrolLocation', fn($q) => $q->select('id', 'branch_location_id')->with('branchLocation', fn($q) => $q->select('id', 'name'))),
+                                ])
+                            );
+                    })
+            ),
+        ]);
+
+
+        // $headers = [
+        //     'Content-Type' => 'application/vnd.ms-excel',
+        //     'Cache-Control' => 'max-age=0',
+        //     'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+        //     'X-Content-Type-Options' => 'nosniff'
+        // ];
+
+        // return (new PatrolTaskExport($patrol, $startDate, $endDate, $useSigned))
+        //     ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
+        $html = view('api.exports.patrol.export', compact('patrol', 'startDate', 'endDate', 'useSigned'))->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="report-patrol-' . now()->format('Ymd') . '.xls"')
+            ->header('Cache-Control', 'max-age=0');
     }
 
     public function testExport()
@@ -485,5 +535,105 @@ class PatrolController extends BaseController
 
         $users = $query->paginate($this->per_page);
         return DefaultResource::collection($users);
+    }
+
+    /**
+     * Export patrol report with external URL images (small file size).
+     * Flow: Load Data → Generate XLSX (15MB embedded) → Convert to External URLs (640KB) → Download
+     */
+    public function exportWithConversion(UserIndexRequest $request, int $id)
+    {
+        $startDate = $request->filter['start_date'] ?? date('Y-m-d');
+        $endDate = $request->filter['end_date'] ?? date('Y-m-d');
+
+        // Load patrol data with all relationships
+        $patrol = Patrol::selectMinimalist()->where('id', $id)->with([
+            'branch' => fn($q) => $q->select('id', 'name'),
+            'patrolLocations' => function ($q) {
+                $q->select('id', 'patrol_id', 'branch_location_id', 'description')
+                    ->with([
+                        'branchLocation' => fn($q) => $q->select('id', 'name', 'lat', 'lng', 'address'),
+                        'tasks' => fn($q) => $q->select('id', 'patrol_location_id', 'name', 'description')
+                    ]);
+            },
+            'users' => fn($q) => $q->with(
+                'user',
+                fn($q) => $q->select('id', 'name', 'nik')
+                    ->with('patrolBatches', function ($q) use ($id, $startDate, $endDate) {
+                        $q->where('patrol_id', $id)
+                            ->whereDate('datetime', '>=', $startDate)->whereDate('datetime', '<=', $endDate)
+                            ->with(
+                                'userPatrolTasks',
+                                fn($q) => $q->with([
+                                    'media',
+                                    'patrolTask' => fn($q) => $q->select('id', 'patrol_location_id', 'name')->with('patrolLocation', fn($q) => $q->select('id', 'branch_location_id')->with('branchLocation', fn($q) => $q->select('id', 'name'))),
+                                ])
+                            );
+                    })
+            ),
+        ])->firstOrFail();
+
+        $useSigned = false; // Set true if S3 bucket is private
+
+        Log::info("=== EXPORT WITH CONVERSION FLOW START ===");
+
+        // Step 1: Create export instance with embedded images
+        $export = new \App\Exports\PatrolTaskExport123($patrol, $startDate, $endDate, $useSigned);
+
+        // Step 2: Generate temp directory
+        $tempDir = storage_path('app/temp');
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $fileName = 'patrol_' . $id . '_' . time() . '.xlsx';
+        $tempPath = $tempDir . '/' . $fileName;
+
+        try {
+            // Step 3: Generate XLSX with EMBEDDED images (will be ~15MB)
+            Log::info("Step 1: Generating XLSX with embedded images...");
+            \Maatwebsite\Excel\Facades\Excel::store($export, 'temp/' . $fileName, 'local');
+            Log::info("Generated file size: " . round(filesize($tempPath) / 1024, 2) . " KB");
+
+            // Step 4: Convert embedded images to external URL references (reduce to ~640KB)
+            Log::info("Step 2: Converting embedded images to external URLs...");
+            $convertSuccess = $export->convertEmbeddedToExternal($tempPath);
+
+            if (!$convertSuccess) {
+                Log::warning("Conversion failed - downloading file with embedded images (large file)");
+            }
+
+            // Step 5: Cleanup temporary downloaded images
+            Log::info("Step 3: Cleaning up temporary images...");
+            $export->cleanupTempImages();
+
+            Log::info("=== EXPORT WITH CONVERSION FLOW COMPLETE ===");
+
+            // Step 6: Download and cleanup
+            $downloadName = 'report-patroli-' . date('Y-m-d') . '.xlsx';
+
+            $headers = [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ];
+
+            return response()->download($tempPath, $downloadName, $headers)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error("ExportWithConversion failed: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+
+            // Cleanup on error
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+            $export->cleanupTempImages();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Export failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
