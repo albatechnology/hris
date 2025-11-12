@@ -113,11 +113,11 @@
                                     @endphp
                                     <img src="{{ $url }}" alt="Gambar"
                                         style="max-width:80px; max-height:80px;"> --}}
-                                    @if ($media->hasGeneratedConversion('thumb'))
+                                    @if ($media)
                                         {{-- <img src="{{ $media->getUrl('thumb') }}" alt="image"/> --}}
                                         <v:shape id="img-tes" type="#_x0000_t75"
                                             style='width:80pt;height:80pt'>
-                                            <v:imagedata src="{{ $media->getUrl('thumb') }}" o:title="" />
+                                            <v:imagedata src="{{ $media->getUrl() }}" o:title="" />
                                         </v:shape>
                                     @else
                                         <a href="{{ $media->original_url }}">Lihat Gambar</a>
