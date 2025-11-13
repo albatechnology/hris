@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WarningLetterMail extends Mailable implements ShouldQueue
+class SP2Mail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -29,7 +29,7 @@ class WarningLetterMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reprimand!',
+            subject: 'Reprimand: SP 2',
         );
     }
 
@@ -38,7 +38,7 @@ class WarningLetterMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        return new Content(view: 'mails.reprimand.reprimand');
+        return new Content(view: 'mails.reprimand.sp-2');
     }
 
     /**

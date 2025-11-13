@@ -69,7 +69,8 @@ enum NotificationType: string
     public function getMessage(): string
     {
         return match ($this) {
-            self::REPRIMAND => 'You have received a reprimand %s', // You have received a reprimand SP1
+            // self::REPRIMAND => 'You have received a reprimand : %s', // You have received a reprimand SP1
+            self::REPRIMAND => '%s', // You have received a reprimand SP1
             self::REPRIMAND_WATCHER => '%s have received a reprimand %s', // Sianu have received a reprimand SP1
             self::REQUEST_ATTENDANCE => 'Requesting attendance (%s) for %s', // Monday, 01 Jan 2024
             self::ATTENDANCE_APPROVED => 'Your attendance (%s) request at %s on %s, has been %s.', // 09:00:00, Monday, 01 Jan 2024, approved/rejected

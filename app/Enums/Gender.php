@@ -8,4 +8,12 @@ enum Gender: string
 
     case MALE = 'male';
     case FEMALE = 'female';
+
+    public function getTitle(): string
+    {
+        return match ($this) {
+            self::MALE => "Mr. ",
+            default => "Ms. ",
+        };
+    }
 }

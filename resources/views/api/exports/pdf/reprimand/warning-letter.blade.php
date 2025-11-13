@@ -59,7 +59,7 @@
 <body>
     <div class="text-center">
         <div class="bold">WARNING LETTER</div>
-        <div>No: {{ $number ?? '[no]' }}/HR-WL1/IV/{{ now()->year }}</div>
+        <div>No: {{ $letter_number ?? "" }}</div>
     </div>
 
     <div class="mt-5">

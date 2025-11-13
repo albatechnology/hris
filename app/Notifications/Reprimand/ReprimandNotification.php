@@ -3,8 +3,7 @@
 namespace App\Notifications\Reprimand;
 
 use App\Enums\NotificationType;
-use App\Mail\Reprimand\WarningLetterMail;
-use App\Mail\Reprimand\WarningLetterMailable;
+use App\Mail\Reprimand\ReprimandMail;
 use App\Models\Reprimand;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,16 +13,13 @@ class ReprimandNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     private string $message;
-    private string $body;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(private NotificationType $notificationType, private Reprimand $reprimand, private ?string $mailClass = null)
+    public function __construct(private NotificationType $notificationType, private Reprimand $reprimand)
     {
-        $this->message = sprintf($this->notificationType->getMessage(), "COBACOBA");
-
-        $this->body = "THIS iS BODU BRO";
+        $this->message = sprintf($this->notificationType->getMessage(), $reprimand->type->getDescription());
     }
 
     /**
@@ -33,11 +29,7 @@ class ReprimandNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $via = ['database', 'fcm'];
-        if($this->mailClass){
-            $via[] = "mail";
-        }
-        return $via;
+        return ['database', 'fcm', 'mail'];
     }
 
     /**
@@ -58,7 +50,7 @@ class ReprimandNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable)
     {
-        return (new WarningLetterMail($notifiable, $this->reprimand))->to($notifiable->email);
+        return (new ReprimandMail($notifiable, $this->reprimand))->to($notifiable->email);
         // return (new $this->mailClass($notifiable, $this->reprimand))->to($notifiable->email);
     }
 
@@ -70,8 +62,8 @@ class ReprimandNotification extends Notification implements ShouldQueue
         return [
             'token' => $notifiable->fcm_token,
             'notification' => [
-                'title' => "Reprimand",
-                'body' => $this->body,
+                'title' => "You have received a reprimand",
+                'body' => $this->message,
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,

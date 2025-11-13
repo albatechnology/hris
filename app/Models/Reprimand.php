@@ -40,7 +40,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
     ];
 
     protected $appends = [
-        'status',
+        // 'status',
         // 'file'
     ];
 

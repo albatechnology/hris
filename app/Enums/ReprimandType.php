@@ -6,7 +6,7 @@ enum ReprimandType: string
 {
     use BaseEnum;
 
-   case TOLERANCE = 'tolerance';
+    case TOLERANCE = 'tolerance';
 
     case NO_EXTRA_OFF = 'no_extra_off';
     case LATE_WARNING_LETTER = 'late_warning_letter';
@@ -113,5 +113,41 @@ enum ReprimandType: string
             self::CUT_LEAVE_FOUR_HALF_DAY_AND_SP_3 => 'Potong cuti 4,5 hari + SP 3',
             self::CUT_LEAVE_FIVE_DAY_AND_SP_3 => 'Potong cuti 5 hari + SP 3',
         };
+    }
+
+    public function isSendWarningLetter(): bool
+    {
+        return !in_array($this, [self::TOLERANCE, self::NO_EXTRA_OFF]) && in_array($this, [
+            self::LATE_WARNING_LETTER,
+            self::LATE_WARNING_LETTER_AND_CALL_TO_HR,
+            self::CUT_LEAVE_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_ONE_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_ONE_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_TWO_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_TWO_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_THREE_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_THREE_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_FOUR_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_FOUR_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_FIVE_DAY_AND_WARNING_LETTER,
+        ]);
+    }
+
+    public function isSendSPLetter(): bool
+    {
+          return !in_array($this, [self::TOLERANCE, self::NO_EXTRA_OFF]) && !in_array($this, [
+            self::LATE_WARNING_LETTER,
+            self::LATE_WARNING_LETTER_AND_CALL_TO_HR,
+            self::CUT_LEAVE_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_ONE_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_ONE_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_TWO_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_TWO_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_THREE_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_THREE_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_FOUR_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_FOUR_HALF_DAY_AND_WARNING_LETTER,
+            self::CUT_LEAVE_FIVE_DAY_AND_WARNING_LETTER,
+        ]);
     }
 }
