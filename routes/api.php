@@ -247,6 +247,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('overtime-requests/approvals', [OvertimeRequestController::class, 'approvals']);
     Route::get('overtime-requests/approvals/count-total', [OvertimeRequestController::class, 'countTotalApprovals']);
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
+    Route::put('overtime-requests/bulk-approve', [OvertimeRequestController::class, 'bulkApprove']);
     Route::apiResource('overtime-requests', OvertimeRequestController::class)->except('update');
 
     Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);
@@ -328,6 +329,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);
     Route::apiResource('request-shifts', RequestShiftController::class);
 
+    Route::put('task-requests/bulk-approve', [TaskRequestController::class, 'bulkApprove']);
     Route::get('task-requests/report', [TaskRequestController::class, 'report']);
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);

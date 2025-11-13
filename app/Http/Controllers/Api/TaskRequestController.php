@@ -10,6 +10,7 @@ use App\Http\Requests\Api\TaskRequest\ApproveRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\TaskRequest;
 use App\Models\User;
+use App\Http\Requests\Api\BulkApproveRequest;
 use App\Services\AttendanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -20,6 +21,8 @@ use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
+use Exception;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TaskRequestController extends BaseController
 {
@@ -167,6 +170,46 @@ class TaskRequestController extends BaseController
 
         return $this->updatedResponse();
     }
+
+    public function approveValidate(int $id, ?int $approverId = null)
+    {
+        $taskRequest = TaskRequest::findOrFail($id);
+        $requestApproval = $taskRequest->approvals()->where('user_id', $approverId ?? auth()->id())->first();
+
+        if (!$requestApproval) {
+            throw new NotFoundHttpException('You are not registered as approved');
+        }
+
+        if (!$taskRequest->isDescendantApproved()) {
+            throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
+        }
+
+        if ($taskRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            throw new UnprocessableEntityHttpException('Status can not be changed');
+        }
+
+        return $requestApproval;
+    }
+
+    public function bulkApprove(BulkApproveRequest $request)
+    {
+        $approverId = auth('sanctum')->id();
+        $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId));
+
+        $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
+        DB::beginTransaction();
+        try {
+            $requestApprovals->each(fn($requestApproval) => $requestApproval->update($data));
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
+    }
+
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
