@@ -112,6 +112,7 @@ enum ReprimandType: string
             self::CUT_LEAVE_FOUR_DAY_AND_SP_3 => 'Potong cuti 4 hari + SP 3',
             self::CUT_LEAVE_FOUR_HALF_DAY_AND_SP_3 => 'Potong cuti 4,5 hari + SP 3',
             self::CUT_LEAVE_FIVE_DAY_AND_SP_3 => 'Potong cuti 5 hari + SP 3',
+            default => 'Toleransi',
         };
     }
 
@@ -135,7 +136,7 @@ enum ReprimandType: string
 
     public function isSendSPLetter(): bool
     {
-          return !in_array($this, [self::TOLERANCE, self::NO_EXTRA_OFF]) && !in_array($this, [
+        return !in_array($this, [self::TOLERANCE, self::NO_EXTRA_OFF]) && !in_array($this, [
             self::LATE_WARNING_LETTER,
             self::LATE_WARNING_LETTER_AND_CALL_TO_HR,
             self::CUT_LEAVE_HALF_DAY_AND_WARNING_LETTER,

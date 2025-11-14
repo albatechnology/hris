@@ -93,9 +93,7 @@ class RunReprimandService
                     'total' => $totalLatePerDay,
                 ];
             }
-
             // dd($totalLateMinutes);
-
             // abaikan jika tidak ada keterlambatan
             if ($totalLateMinutes == 0) {
                 continue;
@@ -157,7 +155,7 @@ class RunReprimandService
             if ($runReprimand->status->is(RunReprimandStatus::RELEASE)) {
                 $runReprimand->reprimands()
                     ->with('user', fn($q) => $q->select('id', 'name', 'type', 'fcm_token', 'gender'))
-                    ->select('id', 'run_reprimand_id', 'user_id', 'month_type', 'type', 'effective_date')
+                    ->select('id', 'run_reprimand_id', 'user_id', 'month_type', 'type', 'effective_date', 'details')
                     ->chunk(100, function ($reprimands) {
                         foreach ($reprimands as $reprimand) {
                             $this->generatePdf($reprimand);
@@ -214,7 +212,7 @@ class RunReprimandService
             $allPreviousMonths = $reprimand->month_type->getAllPreviousMonths();
 
             // Start the main query
-            $allReprimands = Reprimand::select('effective_date')
+            $allReprimandMonths = Reprimand::selectRaw('MONTHNAME(effective_date) as month')
                 ->where(function ($query) use ($allPreviousMonths, $month, $year) {
                     // We modify the $month and $year variables within the loop scope.
                     $currentMonth = (int)$month;
@@ -235,12 +233,37 @@ class RunReprimandService
                             $currentYear--;
                         }
                     }
-                })->orderBy('effective_date')->get(); // Execute the get() after the main where() is fully constructed
+                })->orderBy('effective_date')->pluck('month');
+            dump($allReprimandMonths);
 
-            $pdfViewPath = 'api.exports.pdf.reprimand.sp-latter';
-        }else {
+            $formattedMonths = '';
+            if ($reprimand->month_type->is(ReprimandMonthType::MONTH_3_VIOLATION_3)) {
+                if ($allReprimandMonths->count() === 1) {
+                    $formattedMonths = "in {$allReprimandMonths->first()}";
+                } else {
+                    $first = $allReprimandMonths->first();
+                    $last = $allReprimandMonths->last();
+                    $formattedMonths = "from {$first} through {$last}";
+                }
+            } else {
+                $months = $allReprimandMonths->unique()->values()->toArray();
+
+                if (count($months) > 1) {
+                    $last = array_pop($months);
+                    $formattedMonths = implode(', ', $months) . ', and ' . $last;
+                } else {
+                    $formattedMonths = $months[0] ?? '';
+                }
+            }
+
+            $pdfViewPath = 'api.exports.pdf.reprimand.sp-letter';
+        } else {
             return;
         }
+        $data['formatted_months'] = $formattedMonths;
+        dump($data);
+
+        // dd('SPLetter');
 
 
         // 1. Tentukan nama file yang unik
