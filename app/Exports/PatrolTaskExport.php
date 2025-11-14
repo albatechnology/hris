@@ -19,7 +19,7 @@ class PatrolTaskExport implements FromView
 {
     use Exportable;
 
-    public function __construct(private Patrol $patrol, private string $startDate, private string $endDate, public bool $useSigned = false) {}
+    public function __construct(private Patrol $patrol, private string $startDate, private string $endDate) {}
 
     /**
      * @return \Illuminate\Support\Collection
@@ -34,7 +34,6 @@ class PatrolTaskExport implements FromView
             'patrol' => $this->patrol,
             'startDate' => date('d-M-Y', strtotime($this->startDate)),
             'endDate' => date('d-M-Y', strtotime($this->endDate)),
-            'useSigned' => $this->useSigned
         ]);
     }
 
