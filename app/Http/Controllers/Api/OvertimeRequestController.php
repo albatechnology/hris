@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApprovalStatus;
+use App\Http\Requests\Api\BulkApproveRequest;
 use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
@@ -14,8 +15,10 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class OvertimeRequestController extends BaseController
@@ -69,9 +72,18 @@ class OvertimeRequestController extends BaseController
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
-        $overtimeRequest = OvertimeRequest::where('user_id', $request->user_id)->where('date', $request->date)->approved()->exists();
-        if ($overtimeRequest) {
-            return $this->errorResponse(message: 'You already have an approved overtime request on ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (OvertimeRequest::hasPendingOnDate($request->user_id, $request->date)) {
+            return $this->errorResponse(
+                message: 'You already have an pending overtime request on ' . $request->date,
+                code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
+        if (OvertimeRequest::hasApprovedOnDate($request->user_id, $request->date)) {
+            return $this->errorResponse(
+                message: 'You already have an approved overtime request on ' . $request->date,
+                code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
@@ -176,6 +188,45 @@ class OvertimeRequestController extends BaseController
             ->paginate($this->per_page);
 
         return OvertimeRequestResource::collection($data);
+    }
+
+    public function approveValidate(int $id, ?int $approverId = null)
+    {
+        $overtimeRequest = OvertimeRequest::findOrFail($id);
+        $requestApproval = $overtimeRequest->approvals()->where('user_id', $approverId ?? auth()->id())->first();
+
+        if (!$requestApproval) {
+            throw new NotFoundHttpException('You are not registered as approved');
+        }
+
+        if (!$overtimeRequest->isDescendantApproved()) {
+            throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
+        }
+
+        if ($overtimeRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+            throw new UnprocessableEntityHttpException('Status can not be changed');
+        }
+
+        return $requestApproval;
+    }
+
+    public function bulkApprove(BulkApproveRequest $request)
+    {
+        $approverId = auth('sanctum')->id();
+        $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId));
+
+        $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
+        DB::beginTransaction();
+        try {
+            $requestApprovals->each(fn($requestApproval) => $requestApproval->update($data));
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
     }
 
     public function report(ExportReportRequest $request)

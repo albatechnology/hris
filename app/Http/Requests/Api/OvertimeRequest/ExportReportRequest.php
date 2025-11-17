@@ -63,6 +63,7 @@ class ExportReportRequest extends FormRequest
                 //     });
                 // },
             ],
+            'filter.overtime_ids' => 'nullable'
         ];
     }
 }

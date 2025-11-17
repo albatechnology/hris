@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Interfaces\TenantedInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -89,5 +90,36 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
             ->quality(100)
             ->nonOptimized()
             ->queued();
+
+        $this->addMediaConversion('xls_thumb')     // kecil untuk export HTML-XLS
+            ->format('jpg')
+            ->fit(\Spatie\Image\Enums\Fit::Max, 96, 96)
+            ->quality(30)
+            ->nonOptimized()
+            ->nonQueued();
+    }
+
+    public function getBase64Image($conversion = 'thumb')
+    {
+        if (!$this->media->count()) {
+            return null;
+        }
+
+        $media = $this->media->first();
+        $url = $media->hasGeneratedConversion($conversion)
+            ? $media->getUrl($conversion)
+            : $media->getUrl();
+
+        try {
+            // Download ke memory (bukan ke file)
+            $imageData = file_get_contents($url);
+            $base64 = base64_encode($imageData);
+            $mimeType = finfo_buffer(finfo_open(), $imageData, FILEINFO_MIME_TYPE);
+
+            return "data:{$mimeType};base64,{$base64}";
+        } catch (\Exception $e) {
+            Log::warning("Failed to get base64 image: " . $e->getMessage());
+            return null;
+        }
     }
 }

@@ -41,6 +41,8 @@ use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
+use App\Models\OvertimeRequest;
+use App\Services\OvertimeService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -545,15 +547,16 @@ class AttendanceController extends BaseController
         $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+        $companyId = isset($request['filter']['company_id']) && !empty($request['filter']['company_id']) ? $request['filter']['company_id'] : null;
         $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->when(isset($isShowResignUsers), fn($q) => $q->showResignUsers($isShowResignUsers))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($companyId, fn($q) => $q->where('company_id', $companyId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->with([
                 'branch' => fn($q) => $q->select('id', 'name')
             ]);
-
         $date = $request->filter['date'];
 
         // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($date, $date)->whereCompanyHoliday()->get();
@@ -563,6 +566,7 @@ class AttendanceController extends BaseController
             ->allowedFilters([
                 AllowedFilter::callback('has_attendance', fn($query, $value) => $query->when($value == 1, fn($q) => $q->whereHas('attendance', fn($q) => $q->whereDate('date', $date)))),
                 AllowedFilter::scope('schedule_type'),
+                AllowedFilter::exact('company_id'),
                 'nik',
                 'name',
             ])
@@ -709,35 +713,144 @@ class AttendanceController extends BaseController
                 return $this->errorResponse(message: $e->getMessage());
             }
         }
-
-        DB::beginTransaction();
-        try {
+        $attendanceDetail = null;
+        DB::transaction(function () use ($request, $user, &$attendance, &$attendanceDetail) {
             if (!$attendance) {
                 $attendance = Attendance::create([
                     'user_id' => $user->id,
                     'date' => date('Y-m-d', strtotime($request->time)),
                     'schedule_id' => $request->schedule_id,
-                    'shift_id' => $request->shift_id,
+                    'shift_id' => $request->shift_id
                 ]);
             }
 
-            /** @var AttendanceDetail $attendanceDetail */
             $attendanceDetail = $attendance->details()->create($request->validated());
 
             if ($request->hasFile('file') && $request->file('file')->isValid()) {
                 $mediaCollection = MediaCollection::ATTENDANCE->value;
                 $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
+        });
 
-            // moved to AttendanceDetail booted created
-            // AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
-            DB::commit();
+        $overtimeMessage = null;
+        try {
+            $end = Carbon::parse($attendanceDetail->time);
+            $start = Carbon::parse($attendance->shift->clock_out);
+            $diff = $end->diffInMinutes($start);
+
+            $defaultOvertime = $user->overtimes()->wherePivot('is_default', true)->first();
+            $defaultFlag = (bool) ($defaultOvertime?->pivot?->is_default ?? false);
+
+            $diffMinutes = $end->diffInMinutes($start, false);
+            $hours = intdiv(abs($diffMinutes), 60);
+            $mins = abs($diffMinutes) % 60;
+            $durationStr = sprintf('%02d:%02d:00', $hours, $mins);
+
+            if ($attendanceDetail->is_clock_in == false && $defaultFlag == true) {
+                $dataDefaultOvertime = $defaultOvertime->toArray();
+                $overtimeMinute = $dataDefaultOvertime['min_auto_overtime_minute'] ?? 0;
+
+                if ($diff >= $overtimeMinute) {
+                    $dateOvertime = Carbon::parse($attendanceDetail->time)->toDateString();
+
+                    if (OvertimeRequest::hasPendingOnDate($user->id, $dateOvertime)) {
+                        // return $this->errorResponse(message: 'Silahkan buat ulang overtime request', code: 422);
+                        $overtimeMessage = "Attendance saved; you have pending overtime request!";
+                    } else {
+                        OvertimeRequest::create([
+                            'overtime_id'   => $dataDefaultOvertime['pivot']['overtime_id'],
+                            'user_id'       => $user->id,
+                            'schedule_id'   => $request->schedule_id,
+                            'shift_id'      => $request->shift_id,
+                            'is_after_shift' => true,
+                            'date'          => $dateOvertime,
+                            'duration'      => $durationStr,
+                            'real_duration' => $durationStr,
+                            'note'          => 'AUTOMATED FROM SYSTEM',
+                        ]);
+                        $overtimeMessage = "Attendance and overtime request saved!";
+                    }
+                } else {
+                    $overtimeMessage = "Attendance saved; overtime below minimum treshold";
+                }
+            } elseif ($attendanceDetail->is_clock_in == false) {
+                $overtimeMessage = "Attendance saved; no default overtime configured";
+            }
         } catch (Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
+            report($e);
+            $overtimeMessage = "Attendance saved; overtime request failed: " . $e->getMessage();
         }
+        $resource = new AttendanceResource($attendance);
+        if ($overtimeMessage) {
+            return $resource->additional(['message' => $overtimeMessage]);
+        }
+        return $resource;
 
-        return new AttendanceResource($attendance);
+        // DB::beginTransaction();
+        // try {
+        //     if (!$attendance) {
+        //         $attendance = Attendance::create([
+        //             'user_id' => $user->id,
+        //             'date' => date('Y-m-d', strtotime($request->time)),
+        //             'schedule_id' => $request->schedule_id,
+        //             'shift_id' => $request->shift_id,
+        //         ]);
+        //     }
+
+        //     /** @var AttendanceDetail $attendanceDetail */
+        //     $attendanceDetail = $attendance->details()->create($request->validated());
+
+        //     if ($request->hasFile('file') && $request->file('file')->isValid()) {
+        //         $mediaCollection = MediaCollection::ATTENDANCE->value;
+        //         $attendanceDetail->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
+        //     }
+
+        //     $end = Carbon::parse($attendanceDetail->time); //ambil dari tanggal dan jam request yang dikirim
+        //     $start = Carbon::parse($attendance->shift->clock_out); //otomatis ambil tanggal hari ini karena baru di create
+
+        //     $diff = $end->diffInMinutes($start);
+        //     $defaultOvertime = $user->overtimes()->wherePivot('is_default', true)->first();
+        //     $defaultFlag = (bool) ($defaultOvertime?->pivot?->is_default ?? false);
+
+        //     $diffMinutes = $end->diffInMinutes($start, false); // pakai false jika butuh signed
+        //     $hours = intdiv(abs($diffMinutes), 60);
+        //     $mins  = abs($diffMinutes) % 60;
+        //     $durationStr = sprintf('%02d:%02d:00', $hours, $mins);
+        //     $hoursDecimal = OvertimeService::calculateOvertimeDuration($durationStr);
+        //     //case 1
+        //     if ($attendanceDetail->is_clock_in == false && $defaultFlag == true) {
+        //         $dataDefaultOvertime = $defaultOvertime->toArray();
+        //         $overtimeMinute = $dataDefaultOvertime["min_auto_overtime_minute"];
+        //         if ($diff >= $overtimeMinute) {
+        //             $dateOvertime = Carbon::parse($attendanceDetail->time)->toDateString();
+        //             if(OvertimeRequest::hasPendingOnDate($user->id, $dateOvertime)){
+        //                 return $this->errorResponse(message: 'Silahkan buat ulang overtime request', code: 422);
+        //             }
+
+        //             OvertimeRequest::create([
+        //                 'overtime_id' => $dataDefaultOvertime["pivot"]["overtime_id"],
+        //                 'user_id' => $user->id,
+        //                 'schedule_id' => $request->schedule_id,
+        //                 'shift_id' => $request->shift_id,
+        //                 'is_after_shift' => true,
+        //                 'date' => $dateOvertime,
+        //                 'duration' => $durationStr,
+        //                 'real_duration' => $durationStr,
+        //                 'note' => 'AUTOMATED FROM SYSTEM'
+        //             ]);
+        //         }
+        //     }
+
+
+        //     // moved to AttendanceDetail booted created
+        //     // AttendanceRequested::dispatchIf($attendanceDetail->type->is(AttendanceType::MANUAL), $attendanceDetail);
+        //     DB::commit();
+        // } catch (Exception $e) {
+        //     DB::rollBack();
+        //     return $this->errorResponse($e->getMessage());
+        // }
+
+        // return new AttendanceResource($attendance);
     }
 
     // public function store(StoreRequest $request)
@@ -904,7 +1017,7 @@ class AttendanceController extends BaseController
          * masalah nya ada disitu. kalo schedule_id atau shift_id nya beda, maka akan membuat attendance baru.
          *
          */
-
+        $user = auth('sanctum')->user();
         if ($request->user_id) {
             $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
         }
@@ -915,7 +1028,11 @@ class AttendanceController extends BaseController
 
         // pemeriksaan kehadiran hri ini
         $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('sanctum')->user(), false);
+        //request overtime
+        $defaultOvertime = $user->overtimes()->wherePivot('is_default', true)->first();
+        $defaultFlag = (bool) ($defaultOvertime?->pivot?->is_default ?? false);
 
+        $attendanceDetailClockOut = null;
         DB::beginTransaction();
         try {
             // membuat data kehadiran baru jika tidak ada
@@ -936,7 +1053,7 @@ class AttendanceController extends BaseController
             }
 
             if ($request->is_clock_out) {
-                $attendance->details()->create([
+                $attendanceDetailClockOut = $attendance->details()->create([
                     'is_clock_in' => false,
                     'time' => $request->date . ' ' . $request->clock_out_hour,
                     'type' => $request->type,
@@ -944,7 +1061,6 @@ class AttendanceController extends BaseController
                     'lat' => $request->lat ?? null,
                     'lng' => $request->lng ?? null,
                 ]);
-                // AttendanceRequested::dispatchIf($attendanceDetailClockOut->type->is(AttendanceType::MANUAL), $attendanceDetailClockOut);
             }
             DB::commit();
         } catch (Exception $e) {
@@ -953,7 +1069,50 @@ class AttendanceController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return new AttendanceResource($attendance);
+        $overtimeMessage = null;
+        try {
+            if ($attendanceDetailClockOut) {
+
+                $end = Carbon::parse($request->clock_out_hour);
+                $start = Carbon::parse($attendance->shift->clock_out);
+                $diff = $end->diffInMinutes($start);
+
+                $diffMinutesSigned = $end->diffInMinutes($start, false);
+                $hours = intdiv(abs($diffMinutesSigned), 60);
+                $mins  = abs($diffMinutesSigned) % 60;
+                $durationStr = sprintf('%02d:%02d:00', $hours, $mins);
+                if ($defaultFlag) {
+                    $dataDefaultOvertime = $defaultOvertime->toArray();
+                    if ($diff >= $dataDefaultOvertime["min_auto_overtime_minute"]) {
+                        if (OvertimeRequest::hasPendingOnDate($user->id, $request->date)) {
+                            $overtimeMessage = "Attendance saved; you have pending overtime request.";
+                        } else {
+                            OvertimeRequest::create([
+                                'overtime_id' => $dataDefaultOvertime["pivot"]["overtime_id"],
+                                'user_id' => $user->id,
+                                'schedule_id' => $request->schedule_id,
+                                'shift_id' => $request->shift_id,
+                                'is_after_shift' => true,
+                                'date' => $request->date,
+                                'duration' => $durationStr,
+                                'real_duration' => $durationStr,
+                                'note' => 'AUTOMATED FROM SYSTEM'
+                            ]);
+                            $overtimeMessage = "Attendance and overtime request saved!";
+                        }
+                    } else {
+                        $overtimeMessage = "Attendance saved overtime below minimum treshold";
+                    }
+                } else {
+                    $overtimeMessage = "Attendance saved; no default overtime configured";
+                }
+            }
+        } catch (Exception $e) {
+            report($e);
+            $overtimeMessage = "Attendance saved; overtime request failed: " . $e->getMessage();
+        }
+        $resource = new AttendanceResource($attendance);
+        return $overtimeMessage ? $resource->additional(['message' => $overtimeMessage]) : $resource;
     }
 
 
@@ -1184,7 +1343,6 @@ class AttendanceController extends BaseController
                     'errors' => $stats['errors'],
                 ],
             ], $hasErrors && $stats['created'] === 0 && $stats['updated'] === 0 ? 422 : 200);
-
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             // Handle Excel validation errors
             $failures = $e->failures();
@@ -1203,7 +1361,6 @@ class AttendanceController extends BaseController
                 'message' => 'Validasi data Excel gagal',
                 'errors' => $errors,
             ], 422);
-
         } catch (\Exception $e) {
             // Handle general errors
             return response()->json([

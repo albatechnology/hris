@@ -66,7 +66,10 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
     {
         $branchId = $this->request->filter['branch_id'] ?? null;
         $userIds = $this->request->filter['user_ids'] ?? null;
-
+        $overtimeIdsRaw = $this->request->filter['overtime_ids'] ?? null;
+        $overtimeIds = $overtimeIdsRaw
+            ? array_values(array_filter(array_map(fn($v) => (int) trim($v), explode(',', $overtimeIdsRaw)), fn($v) => $v > 0))
+            : null;
         // $overtimeRequests = OvertimeRequest::whereDateBetween($this->startDate, $this->endDate)
         //     ->approved()
         //     ->whereHas('user', fn($q) => $q->whereIn('company_id', $this->companies->pluck('id')))
@@ -90,11 +93,28 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             ->whereIn('company_id', $this->companies->pluck('id'))
             ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereHas('overtimeRequests', fn($q) => $q->where($where))
+            // ->whereHas('overtimeRequests', fn($q) => $q->where($where))
+            ->whereHas('overtimeRequests', function ($q) use ($where, $overtimeIds) {
+                $q->where($where)
+                    ->when($overtimeIds, fn($qq) => $qq->whereIn('overtime_id', $overtimeIds));
+            })
+            // ->with([
+            //     'overtimeRequests' => fn($q) => $q->where($where)->with('overtime', fn($q) => $q->select('id', 'name', 'rate_type', 'rate_amount', 'compensation_rate_per_day')),
+            //     'detail' => fn($q) => $q->select('user_id', 'employment_status'),
+            //     'payrollInfo' => fn($q) => $q->select('user_id', 'basic_salary'),
+            // ])
             ->with([
-                'overtimeRequests' => fn($q) => $q->where($where)->with('overtime', fn($q) => $q->select('id', 'name', 'rate_type', 'rate_amount', 'compensation_rate_per_day')),
+                // Eager load overtimeRequests terfilter tanggal + overtime_ids
+                'overtimeRequests' => function ($q) use ($where, $overtimeIds) {
+                    $q->where($where)
+                        ->when($overtimeIds, fn($qq) => $qq->whereIn('overtime_id', $overtimeIds))
+                        ->with('overtime:id,name,rate_type,rate_amount,compensation_rate_per_day');
+                },
                 'detail' => fn($q) => $q->select('user_id', 'employment_status'),
                 'payrollInfo' => fn($q) => $q->select('user_id', 'basic_salary'),
+                // optional: kurangi N+1 di map()
+                'branch:id,name',
+                'company:id,name',
             ])
             ->get();
 
@@ -256,21 +276,22 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                         $basicSalary = $overtimeRequest->user->payrollInfo?->basic_salary ?? 0;
                         $overtimeAmountMultiply = $basicSalary / $overtime->rate_amount;
                         break;
-                    // case RateType::ALLOWANCES:
-                    //     $overtimeAmountMultiply = 0;
+                        // case RateType::ALLOWANCES:
+                        //     $overtimeAmountMultiply = 0;
 
-                    //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
-                    //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
-                    //     }
+                        //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
+                        //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
+                        //     }
 
-                    //     break;
-                    // case RateType::FORMULA:
-                    //     // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
+                        //     break;
+                        case RateType::FORMULA:
+                        // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
 
-
-                    //     $overtimeAmountMultiply = self::calculateFormula($user, $overtimeRequest, $overtime, $overtime->formulas, $startPeriod, $endPeriod);
-                    //     break;
+                        // dd($overtime->formulas);
+                        $overtimeAmountMultiply = OvertimeService::calculateFormula($user, $overtimeRequest, $overtime, $overtime->formulas, $this->startDate, $this->endDate);
+                        break;
                     default:
+                        // dd('dd dari feault lur');
                         $overtimeAmountMultiply = 0;
 
                         break;
@@ -293,6 +314,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                     $overtimeMultiplier += ($om['duration'] * $om['multiply']);
                 }
             }
+            // dump($overtimeRate, "tes");
 
             $datas[] = [
                 ...$dataHeader,

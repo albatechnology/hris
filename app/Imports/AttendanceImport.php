@@ -158,7 +158,7 @@ class AttendanceImport implements
         $schedule = ScheduleService::getTodaySchedule($user, $date, ['id'], ['id']);
         $scheduleId = $schedule?->id;
         $shiftId = $schedule?->shift?->id;
-        
+
 
         // ═══════════════════════════════════════════════════════════
         // STEP 4: Find or Create Attendance (idempotent per user+date)
@@ -173,7 +173,7 @@ class AttendanceImport implements
                 'date' => $date,
                 'schedule_id' => $scheduleId,
                 'shift_id' => $shiftId,
-                
+
             ]
         );
 
@@ -196,6 +196,16 @@ class AttendanceImport implements
         // STEP 5: Update or Create Attendance Details
         // ═══════════════════════════════════════════════════════════
 
+        $existingCheckIn = AttendanceDetail::where('attendance_id',$attendance->id)
+                ->where('is_clock_in',true)
+                ->first();
+        $checkInNote = $existingCheckIn?->note ?? 'Imported';
+
+        $existingCheckOut = AttendanceDetail::where('attendance_id',$attendance->id)
+                ->where('is_clock_in', false)
+                ->first();
+        $checkOutNote = $existingCheckOut?->note ?? 'Imported';
+
         // Handle Check In (is_clock_in = true)
         if (!empty($checkIn)) {
             AttendanceDetail::updateOrCreate(
@@ -208,7 +218,7 @@ class AttendanceImport implements
                     'is_clock_in' => true,
                     'time' => $date . ' ' . $checkIn,
                     'type' => AttendanceType::AUTOMATIC->value,
-                    'note' => 'Imported',
+                    'note' => $checkInNote,
                     'lat'=> $lat,
                     'lng'=> $lng,
                 ]
@@ -227,7 +237,7 @@ class AttendanceImport implements
                     'is_clock_in' => false,
                     'time' => $date . ' ' . $checkOut,
                     'type' => AttendanceType::AUTOMATIC->value,
-                    'note' => 'Imported',
+                    'note' => $checkOutNote,
                     'lat'=> $lat,
                     'lng'=> $lng,
                 ]

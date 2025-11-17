@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained();
             $table->foreignIdFor(RunReprimand::class)->nullable()->constrained()->cascadeOnDelete();
+            $table->string('month');
             $table->string('type');
             $table->date('effective_date');
             $table->date('end_date');
