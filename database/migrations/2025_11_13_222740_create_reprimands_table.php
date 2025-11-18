@@ -23,7 +23,7 @@ return new class extends Migration
             $table->date('effective_date');
             $table->date('end_date');
             $table->text('notes')->nullable();
-            $table->json('details');
+            $table->json('context');
             $table->timestamps();
 
             // created/updated/deleted info

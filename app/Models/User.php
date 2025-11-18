@@ -491,6 +491,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(RequestSchedule::class);
     }
 
+    public function reprimands(): HasMany
+    {
+        return $this->hasMany(Reprimand::class);
+    }
+
     public function userBpjs(): HasOne
     {
         return $this->hasOne(UserBpjs::class);
@@ -526,7 +531,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(UserSupervisor::class)->orderBy('order');
     }
 
-     public function additional_supervisors()
+    public function additional_supervisors()
     {
         return $this->hasMany(UserSupervisor::class)->where('is_additional_supervisor', true)->orderBy('order');
     }

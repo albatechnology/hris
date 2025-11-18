@@ -8,6 +8,7 @@ enum ReprimandType: string
 
     case TOLERANCE = 'tolerance';
 
+    // tipe yang reusable
     case NO_EXTRA_OFF = 'no_extra_off';
     case LATE_WARNING_LETTER = 'late_warning_letter';
     case LATE_WARNING_LETTER_AND_CALL_TO_HR = 'late_warning_letter_and_call_to_hr';
@@ -23,6 +24,7 @@ enum ReprimandType: string
     case CUT_LEAVE_FOUR_HALF_DAY_AND_WARNING_LETTER = 'cut_leave_four_half_day_and_warning_letter';
     case CUT_LEAVE_FIVE_DAY_AND_WARNING_LETTER = 'cut_leave_five_day_and_warning_letter';
 
+    // tipe selain diatas tidak bisa dibuat reusable, makanya bikin satu satu
     case SP_1 = 'sp_1';
     case SP_2 = 'sp_2';
     case SP_3 = 'sp_3';
@@ -65,10 +67,12 @@ enum ReprimandType: string
         return match ($this) {
             self::TOLERANCE => 'Toleransi',
 
+            // tipe yang reusable
             self::NO_EXTRA_OFF => 'Terlambat (tidak mendapat Extra Off)',
             self::LATE_WARNING_LETTER => 'Surat Teguran Keterlambatan',
             self::LATE_WARNING_LETTER_AND_CALL_TO_HR => 'Surat Teguran Keterlambatan dan Panggilan ke HR',
 
+            // tipe selain diatas tidak bisa dibuat reusable, makanya bikin satu satu
             self::CUT_LEAVE_HALF_DAY_AND_WARNING_LETTER => 'Potong cuti 0,5 hari + Surat Teguran',
             self::CUT_LEAVE_ONE_DAY_AND_WARNING_LETTER => 'Potong cuti 1 hari + Surat Teguran',
             self::CUT_LEAVE_ONE_HALF_DAY_AND_WARNING_LETTER => 'Potong cuti 1,5 hari + Surat Teguran',

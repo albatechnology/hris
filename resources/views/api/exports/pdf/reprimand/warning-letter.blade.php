@@ -46,10 +46,6 @@
             margin-bottom: 4px;
         }
 
-        .highlight {
-            /* background-color: #fff6a5; */
-        }
-
         .signature {
             margin-top: 60px;
         }
@@ -65,17 +61,17 @@
     <div class="mt-5">
         <p>
             To:<br>
-            <span class="highlight">{{ $user_name }}</span><br>
+            <span>{{ $user_name }}</span><br>
             @if ($position)
-                <span class="highlight">{{ $position }}</span><br>
+                <span>{{ $position }}</span><br>
             @endif
             @if ($department)
-                <span class="highlight">{{ $department }}</span><br>
+                <span>{{ $department }}</span><br>
             @endif
         </p>
     </div>
 
-    <p>Dear <span class="highlight">{{ $user_title . $user_name }}</span>,</p>
+    <p>Dear <span>{{ $user_title . $user_name }}</span>,</p>
 
     <p>
         Through this letter, we would like to formally address your repeated tardiness on the following dates:

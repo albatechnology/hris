@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\MediaCollection;
 use App\Enums\ReprimandMonthType;
 use App\Enums\ReprimandType;
 use App\Interfaces\TenantedInterface;
@@ -30,13 +29,13 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
         'effective_date',
         'end_date',
         'notes',
-        'details',
+        'context',
     ];
 
     protected $casts = [
         'month_type' => ReprimandMonthType::class,
         'type' => ReprimandType::class,
-        'details' => 'json',
+        'context' => 'array', // {"rules","attendances"}
     ];
 
     protected $appends = [
@@ -56,21 +55,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
-        if (!$user) {
-            /** @var User $user */
-            $user = auth('sanctum')->user();
-        }
-
-        if ($user->is_super_admin) return $query;
-
-        $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
-        $query->whereHas('user', fn($q) => $q->whereIn('company_id', $companyIds));
-
-        if ($user->is_admin) {
-            return $query;
-        }
-
-        return $query->where('user_id', $user->id);
+        return $query->whereHas('runReprimand', fn($q) => $q->tenanted());
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
@@ -94,7 +79,7 @@ class Reprimand extends BaseModel implements TenantedInterface, HasMedia
 
     public function getFileAttribute()
     {
-        $file = $this->getFirstMedia(MediaCollection::REPRIMAND->value);
+        $file = $this->getFirstMedia();
         if ($file) {
             $url = $file->getUrl();
             // $preview = $file->getUrl('preview');

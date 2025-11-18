@@ -56,6 +56,7 @@ class ReprimandMail extends Mailable implements ShouldQueue
                 'user_title' => $this->user->gender->getTitle(),
                 'position' => $position,
                 'department' => $department,
+                'download_url' => $this->reprimand->file  && isset($this->reprimand->file['url']) ?  $this->reprimand->file['url'] : null,
             ],
         );
     }

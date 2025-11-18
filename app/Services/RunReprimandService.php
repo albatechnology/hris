@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\File;
-use App\Enums\NotificationType;
 use App\Enums\ReprimandMonthType;
 use App\Enums\TimeoffRequestType;
 use App\Http\Requests\Api\RunReprimand\StoreRequest;
@@ -11,9 +10,11 @@ use App\Models\RunReprimand;
 use App\Models\User;
 use App\Enums\ReprimandType;
 use App\Enums\RunReprimandStatus;
+use App\Jobs\Reprimand\ProcessSingleReprimandJob;
 use App\Models\Reprimand;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -39,6 +40,7 @@ class RunReprimandService
         $users = User::tenanted()->select('id', 'name', 'join_date')
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->where('company_id', $request->company_id)
+            ->whereDoesntHave('reprimands', fn($q) => $q->whereYear('effective_date', date('Y', strtotime($request->start_date)))->whereMonth('effective_date', date('m', strtotime($request->start_date))))
             ->with(
                 'attendances',
                 fn($q) => $q->select('id', 'user_id', 'shift_id', 'date', 'timeoff_id')
@@ -107,7 +109,9 @@ class RunReprimandService
                 'total_late_minutes' => $totalLateMinutes,
                 'effective_date' => $runReprimand->start_date,
                 'end_date' => $runReprimand->end_date,
-                'details' => $perDay,
+                'context' => [
+                    'attendances' => $perDay,
+                ]
             ]);
 
             $this->setReprimandType($reprimand);
@@ -138,6 +142,13 @@ class RunReprimandService
         $reprimand->month_type = $prevReprimand?->month_type->next() ?? $reprimand->month_type;
         $reprimand->type = $reprimand->month_type->getReprimandType($reprimand->total_late_minutes);
 
+
+        $monthTypeRule = $reprimand->month_type->getRule($reprimand->type);
+        $reprimand->context = array_merge(
+            $reprimand->context ?? [],
+            ['rule' => $monthTypeRule]
+        );
+
         return $reprimand;
     }
 
@@ -152,30 +163,71 @@ class RunReprimandService
         DB::transaction(function () use ($runReprimand, $data) {
             $runReprimand->update($data);
 
+
             if ($runReprimand->status->is(RunReprimandStatus::RELEASE)) {
-                $runReprimand->reprimands()
-                    ->with('user', fn($q) => $q->select('id', 'name', 'type', 'fcm_token', 'gender'))
-                    ->select('id', 'run_reprimand_id', 'user_id', 'month_type', 'type', 'effective_date', 'details')
-                    ->chunk(100, function ($reprimands) {
-                        foreach ($reprimands as $reprimand) {
-                            $this->generatePdf($reprimand);
+                // only pluck IDs to save memory
+                $reprimandIds = $runReprimand->reprimands()->select('id')->pluck('id');
 
-                            // belum berani di running karena masih belum jelas untuk pemotongan cuti nya
-                            // if (isset($rule['total_cut_leave']) && $rule['total_cut_leave'] > 0) {
-                            //     $this->cutLeave($reprimand, $rule);
-                            // }
+                $batchSize = 100; // number of jobs in one batch dispatch - tune as needed
 
-                            $notificationType = NotificationType::REPRIMAND;
-                            $reprimand->user->notify(new ($notificationType->getNotificationClass())($notificationType, $reprimand));
-                        }
-                    });
+                $jobs = [];
+                foreach ($reprimandIds as $rid) {
+                    $jobs[] = new ProcessSingleReprimandJob($rid);
+
+
+                    // Dispatch batches in groups to avoid creating extremely large batch objects
+                    if (count($jobs) >= $batchSize) {
+                        Bus::batch($jobs)
+                            ->name("Process Reprimands: run_reprimand_{$runReprimand->id}")
+                            ->allowFailures()
+                            ->dispatch();
+
+
+                        $jobs = [];
+                    }
+                }
+
+                // dispatch remaining
+                if (!empty($jobs)) {
+                    Bus::batch($jobs)
+                        ->name("Process Reprimands: run_reprimand_{$runReprimand->id}_part2")
+                        ->allowFailures()
+                        ->dispatch();
+                }
             }
         });
+
+        // DB::transaction(function () use ($runReprimand, $data) {
+        //     $runReprimand->update($data);
+
+        //     if ($runReprimand->status->is(RunReprimandStatus::RELEASE)) {
+        //         $runReprimand->reprimands()
+        //             ->with([
+        //                 'user' => fn($q) => $q->select('id', 'name', 'type', 'fcm_token', 'gender'),
+        //                 'runReprimand' => fn($q) => $q->select('id', 'company_id'),
+        //             ])
+        //             ->select('id', 'run_reprimand_id', 'user_id', 'month_type', 'type', 'effective_date', 'context')
+        //             ->chunk(100, function ($reprimands) {
+        //                 foreach ($reprimands as $reprimand) {
+        //                     $this->generatePdf($reprimand);
+
+        //                     $monthTypeRule = $reprimand->month_type->getRule($reprimand->type);
+        //                     if (isset($monthTypeRule['total_cut_leave']) && $monthTypeRule['total_cut_leave'] > 0) {
+        //                         $this->cutLeave($reprimand, $monthTypeRule);
+        //                     }
+
+        //                     $notificationType = NotificationType::REPRIMAND;
+        //                     $reprimand->user->notify(new ($notificationType->getNotificationClass())($notificationType, $reprimand));
+        //                 }
+        //             });
+        //     }
+        // });
     }
 
-    private function generatePdf(Reprimand $reprimand)
+    // make public because this function called by ProcessSingleReprimandJob
+    public function generatePdf(Reprimand $reprimand)
     {
-        $monthTypeRule = $reprimand->month_type->getRule($reprimand->type);
+        $monthTypeRule = $reprimand->context['rule'];
 
         $user = $reprimand->user->load(['positions' => fn($q) => $q->with([
             'department' => fn($q) => $q->select('id', 'name'),
@@ -190,13 +242,15 @@ class RunReprimandService
         }
 
         $data = [
+            'reprimand' => $reprimand,
             'number' => rand(100, 999),
             'user_name' => $user->name,
             'user_title' => $user->gender->getTitle(),
             'position' => $position,
             'department' => $department,
+            'letter_title' => $monthTypeRule['letter_title'],
+            'letter_subject' => $monthTypeRule['letter_subject'],
             'letter_number' => $monthTypeRule['letter_number'],
-            'mail_body' => $monthTypeRule['mail_body'],
         ];
 
         $month = date('m', strtotime($reprimand->effective_date));
@@ -204,14 +258,14 @@ class RunReprimandService
 
         // pelanggaran bulan pertama tidak ribet datanya, makanya pake ini aja
         if ($reprimand->type->isSendWarningLetter()) {
-            $dates = collect($reprimand->details)->map(fn($value, $date) => date("F jS, Y", strtotime($date)));
+            $dates = collect($reprimand->context['attendances'])->map(fn($value, $date) => date("F jS, Y", strtotime($date)));
 
             $data['dates'] = $dates;
             $pdfViewPath = 'api.exports.pdf.reprimand.warning-letter';
         } elseif ($reprimand->type->isSendSPLetter()) {
             $allPreviousMonths = $reprimand->month_type->getAllPreviousMonths();
 
-            // Start the main query
+            // get nama bulan reprimand sebelumnya, masih dalam bentuk collections
             $allReprimandMonths = Reprimand::selectRaw('MONTHNAME(effective_date) as month')
                 ->where(function ($query) use ($allPreviousMonths, $month, $year) {
                     // We modify the $month and $year variables within the loop scope.
@@ -234,8 +288,11 @@ class RunReprimandService
                         }
                     }
                 })->orderBy('effective_date')->pluck('month');
-            dump($allReprimandMonths);
 
+            // format nama bulan menjadi
+            // SP1: January, February, and March
+            // SP2: January, February, March, and April
+            // SP2: January through Mei
             $formattedMonths = '';
             if ($reprimand->month_type->is(ReprimandMonthType::MONTH_3_VIOLATION_3)) {
                 if ($allReprimandMonths->count() === 1) {
@@ -249,22 +306,22 @@ class RunReprimandService
                 $months = $allReprimandMonths->unique()->values()->toArray();
 
                 if (count($months) > 1) {
-                    $last = array_pop($months);
-                    $formattedMonths = implode(', ', $months) . ', and ' . $last;
+                    if ($reprimand->month_type->is(ReprimandMonthType::MONTH_3_VIOLATION_3)) {
+                        $formattedMonths = $months[0] . ' through ' . end($months);
+                    } else {
+                        $last = array_pop($months);
+                        $formattedMonths = implode(', ', $months) . ', and ' . $last;
+                    }
                 } else {
                     $formattedMonths = $months[0] ?? '';
                 }
             }
-
+            $data['formatted_months'] = $formattedMonths;
             $pdfViewPath = 'api.exports.pdf.reprimand.sp-letter';
         } else {
+            // reprimand yang tidak perlu generate pdf langsung return aja
             return;
         }
-        $data['formatted_months'] = $formattedMonths;
-        dump($data);
-
-        // dd('SPLetter');
-
 
         // 1. Tentukan nama file yang unik
         $fileName = sprintf(
@@ -301,25 +358,30 @@ class RunReprimandService
         }
     }
 
-    private function cutLeave(Reprimand $reprimand, array $rule): void
+    // make public because this function called by ProcessSingleReprimandJob
+    public function cutLeave(Reprimand $reprimand, array $rule): void
     {
-        $timeoffPolicyId = 1;
+        // timeoff policy AL sunshine 1, sun malay 14
+        $timeoffPolicyId = $reprimand->runReprimand->company_id == 1 ? 1 : 14;
         $startDate = date('Y-01-01');
         $endDate = date('Y-12-31');
 
         $timeoffQuotas = $reprimand->user->timeoffQuotas()
-            ->with('timeoffQuotaHistories')
             ->where('timeoff_policy_id', $timeoffPolicyId)
             ->whereActiveNew($startDate, $endDate)
-            ->orderByDesc('effective_start_date')
             ->get();
 
+        // dump($timeoffQuotas->toArray());
+
         $remainingTotalCutOff = $rule['total_cut_leave'];
+        // dump($remainingTotalCutOff);
         if ($timeoffQuotas->count()) {
             foreach ($timeoffQuotas as $timeoffQuota) {
-
+                // dump($timeoffQuota->toArray());
 
                 $oldBalance = $timeoffQuota->balance;
+                // dump($oldBalance);
+
                 // Check if the quota is exceeded
                 if ($remainingTotalCutOff > $oldBalance) {
                     $timeoffQuota->used_quota += $oldBalance;
@@ -329,6 +391,9 @@ class RunReprimandService
                     $timeoffQuota->used_quota += $remainingTotalCutOff;
                     $remainingTotalCutOff = 0;
                 }
+                // dump($oldBalance);
+                // dump($remainingTotalCutOff);
+                // dump($timeoffQuota->toArray());
 
                 $timeoffQuota->save();
 
@@ -337,18 +402,44 @@ class RunReprimandService
                     'is_increment' => false,
                     'old_balance' => $oldBalance,
                     'new_balance' => $timeoffQuota->quota - $timeoffQuota->used_quota,
-                    'description' => "CUT LEAVE FROM REPRIMAND"
+                    'description' => "CUT LEAVE FROM REPRIMAND " . date('F', strtotime($reprimand->effective_date)) . ' ' . date('Y', strtotime($reprimand->effective_date))
                 ]);
 
                 if ($remainingTotalCutOff == 0) {
                     return;
                 }
+
+                // dump($oldBalance);
             }
         }
 
         // hapus absensi di hari melanggar
+        $remainingTotalCutOff = ceil($remainingTotalCutOff);
+        // dump($reprimand->context);
 
-        dd($timeoffQuotas->toArray());
+        foreach ($reprimand?->context['attendances'] ?? [] as $c) {
+            if ($remainingTotalCutOff < 1) return;
+            $date = $c['attendance_date'] ?? null;
+            if ($date) {
+                // mungkin kedepan harus tambahin query whereNull('reprimand_id')
+                $attendance = $reprimand->user->attendance()->where('date', $date)->first(['id', 'reprimand_id']);
+
+                if ($attendance) {
+                    $attendance->reprimand_id = $reprimand->id;
+                    $attendance->save();
+
+                    $remainingTotalCutOff--;
+                }
+            }
+        }
+
+        // kalo remainingTotalCutOff masih sisa biarin aja
+    }
+
+    public function notifyUser(Reprimand $reprimand): void
+    {
+        $notificationType = \App\Enums\NotificationType::REPRIMAND;
+        $reprimand->user->notify(new ($notificationType->getNotificationClass())($notificationType, $reprimand));
     }
 
     // public function allReprimand(RunReprimand $runReprimand): array
@@ -442,7 +533,7 @@ class RunReprimandService
     //             'name' => $user->name,
     //             'total_late_minutes' => $userTotal,
     //             'count' => (int) ($reprimandCountByUser[$user->id] ?? 0),
-    //             'details' => $perDay,
+    //             'context' => $perDay,
     //             'is_over_threshold' => $total > LateService::MINUTES_TRESHOLD,
     //         ];
 

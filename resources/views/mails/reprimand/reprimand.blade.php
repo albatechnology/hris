@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Warning Letter</title>
+    <title>REPRIMAND</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -46,10 +46,6 @@
             margin-bottom: 4px;
         }
 
-        .highlight {
-            /* background-color: #fff6a5; */
-        }
-
         .signature {
             margin-top: 60px;
         }
@@ -61,6 +57,7 @@
             padding: 10px;
             color: #ffffff;
             background-color: #F16522;
+            text-decoration: none;
         }
     </style>
 </head>
@@ -73,20 +70,24 @@
     <div class="mt-5">
         <p>
             To:<br>
-            <span class="highlight">{{ $user_name }}</span><br>
+            <span>{{ $user_name }}</span><br>
             @if ($position)
-                <span class="highlight">{{ $position }}</span><br>
+                <span>{{ $position }}</span><br>
             @endif
             @if ($department)
-                <span class="highlight">{{ $department }}</span><br>
+                <span>{{ $department }}</span><br>
             @endif
         </p>
     </div>
 
-    <p>Dear <span class="highlight">{{ $user_title . $user_name }}</span>,</p>
+    <p>Dear <span>{{ $user_title . $user_name }}</span>,</p>
 
     {{-- arahkan ke file pdf nya --}}
-    <a class="download-button">DOWNLOAD FILE</a>
+    @if ($download_url)
+        <br><br>
+        <a href="{{ $download_url }}" class="download-button">DOWNLOAD FILE</a>
+        <br><br>
+    @endif
 
     <p>Thank you for your attention and cooperation.</p>
 

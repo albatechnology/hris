@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\MediaCollection;
 use App\Http\Requests\Api\RunReprimand\StoreRequest;
 use App\Http\Requests\Api\RunReprimand\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RunReprimand;
-use App\Models\User;
 use App\Services\RunReprimandService;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -27,26 +22,26 @@ class RunReprimandController extends BaseController
         $this->middleware('permission:run_reprimand_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    public function allReprimand(int $id)
-    {
-        $runReprimand = RunReprimand::findTenanted($id);
-        $data = $this->runReprimandService->allReprimand($runReprimand);
-        return DefaultResource::collection($data);
-    }
+    // public function allReprimand(int $id)
+    // {
+    //     $runReprimand = RunReprimand::findTenanted($id);
+    //     $data = $this->runReprimandService->allReprimand($runReprimand);
+    //     return DefaultResource::collection($data);
+    // }
 
-    public function applyAllReprimand(int $id)
-    {
-        $runReprimand = RunReprimand::findTenanted($id);
-        $results = $this->runReprimandService->applyAllReprimand($runReprimand);
-        return response()->json(['results' => $results]);
-    }
+    // public function applyAllReprimand(int $id)
+    // {
+    //     $runReprimand = RunReprimand::findTenanted($id);
+    //     $results = $this->runReprimandService->applyAllReprimand($runReprimand);
+    //     return response()->json(['results' => $results]);
+    // }
 
     public function index()
     {
         $data = QueryBuilder::for(RunReprimand::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                'type',
+                'status',
             ])
             ->allowedIncludes([
                 'company',
@@ -66,11 +61,6 @@ class RunReprimandController extends BaseController
     {
         $runReprimand = RunReprimand::findTenanted($id);
 
-        // $data = ['runReprimand' => $runReprimand];
-
-        // $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('api.exports.pdf.run-reprimand.warning-lette-one', $data)->setPaper('a4');
-        // return $pdf->download(sprintf("run-reprimand-%s-%s.pdf", $runReprimand->start_date, $runReprimand->end_date));
-
         return new DefaultResource($runReprimand->loadMissing([
             'company',
         ]));
@@ -89,29 +79,6 @@ class RunReprimandController extends BaseController
 
         return $this->updatedResponse();
     }
-
-    // public function update(int $id, UpdateRequest $request)
-    // {
-    //     $runReprimand = RunReprimand::findTenanted($id);
-
-    //     DB::beginTransaction();
-    //     try {
-    //         $runReprimand->update($request->validated());
-    //         $runReprimand->watchers()->sync($request->watcher_ids);
-
-    //         if ($request->hasFile('file') && $request->file('file')->isValid()) {
-    //             $mediaCollection = MediaCollection::RunREPRIMAND->value;
-    //             $runReprimand->clearMediaCollection($mediaCollection);
-    //             $runReprimand->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
-    //         }
-    //         DB::commit();
-    //     } catch (Exception $e) {
-    //         DB::rollBack();
-    //         return $this->errorResponse($e->getMessage());
-    //     }
-
-    //     return (new DefaultResource($runReprimand))->response()->setStatusCode(Response::HTTP_ACCEPTED);
-    // }
 
     public function destroy(int $id)
     {
