@@ -87,7 +87,7 @@ class RunReprimandService
 
                 $totalLateMinutes += $totalLatePerDay;
 
-                $perDay[$date->format('Y-m-d')] = [
+                $perDay[] = [
                     'attendance_id' => $attendance->id,
                     'attendance_date' => $attendance->date,
                     'late_in_minutes' => $minutesIn,
@@ -258,7 +258,7 @@ class RunReprimandService
 
         // pelanggaran bulan pertama tidak ribet datanya, makanya pake ini aja
         if ($reprimand->type->isSendWarningLetter()) {
-            $dates = collect($reprimand->context['attendances'])->map(fn($value, $date) => date("F jS, Y", strtotime($date)));
+            $dates = collect($reprimand->context['attendances'])->map(fn($attendance) => date("F jS, Y", strtotime($attendance['attendance_date'])));
 
             $data['dates'] = $dates;
             $pdfViewPath = 'api.exports.pdf.reprimand.warning-letter';
