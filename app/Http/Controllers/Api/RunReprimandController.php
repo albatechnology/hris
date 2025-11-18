@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\MediaCollection;
 use App\Http\Requests\Api\RunReprimand\StoreRequest;
 use App\Http\Requests\Api\RunReprimand\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\RunReprimand;
-use App\Models\User;
 use App\Services\RunReprimandService;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -27,26 +22,26 @@ class RunReprimandController extends BaseController
         $this->middleware('permission:run_reprimand_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    public function allReprimand(int $id)
-    {
-        $runReprimand = RunReprimand::findTenanted($id);
-        $data = $this->runReprimandService->allReprimand($runReprimand);
-        return DefaultResource::collection($data);
-    }
+    // public function allReprimand(int $id)
+    // {
+    //     $runReprimand = RunReprimand::findTenanted($id);
+    //     $data = $this->runReprimandService->allReprimand($runReprimand);
+    //     return DefaultResource::collection($data);
+    // }
 
-    public function applyAllReprimand(int $id)
-    {
-        $runReprimand = RunReprimand::findTenanted($id);
-        $results = $this->runReprimandService->applyAllReprimand($runReprimand);
-        return response()->json(['results' => $results]);
-    }
+    // public function applyAllReprimand(int $id)
+    // {
+    //     $runReprimand = RunReprimand::findTenanted($id);
+    //     $results = $this->runReprimandService->applyAllReprimand($runReprimand);
+    //     return response()->json(['results' => $results]);
+    // }
 
     public function index()
     {
         $data = QueryBuilder::for(RunReprimand::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                'type',
+                'status',
             ])
             ->allowedIncludes([
                 'company',
@@ -65,6 +60,7 @@ class RunReprimandController extends BaseController
     public function show(int $id)
     {
         $runReprimand = RunReprimand::findTenanted($id);
+
         return new DefaultResource($runReprimand->loadMissing([
             'company',
         ]));
@@ -77,27 +73,11 @@ class RunReprimandController extends BaseController
         return $this->createdResponse();
     }
 
-    public function update(int $id, UpdateRequest $request)
+    public function update(UpdateRequest $request, int $id)
     {
-        $runReprimand = RunReprimand::findTenanted($id);
+        $this->runReprimandService->update($id, $request->validated());
 
-        DB::beginTransaction();
-        try {
-            $runReprimand->update($request->validated());
-            $runReprimand->watchers()->sync($request->watcher_ids);
-
-            if ($request->hasFile('file') && $request->file('file')->isValid()) {
-                $mediaCollection = MediaCollection::RunREPRIMAND->value;
-                $runReprimand->clearMediaCollection($mediaCollection);
-                $runReprimand->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
-            }
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return (new DefaultResource($runReprimand))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)

@@ -23,6 +23,7 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
         'shift_id',
         'timeoff_id',
         'event_id',
+        'reprimand_id',
         'code',
         'date',
     ];
@@ -64,6 +65,11 @@ class Attendance extends BaseModel implements TenantedInterface, HasMedia
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function reprimand(): BelongsTo
+    {
+        return $this->belongsTo(Reprimand::class);
     }
 
     public function details(): HasMany
