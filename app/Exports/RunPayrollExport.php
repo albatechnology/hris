@@ -34,6 +34,8 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
 
         $payrollStartDate = Carbon::parse($this->runPayroll->payroll_start_date);
         $payrollEndDate = Carbon::parse($this->runPayroll->payroll_end_date);
+        $year  = (int) $payrollStartDate->format('Y');
+        $month = (int) $payrollStartDate->format('n');
 
         $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($payrollStartDate, $payrollEndDate) {
             return $item->user->resign_date && (Carbon::parse($item->user->resign_date)->between($payrollStartDate, $payrollEndDate)) ? 'resign' : (Carbon::parse($item->user->join_date)->between($payrollStartDate, $payrollEndDate) ? 'new' : 'active');
@@ -44,6 +46,63 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
         $resignUsers = $runPayrollUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
         $newUsers = $runPayrollUsers->get('new')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
 
+        $loanComponentIds = $deductions->where('category', PayrollComponentCategory::LOAN)->pluck('id');
+        $insuranceComponentIds = $deductions->where('category', PayrollComponentCategory::INSURANCE)->pluck('id');
+        $samePeriodRpuIds = $this->runPayroll->users->pluck('id');
+        $fallbackLoanInsurance = [];
+
+        $userMap = $this->runPayroll->users->map(
+            fn($rpu) => [
+                'rpu_id' => $rpu->id,
+                'user_id' => $rpu->user_id
+            ]
+        );
+        if ($loanComponentIds->isNotEmpty() || $insuranceComponentIds->isNotEmpty()) {
+            // Ambil semua loans terkait user2 ini sekaligus
+            $allLoans = \App\Models\Loan::whereIn('user_id', $userMap->pluck('user_id'))
+                ->whereIn('type', ['loan', 'insurance'])
+                ->with(['details' => function ($q) use ($year, $month, $samePeriodRpuIds) {
+                    $q->where('payment_period_year', $year)
+                        ->where('payment_period_month', $month)
+                        ->where(function ($qq) use ($samePeriodRpuIds) {
+                            $qq->whereNull('run_payroll_user_id')
+                                ->orWhereIn('run_payroll_user_id', $samePeriodRpuIds);
+                        });
+                }])
+                ->get(['id', 'user_id', 'type', 'amount', 'effective_date']);
+
+            foreach ($userMap as $row) {
+                $rpuId  = $row['rpu_id'];
+                $userId = $row['user_id'];
+
+                $userLoans = $allLoans->where('user_id', $userId);
+
+                $loanSum = $userLoans
+                    ->where('type', 'loan')
+                    ->sum(fn($l) => $l->details->sum('total'));
+
+                $insuranceSumDetails = $userLoans
+                    ->where('type', 'insurance')
+                    ->sum(fn($l) => $l->details->sum('total'));
+
+                // Fallback insurance single-shot (amount) jika detail 0 dan effective_date di bulan ini
+                if ($insuranceSumDetails == 0) {
+                    $insuranceSumDetails = $userLoans
+                        ->where('type', 'insurance')
+                        ->filter(
+                            fn($l) =>
+                            (int) Carbon::parse($l->effective_date)->format('Y') === $year &&
+                                (int) Carbon::parse($l->effective_date)->format('n') === $month
+                        )
+                        ->sum('amount');
+                }
+
+                $fallbackLoanInsurance[$rpuId] = [
+                    'loan'      => $loanSum,
+                    'insurance' => $insuranceSumDetails,
+                ];
+            }
+        }
         // $runPayrollUsersGroups = $runPayrollUsers->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
 
         $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
@@ -83,7 +142,8 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             'totalAllowancesStorages' => $totalAllowancesStorages,
             'totalDeductionsStorages' => $totalDeductionsStorages,
             'totalBenefitsStorages' => $totalBenefitsStorages,
-            'totalColumns' =>  $totalColumns +  $allowances->count() + $deductions->count() + $benefits->count()
+            'totalColumns' =>  $totalColumns +  $allowances->count() + $deductions->count() + $benefits->count(),
+            'fallbackLoanInsurance' => $fallbackLoanInsurance
         ]);
     }
 

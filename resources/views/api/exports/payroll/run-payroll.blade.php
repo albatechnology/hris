@@ -150,6 +150,20 @@
             </tr>
         @endforeach
 
+            @php
+                $loanInsuranceRow = $group->map(function ($runPayrollUser) use ($fallbackLoanInsurance) {
+                    $rpuId = $runPayrollUser->id;
+                    $nik   = $runPayrollUser->user?->nik ?? '-';
+                    $loanAmt = $fallbackLoanInsurance[$rpuId]['loan'] ?? 0;
+                    $insAmt  = $fallbackLoanInsurance[$rpuId]['insurance'] ?? 0;
+                    return "{$nik}={$loanAmt}|{$insAmt}";
+                })->implode(', ');
+            @endphp
+       <tr>
+                <td colspan="{{ $totalColumns }}" style="font-size:11px; background:#e0f7fa;">
+                    Loan|Insurance (NIK=loan|insurance): {{ $loanInsuranceRow }}
+                </td>
+            </tr>
         <tr>
             <th colspan="{{ $totalColumns }}"></th>
         <tr>
@@ -262,6 +276,20 @@
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
             </tr>
+             @php
+                $loanInsuranceRow = $group->map(function ($runPayrollUser) use ($fallbackLoanInsurance) {
+                    $rpuId = $runPayrollUser->id;
+                    $nik   = $runPayrollUser->user?->nik ?? '-';
+                    $loanAmt = $fallbackLoanInsurance[$rpuId]['loan'] ?? 0;
+                    $insAmt  = $fallbackLoanInsurance[$rpuId]['insurance'] ?? 0;
+                    return "{$nik}={$loanAmt}|{$insAmt}";
+                })->implode(', ');
+            @endphp
+            <tr>
+                <td colspan="{{ $totalColumns }}" style="font-size:11px; background:#e0f7fa;">
+                    Loan|Insurance (NIK=loan|insurance): {{ $loanInsuranceRow }}
+                </td>
+            </tr>
         @endforeach
 
         <tr>
@@ -304,7 +332,11 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->positions
                         ?->map(function ($position) {
+<<<<<<< Updated upstream
                             return $position->department->name . ' / ' . $position->position->name;
+=======
+                            return $position->department?->name . ' / ' . $position->position?->name;
+>>>>>>> Stashed changes
                         })
                         ?->implode(', ') }}
                     </td>
@@ -375,6 +407,20 @@
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
+            </tr>
+             @php
+                $loanInsuranceRow = $group->map(function ($runPayrollUser) use ($fallbackLoanInsurance) {
+                    $rpuId = $runPayrollUser->id;
+                    $nik   = $runPayrollUser->user?->nik ?? '-';
+                    $loanAmt = $fallbackLoanInsurance[$rpuId]['loan'] ?? 0;
+                    $insAmt  = $fallbackLoanInsurance[$rpuId]['insurance'] ?? 0;
+                    return "{$nik}={$loanAmt}|{$insAmt}";
+                })->implode(', ');
+            @endphp
+            <tr>
+                <td colspan="{{ $totalColumns }}" style="font-size:11px; background:#e0f7fa;">
+                    Loan|Insurance (NIK=loan|insurance): {{ $loanInsuranceRow }}
+                </td>
             </tr>
         @endforeach
     </tbody>
