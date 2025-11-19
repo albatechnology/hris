@@ -25,16 +25,16 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Take Home Pay</th>
             <th style="text-align: center; font-weight: bold" colspan="{{ $benefits->count() }}">Benefit</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total Benefit</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">INSURANCE</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">LOAN</th>
         </tr>
         <tr>
             @foreach ($allowances as $allowance)
                 <th>{{ $allowance->name }}</th>
             @endforeach
-
             @foreach ($deductions as $deduction)
                 <th>{{ $deduction->name }}</th>
             @endforeach
-
             @foreach ($benefits as $benefit)
                 <th>{{ $benefit->name }}</th>
             @endforeach
@@ -52,6 +52,8 @@
                 $totalTax = 0;
                 $totalThp = 0;
                 $totalBenefit = 0;
+                $totalInsurancePrincipal = 0;
+                $totalLoanPrincipal = 0;
                 $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
@@ -64,22 +66,19 @@
                     $totalTax += $runPayrollUser->tax;
                     $totalThp += $runPayrollUser->thp;
                     $totalBenefit += $runPayrollUser->benefit;
+                    $insPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['insurance'] ?? 0;
+                    $loanPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['loan'] ?? 0;
+                    $totalInsurancePrincipal += $insPrincipal;
+                    $totalLoanPrincipal += $loanPrincipal;
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->name ?? '' }}</td>
                     <td>{{ $runPayroll->company?->name }}</td>
                     <td>{{ $runPayrollUser->user?->branch?->name }}</td>
-                    <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
-                    </td>
-                    <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
-                    </td>
-                    <td>{{ $runPayrollUser->user?->positions
-                        ?->map(function ($position) {
-                            return $position->department->name ?? '-' . ' / ' . $position->position->name ?? '-';
-                        })
-                        ?->implode(', ') }}
-                    </td>
+                    <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}</td>
+                    <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}</td>
+                    <td>{{ $runPayrollUser->user?->positions?->map(function ($position) { return $position->department->name ?? '-' . ' / ' . $position->position->name ?? '-'; })?->implode(', ') }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>
@@ -89,86 +88,58 @@
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
-
                     @foreach ($allowances as $allowance)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ?? 0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->allowance }}</td>
-
                     @foreach ($deductions as $deduction)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)?->amount ?? 0;
                             $cloneTotalDeductionsStorages[$deduction->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->deduction }}</td>
-
                     <td>{{ $runPayrollUser->tax }}</td>
                     <td>{{ $runPayrollUser->thp }}</td>
-
                     @foreach ($benefits as $benefit)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)?->amount ?? 0;
                             $cloneTotalBenefitsStorages[$benefit->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->benefit }}</td>
+                    <td>{{ $insPrincipal }}</td>
+                    <td>{{ $loanPrincipal }}</td>
                 </tr>
             @endforeach
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
-
                 @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
-
                 @foreach ($cloneTotalBenefitsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalInsurancePrincipal }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalLoanPrincipal }}</td>
             </tr>
+            <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
-
-            @php
-                $loanInsuranceRow = $group->map(function ($runPayrollUser) use ($fallbackLoanInsurance) {
-                    $rpuId = $runPayrollUser->id;
-                    $nik   = $runPayrollUser->user?->nik ?? '-';
-                    $loanAmt = $fallbackLoanInsurance[$rpuId]['loan'] ?? 0;
-                    $insAmt  = $fallbackLoanInsurance[$rpuId]['insurance'] ?? 0;
-                    return "{$nik}={$loanAmt}|{$insAmt}";
-                })->implode(', ');
-            @endphp
-       <tr>
-                <td colspan="{{ $totalColumns }}" style="font-size:11px; background:#e0f7fa;">
-                    Loan|Insurance (NIK=loan|insurance): {{ $loanInsuranceRow }}
-                </td>
-            </tr>
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        </tr>
         <tr>
             <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">Resign Users</th>
         </tr>
@@ -180,6 +151,8 @@
                 $totalTax = 0;
                 $totalThp = 0;
                 $totalBenefit = 0;
+                $totalInsurancePrincipal = 0;
+                $totalLoanPrincipal = 0;
                 $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
@@ -192,22 +165,19 @@
                     $totalTax += $runPayrollUser->tax;
                     $totalThp += $runPayrollUser->thp;
                     $totalBenefit += $runPayrollUser->benefit;
+                    $insPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['insurance'] ?? 0;
+                    $loanPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['loan'] ?? 0;
+                    $totalInsurancePrincipal += $insPrincipal;
+                    $totalLoanPrincipal += $loanPrincipal;
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->name ?? '' }}</td>
                     <td>{{ $runPayroll->company?->name }}</td>
                     <td>{{ $runPayrollUser->user?->branch?->name }}</td>
-                    <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
-                    </td>
-                    <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
-                    </td>
-                    <td>{{ $runPayrollUser->user?->positions
-                        ?->map(function ($position) {
-                            return $position->department->name . ' / ' . $position->position->name;
-                        })
-                        ?->implode(', ') }}
-                    </td>
+                    <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}</td>
+                    <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}</td>
+                    <td>{{ $runPayrollUser->user?->positions?->map(function ($position) { return $position?->department?->name . ' / ' . $position?->position?->name; })?->implode(', ') }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>
@@ -217,86 +187,58 @@
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
-
                     @foreach ($allowances as $allowance)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ?? 0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->allowance }}</td>
-
                     @foreach ($deductions as $deduction)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)?->amount ?? 0;
                             $cloneTotalDeductionsStorages[$deduction->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->deduction }}</td>
-
                     <td>{{ $runPayrollUser->tax }}</td>
                     <td>{{ $runPayrollUser->thp }}</td>
-
                     @foreach ($benefits as $benefit)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)?->amount ?? 0;
                             $cloneTotalBenefitsStorages[$benefit->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->benefit }}</td>
+                    <td>{{ $insPrincipal }}</td>
+                    <td>{{ $loanPrincipal }}</td>
                 </tr>
             @endforeach
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
-
                 @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
-
                 @foreach ($cloneTotalBenefitsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalInsurancePrincipal }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalLoanPrincipal }}</td>
             </tr>
-             @php
-                $loanInsuranceRow = $group->map(function ($runPayrollUser) use ($fallbackLoanInsurance) {
-                    $rpuId = $runPayrollUser->id;
-                    $nik   = $runPayrollUser->user?->nik ?? '-';
-                    $loanAmt = $fallbackLoanInsurance[$rpuId]['loan'] ?? 0;
-                    $insAmt  = $fallbackLoanInsurance[$rpuId]['insurance'] ?? 0;
-                    return "{$nik}={$loanAmt}|{$insAmt}";
-                })->implode(', ');
-            @endphp
-            <tr>
-                <td colspan="{{ $totalColumns }}" style="font-size:11px; background:#e0f7fa;">
-                    Loan|Insurance (NIK=loan|insurance): {{ $loanInsuranceRow }}
-                </td>
-            </tr>
+            <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
-
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        </tr>
         <tr>
             <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">New Users</th>
         </tr>
@@ -308,6 +250,8 @@
                 $totalTax = 0;
                 $totalThp = 0;
                 $totalBenefit = 0;
+                $totalInsurancePrincipal = 0;
+                $totalLoanPrincipal = 0;
                 $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
@@ -320,26 +264,19 @@
                     $totalTax += $runPayrollUser->tax;
                     $totalThp += $runPayrollUser->thp;
                     $totalBenefit += $runPayrollUser->benefit;
+                    $insPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['insurance'] ?? 0;
+                    $loanPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['loan'] ?? 0;
+                    $totalInsurancePrincipal += $insPrincipal;
+                    $totalLoanPrincipal += $loanPrincipal;
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->name ?? '' }}</td>
                     <td>{{ $runPayroll->company?->name }}</td>
                     <td>{{ $runPayrollUser->user?->branch?->name }}</td>
-                    <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}
-                    </td>
-                    <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
-                    </td>
-                    <td>{{ $runPayrollUser->user?->positions
-                        ?->map(function ($position) {
-<<<<<<< Updated upstream
-                            return $position->department->name . ' / ' . $position->position->name;
-=======
-                            return $position->department?->name . ' / ' . $position->position?->name;
->>>>>>> Stashed changes
-                        })
-                        ?->implode(', ') }}
-                    </td>
+                    <td>{{ $runPayrollUser->user?->join_date ? date('d-M-Y', strtotime($runPayrollUser->user->join_date)) : '' }}</td>
+                    <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}</td>
+                    <td>{{ $runPayrollUser->user?->positions?->map(function ($position) { return $position?->department->name . ' / ' . $position->position?->name; })?->implode(', ') }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>
@@ -349,79 +286,57 @@
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
-
                     @foreach ($allowances as $allowance)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ?? 0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->allowance }}</td>
-
                     @foreach ($deductions as $deduction)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)?->amount ?? 0;
                             $cloneTotalDeductionsStorages[$deduction->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->deduction }}</td>
-
                     <td>{{ $runPayrollUser->tax }}</td>
                     <td>{{ $runPayrollUser->thp }}</td>
-
                     @foreach ($benefits as $benefit)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)?->amount ?? 0;
                             $cloneTotalBenefitsStorages[$benefit->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->benefit }}</td>
+                    <td>{{ $insPrincipal }}</td>
+                    <td>{{ $loanPrincipal }}</td>
                 </tr>
             @endforeach
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
-
                 @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
-
                 @foreach ($cloneTotalBenefitsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalInsurancePrincipal }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalLoanPrincipal }}</td>
             </tr>
-             @php
-                $loanInsuranceRow = $group->map(function ($runPayrollUser) use ($fallbackLoanInsurance) {
-                    $rpuId = $runPayrollUser->id;
-                    $nik   = $runPayrollUser->user?->nik ?? '-';
-                    $loanAmt = $fallbackLoanInsurance[$rpuId]['loan'] ?? 0;
-                    $insAmt  = $fallbackLoanInsurance[$rpuId]['insurance'] ?? 0;
-                    return "{$nik}={$loanAmt}|{$insAmt}";
-                })->implode(', ');
-            @endphp
-            <tr>
-                <td colspan="{{ $totalColumns }}" style="font-size:11px; background:#e0f7fa;">
-                    Loan|Insurance (NIK=loan|insurance): {{ $loanInsuranceRow }}
-                </td>
-            </tr>
+            <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
     </tbody>
 </table>
