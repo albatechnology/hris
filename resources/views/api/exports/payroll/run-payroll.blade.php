@@ -304,7 +304,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->positions
                         ?->map(function ($position) {
-                            return $position->department->name . ' / ' . $position->position->name;
+                            return $position->department?->name . ' / ' . $position->position?->name;
                         })
                         ?->implode(', ') }}
                     </td>
