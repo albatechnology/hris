@@ -23,6 +23,10 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
     protected static function booted(): void
     {
         static::created(function (self $model) {
+            if($model instanceof RequestChangeData){
+                return;
+            }
+
             if (!$model instanceof AttendanceDetail || ($model instanceof AttendanceDetail && $model->type->is(AttendanceType::MANUAL))) {
                 RequestApprovalService::createApprovals($model);
             }
