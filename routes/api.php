@@ -436,11 +436,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('daily-activities', DailyActivityController::class);
 
-    Route::get('run-reprimands/{id}/all', [RunReprimandController::class, 'allReprimand']);
-    // POST to apply (persist) the previewed reprimands
-    Route::post('run-reprimands/{id}/all', [RunReprimandController::class, 'applyAllReprimand']);
     Route::apiResource('run-reprimands', RunReprimandController::class);
-
-    Route::get('reprimands/all', [ReprimandController::class, 'allReprimand']);
-    Route::apiResource('reprimands', ReprimandController::class);
+    Route::apiResource('reprimands', ReprimandController::class)->only(['index', 'show', 'destroy']);
 });

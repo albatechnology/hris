@@ -18,16 +18,9 @@ return new class extends Migration
             $table->foreignId('shift_id')->constrained();
             $table->foreignId('timeoff_id')->nullable();
             $table->foreignId('event_id')->nullable();
+            // $table->foreignId('reprimand_id')->nullable();
             $table->string('code')->nullable();
             $table->date('date')->useCurrent();
-            // $table->boolean('is_clock_in')->default(1);
-            // $table->timestamp('time');
-            // $table->string('type', 20);
-            // $table->string('lat')->nullable();
-            // $table->string('lng')->nullable();
-            // $table->string('approval_status')->default(ApprovalStatus::PENDING);
-            // $table->foreignId('approved_by')->nullable()->constrained('users');
-            // $table->text('note')->nullable();
             $table->timestamps();
 
             // created/updated/deleted info

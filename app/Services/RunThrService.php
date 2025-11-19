@@ -526,9 +526,12 @@ class RunThrService
         //Hitung Prorate
         $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
         $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
-        $days = $joinDate->diffInDays($thrDate);
-        $months = intdiv($days, 30);
-        $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
+        $months = $joinDate->diffInMonths($thrDate,true,false);
+        // $months = intdiv($days, 12);
+        // dd($months);
+        // $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
+        $thrMultiplier = $months >= 12 ? 1 : ($months / 12);
+        // dd($thrMultiplier, $months);
         $thrProrate = round($thrMultiplier * $basicSalary);
 
         $totalBebanMonth = round($totalMonth + $thrProrate);
