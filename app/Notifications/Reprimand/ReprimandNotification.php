@@ -62,7 +62,7 @@ class ReprimandNotification extends Notification implements ShouldQueue
         return [
             'token' => $notifiable->fcm_token,
             'notification' => [
-                'title' => "You have received a reprimand",
+                'title' => "TEST REPRIMAND DEVELOPMENT - ABAIKAN PESAN INI",
                 'body' => $this->message,
             ],
             'data' => [
