@@ -9,8 +9,6 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -32,12 +30,13 @@ class StoreRequest extends FormRequest
             'working_period' => ['required', Rule::enum(WorkingPeriod::class)],
             'description' => 'nullable|string',
             'weekday_overtime_rate' => 'nullable|numeric',
-            'weekend_overtime_rate' => 'nullable|numeric',
+            'saturday_overtime_rate' => 'nullable|numeric',
+            'sunday_overtime_rate' => 'nullable|numeric',
 
             'hours' => 'nullable|array',
             'hours.*.name' => 'required|string',
             'hours.*.min_working_hour' => 'required|integer',
-            'hours.*.max_working_hour' => 'required|integer',
+            // 'hours.*.max_working_hour' => 'required|integer',
             'hours.*.hours' => 'nullable|array',
             'hours.*.hours.*.name' => 'required|string',
             'hours.*.hours.*.clock_in' => 'required|date_format:H:i',

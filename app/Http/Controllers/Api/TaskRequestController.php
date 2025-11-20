@@ -255,4 +255,9 @@ class TaskRequestController extends BaseController
     {
         return (new \App\Exports\Overtime\ExportTaskOvertimeRequest($request))->download('task-overtime-requests.xlsx');
     }
+
+    public function newReport(ExportReportRequest $request)
+    {
+        return (new \App\Exports\Overtime\NewExportTaskOvertimeRequest($request))->download('new-task-overtime-requests.xlsx');
+    }
 }

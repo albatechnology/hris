@@ -19,7 +19,7 @@ class StoreRequest extends FormRequest
             'task_id' => ['required', new CompanyTenantedRule(Task::class, "Task not found")],
             'name' => 'required|string',
             'min_working_hour' => 'required|integer',
-            'max_working_hour' => 'required|integer',
+            // 'max_working_hour' => 'required|integer',
             'hours' => 'nullable|array',
             'hours.*.name' => 'required|string',
             'hours.*.clock_in' => 'required|date_format:H:i',

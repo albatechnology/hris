@@ -16,7 +16,7 @@ class TaskHour extends BaseModel implements TenantedInterface
         'task_id',
         'name',
         'min_working_hour',
-        'max_working_hour',
+        // 'max_working_hour',
         'hours',
     ];
 

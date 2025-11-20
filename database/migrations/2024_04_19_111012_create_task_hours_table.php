@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('hours')->nullable();
             $table->foreignIdFor(Task::class)->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('min_working_hour')->default(0);
-            $table->unsignedSmallInteger('max_working_hour')->default(0);
+            // $table->unsignedSmallInteger('max_working_hour')->default(0);
             $table->timestamps();
 
             // softDeletes must implement deleted_by

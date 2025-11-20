@@ -20,7 +20,8 @@ return new class extends Migration
             $table->string('working_period');
             $table->text('description')->nullable();
             $table->float('weekday_overtime_rate', 12)->unsigned()->default(0);
-            $table->float('weekend_overtime_rate', 12)->unsigned()->default(0);
+            $table->float('saturday_overtime_rate', 12)->unsigned()->default(0);
+            $table->float('sunday_overtime_rate', 12)->unsigned()->default(0);
             $table->timestamps();
 
             // softDeletes must implement deleted_by

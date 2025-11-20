@@ -20,7 +20,8 @@ class Task extends BaseModel implements TenantedInterface
         'working_period',
         'description',
         'weekday_overtime_rate',
-        'weekend_overtime_rate',
+        'saturday_overtime_rate',
+        'sunday_overtime_rate',
     ];
 
     protected $casts = [

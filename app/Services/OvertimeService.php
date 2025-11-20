@@ -383,7 +383,6 @@ class OvertimeService
         return false;
     }
 
-
     public static function calculateTaskOvertime(User $user, ?string $startPeriod = null, ?string $endPeriod = null)
     {
         if (!is_null($startPeriod)) $startPeriod = date('Y-m-d', strtotime($startPeriod));
@@ -391,11 +390,11 @@ class OvertimeService
 
         $tasks = $user->tasks()
             ->select('id')
-            ->select('id', 'min_working_hour', 'working_period', 'weekday_overtime_rate', 'weekend_overtime_rate')
+            ->select('id', 'min_working_hour', 'working_period', 'weekday_overtime_rate', 'saturday_overtime_rate', 'sunday_overtime_rate')
             ->withPivot('task_hour_id')
             ->get();
 
-        $taskHours = TaskHour::select('id', 'task_id', 'min_working_hour', 'max_working_hour')->whereIn('id', $tasks->pluck('pivot.task_hour_id'))->get();
+        $taskHours = TaskHour::select('id', 'task_id', 'min_working_hour')->whereIn('id', $tasks->pluck('pivot.task_hour_id'))->get();
         if ($taskHours->count() <= 0) return 0;
 
         $amount = 0;
@@ -412,14 +411,14 @@ class OvertimeService
                 $start = Carbon::parse($overtimeRequest->start_at);
                 $end = Carbon::parse($overtimeRequest->end_at);
                 $totalDurationInHours += $end->diffInHours($start); // Hitung durasi dalam jam
-                if ($totalDurationInHours > $taskHour->max_working_hour) {
+                if ($totalDurationInHours > $taskHour->min_working_hour) {
                     $lastOvertimeRequest = $overtimeRequest;
-                    $sisa = $totalDurationInHours - $taskHour->max_working_hour;
+                    $sisa = $totalDurationInHours - $taskHour->min_working_hour;
                     break;
                 }
             }
 
-            if ($totalDurationInHours <= $taskHour->max_working_hour) continue;
+            if ($totalDurationInHours <= $taskHour->min_working_hour) continue;
 
             $totalHourWeekday = 0;
             $totalHourWeekend = 0;
@@ -436,7 +435,7 @@ class OvertimeService
                 $sisa = 0;
             }
 
-            $amount += ($totalHourWeekday * $task->weekday_overtime_rate) + ($totalHourWeekend * $task->weekend_overtime_rate);
+            $amount += ($totalHourWeekday * $task->weekday_overtime_rate) + ($totalHourWeekend * $task->saturday_overtime_rate);
         }
 
         return $amount;

@@ -60,12 +60,10 @@ class ExportTaskOvertimeRequest implements FromCollection, WithMapping, WithHead
             ->whereIn('company_id', $this->companies->pluck('id'))
             ->when($userIds, fn($q) => $q->whereIn('id', explode(',', $userIds)))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereHas('taskRequests', fn($q) => $q->where($where))
+            ->withWhereHas('tasks', fn($q) => $q->select('id', 'weekday_overtime_rate', 'saturday_overtime_rate','sunday_overtime_rate'))
+            ->withWhereHas('taskRequests', fn($q) => $q->where($where)->orderBy('start_at')->with('taskHour'))
             ->with([
-                'tasks' => fn($q) => $q->select('id', 'min_working_hour', 'working_period', 'weekday_overtime_rate', 'weekend_overtime_rate')->withPivot('task_hour_id'),
-                'taskRequests' => fn($q) => $q->where($where)->orderBy('start_at')->with('taskHour'),
                 'detail' => fn($q) => $q->select('user_id', 'employment_status'),
-                'payrollInfo' => fn($q) => $q->select('user_id', 'basic_salary'),
             ])
             ->get();
 
@@ -101,13 +99,13 @@ class ExportTaskOvertimeRequest implements FromCollection, WithMapping, WithHead
                 $end = Carbon::parse($taskRequest->end_at);
                 $totalDurationInHours += $end->diffInMinutes($start) / 60; // Hitung durasi dalam jam
 
-                if ($totalDurationInHours > $taskHour->max_working_hour) {
+                if ($totalDurationInHours > $taskHour->min_working_hour) {
                     $lastTaskRequest = $taskRequest;
                     break;
                 }
             }
 
-            if ($totalDurationInHours <= $taskHour->max_working_hour) continue;
+            if ($totalDurationInHours <= $taskHour->min_working_hour) continue;
 
             $newOvertimeRequests = $user->taskRequests->skipUntil(fn($d) => $d->id === $lastTaskRequest->id);
             foreach ($newOvertimeRequests as $newOvertimeRequest) {
@@ -123,7 +121,7 @@ class ExportTaskOvertimeRequest implements FromCollection, WithMapping, WithHead
                 if ($overtimeDate->isWeekday()) {
                     $rate = $diffInHours * $task->weekday_overtime_rate;
                 } else {
-                    $rate = $diffInHours * $task->weekend_overtime_rate;
+                    $rate = $diffInHours * $task->saturday_overtime_rate;
                 }
 
                 $datas[] = [

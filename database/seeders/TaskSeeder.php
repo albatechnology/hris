@@ -37,8 +37,8 @@ class TaskSeeder extends Seeder
             $taskHour = $task->hours()->create(
                 [
                     'name' => 'Teacher',
-                    'min_working_hour' => 60,
-                    'max_working_hour' => 108,
+                    'min_working_hour' => 108,
+                    // 'max_working_hour' => 108,
                     'hours' => [
                         [
                             'name' => 'Monday - Friday Shift 1',
@@ -64,8 +64,8 @@ class TaskSeeder extends Seeder
             $taskHour = $task->hours()->create(
                 [
                     'name' => 'Student Advisor & Teacher',
-                    'min_working_hour' => 0,
-                    'max_working_hour' => 80,
+                    'min_working_hour' => 80,
+                    // 'max_working_hour' => 80,
                     'hours' => [
                         [
                             'name' => 'Monday - Friday Shift 1',
@@ -89,8 +89,8 @@ class TaskSeeder extends Seeder
             $taskHour = $task->hours()->create(
                 [
                     'name' => 'Team Leader',
-                    'min_working_hour' => 40,
-                    'max_working_hour' => 80,
+                    'min_working_hour' => 80,
+                    // 'max_working_hour' => 80,
                     'hours' => [
                         [
                             'name' => 'Monday - Friday Shift 1',
