@@ -766,7 +766,7 @@ class RunPayrollService
                 ->where('category', PayrollComponentCategory::LOAN)->first();
 
             if ($loanComponent) {
-                $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
+                $whereHas = fn($q) => $q->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
                 $loans = Loan::where('user_id', $user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
                 if ($loans->count()) {
                     $loans->load(['details' => $whereHas]);
@@ -787,7 +787,7 @@ class RunPayrollService
                 ->where('category', PayrollComponentCategory::INSURANCE)->first();
 
             if ($insuranceComponent) {
-                $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
+                $whereHas = fn($q) => $q->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
                 $insurances = Loan::where('user_id', $user->id)->whereInsurance()->whereHas('details', $whereHas)->get(['id']);
                 if ($insurances->count()) {
                     $insurances->load(['details' => $whereHas]);
