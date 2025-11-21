@@ -12,6 +12,7 @@ use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -163,11 +164,38 @@ class UserPatrolTaskController extends BaseController
 
     public function update(int $id, UpdateRequest $request)
     {
-        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->firstWhere('id', $id);
+        $userPatrolTask = UserPatrolTask::findOrFail($id);
 
+        DB::beginTransaction();
         try {
-            $userPatrolTask->update($request->validated());
+            // $userPatrolTask->update($request->validated());
+
+            if ($request->ids) {
+                $ids = explode(",", $request->ids);
+                foreach ($ids as $id) {
+                    if ($request->hasFile('file')) {
+                        $userPatrolTask = UserPatrolTask::find($id);
+                        if ($userPatrolTask) {
+                            foreach ($request->file('file') as $file) {
+                                if ($file->isValid()) {
+                                    $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // if ($request->hasFile('file')) {
+            //     foreach ($request->file('file') as $file) {
+            //         if ($file->isValid()) {
+            //             $userPatrolTask->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+            //         }
+            //     }
+            // }
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 

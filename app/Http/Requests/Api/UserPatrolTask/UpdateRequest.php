@@ -6,8 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
 {
-    
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -16,8 +14,11 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'patrol_task_id' => 'required|exists:patrol_tasks,id',
-            'description' => 'required|string',
+            // 'patrol_task_id' => 'required|exists:patrol_tasks,id',
+            // 'description' => 'required|string',
+            'ids' => 'nullable|string',
+            'file' => 'required|array|min:1',
+            'file.*' => 'required|mimes:' . config('app.file_mimes_types'),
         ];
     }
 }

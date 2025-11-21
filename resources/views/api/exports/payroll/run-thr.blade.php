@@ -16,8 +16,8 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Account Holder</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Account</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Code</th>
+             <th style="text-align: center; font-weight: bold" rowspan="2">THR Pro Rate</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Basic Salary</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">THR Pro Rate</th>
             {{-- <th style="text-align: center; font-weight: bold" colspan="{{ $allowances->count() }}">Allowance</th> --}}
             {{-- <th style="text-align: center; font-weight: bold" rowspan="2">Total Allowance</th> --}}
             <th style="text-align: center; font-weight: bold" colspan="{{ $deductions->count() }}">Deduction
@@ -53,7 +53,7 @@
     </thead>
     <tbody>
         <tr>
-            <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">Active Users</th>
+            <th colspan="{{ $totalColumns+1 }}" style="font-weight: bold; background-color: yellow">Active Users</th>
         </tr>
         @foreach ($activeUsers as $group)
             @php
@@ -75,7 +75,7 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalThrProrate += $runThrUser->thr_prorate;
+                    $totalThrProrate += $runThrUser->basic_salary;
                     // $totalBasicSalary += $runThrUser->basic_salary;
                      $totalBasicSalary += $runThrUser->base_salary_original;
                     // $totalAllowance += $runThrUser->allowance;
@@ -112,7 +112,7 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
-                    <td>{{ $runThrUser->thr_prorate }}</td>
+                    <td>{{ $runThrUser->base_salary_original }}</td>
 
                     {{-- @foreach ($allowances as $allowance)
                         @php
@@ -157,6 +157,7 @@
             @endforeach
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThrProrate }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
                 {{-- @foreach ($cloneTotalAllowancesStorages as $value)
@@ -184,12 +185,12 @@
         @endforeach
 
         <tr>
-            <th colspan="{{ $totalColumns }}"></th>
+            <th colspan="{{ $totalColumns+1 }}"></th>
         <tr>
-            <th colspan="{{ $totalColumns }}"></th>
+            <th colspan="{{ $totalColumns+1 }}"></th>
         </tr>
         <tr>
-            <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">Resign Users</th>
+            <th colspan="{{ $totalColumns+1 }}" style="font-weight: bold; background-color: yellow">Resign Users</th>
         </tr>
         @foreach ($resignUsers as $group)
             @php
@@ -212,7 +213,8 @@
             @foreach ($group as $runThrUser)
                 @php
                     // $totalBasicSalary += $runThrUser->thr_prorate;
-                    $totalBasicSalary += $runThrUser->basic_salary;
+                    $totalBasicSalary += $runThrUser->base_salary_original;
+                    $totalThrProrate += $runThrUser->basic_salary;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
@@ -246,7 +248,8 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
-                     <td>{{ $runThrUser->thr_prorate }}</td>
+                     <td>{{ $runThrUser->basic_salary }}</td>
+                     <td>{{ $runThrUser->base_salary_original }}</td>
                     {{-- <td>{{ $runThrUser->thr_prorate }}</td> --}}
 
                     {{-- @foreach ($allowances as $allowance)
@@ -292,6 +295,7 @@
             @endforeach
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThrProrate }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
                 {{-- @foreach ($cloneTotalAllowancesStorages as $value)
@@ -319,12 +323,12 @@
         @endforeach
 
         <tr>
-            <th colspan="{{ $totalColumns }}"></th>
+            <th colspan="{{ $totalColumns+1 }}"></th>
         <tr>
-            <th colspan="{{ $totalColumns }}"></th>
+            <th colspan="{{ $totalColumns+1 }}"></th>
         </tr>
         <tr>
-            <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">New Users</th>
+            <th colspan="{{ $totalColumns+1 }}" style="font-weight: bold; background-color: yellow">New Users</th>
         </tr>
         @foreach ($newUsers as $group)
             @php
@@ -346,8 +350,8 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalThrProrate += $runThrUser->thr_prorate;
-                    $totalBasicSalary += $runThrUser->basic_salary;
+                    $totalThrProrate += $runThrUser->basic_salary;
+                    $totalBasicSalary += $runThrUser->base_salary_original;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
@@ -381,8 +385,9 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
-                    <td>{{ $runThrUser->thr_prorate }}</td>
-                     <td>{{ $runThrUser->basic_salary }}</td>
+                    <td>{{ $runThrUser->basic_salary }}</td>
+                     <td>{{ $runThrUser->base_salary_original }}</td>
+
 
                     {{-- @foreach ($allowances as $allowance)
                         @php
@@ -427,6 +432,7 @@
             @endforeach
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThrProrate }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
                 {{-- @foreach ($cloneTotalAllowancesStorages as $value)

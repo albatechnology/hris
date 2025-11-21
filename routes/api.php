@@ -85,7 +85,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('atara/contact', [\App\Http\Controllers\Api\AtaraController::class, 'contact']);
 Route::post('subscriptions', [SubscriptionController::class, 'store']);
-Route::get('subscriptions/info',[SubscriptionController::class,'quotaInfo']);
+Route::get('subscriptions/info', [SubscriptionController::class, 'quotaInfo']);
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
     Route::post('token', 'login');
@@ -247,6 +247,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('overtime-requests/approvals', [OvertimeRequestController::class, 'approvals']);
     Route::get('overtime-requests/approvals/count-total', [OvertimeRequestController::class, 'countTotalApprovals']);
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
+    Route::put('overtime-requests/bulk-approve', [OvertimeRequestController::class, 'bulkApprove']);
     Route::apiResource('overtime-requests', OvertimeRequestController::class)->except('update');
 
     Route::get('live-attendances/users', [LiveAttendanceController::class, 'users']);
@@ -328,6 +329,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::put('request-shifts/{request_shift}/approve', [RequestShiftController::class, 'approve']);
     Route::apiResource('request-shifts', RequestShiftController::class);
 
+    Route::put('task-requests/bulk-approve', [TaskRequestController::class, 'bulkApprove']);
     Route::get('task-requests/report', [TaskRequestController::class, 'report']);
     Route::get('task-requests/approvals', [TaskRequestController::class, 'approvals']);
     Route::get('task-requests/approvals/count-total', [TaskRequestController::class, 'countTotalApprovals']);
@@ -409,13 +411,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
     Route::apiResource('loans', LoanController::class);
-    Route::get('runreprimands/{id}/all', [RunReprimandController::class, 'allReprimand']);
-    // POST to apply (persist) the previewed reprimands
-    Route::post('runreprimands/{id}/all', [RunReprimandController::class, 'applyAllReprimand']);
-    Route::get('reprimands/all', [ReprimandController::class, 'allReprimand']);
-    Route::apiResource('run-reprimands', RunReprimandController::class);
 
-    Route::apiResource('reprimands', ReprimandController::class);
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
     Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
     Route::apiResource('media', MediaController::class)->only(['index', 'show', 'destroy']);
@@ -436,7 +432,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::get('test/generate-timeoff', [\App\Http\Controllers\Api\TestController::class, 'generateTimeoff']);
 
-    Route::apiResource('levels',LevelController::class);
+    Route::apiResource('levels', LevelController::class);
 
     Route::apiResource('daily-activities', DailyActivityController::class);
+
+    Route::apiResource('run-reprimands', RunReprimandController::class);
+    Route::apiResource('reprimands', ReprimandController::class)->only(['index', 'show', 'destroy']);
 });

@@ -7,6 +7,7 @@ use App\Enums\MediaCollection;
 use App\Enums\PayrollComponentType;
 use App\Enums\RequestChangeDataType;
 use App\Enums\ResignationType;
+use App\Enums\SettingKey;
 use App\Enums\UserType;
 use App\Exports\User\UserExport;
 use App\Exports\User\UsersImportTemplate;
@@ -544,24 +545,6 @@ class UserController extends BaseController
                 /** @var \App\Models\RequestChangeData $requestChangeData */
                 $photoProfile = collect($dataRequested)->firstWhere('type', 'photo_profile');
 
-                // if (!is_null($photoProfile)) {
-                //     $defaultApproverId = $user->company->settings()->where('key', SettingKey::PROFILE_PICTURE_APPROVER)->first(['value'])?->value;
-
-                //     /** @var User $defaultApprover */
-                //     $defaultApprover = User::find($defaultApproverId, ['id']);
-                //     if (!$defaultApprover) {
-                //         $defaultApprover = User::where('company_id', $user->company_id)->where('type', UserType::ADMIN)->first(['id']);
-                //     }
-
-                //     $approvers[] = [
-                //         'user_id' => $defaultApprover->id,
-                //     ];
-
-                //     $requestChangeData = $user->requestChangeDatas()->createQuietly($request->validated());
-                //     RequestApprovalService::createApprovals($requestChangeData, $approvers);
-                // } else {
-                //     $requestChangeData = $user->requestChangeDatas()->create($request->validated());
-                // }
                 $requestChangeData = $user->requestChangeDatas()->create($request->validated());
 
                 if (count($dataRequested) > 0) {
@@ -582,16 +565,28 @@ class UserController extends BaseController
                     }
 
                     $requestChangeData->details()->createMany(collect($dataRequested)->whereNotIn('type', ['photo_profile'])->all() ?? []);
-
-                    // moved to RequestApprovalService
-                    // $notificationType = \App\Enums\NotificationType::REQUEST_CHANGE_DATA;
-                    // $requestChangeData->user->approval?->notify(new ($notificationType->getNotificationClass())($notificationType, $requestChangeData->user, $requestChangeData));
                 }
 
                 if (count($dataAllowedToUpdate) > 0) {
                     // auto update, no need approval
                     foreach ($dataAllowedToUpdate as $data) {
                         RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
+                    }
+                }
+                $defaultApproverId = $user->company?->settings()->where('key',SettingKey::REQUEST_APPROVER)->value('value');
+
+                $approvers = [];
+                if($defaultApproverId && User::where('id',$defaultApproverId)->exists()){
+                    $approvers[] = ['user_id' => (int)$defaultApproverId];
+                }
+
+                if($approvers)
+                {
+                    $requestChangeData->approvals()->createMany($approvers);
+
+                    $firstApprover = User::find($approvers[0]['user_id'],['id','name','email','fcm_token']);
+                    if($firstApprover){
+                        $requestChangeData->sendRequestNotification($firstApprover, $user, $requestChangeData);
                     }
                 }
             }

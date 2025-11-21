@@ -63,7 +63,7 @@ class ExportTaskOvertimeRequest implements FromCollection, WithMapping, WithHead
             ->whereHas('taskRequests', fn($q) => $q->where($where))
             ->with([
                 'tasks' => fn($q) => $q->select('id', 'min_working_hour', 'working_period', 'weekday_overtime_rate', 'weekend_overtime_rate')->withPivot('task_hour_id'),
-                'taskRequests' => fn($q) => $q->where($where)->with('taskHour'),
+                'taskRequests' => fn($q) => $q->where($where)->orderBy('start_at')->with('taskHour'),
                 'detail' => fn($q) => $q->select('user_id', 'employment_status'),
                 'payrollInfo' => fn($q) => $q->select('user_id', 'basic_salary'),
             ])

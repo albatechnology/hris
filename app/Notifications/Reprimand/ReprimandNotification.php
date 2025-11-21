@@ -3,6 +3,7 @@
 namespace App\Notifications\Reprimand;
 
 use App\Enums\NotificationType;
+use App\Mail\Reprimand\ReprimandMail;
 use App\Models\Reprimand;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,17 +13,13 @@ class ReprimandNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     private string $message;
-    private string $body;
 
     /**
      * Create a new notification instance.
      */
     public function __construct(private NotificationType $notificationType, private Reprimand $reprimand)
     {
-        $this->message = $this->notificationType->is(NotificationType::REPRIMAND_WATCHER) ? sprintf($this->notificationType->getMessage(), $this->reprimand->user->name, $this->reprimand->type->value) : sprintf($this->notificationType->getMessage(), $this->reprimand->type->value);
-
-        $this->body = $this->notificationType->is(NotificationType::REPRIMAND_WATCHER) ?
-            $this->message : ($this->reprimand->notes ? $this->reprimand->notes : $this->message);
+        $this->message = sprintf($this->notificationType->getMessage(), $reprimand->type->getDescription());
     }
 
     /**
@@ -32,7 +29,7 @@ class ReprimandNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm'];
+        return ['database', 'fcm', 'mail'];
     }
 
     /**
@@ -51,6 +48,12 @@ class ReprimandNotification extends Notification implements ShouldQueue
         ];
     }
 
+    public function toMail(object $notifiable)
+    {
+        return (new ReprimandMail($notifiable, $this->reprimand))->to($notifiable->email);
+        // return (new $this->mailClass($notifiable, $this->reprimand))->to($notifiable->email);
+    }
+
     /**
      * Get the fcm representation of the notification.
      */
@@ -59,8 +62,8 @@ class ReprimandNotification extends Notification implements ShouldQueue
         return [
             'token' => $notifiable->fcm_token,
             'notification' => [
-                'title' => "Reprimand",
-                'body' => $this->body,
+                'title' => "TEST REPRIMAND DEVELOPMENT - ABAIKAN PESAN INI",
+                'body' => $this->message,
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,

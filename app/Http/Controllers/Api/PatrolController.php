@@ -433,11 +433,9 @@ class PatrolController extends BaseController
 
     public function export(UserIndexRequest $request, int $id)
     {
-
         $startDate = $request->filter['start_date'] ?? date('Y-m-d');
         $endDate = $request->filter['end_date'] ?? date('Y-m-d');
         $patrol = Patrol::selectMinimalist(['created_at'])->where('id', $id)->firstOrFail();
-        $useSigned = config('filesystems.disks.s3.visibility', 'private') !== 'public';
         $patrol->load([
             'patrolLocations' => function ($q) {
                 $q->select('id', 'patrol_id', 'branch_location_id', 'description')
@@ -473,7 +471,7 @@ class PatrolController extends BaseController
 
         // return (new PatrolTaskExport($patrol, $startDate, $endDate, $useSigned))
         //     ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
-        $html = view('api.exports.patrol.export', compact('patrol', 'startDate', 'endDate', 'useSigned'))->render();
+        $html = view('api.exports.patrol.export', compact('patrol', 'startDate', 'endDate'))->render();
 
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-excel')
