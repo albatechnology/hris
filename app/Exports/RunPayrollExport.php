@@ -34,8 +34,6 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
 
         $payrollStartDate = Carbon::parse($this->runPayroll->payroll_start_date);
         $payrollEndDate = Carbon::parse($this->runPayroll->payroll_end_date);
-        $year  = (int) $payrollStartDate->format('Y');
-        $month = (int) $payrollStartDate->format('m');
 
         $runPayrollUsers = $this->runPayroll->users->groupBy(function ($item, $key) use ($payrollStartDate, $payrollEndDate) {
             return $item->user->resign_date && (Carbon::parse($item->user->resign_date)->between($payrollStartDate, $payrollEndDate)) ? 'resign' : (Carbon::parse($item->user->join_date)->between($payrollStartDate, $payrollEndDate) ? 'new' : 'active');
@@ -46,40 +44,6 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
         $resignUsers = $runPayrollUsers->get('resign')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
         $newUsers = $runPayrollUsers->get('new')?->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id') ?? [];
 
-        $loanComponentIds = $deductions->where('category', PayrollComponentCategory::LOAN)->pluck('id');
-        // dd($month);
-        $insuranceComponentIds = $deductions->where('category', PayrollComponentCategory::INSURANCE)->pluck('id');
-        $samePeriodRpuIds = $this->runPayroll->users->pluck('id');
-        $fallbackLoanInsurance = [];
-
-        $userMap = $this->runPayroll->users->map(
-            fn($rpu) => [
-                'rpu_id' => $rpu->id,
-                'user_id' => $rpu->user_id
-            ]
-        );
-        if ($loanComponentIds->isNotEmpty() || $insuranceComponentIds->isNotEmpty()) {
-            $allLoans = \App\Models\Loan::whereIn('user_id', $userMap->pluck('user_id'))
-                ->whereIn('type', ['loan', 'insurance'])
-                ->get(['id', 'user_id', 'type', 'amount']);
-
-            // Karena kolom type dicast ke Enum, gunakan value enum untuk filtering manual
-            $loanMap = $allLoans->filter(fn($l) => ($l->type instanceof \App\Enums\LoanType ? $l->type->value : $l->type) === 'loan')
-                ->groupBy('user_id')
-                ->map(fn($c) => $c->sum('amount'));
-
-            $insuranceMap = $allLoans->filter(fn($l) => ($l->type instanceof \App\Enums\LoanType ? $l->type->value : $l->type) === 'insurance')
-                ->groupBy('user_id')
-                ->map(fn($c) => $c->sum('amount'));
-                // dd($insuranceMap);
-
-            foreach ($userMap as $row) {
-                $fallbackLoanInsurance[$row['rpu_id']] = [
-                    'loan' => $loanMap[$row['user_id']] ?? 0,
-                    'insurance' => $insuranceMap[$row['user_id']] ?? 0,
-                ];
-            }
-        }
         // $runPayrollUsersGroups = $runPayrollUsers->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
 
         $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
@@ -119,9 +83,7 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
             'totalAllowancesStorages' => $totalAllowancesStorages,
             'totalDeductionsStorages' => $totalDeductionsStorages,
             'totalBenefitsStorages' => $totalBenefitsStorages,
-            // Tambah 2 kolom (INSURANCE, LOAN) di akhir setiap baris
-            'totalColumns' =>  $totalColumns +  $allowances->count() + $deductions->count() + $benefits->count() + 2,
-            'fallbackLoanInsurance' => $fallbackLoanInsurance
+            'totalColumns' =>  $totalColumns +  $allowances->count() + $deductions->count() + $benefits->count()
         ]);
     }
 
