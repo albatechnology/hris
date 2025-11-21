@@ -122,7 +122,7 @@ class OvertimeRequestController extends BaseController
         $overtimeRequest = OvertimeRequest::findTenanted($id);
         $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
 
-        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approver', code: Response::HTTP_NOT_FOUND);
 
         if (!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
@@ -139,6 +139,27 @@ class OvertimeRequestController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
+        return new OvertimeRequestResource($overtimeRequest);
+    }
+
+    public function cancelled(NewApproveRequest $request, int $id): OvertimeRequestResource|JsonResponse
+    {
+        $overtimeRequest = OvertimeRequest::findTenanted($id);
+        $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
+
+        if(!$requestApproval) return $this->errorResponse(message: "You are not registered as approver", code: Response::HTTP_NOT_FOUND);
+
+        if(!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if($overtimeRequest->approval_status == ApprovalStatus::REJECTED->value){
+            return $this->errorResponse(message:'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $requestApproval->update($request->validated());
+        } catch (Exception $th) {
+            return $this->errorResponse($th->getMessage());
+        }
         return new OvertimeRequestResource($overtimeRequest);
     }
 
