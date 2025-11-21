@@ -25,8 +25,6 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Take Home Pay</th>
             <th style="text-align: center; font-weight: bold" colspan="{{ $benefits->count() }}">Benefit</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total Benefit</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">INSURANCE</th>
-            <th style="text-align: center; font-weight: bold" rowspan="2">LOAN</th>
         </tr>
         <tr>
             @foreach ($allowances as $allowance)
@@ -52,8 +50,6 @@
                 $totalTax = 0;
                 $totalThp = 0;
                 $totalBenefit = 0;
-                $totalInsurancePrincipal = 0;
-                $totalLoanPrincipal = 0;
                 $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
@@ -66,10 +62,6 @@
                     $totalTax += $runPayrollUser->tax;
                     $totalThp += $runPayrollUser->thp;
                     $totalBenefit += $runPayrollUser->benefit;
-                    $insPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['insurance'] ?? 0;
-                    $loanPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['loan'] ?? 0;
-                    $totalInsurancePrincipal += $insPrincipal;
-                    $totalLoanPrincipal += $loanPrincipal;
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
@@ -121,8 +113,6 @@
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->benefit }}</td>
-                    <td>{{ $insPrincipal }}</td>
-                    <td>{{ $loanPrincipal }}</td>
                 </tr>
             @endforeach
             <tr>
@@ -142,8 +132,6 @@
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalInsurancePrincipal }}</td>
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalLoanPrincipal }}</td>
             </tr>
             <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
@@ -172,10 +160,6 @@
                     $totalTax += $runPayrollUser->tax;
                     $totalThp += $runPayrollUser->thp;
                     $totalBenefit += $runPayrollUser->benefit;
-                    $insPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['insurance'] ?? 0;
-                    $loanPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['loan'] ?? 0;
-                    $totalInsurancePrincipal += $insPrincipal;
-                    $totalLoanPrincipal += $loanPrincipal;
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
@@ -227,8 +211,6 @@
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->benefit }}</td>
-                    <td>{{ $insPrincipal }}</td>
-                    <td>{{ $loanPrincipal }}</td>
                 </tr>
             @endforeach
             <tr>
@@ -248,8 +230,6 @@
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalInsurancePrincipal }}</td>
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalLoanPrincipal }}</td>
             </tr>
             <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
@@ -278,10 +258,6 @@
                     $totalTax += $runPayrollUser->tax;
                     $totalThp += $runPayrollUser->thp;
                     $totalBenefit += $runPayrollUser->benefit;
-                    $insPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['insurance'] ?? 0;
-                    $loanPrincipal = $fallbackLoanInsurance[$runPayrollUser->id]['loan'] ?? 0;
-                    $totalInsurancePrincipal += $insPrincipal;
-                    $totalLoanPrincipal += $loanPrincipal;
                 @endphp
                 <tr>
                     <td>{{ $runPayrollUser->user?->nik ?? '' }}</td>
@@ -333,8 +309,6 @@
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->benefit }}</td>
-                    <td>{{ $insPrincipal }}</td>
-                    <td>{{ $loanPrincipal }}</td>
                 </tr>
             @endforeach
             <tr>
@@ -354,8 +328,6 @@
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalInsurancePrincipal }}</td>
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalLoanPrincipal }}</td>
             </tr>
             <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
