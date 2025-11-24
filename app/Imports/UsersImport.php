@@ -92,7 +92,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             }],
             'join_date' => 'required|date',
             'sign_date' => 'nullable|date',
-
+            'resign_date' => 'nullable|date',
             'kk_number' => 'nullable|min:6|max:50',
             'ktp_number' => 'nullable|min:6|max:50',
             'postal_code' => 'nullable|min:3|max:10',
@@ -215,6 +215,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'gender' => strtolower($row['gender']),
                 'join_date' => date('Y-m-d', strtotime($row['join_date'])),
                 'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
+                'resign_date' => date('Y-m-d', strtotime($row['resign_date'])),
                 ...$password
             ]
         );
