@@ -60,7 +60,7 @@ class ProcessSingleReprimandJob implements ShouldQueue
             // }
 
             // 3) Notify
-            $service->notifyUser($reprimand);
+            // $service->notifyUser($reprimand);
         } catch (\Throwable $e) {
             Log::error('ProcessSingleReprimandJob failed', [
                 'reprimand_id' => $this->reprimandId,

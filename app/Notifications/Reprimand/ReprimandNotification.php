@@ -29,7 +29,11 @@ class ReprimandNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'fcm', 'mail'];
+        return [
+            // 'database',
+            // 'fcm',
+            // 'mail'
+        ];
     }
 
     /**
@@ -62,8 +66,9 @@ class ReprimandNotification extends Notification implements ShouldQueue
         return [
             'token' => $notifiable->fcm_token,
             'notification' => [
-                'title' => "TEST REPRIMAND DEVELOPMENT - ABAIKAN PESAN INI",
-                'body' => $this->message,
+                'title' => "TEST REPRIMAND DEVELOPMENT",
+                'body' => "ABAIKAN PESAN INI",
+                // 'body' => $this->message,
             ],
             'data' => [
                 'notifiable_type' => $this->notificationType->value,

@@ -163,7 +163,6 @@ class RunReprimandService
         DB::transaction(function () use ($runReprimand, $data) {
             $runReprimand->update($data);
 
-
             if ($runReprimand->status->is(RunReprimandStatus::RELEASE)) {
                 // only pluck IDs to save memory
                 $reprimandIds = $runReprimand->reprimands()->select('id')->pluck('id');
@@ -174,14 +173,12 @@ class RunReprimandService
                 foreach ($reprimandIds as $rid) {
                     $jobs[] = new ProcessSingleReprimandJob($rid);
 
-
                     // Dispatch batches in groups to avoid creating extremely large batch objects
                     if (count($jobs) >= $batchSize) {
                         Bus::batch($jobs)
                             ->name("Process Reprimands: run_reprimand_{$runReprimand->id}")
                             ->allowFailures()
                             ->dispatch();
-
 
                         $jobs = [];
                     }
