@@ -30,11 +30,9 @@
             @foreach ($allowances as $allowance)
                 <th>{{ $allowance->name }}</th>
             @endforeach
-
             @foreach ($deductions as $deduction)
                 <th>{{ $deduction->name }}</th>
             @endforeach
-
             @foreach ($benefits as $benefit)
                 <th>{{ $benefit->name }}</th>
             @endforeach
@@ -89,37 +87,27 @@
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
-
                     @foreach ($allowances as $allowance)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ?? 0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->allowance }}</td>
-
                     @foreach ($deductions as $deduction)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)?->amount ?? 0;
                             $cloneTotalDeductionsStorages[$deduction->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->deduction }}</td>
-
                     <td>{{ $runPayrollUser->tax }}</td>
                     <td>{{ $runPayrollUser->thp }}</td>
-
                     @foreach ($benefits as $benefit)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)?->amount ?? 0;
                             $cloneTotalBenefitsStorages[$benefit->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
@@ -130,31 +118,23 @@
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
-
                 @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
-
                 @foreach ($cloneTotalBenefitsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
             </tr>
+            <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
-
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        </tr>
         <tr>
             <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">Resign Users</th>
         </tr>
@@ -166,6 +146,8 @@
                 $totalTax = 0;
                 $totalThp = 0;
                 $totalBenefit = 0;
+                $totalInsurancePrincipal = 0;
+                $totalLoanPrincipal = 0;
                 $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
@@ -203,37 +185,27 @@
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
-
                     @foreach ($allowances as $allowance)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ?? 0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->allowance }}</td>
-
                     @foreach ($deductions as $deduction)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)?->amount ?? 0;
                             $cloneTotalDeductionsStorages[$deduction->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->deduction }}</td>
-
                     <td>{{ $runPayrollUser->tax }}</td>
                     <td>{{ $runPayrollUser->thp }}</td>
-
                     @foreach ($benefits as $benefit)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)?->amount ?? 0;
                             $cloneTotalBenefitsStorages[$benefit->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
@@ -244,31 +216,23 @@
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
-
                 @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
-
                 @foreach ($cloneTotalBenefitsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
             </tr>
+            <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
-
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        <tr>
-            <th colspan="{{ $totalColumns }}"></th>
-        </tr>
         <tr>
             <th colspan="{{ $totalColumns }}" style="font-weight: bold; background-color: yellow">New Users</th>
         </tr>
@@ -280,6 +244,8 @@
                 $totalTax = 0;
                 $totalThp = 0;
                 $totalBenefit = 0;
+                $totalInsurancePrincipal = 0;
+                $totalLoanPrincipal = 0;
                 $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
@@ -317,37 +283,27 @@
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runPayrollUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
-
                     @foreach ($allowances as $allowance)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ?? 0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->allowance }}</td>
-
                     @foreach ($deductions as $deduction)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $deduction->id)?->amount ?? 0;
                             $cloneTotalDeductionsStorages[$deduction->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
                     <td>{{ $runPayrollUser->deduction }}</td>
-
                     <td>{{ $runPayrollUser->tax }}</td>
                     <td>{{ $runPayrollUser->thp }}</td>
-
                     @foreach ($benefits as $benefit)
                         @php
-                            $amount =
-                                $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)
-                                    ?->amount ?? 0;
+                            $amount = $runPayrollUser->components?->firstWhere('payroll_component_id', $benefit->id)?->amount ?? 0;
                             $cloneTotalBenefitsStorages[$benefit->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
@@ -358,24 +314,22 @@
             <tr>
                 <td colspan="15" style="font-weight: bold; background: #ffcbb1;">TOTAL</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
-
                 @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalDeduction }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalTax }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThp }}</td>
-
                 @foreach ($cloneTotalBenefitsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBenefit }}</td>
             </tr>
+            <tr><td colspan="{{ $totalColumns }}"></td></tr>
         @endforeach
     </tbody>
 </table>

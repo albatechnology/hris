@@ -50,7 +50,7 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
     public function scopeApproved(Builder $query)
     {
         $query->has('approvals')
-            ->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS]));
+            ->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::REJECTED, ApprovalStatus::ON_PROGRESS,ApprovalStatus::CANCELLED]));
     }
 
     public function scopeWhereApprovalStatus(Builder $query, string|ApprovalStatus $status = 'pending'): Builder
@@ -70,6 +70,8 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         } elseif ($status == ApprovalStatus::REJECTED->value) {
             return $query->whereHas('approvals', fn($q) => $q->where('approval_status', ApprovalStatus::REJECTED));
             // ->whereDoesntHave('approvals', fn($q) => $q->whereIn('approval_status', [ApprovalStatus::PENDING, ApprovalStatus::APPROVED]));
+        }elseif($status == ApprovalStatus::CANCELLED->value){
+            return $query->whereHas('approvals', fn($q)=> $q->where('approval_status', ApprovalStatus::CANCELLED));
         }
 
         // on_progress
@@ -147,6 +149,9 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
         }
         if ($this->approvals->contains(fn($approval) => $approval->approval_status == ApprovalStatus::REJECTED)) {
             return ApprovalStatus::REJECTED->value;
+        }
+        if ($this->approvals->every(fn($approval) => $approval->approval_status == ApprovalStatus::APPROVED)) {
+            return ApprovalStatus::CANCELLED->value;
         }
 
         return ApprovalStatus::ON_PROGRESS->value;
