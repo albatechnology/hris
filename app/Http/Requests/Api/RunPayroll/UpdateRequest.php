@@ -11,8 +11,6 @@ class UpdateRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
-
     /**
      * Get the validation rules that apply to the request.
      *

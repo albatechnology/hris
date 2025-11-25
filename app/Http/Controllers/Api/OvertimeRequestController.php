@@ -125,11 +125,11 @@ class OvertimeRequestController extends BaseController
         $overtimeRequest = OvertimeRequest::findTenanted($id);
         $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
 
-        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
+        if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approver', code: Response::HTTP_NOT_FOUND);
 
         if (!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        if ($overtimeRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+        if ($overtimeRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED])) {
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -143,6 +143,46 @@ class OvertimeRequestController extends BaseController
         }
 
         return new OvertimeRequestResource($overtimeRequest);
+    }
+
+    public function cancelled(NewApproveRequest $request, int $id): OvertimeRequestResource|JsonResponse
+    {
+        $overtimeRequest = OvertimeRequest::findTenanted($id);
+        $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
+
+        if(!$requestApproval) return $this->errorResponse(message: "You are not registered as approver", code: Response::HTTP_NOT_FOUND);
+
+        if(!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        if($overtimeRequest->approval_status == ApprovalStatus::PENDING->value || $requestApproval->approval_status->in([ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED, ApprovalStatus::PENDING])){
+            return $this->errorResponse(message:'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $requestApproval->update($request->validated());
+        } catch (Exception $th) {
+            return $this->errorResponse($th->getMessage());
+        }
+        return new OvertimeRequestResource($overtimeRequest);
+    }
+
+    public function bulkCancel(BulkApproveRequest $request)
+    {
+        $approverId = auth('sanctum')->id();
+        $requestApprovals = collect($request->ids)->map(fn($id) => $this->cancelValidate($id, $approverId));
+
+        $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
+        DB::beginTransaction();
+        try {
+            $requestApprovals->each(fn($requestApproval) => $requestApproval->update($data));
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse($e->getMessage());
+        }
+
+        return $this->updatedResponse("Data " . $request->approval_status . " successfully");
     }
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
@@ -203,7 +243,27 @@ class OvertimeRequestController extends BaseController
             throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
         }
 
-        if ($overtimeRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+        if ($overtimeRequest->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED])) {
+            throw new UnprocessableEntityHttpException('Status can not be changed');
+        }
+
+        return $requestApproval;
+    }
+
+    public function cancelValidate(int $id, ?int $approverId = null)
+    {
+        $overtimeRequest = OvertimeRequest::findOrFail($id);
+        $requestApproval = $overtimeRequest->approvals()->where('user_id', $approverId ?? auth()->id())->first();
+
+        if (!$requestApproval) {
+            throw new NotFoundHttpException('You are not registered as approved');
+        }
+
+        if (!$overtimeRequest->isDescendantApproved()) {
+            throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
+        }
+
+        if ($overtimeRequest->approval_status == ApprovalStatus::CANCELLED->value || $requestApproval->approval_status->in([ ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED])) {
             throw new UnprocessableEntityHttpException('Status can not be changed');
         }
 
