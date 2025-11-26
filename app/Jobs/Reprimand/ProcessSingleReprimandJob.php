@@ -50,7 +50,7 @@ class ProcessSingleReprimandJob implements ShouldQueue
             if (! $reprimand) return;
 
             // 1) Generate PDF if applicable
-            $service->generatePdf($reprimand);
+            // $service->generatePdf($reprimand);
 
 
             // 2) Apply cut leave if rule present
@@ -60,7 +60,7 @@ class ProcessSingleReprimandJob implements ShouldQueue
             // }
 
             // 3) Notify
-            $service->notifyUser($reprimand);
+            // $service->notifyUser($reprimand);
         } catch (\Throwable $e) {
             Log::error('ProcessSingleReprimandJob failed', [
                 'reprimand_id' => $this->reprimandId,

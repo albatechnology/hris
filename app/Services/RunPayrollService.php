@@ -585,9 +585,30 @@ class RunPayrollService
         $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value; //ambil valuebpjs_kesehatan_max_salary berdasarkan id negara dan id company
         $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value; //ambil valu jaminan_pensiun
 
-        $userIds = isset($request['user_ids']) && !empty($request['user_ids']) ? explode(',', $request['user_ids']) : User::where('company_id', $runPayroll->company_id)
-            ->whenBranch($runPayroll->branch_id)
-            ->pluck('id')->toArray();
+        $userIds = isset($request['user_ids']) && !empty($request['user_ids'])
+            ? User::whereIn('id', explode(',', $request['user_ids']))
+                ->where('company_id', $runPayroll->company_id)
+                ->whenBranch($runPayroll->branch_id)
+                ->whereDoesntHave('runPayrollUser', function ($q) use ($runPayroll) {
+                    $q->whereHas('runPayroll', function ($rp) use ($runPayroll) {
+                        $rp->where('period', $runPayroll->period)
+                            ->where('company_id', $runPayroll->company_id)
+                            ->when($runPayroll->branch_id, fn($b) => $b->where('branch_id', $runPayroll->branch_id))
+                            ->where('status', RunPayrollStatus::RELEASE);
+                    });
+                })
+                ->pluck('id')->toArray()
+            : User::where('company_id', $runPayroll->company_id)
+                ->whenBranch($runPayroll->branch_id)
+                ->whereDoesntHave('runPayrollUser', function ($q) use ($runPayroll) {
+                    $q->whereHas('runPayroll', function ($rp) use ($runPayroll) {
+                        $rp->where('period', $runPayroll->period)
+                            ->where('company_id', $runPayroll->company_id)
+                            ->when($runPayroll->branch_id, fn($b) => $b->where('branch_id', $runPayroll->branch_id))
+                            ->where('status', RunPayrollStatus::RELEASE);
+                    });
+                })
+                ->pluck('id')->toArray();
         //ketika request_ids kosong makaambil semua user, sesuai dengan company_id dari runpayroll yang baru saja dibuat ke database ambil id user dan kembalikan dalam bentuk array
 
         // calculate for each user
@@ -601,7 +622,7 @@ class RunPayrollService
             $user = User::where('id', $userId)->has('payrollInfo')->with('payrollInfo')->first();
             if (!$user) continue;
             $resignDate = null;
-
+            // dd($user);
             if ($user->join_date) {
                 $joinDate = Carbon::parse($user->join_date);
                 if ($joinDate->greaterThan($endDate)) {
@@ -610,11 +631,47 @@ class RunPayrollService
                 }
             }
 
-            if ($user->resign_date) {
+           if ($user->resign_date) {
                 $resignDate = Carbon::parse($user->resign_date);
-                if ($resignDate->lessThan($cutOffEndDate)) {
+                // If user resigned before the payroll period starts, only process active updates (e.g., severance)
+                if ($resignDate->lessThan($startDate)) {
+                    $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
+                        ->where('user_id', $userId)
+                        ->whereHas(
+                            'updatePayrollComponent',
+                            fn($q) => $q->whereCompany($runPayroll->company_id)
+                                ->whenBranch($runPayroll->branch_id)
+                                ->whereActive($startDate, $endDate)
+                        )
+                        ->orderByDesc('id')
+                        ->get();
+
+                    // If there are no active updates for this period, skip the user
+                    if ($updatePayrollComponentDetails->isEmpty()) {
+                        continue;
+                    }
+
+                    // Create the payroll user entry so we can record severance/adjustments
+                    $runPayrollUser = self::assignUser($runPayroll, $userId);
+
+                    // Add each updated component (e.g., severance pay) for the user
+                    foreach ($updatePayrollComponentDetails as $upd) {
+                        $component = PayrollComponent::tenanted()
+                            ->whereCompany($runPayroll->company_id)
+                            ->whenBranch($runPayroll->branch_id)
+                            ->where('id', $upd->payroll_component_id)
+                            ->first();
+
+                        if (!$component) continue;
+
+                        // For ONE_TIME components, this prevents double payment across released runs
+                        $amount = self::calculatePayrollComponentPeriodType($component, $upd->new_amount, 0, $runPayrollUser, $upd);
+                        self::createComponent($runPayrollUser, $component, $amount);
+                    }
+
+                    // Refresh totals and move to next user
+                    self::refreshRunPayrollUser($runPayrollUser);
                     continue;
-                    //untuk user yang sudah resign sebelum cutoff tidak perlu dihitung
                 }
             }
 
