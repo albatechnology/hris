@@ -565,7 +565,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 }
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-                if ($updatePayrollComponentDetail) {
+                if ($updatePayrollComponentDetail && $payrollComponent->is_prorate) {
                     $updatePayrollComponentAmount = $this->calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
 
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
