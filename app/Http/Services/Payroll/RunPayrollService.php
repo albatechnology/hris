@@ -565,7 +565,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 }
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-                if ($updatePayrollComponentDetail) {
+                if ($updatePayrollComponentDetail && $payrollComponent->is_prorate) {
                     $updatePayrollComponentAmount = $this->calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
 
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
@@ -574,11 +574,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
                     // calculate prorate
-                    if($payrollComponent->is_prorate){
-                        $amount = $this->newProrate(0, $updatePayrollComponentAmount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
-                    } else {
-                        $amount = $updatePayrollComponentDetail->new_amount;
-                    }
+                    $amount = $this->newProrate(0, $updatePayrollComponentAmount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
 
 
                     // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
