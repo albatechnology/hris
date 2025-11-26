@@ -79,7 +79,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         ];
     }
 
-    public function store(RunPayrollDTO $dto): RunPayroll
+    public function store(RunPayrollDTO $dto): RunPayroll|JsonResponse
     {
 
         return $this->execute($dto);
@@ -97,6 +97,32 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
         $cutOffAttendance = self::generateDate($payrollSetting->cut_off_attendance_start_date, $payrollSetting->cut_off_attendance_end_date, $dto->period, $payrollSetting->is_attendance_pay_last_month);
         $payrollDate = self::generateDate($payrollSetting->payroll_start_date, $payrollSetting->payroll_end_date, $dto->period);
+
+        $eligibleUsersCount = User::query()
+            ->when(count($dto->array_user_ids), fn($q) => $q->whereIn('id', $dto->array_user_ids))
+            ->whenBranch($dto->branch_id)
+            ->whereDoesntHave('runPayrollUser', function ($q) use ($dto) {
+                $q->whereHas('runPayroll', function ($rp) use ($dto) {
+                    $rp->where('period', $dto->period)
+                        ->where('company_id', $dto->company_id)
+                        ->when($dto->branch_id, fn($b) => $b->where('branch_id', $dto->branch_id))
+                        ->where('status', RunPayrollStatus::RELEASE);
+                });
+            })
+            ->where('company_id', $dto->company_id)
+            ->whereDate('join_date', '<=', $payrollDate['end'])
+            ->has('payrollinfo')
+            ->count();
+
+        if ($eligibleUsersCount === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => count($dto->array_user_ids) > 0
+                    ? 'All selected users have already been released for this period.'
+                    : 'No eligible users found for this payroll period. All users have already been released.',
+                'data' => null
+            ], 422);
+        }
 
         // $request = array_merge($request, [
         //     'cut_off_start_date' => $cutOffAttendance['start'],
@@ -319,7 +345,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $totalPresentDates = collect($dataTotalAttendance['total_present_dates']);
         $totalWorkingDays = $dataTotalAttendance['total_working_days'];
         // $totalWorkingDaysDates = collect($dataTotalAttendance['total_working_days_dates']);
-
         if ($startEffectiveDate->between($startDate, $endDate)) {
             // ex: $startEffective = 2025-09-15 $endEffectiveDate = 2025-09-30, $startDate = 2025-09-01 $endDate = 2025-09-30
 
@@ -407,6 +432,14 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $users = User::query()
             ->when(count($dto->array_user_ids), fn($q) => $q->whereIn('id', $dto->array_user_ids))
             ->whenBranch($runPayroll->branch_id)
+            ->whereDoesntHave('runPayrollUser', function ($q) use ($runPayroll) {
+                $q->whereHas('runPayroll', function ($rp) use ($runPayroll) {
+                    $rp->where('period', $runPayroll->period)
+                        ->where('company_id', $runPayroll->company_id)
+                        ->when($runPayroll->branch_id, fn($b) => $b->where('branch_id', $runPayroll->branch_id))
+                        ->where('status', RunPayrollStatus::RELEASE);
+                });
+            })
             ->where('company_id', $runPayroll->company_id)
             ->whereDate('join_date', '<=', $runPayroll->payroll_end_date)
             ->has('payrollInfo')
@@ -448,7 +481,44 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             if ($user->resign_date) {
                 $resignDate = Carbon::parse($user->resign_date);
-                if ($resignDate->lessThan($cutOffEndDate)) {
+                // If user resigned before the payroll period starts, only process active updates (e.g., severance)
+                if ($resignDate->lessThan($startDate)) {
+                    $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
+                        ->where('user_id', $user->id)
+                        ->whereHas(
+                            'updatePayrollComponent',
+                            fn($q) => $q->whereCompany($runPayroll->company_id)
+                                ->whenBranch($runPayroll->branch_id)
+                                ->whereActive($startDate, $endDate)
+                        )
+                        ->orderByDesc('id')
+                        ->get();
+                    // dd($updatePayrollComponentDetails);
+                    // If there are no active updates for this period, skip the user
+                    if ($updatePayrollComponentDetails->isEmpty()) {
+                        continue;
+                    }
+
+                    // Create the payroll user entry so we can record severance/adjustments
+                    $runPayrollUser = self::assignUser($runPayroll, $user->id);
+
+                    // Add each updated component (e.g., severance pay) for the user
+                    foreach ($updatePayrollComponentDetails as $upd) {
+                        $component = PayrollComponent::tenanted()
+                            ->whereCompany($runPayroll->company_id)
+                            ->whenBranch($runPayroll->branch_id)
+                            ->where('id', $upd->payroll_component_id)
+                            ->first();
+
+                        if (!$component) continue;
+
+                        // For ONE_TIME components, this prevents double payment across released runs
+                        $amount = self::calculatePayrollComponentPeriodType($component, $upd->new_amount, 0, $runPayrollUser, $upd);
+                        self::createComponent($runPayrollUser, $component, $amount);
+                    }
+
+                    // Refresh totals and move to next user
+                    self::refreshRunPayrollUser($runPayrollUser);
                     continue;
                 }
             }
@@ -514,19 +584,17 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
             //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
             // }
-
             if ($updatePayrollComponentDetail) {
                 $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
                 // end_date / endEffectiveDate can be null
                 $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
-                // calculate prorate
                 $userBasicSalary = $this->newProrate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
             } else {
-                if ($basicSalaryComponent->is_prorate) {
-                    $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
-                }
+                // if ($basicSalaryComponent->is_prorate) {
+                //     $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                // }
             }
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
@@ -565,7 +633,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 }
 
                 $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-                if ($updatePayrollComponentDetail && $payrollComponent->is_prorate) {
+                if ($updatePayrollComponentDetail) {
                     $updatePayrollComponentAmount = $this->calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
 
                     $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
@@ -573,9 +641,13 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     // end_date / endEffectiveDate can be null
                     $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
+                    if ($payrollComponent->is_prorate) {
+                        $amount = $this->newProrate(0, $amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                    } else {
+                        $amount = $updatePayrollComponentDetail->new_amount;
+                    }
                     // calculate prorate
-                    $amount = $this->newProrate(0, $updatePayrollComponentAmount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
-
+                    // $amount = $this->newProrate(0, $updatePayrollComponentAmount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
 
                     // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -599,7 +671,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * third, calculate alpa
              */
-            if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+            if ($user->payrollInfo?->is_ignore_alpa == false && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && (config('app.name') != 'SUNSHINE' || !$isFirstTimePayroll)) {
                 // $alpaComponent = PayrollComponent::tenanted()
                 //     ->where('company_id', $runPayroll->company_id)
                 //     ->whenBranch($runPayroll->branch_id)
