@@ -789,7 +789,7 @@ class RunPayrollService
             /**
              * third, calculate alpa
              */
-            if ($user->payrollInfo?->is_ignore_alpa == false && !$isFirstTimePayroll && !$joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+            if ($user->payrollInfo?->is_ignore_alpa == false && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && (config('app.name') == 'SUNSHINE' && !$isFirstTimePayroll)) {
                 $alpaComponent = PayrollComponent::tenanted()
                     ->where('company_id', $runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
