@@ -550,6 +550,12 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
+                $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll(
+                    $payrollSetting,
+                    $user,
+                    $cutOffStartDate,
+                    $cutOffEndDate
+                );
                 $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
                 $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
 
