@@ -493,7 +493,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                         )
                         ->orderByDesc('id')
                         ->get();
-                    // dd($updatePayrollComponentDetails);
                     // If there are no active updates for this period, skip the user
                     if ($updatePayrollComponentDetails->isEmpty()) {
                         continue;
@@ -550,20 +549,46 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
-                $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll(
-                    $payrollSetting,
-                    $user,
-                    $cutOffStartDate,
-                    $cutOffEndDate
-                );
-                $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
-                $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
 
+                if ($payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY)) {
+                    $totalCalendarDaysFullPeriod = $startDate->diffInDays($endDate) + 1;
+                    $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+                    $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll(
+                        $payrollSetting,
+                        $user,
+                        $cutOffStartDate,
+                        $cutOffEndDate
+                    );
+
+                    $dataTotalAttendance['total_working_days'] = $totalCalendarDaysFullPeriod;
+                    $totalWorkingDays = $totalCalendarDaysFullPeriod;
+                } else {
+                    $dataTotalAttendanceFullPeriod = AttendanceHelper::getTotalAttendanceForPayroll(
+                        $payrollSetting,
+                        $user,
+                        $cutOffStartDate,
+                        $endDate
+                    );
+
+                    $totalWorkingDaysFullPeriod = $dataTotalAttendanceFullPeriod['total_working_days'];
+                    $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
+
+                    $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll(
+                        $payrollSetting,
+                        $user,
+                        $cutOffStartDate,
+                        $cutOffEndDate
+                    );
+                    $dataTotalAttendance['total_working_days'] = $totalWorkingDaysFullPeriod;
+
+                    $totalWorkingDays = $totalWorkingDaysFullPeriod;
+                }
                 $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
             } else {
                 // $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
                 // $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
                 $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
+                // dd($dataTotalAttendance);
                 $totalPresent = $dataTotalAttendance['total_present'];
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
             }
@@ -646,11 +671,14 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                     // end_date / endEffectiveDate can be null
                     $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
-
+                    // dd($payrollComponent->period_type);
                     if ($payrollComponent->is_prorate) {
                         $amount = $this->newProrate(0, $amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                    } elseif ($payrollComponent->period_type->is(PayrollComponentPeriodType::DAILY)) {
+                        $amount = $this->newProrate(0, $updatePayrollComponentAmount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
                     } else {
                         $amount = $updatePayrollComponentDetail->new_amount;
+                        // $amount = $this->newProrate(0, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
                     }
                     // calculate prorate
                     // $amount = $this->newProrate(0, $updatePayrollComponentAmount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
@@ -660,7 +688,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     // // end_date / endEffectiveDate can be null
                     // $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
-                    // calculate prorate
+                    // // calculate prorate
                     // $amount = $this->prorate($amount, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate, true);
 
                     // $amount = $this->calculatePayrollComponentPeriodType($payrollComponent, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $runPayrollUser, $updatePayrollComponentDetail);
@@ -670,6 +698,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                         $amount = $this->newProrate(0, $amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
                     }
                 }
+                // dump($amount);
                 $this->createComponent($runPayrollUser, $payrollComponent, $amount);
             });
             // END
