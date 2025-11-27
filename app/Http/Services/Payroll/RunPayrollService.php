@@ -556,11 +556,8 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $cutOffStartDate,
                     $cutOffEndDate
                 );
-            dump($dataTotalAttendance);
                 $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
                 $totalPresent = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
-            dump($totalWorkingDays);
-            dd($totalPresent);
 
                 $userBasicSalary = ($userBasicSalary / $totalWorkingDays) * $totalPresent;
             } else {
@@ -570,7 +567,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 $totalPresent = $dataTotalAttendance['total_present'];
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
             }
-            dd($user->toArray());
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
                 ->where('user_id', $user->id)
