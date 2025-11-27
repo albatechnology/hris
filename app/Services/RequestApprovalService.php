@@ -81,7 +81,7 @@ class RequestApprovalService
         if (
             ($user?->company_id == 1) &&
             config('app.name') == "SUNSHINE" &&
-            (($requestedbaseModel instanceof OvertimeRequest && in_array($requestedbaseModel->overtime_id, [7, 8, 9, 13])) || $requestedbaseModel instanceof TaskRequest)
+            (($requestedbaseModel instanceof OvertimeRequest && in_array($requestedbaseModel->overtime_id, [7, 8, 9, 13])))
         ) {
             return [
                 [
