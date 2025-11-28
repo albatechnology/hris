@@ -455,7 +455,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $insuranceComponent = $allPayrollComponents->where('category', PayrollComponentCategory::INSURANCE)->first();
         $overtimePayrollComponent = $allPayrollComponents->where('category', PayrollComponentCategory::OVERTIME)->first();
         $bpjsKesehatanFamilyComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
-
         $payrollComponents =  PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
         $bpjsPayrollComponents =  PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
 
@@ -671,7 +670,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                     // end_date / endEffectiveDate can be null
                     $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
-                    // dd($payrollComponent->period_type);
                     if ($payrollComponent->is_prorate) {
                         $amount = $this->newProrate(0, $amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
                     } elseif ($payrollComponent->period_type->is(PayrollComponentPeriodType::DAILY)) {
@@ -698,7 +696,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                         $amount = $this->newProrate(0, $amount, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
                     }
                 }
-                // dump($amount);
                 $this->createComponent($runPayrollUser, $payrollComponent, $amount);
             });
             // END
@@ -715,7 +712,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
                 $totalAlpa = $totalWorkingDays - $dataTotalAttendance['total_present'];
 
-                if ($alpaComponent && $totalAlpa > 0) {
+                if ($alpaComponent && $totalAlpa > 0 && !($user->company?->is_roster ?? false)) {
                     $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
                     if ($alpaUpdateComponent) {
                         $amount = $alpaUpdateComponent->new_amount;

@@ -43,7 +43,6 @@ class AttendanceHelper
             $totalWorkingDayDates = collect($dateRange)
                 ->mapWithKeys(fn($date) => [$date->toDateString() => $date->toDateString()])
                 ->toArray();
-
             // Ambil tanggal terakhir dari date range
             $lastDate = $dateRange->last();
 
@@ -54,7 +53,8 @@ class AttendanceHelper
                 ->toArray();
         }
 
-        $isBaseOnCalendarDayAndNotIgnoreAlpa = $payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY) && !$user->payrollInfo->is_ignore_alpa;
+        $isBaseOnCalendarDayAndNotIgnoreAlpa = $payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY) && !$user->payrollInfo->is_ignore_alpa && !($user->company?->is_roster ?? false);
+        $isRosterBaseOnCalendaryDay = $payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY) && ($user->company?->is_roster ?? false);
         if (
             $payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_WORKING_DAY)
             || ($isBaseOnCalendarDayAndNotIgnoreAlpa)
@@ -137,6 +137,83 @@ class AttendanceHelper
             }
         } elseif ($payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY) && $user->payrollInfo->is_ignore_alpa) {
             $totalPresentDates = $dateRange;
+        }elseif($isRosterBaseOnCalendaryDay){
+            $attendances = Attendance::select([
+                'id',
+                'schedule_id',
+                'shift_id',
+                'timeoff_id',
+                'date',
+            ])
+                ->where('user_id', $user->id)
+                ->where(
+                    fn($q) => $q->whereHas('details', fn($q) => $q->approved())->orHas('timeoff')
+                )
+                ->whereDate('date', '>=', $startDate->format('Y-m-d'))
+                ->whereDate('date', '<=', $endDate->format('Y-m-d'))
+                ->with([
+                    'clockIn' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                    'clockOut' => fn($q) => $q->approved()->select('id', 'attendance_id'),
+                    'timeoff' => fn($q) => $q->select('id', 'is_cancelled'),
+                ])
+                ->get(['id', 'date', 'timeoff_id']);
+
+            $isDateRangeInstanceCarbonPeriod = $dateRange instanceof CarbonPeriod;
+            foreach ($dateRange as $date) {
+                $totalPresentWasAdded = false;
+                $totalWorkingDayWasAdded = false;
+                if ($isDateRangeInstanceCarbonPeriod) {
+                    $date = $date->format("Y-m-d");
+                }
+
+                $todaySchedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'is_overide_national_holiday', 'is_overide_company_holiday', 'effective_date'], ['id', 'is_dayoff']);
+
+                if (!$todaySchedule?->shift) {
+                    continue;
+                }
+
+                $attendanceOnDate = $attendances->firstWhere('date', $date);
+
+                if ($todaySchedule?->shift->is_dayoff) {
+                    continue;
+                }
+
+                if ($attendanceStartDate->greaterThan($date)) {
+                    $totalPresentWasAdded = true;
+                }
+
+                $nationalHoliday = Event::whereNationalHoliday()
+                    ->where('company_id', $user->company_id)
+                    ->where(
+                        fn($q) => $q->whereDate('start_at', '<=', $date)
+                            ->whereDate('end_at', '>=', $date)
+                    )
+                    ->exists();
+
+                // jika nationalHoliday dan schedule tidak termasuk holiday maka dianggap masuk
+                if ($nationalHoliday && $todaySchedule->is_overide_national_holiday == false) {
+                    $totalWorkingDayWasAdded = true;
+                }
+
+                // only for BASE_ON_WORKING_DAY
+                if (!$totalWorkingDayWasAdded && !$payrollSetting->prorate_setting->is(ProrateSetting::BASE_ON_CALENDAR_DAY)) {
+                    $totalWorkingDayDates[$date] = $date;
+                }
+
+                if ($attendanceOnDate?->timeoff && $attendanceOnDate->timeoff->approval_status == ApprovalStatus::APPROVED->value && $attendanceOnDate->timeoff->is_cancelled == false) {
+                    if (!$totalPresentWasAdded) {
+                        $totalPresentDates[$date] = $date;
+                        continue;
+                    }
+                }
+
+                if ($attendanceOnDate?->clockIn && $attendanceOnDate?->clockOut) {
+                    if (!$totalPresentWasAdded) {
+                        $totalPresentDates[$date] = $date;
+                        continue;
+                    }
+                }
+            }
         }
 
         return [
