@@ -31,12 +31,14 @@ class Company extends BaseModel implements TenantedInterface
         'address',
         'currency_code',
         'jkk_tier',
-        'employee_prefix'
+        'employee_prefix',
+        'is_roster'
     ];
 
     protected $casts = [
         'currency_code' => CurrencyCode::class,
         'jkk_tier' => JkkTier::class,
+        'is_roster' => 'boolean'
     ];
 
     public function scopeTenanted(Builder $query): Builder

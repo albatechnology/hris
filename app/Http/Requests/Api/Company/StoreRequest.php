@@ -40,7 +40,8 @@ class StoreRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'address' => 'nullable|string',
-            'employee_prefix' => [Rule::requiredIf(config('app.name') == 'SUNSHINE'), 'string']
+            'employee_prefix' => [Rule::requiredIf(config('app.name') == 'SUNSHINE'), 'string'],
+            'is_roster' => 'nullable|boolean'
 
             // timeoff_regulations
             // 'renew_type' => ['required', Rule::enum(TimeoffRenewType::class)],

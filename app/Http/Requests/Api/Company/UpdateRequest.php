@@ -26,7 +26,8 @@ class UpdateRequest extends FormRequest
             'lat' => 'nullable|string',
             'lng' => 'nullable|string',
             'address' => 'nullable|string',
-            'employee_prefix' => 'nullable|string'
+            'employee_prefix' => 'nullable|string',
+            'is_roster' => 'nullable|boolean'
         ];
     }
 }
