@@ -573,12 +573,35 @@ class UserController extends BaseController
                         RequestChangeDataType::updateData($data['type'], $user->id, $data['value']);
                     }
                 }
-                $defaultApproverId = $user->company?->settings()->where('key',SettingKey::REQUEST_APPROVER)->value('value');
+                // $settingKey = $photoProfile ? SettingKey::PROFILE_PICTURE_APPROVER : SettingKey::REQUEST_APPROVER;
+                // $defaultApproverId = $user->company?->settings()->where('key',$settingKey)->value('value');
 
                 $approvers = [];
-                if($defaultApproverId && User::where('id',$defaultApproverId)->exists()){
-                    $approvers[] = ['user_id' => (int)$defaultApproverId];
+
+                $requestApproverId = $user->company?->settings()
+                    ->where('key', SettingKey::REQUEST_APPROVER)
+                    ->value('value');
+
+                if($requestApproverId && User::where('id', $requestApproverId)->exists()){
+                    $approvers[] = ['user_id' => (int) $requestApproverId];
                 }
+
+                if($photoProfile){
+                    $profilePictureApproverId = $user->company?->settings()
+                        ->where('key',SettingKey::PROFILE_PICTURE_APPROVER)
+                        ->value('value');
+
+                        if($profilePictureApproverId && User::where('id', $profilePictureApproverId)->exists()){
+                            $existingApproverIds = collect($approvers)->pluck('user_id')->toArray();
+
+                            if(!in_array((int) $profilePictureApproverId, $existingApproverIds)){
+                                $approvers[] = ['user_id' => (int) $profilePictureApproverId];
+                            }
+                        }
+                }
+                // if($defaultApproverId && User::where('id',$defaultApproverId)->exists()){
+                //     $approvers[] = ['user_id' => (int)$defaultApproverId];
+                // }
 
                 if($approvers)
                 {
