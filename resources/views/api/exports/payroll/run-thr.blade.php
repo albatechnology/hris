@@ -18,8 +18,10 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Code</th>
              <th style="text-align: center; font-weight: bold" rowspan="2">THR Pro Rate</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Basic Salary</th>
-            {{-- <th style="text-align: center; font-weight: bold" colspan="{{ $allowances->count() }}">Allowance</th> --}}
-            {{-- <th style="text-align: center; font-weight: bold" rowspan="2">Total Allowance</th> --}}
+            {{-- FOR SUNSHINE --}}
+            <th style="text-align: center; font-weight: bold" colspan="1">Allowance</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Total Allowance</th>
+            {{-- FOR SUNSHINE --}}
             <th style="text-align: center; font-weight: bold" colspan="{{ $deductions->count() }}">Deduction
                 {{ date('M-Y', strtotime($runThr->thr_date)) }}</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total Deduction</th>
@@ -40,7 +42,11 @@
         <tr>
             {{-- @foreach ($allowances as $allowance)
                 <th>{{ $allowance->name }}</th>
-            @endforeach --}}
+                @endforeach --}}
+
+            {{-- FOR SUNSHINE --}}
+            <th>Allowance TAX</th>
+
 
             @foreach ($deductions as $deduction)
                 <th>{{ $deduction->name }}</th>
@@ -53,13 +59,13 @@
     </thead>
     <tbody>
         <tr>
-            <th colspan="{{ $totalColumns+1 }}" style="font-weight: bold; background-color: yellow">Active Users</th>
+            <th colspan="{{ $totalColumns+3 }}" style="font-weight: bold; background-color: yellow">Active Users</th>
         </tr>
         @foreach ($activeUsers as $group)
             @php
                 $totalBasicSalary = 0;
                 $totalThrProrate = 0;
-                // $totalAllowance = 0;
+                $totalAllowance = 0; // FOR SUNSHINE
                 $totalDeduction = 0;
                 $totalTax = 0;
                 $totalThp = 0;
@@ -78,7 +84,7 @@
                     $totalThrProrate += $runThrUser->basic_salary;
                     // $totalBasicSalary += $runThrUser->basic_salary;
                      $totalBasicSalary += $runThrUser->base_salary_original;
-                    // $totalAllowance += $runThrUser->allowance;
+                    $totalAllowance += $runThrUser->tax_thr; // FOR SUNSHINE
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax;
                     $totalThp += $runThrUser->total_month;
@@ -125,6 +131,10 @@
                     @endforeach
                     <td>{{ $runThrUser->allowance }}</td> --}}
 
+                    {{-- FOR SUNSHINE --}}
+                    <td>{{ $runThrUser->tax_thr }}</td>
+                    <td>{{ $runThrUser->tax_thr }}</td>
+
                     @foreach ($deductions as $deduction)
                         @php
                             $amount =
@@ -152,7 +162,11 @@
                     <td>{{ $runThrUser->total_beban_month }}</td>
                     <td>{{ $runThrUser->total_tax_month }}</td>
                     <td>{{ $runThrUser->tax_thr }}</td>
+                    @if(config('app.name') == 'Sunshine')
+                    <td>{{ $runThrUser->basic_salary }}</td>
+                    @else
                     <td>{{ $runThrUser->thp_thr }}</td>
+                    @endif
                 </tr>
             @endforeach
             <tr>
@@ -164,6 +178,10 @@
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td> --}}
+
+                {{-- FOR SUNSHINE --}}
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
 
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
@@ -185,12 +203,12 @@
         @endforeach
 
         <tr>
-            <th colspan="{{ $totalColumns+1 }}"></th>
+            <th colspan="{{ $totalColumns+3 }}"></th>
         <tr>
-            <th colspan="{{ $totalColumns+1 }}"></th>
+            <th colspan="{{ $totalColumns+3 }}"></th>
         </tr>
         <tr>
-            <th colspan="{{ $totalColumns+1 }}" style="font-weight: bold; background-color: yellow">Resign Users</th>
+            <th colspan="{{ $totalColumns+3 }}" style="font-weight: bold; background-color: yellow">Resign Users</th>
         </tr>
         @foreach ($resignUsers as $group)
             @php
@@ -323,12 +341,12 @@
         @endforeach
 
         <tr>
-            <th colspan="{{ $totalColumns+1 }}"></th>
+            <th colspan="{{ $totalColumns+3 }}"></th>
         <tr>
-            <th colspan="{{ $totalColumns+1 }}"></th>
+            <th colspan="{{ $totalColumns+3 }}"></th>
         </tr>
         <tr>
-            <th colspan="{{ $totalColumns+1 }}" style="font-weight: bold; background-color: yellow">New Users</th>
+            <th colspan="{{ $totalColumns+3 }}" style="font-weight: bold; background-color: yellow">New Users</th>
         </tr>
         @foreach ($newUsers as $group)
             @php

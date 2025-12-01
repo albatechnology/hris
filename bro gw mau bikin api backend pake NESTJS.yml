@@ -1,0 +1,46 @@
+bro gw mau bikin api backend pake NESTJS dan PrismaORM untuk aplikasi kursus music.
+disini ada 3 kategori users, yaitu admin, teacher, student.
+
+akan ada master kelas, contoh: Kelas Piano, Kelas Gitar, dan lain lain.
+
+masing masing kelas akan ada periode pembelajarannya dan frekuensi belajarnya berapa kali seminggu dan di jam berapa aja, tapi student bisa pilih sendiri mau berapa kali dia pilih jadwal belajar dalam seminggu.
+contoh, Kelas Gitar dibuka mulai 1 Januari 2026 hingga 31 Mei 2026. di sistem dibuka setiap hari atau bisa pilih hari tertentu, dan di hari itu jam berapa sampe jam berapa, nanti student bisa pilih sendiri jadwalnya di hari apa dan jam berapa, dan bisa pilih lebih dari 1 hari.
+misal :
+schedule hari senin:
+1. 08.00 - 10.00
+2. 12.00 - 15.00
+3. 17.00 - 20.00
+
+schedule hari selasa:
+1. 08.00 - 10.00
+2. 12.00 - 15.00
+3. 17.00 - 20.00
+
+student bisa pilih jadwal di hari senin jam 08.00 - 10.00 dan di hari selasa jam 17.00 - 20.00
+
+
+
+kategori class,
+
+music class
+users
+billing monthly
+
+schedule
+
+teacher bisa lihat jadwal ngajarnya
+siswanya ada berapa
+
+komisi teacher, percentage dari tagihan bulanna siswanya
+teacher bisa lihat siswanya sudah bayar atau belum
+
+teacher isi report harian siswa, hari ini belajar apa, ngapain aja
+
+teacher harus start end class
+
+student tap atau face recog ke kelas
+
+event
+event boleh pilih dari student nya, atau orang daftar dari luar
+
+jualan product

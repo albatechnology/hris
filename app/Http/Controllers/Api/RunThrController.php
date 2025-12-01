@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\CountrySettingKey;
 use App\Exports\RunThrExport;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
-use App\Http\Requests\Api\RunThr\UpdateUserComponentRequest;
+use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunThr\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Bank;
@@ -189,7 +189,6 @@ class RunThrController extends BaseController
 
 
         $body = "";
-        $totalAmount = 0;
         foreach ($datas as $runThrUser) {
             if (!$runThrUser->user) {
                 throw new Exception("User with ID $runThrUser->user_id not found");
@@ -215,7 +214,13 @@ class RunThrController extends BaseController
             $body .= 'P'; // 1 M
             $body .= substr(trim($runThrUser->user->payrollInfo->bank_account_no) . str_repeat(' ', 34), 0, 34); // 34 M
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
-            $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+
+            if (config('app.name') === 'SUNSHINE') {
+                $body .= substr(str_repeat('0', 14) . number_format($runThrUser->basic_salary, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            } else {
+                $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            }
+
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
 
             $body .= str_repeat(' ', 255); // 255 O
@@ -287,11 +292,22 @@ class RunThrController extends BaseController
             $body .= PHP_EOL;
             $body .= '0'; // 1 default_1
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_no, 0, 10); // 10 account_number
-            $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
+
+            if (config('app.name') === 'SUNSHINE') {
+                $body .= substr(str_repeat('0', 15) . number_format($runThrUser->basic_salary, 2, '', ''), -15, 15); // 15 pay_amount
+            } else {
+                $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
+            }
+
             $body .= substr($runThrUser->user->nik . str_repeat(' ', 10), 0, 10); // 10 nik;
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30); // 30 name
             $body .= substr('DEP0' . str_repeat(' ', 4), 0, 4); // 4 DEP0
-            $totalAmount += $runThrUser->thp_thr;
+
+            if (config('app.name') === 'SUNSHINE') {
+                $totalAmount += $runThrUser->basic_salary;
+            } else {
+                $totalAmount += $runThrUser->thp_thr;
+            }
         }
 
         $totalData = $datas->count();

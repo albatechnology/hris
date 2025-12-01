@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\CountrySettingKey;
-use App\Enums\OvertimeSetting;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
@@ -533,13 +532,18 @@ class RunThrService
         $thrMultiplier = $months >= 12 ? 1 : ($months / 12);
         // dd($thrMultiplier, $months);
         $thrProrate = round($thrMultiplier * $basicSalary);
+        // dump($thrProrate);
 
         $totalBebanMonth = round($totalMonth + $thrProrate);
+        // dump($totalBebanMonth);
         $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth) / 100);
+        // dump($taxAfter);
         $taxThr = round($taxAfter - $tax);
+        // dump($taxThr);
         $thpThr = round($thrProrate - $taxThr);
+        // dump($thpThr);
         $basicSalaryPersisted = $thrProrate;
-
+        // dump($basicSalaryPersisted);
 
         $runThrUser->update([
             'basic_salary' => $basicSalaryPersisted,
