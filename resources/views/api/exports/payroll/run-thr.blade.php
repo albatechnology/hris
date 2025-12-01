@@ -162,7 +162,7 @@
                     <td>{{ $runThrUser->total_beban_month }}</td>
                     <td>{{ $runThrUser->total_tax_month }}</td>
                     <td>{{ $runThrUser->tax_thr }}</td>
-                    @if(config('app.name') == 'Sunshine')
+                    @if(config('app.name') == 'SUNSHINE')
                     <td>{{ $runThrUser->basic_salary }}</td>
                     @else
                     <td>{{ $runThrUser->thp_thr }}</td>

@@ -97,7 +97,20 @@ class RunThrUser extends BaseModel
 
     public function getThpThrAttribute(): int
     {
+        if (config('app.name') == 'SUNSHINE') {
+            return $this->basic_salary;
+        }
+
         return $this->thr_prorate - $this->tax_thr;
+    }
+
+    public function getAllowanceAttribute(): int
+    {
+        if (config('app.name') == 'SUNSHINE') {
+            return $this->tax_thr;
+        }
+
+        return $this->allowance;
     }
 
     public function getThpAttribute(): int
