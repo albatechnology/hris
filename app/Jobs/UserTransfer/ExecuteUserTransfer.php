@@ -5,7 +5,7 @@ namespace App\Jobs\UserTransfer;
 use App\Http\Services\UserTransfer\UserTransferService;
 use App\Models\UserTransfer;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 
 class ExecuteUserTransfer implements ShouldQueue
