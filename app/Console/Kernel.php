@@ -15,7 +15,8 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->monthlyOn(1, '02:00');
+        // $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->monthlyOn(1, '02:00');
+        $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->dailyAt('14:54');
         // $schedule->job(new \App\Jobs\AnnualLeave\NewEmployeeCharyuning)->dailyAt('18:06');
         $schedule->job(new \App\Jobs\UserTransfer\ExecuteUserTransfer)->dailyAt('02:00');
         $schedule->job(new AbsenceReminderBatch())->everyFiveMinutes();

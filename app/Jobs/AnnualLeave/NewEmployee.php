@@ -75,6 +75,7 @@ class NewEmployee implements ShouldQueue
         foreach ($companies as $company) {
             $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()
+                ->whereNull('resign_date')
                 ->where('company_id', $company->id)
                 ->whereDate('join_date', '>', now()->subYear())
                 ->whereDate('join_date', '<=', $joinMonth)
