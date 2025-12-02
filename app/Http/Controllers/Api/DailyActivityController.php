@@ -104,7 +104,7 @@ class DailyActivityController extends BaseController
             ])
             ->get();
 
-        $html = view('api.exports.daily-activity.daily-activity', compact('dailyActivities', 'startAt', 'endAt'))->render();
+        $html = view('api.exports.daily-activity.daily-activity', compact('dailyActivities'))->render();
 
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-excel')
