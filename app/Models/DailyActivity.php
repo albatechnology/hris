@@ -14,6 +14,9 @@ class DailyActivity extends BaseModel implements TenantedInterface, HasMedia
 
     protected $fillable = [
         'user_id',
+        'title',
+        'start_at',
+        'end_at',
         'description',
     ];
 
@@ -25,5 +28,15 @@ class DailyActivity extends BaseModel implements TenantedInterface, HasMedia
     public function scopeWhereBranchId(Builder $query, $branchId)
     {
         $query->whereHas('user', fn($q) => $q->where('branch_id', $branchId));
+    }
+
+    public function scopeStartAtStart(Builder $query, $date)
+    {
+        $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($date)));
+    }
+
+    public function scopeEndAtEnd(Builder $query, $date)
+    {
+        $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
     }
 }

@@ -29,9 +29,9 @@ class DailyActivityController extends BaseController
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::scope('company_id', 'whereCompanyId'),
                 AllowedFilter::scope('branch_id', 'whereBranchId'),
-                AllowedFilter::scope('created_start_date', 'createdAtStart'),
-                AllowedFilter::scope('created_end_date', 'createdAtEnd'),
-                'description',
+                AllowedFilter::scope('start_at', 'startAt'),
+                AllowedFilter::scope('end_at', 'endAt'),
+                'title',
             ])
             ->allowedIncludes(
                 AllowedInclude::callback('user', function ($query) {
@@ -41,7 +41,9 @@ class DailyActivityController extends BaseController
             ->allowedSorts([
                 'id',
                 'user_id',
-                'description',
+                'title',
+                'start_at',
+                'end_at',
                 'created_at',
             ])
             ->with(['media'])
@@ -53,6 +55,10 @@ class DailyActivityController extends BaseController
     public function show(int $id)
     {
         $activity = $this->service->findById($id);
+        if (!$activity) {
+            return $this->errorResponse('Daily Activity not found', code: 404);
+        }
+
         return new DefaultResource($activity->load([
             'user' => fn($q) => $q->select('id', 'name'),
             'media',
@@ -65,19 +71,49 @@ class DailyActivityController extends BaseController
         return $this->createdResponse();
     }
 
-    public function update(int $id, UpdateRequest $request)
-    {
-        if (!$this->service->update($id, $request->validated())) {
-            return $this->errorResponse('Daily Activity not found', code: 404);
-        }
+    // public function update(int $id, UpdateRequest $request)
+    // {
+    //     if (!$this->service->update($id, $request->validated())) {
+    //         return $this->errorResponse('Daily Activity not found', code: 404);
+    //     }
 
-        return $this->updatedResponse();
-    }
+    //     return $this->updatedResponse();
+    // }
 
     public function destroy(int $id)
     {
         $this->service->delete($id);
 
         return $this->deletedResponse();
+    }
+
+    public function export()
+    {
+        $data = QueryBuilder::for(DailyActivity::tenanted())
+            ->allowedFilters([
+                AllowedFilter::exact('user_id'),
+                AllowedFilter::scope('company_id', 'whereCompanyId'),
+                AllowedFilter::scope('branch_id', 'whereBranchId'),
+                AllowedFilter::scope('start_at', 'startAt'),
+                AllowedFilter::scope('end_at', 'endAt'),
+                'title',
+            ])
+            ->allowedIncludes(
+                AllowedInclude::callback('user', function ($query) {
+                    $query->select('id', 'name');
+                }),
+            )
+            ->allowedSorts([
+                'id',
+                'user_id',
+                'title',
+                'start_at',
+                'end_at',
+                'created_at',
+            ])
+            ->with(['media'])
+            ->paginate($this->per_page);
+
+        return DefaultResource::collection($data);
     }
 }
