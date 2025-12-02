@@ -146,12 +146,11 @@ class IncidentController extends BaseController
         $createdAtEndDate = $request->filter['created_at_end_date'] ?? null;
         $incidentTypeId = $request->filter['incident_type_id'] ?? null;
 
-        // dd($request->validated());
         $incidents =  Incident::tenanted()
             ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
             ->when($createdAtStartDate, fn($q) => $q->createdAtStart($createdAtStartDate))
             ->when($createdAtEndDate, fn($q) => $q->createdAtEnd($createdAtEndDate))
-            ->when($incidentTypeId, fn($q) => $q->whereHas('incidentType', fn($q)=>$q->where('id',$incidentTypeId)))
+            ->when($incidentTypeId, fn($q) => $q->whereHas('incidentType', fn($q) => $q->where('id', $incidentTypeId)))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->with('user', fn($q) => $q->withTrashed()->select('id', 'name'))
             ->with('incidentType', fn($q) => $q->withTrashed()->select('id', 'name'))
