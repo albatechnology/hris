@@ -174,7 +174,36 @@ class GuestBookController extends BaseController
 
     public function export(ExportRequest $request)
     {
-        return (new \App\Exports\GuestBook\ExportGuestBook($request))->download('guest-books.xlsx');
+        $companyId = $this->request['filter']['company_id'] ?? null;
+        $branchId = $this->request['filter']['branch_id'] ?? null;
+        $checkInStartDate = $this->request['filter']['check_in_start_date'] ?? null;
+        $checkInEndDate = $this->request['filter']['check_in_end_date'] ?? null;
+
+        $guestBooks = GuestBook::tenanted()
+            ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($checkInStartDate, fn($q) => $q->whereDate('created_at', '>=', $checkInStartDate))
+            ->when($checkInEndDate, fn($q) => $q->whereDate('created_at', '<=', $checkInEndDate))
+            ->with([
+                'branch' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'user' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'checkOutBy' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'media'
+            ])->get();
+
+        $html = view('api.exports.guest-book.guest-book', compact('guestBooks'))->render();
+
+        $filename = 'guest books.xls';
+        if ($checkInStartDate && $checkInEndDate) {
+            $filename = 'guest books ' . $checkInStartDate . ' to ' . $checkInEndDate . '.xls';
+        }
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Cache-Control', 'max-age=0');
+
+        // return (new \App\Exports\GuestBook\ExportGuestBook($request))->download('guest-books.xlsx');
     }
 
     // public function forceDelete(int $id)
