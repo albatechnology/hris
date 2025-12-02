@@ -140,21 +140,24 @@ class IncidentController extends BaseController
 
     public function export(ExportRequest $request)
     {
-        $companyId = $this->request['filter']['company_id'] ?? null;
-        $branchId = $this->request['filter']['branch_id'] ?? null;
-        $createdAtStartDate = $this->request['filter']['created_at_start_date'] ?? null;
-        $createdAtEndDate = $this->request['filter']['created_at_end_date'] ?? null;
+        $companyId = $request->filter['company_id'] ?? null;
+        $branchId = $request->filter['branch_id'] ?? null;
+        $createdAtStartDate = $request->filter['created_at_start_date'] ?? null;
+        $createdAtEndDate = $request->filter['created_at_end_date'] ?? null;
+        $incidentTypeId = $request->filter['incident_type_id'] ?? null;
 
+        // dd($request->validated());
         $incidents =  Incident::tenanted()
             ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
+            ->when($createdAtStartDate, fn($q) => $q->createdAtStart($createdAtStartDate))
+            ->when($createdAtEndDate, fn($q) => $q->createdAtEnd($createdAtEndDate))
+            ->when($incidentTypeId, fn($q) => $q->whereHas('incidentType', fn($q)=>$q->where('id',$incidentTypeId)))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($createdAtStartDate, fn($q) => $q->whereDate('created_at', '>=', $createdAtStartDate))
-            ->when($createdAtEndDate, fn($q) => $q->whereDate('created_at', '<=', $createdAtEndDate))
-            ->with('branch', fn($q) => $q->withTrashed()->select('id', 'name'))
             ->with('user', fn($q) => $q->withTrashed()->select('id', 'name'))
             ->with('incidentType', fn($q) => $q->withTrashed()->select('id', 'name'))
             ->with('media')
             ->get();
+        // dd($incidents);
 
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel',
@@ -169,6 +172,5 @@ class IncidentController extends BaseController
             ->header('Content-Type', 'application/vnd.ms-excel')
             ->header('Content-Disposition', 'attachment; filename="report-incidents-' . now()->format('Ymd') . '.xls"')
             ->header('Cache-Control', 'max-age=0');
-
     }
 }

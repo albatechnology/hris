@@ -1,11 +1,11 @@
-{{-- <html xmlns:v="urn:schemas-microsoft-com:vml">
+<html xmlns:v="urn:schemas-microsoft-com:vml">
 
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-      <xml>
+    <xml>
         <o:shapelayout v:ext="edit">
-            <o:idmap v:ext="edit" data="1"/>
+            <o:idmap v:ext="edit" data="1" />
         </o:shapelayout>
     </xml>
     <style>
@@ -210,6 +210,7 @@
                 <th style="font-weight: bold; background: #4472C4;">Branch</th>
                 <th style="font-weight: bold; background: #4472C4;">User</th>
                 <th style="font-weight: bold; background: #4472C4;">Type</th>
+                <th style="font-weight: bold; background: #4472C4;">Title</th>
                 <th style="font-weight: bold; background: #4472C4;">Description</th>
                 <th style="font-weight: bold; background: #4472C4;">Created At</th>
                 <th style="font-weight: bold; background: #4472C4;">Gambar</th>
@@ -217,12 +218,13 @@
 
             @foreach ($incidents as $incident)
                 <tr>
-                    <td>{{ $incident->id }}</td>
-                    <td>{{ $incident->branch_id }}</td>
-                    <td>{{ $incident->user?->name }}</td>
-                    <td>{{ $incident->incidentType?->name }}</td>
-                    <td>{{ $incident->description }}</td>
-                    <td>{{ $incident->created_at }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->id }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->branch_id }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->user?->name }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->incidentType?->name }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->incident_type_custom ?? '-' }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->description }}</td>
+                    <td style="height: 100px;width: 130px;">{{ $incident->created_at }}</td>
                     <td>
                         @foreach ($incident->media as $key => $media)
                             <v:shape id="img-{{ $incident->id }}-{{ $key }}" type="#_x0000_t75"
@@ -237,180 +239,6 @@
 
         </table>
 
-    </div>
-</body>
-
-</html> --}}
-<html xmlns:v="urn:schemas-microsoft-com:vml">
-
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <xml>
-        <o:shapelayout v:ext="edit">
-            <o:idmap v:ext="edit" data="1" />
-        </o:shapelayout>
-    </xml>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        th,
-        td {
-            border: 1px solid #d0d0d0;
-            padding: 14px 16px;
-            text-align: left;
-            vertical-align: middle;
-            font-size: 13px;
-        }
-
-        /* Header Styling */
-        th {
-            font-weight: bold;
-            background: #4472C4 !important;
-            color: white;
-            text-align: center;
-            font-size: 14px;
-            padding: 16px;
-        }
-
-        /* Data Rows */
-        td {
-            background: white;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        /* Zebra Striping for Better Readability */
-        tr:nth-child(even) td {
-            background: #F9F9F9;
-        }
-
-        tr:hover td {
-            background: #F0F4F8;
-        }
-
-        /* Column Widths - Fixed & Diperbesar */
-        colgroup col:nth-child(1) {
-            width: 100pt;
-            /* ID */
-        }
-
-        colgroup col:nth-child(2) {
-            width: 150pt;
-            /* Branch */
-        }
-
-        colgroup col:nth-child(3) {
-            width: 200pt;
-            /* User */
-        }
-
-        colgroup col:nth-child(4) {
-            width: 180pt;
-            /* Type */
-        }
-
-        colgroup col:nth-child(5) {
-            width: 350pt;
-            /* Description */
-        }
-
-        colgroup col:nth-child(6) {
-            width: 180pt;
-            /* Created At */
-        }
-
-        colgroup col:nth-child(7) {
-            width: 300pt;
-            /* Gambar - diperbesar signifikan */
-        }
-
-        /* Text Wrapping untuk Description */
-        td:nth-child(5) {
-            word-wrap: break-word;
-            white-space: normal;
-            max-width: 350pt;
-        }
-
-        /* Date/Time Formatting */
-        td:nth-child(6) {
-            white-space: nowrap;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-        }
-
-        /* Image Container */
-        v\:shape {
-            display: inline-block;
-            border: 2px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 2px;
-            background: white;
-            margin: 2px;
-        }
-
-        /* Center ID and Branch columns */
-        td:nth-child(1),
-        td:nth-child(2) {
-            text-align: center;
-        }
-    </style>
-</head>
-
-<body>
-    <div>
-        <table>
-            <colgroup>
-                <col style="width: 100pt;"> <!-- ID -->
-                <col style="width: 150pt;"> <!-- Branch -->
-                <col style="width: 200pt;"> <!-- User -->
-                <col style="width: 180pt;"> <!-- Type -->
-                <col style="width: 350pt;"> <!-- Description -->
-                <col style="width: 180pt;"> <!-- Created At -->
-                <col style="width: 300pt;"> <!-- Gambar -->
-            </colgroup>
-            <thead>
-                <tr>
-                    <th style="font-weight: bold; background: #4472C4;">ID</th>
-                    <th style="font-weight: bold; background: #4472C4;">Branch</th>
-                    <th style="font-weight: bold; background: #4472C4;">User</th>
-                    <th style="font-weight: bold; background: #4472C4;">Type</th>
-                    <th style="font-weight: bold; background: #4472C4;">Description</th>
-                    <th style="font-weight: bold; background: #4472C4;">Created At</th>
-                    <th style="font-weight: bold; background: #4472C4;">Gambar</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($incidents as $incident)
-                    <tr>
-                        <td>{{ $incident->id }}</td>
-                        <td>{{ $incident->branch_id }}</td>
-                        <td>{{ $incident->user?->name }}</td>
-                        <td>{{ $incident->incidentType?->name }}</td>
-                        <td>{{ $incident->description }}</td>
-                        <td>{{ $incident->created_at }}</td>
-                        <td>
-                            @foreach ($incident->media as $key => $media)
-                                <v:shape id="img-{{ $incident->id }}-{{ $key }}" type="#_x0000_t75"
-                                    style='width:80pt;height:80pt'>
-                                    <v:imagedata src="{{ $media->getUrl() }}" o:title="" />
-                                </v:shape>
-                            @endforeach
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
     </div>
 </body>
 

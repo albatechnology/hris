@@ -19,6 +19,7 @@ class Incident extends BaseModel implements HasMedia, TenantedInterface
         'branch_id',
         'user_id',
         'incident_type_id',
+        'incident_type_custom',
         'description',
     ];
 

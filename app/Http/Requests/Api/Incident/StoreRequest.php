@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Prepare inputs for validation.
@@ -39,6 +39,7 @@ class StoreRequest extends FormRequest
             'company_id' => ['required', new CompanyTenantedRule()],
             'branch_id' => [Rule::requiredIf(config('app.name') == "Syntegra"), new CompanyTenantedRule(Branch::class)],
             'incident_type_id' => 'required|exists:incident_types,id',
+            'incident_type_custom' => 'nullable|string',
             'description' => 'required|string',
             'file' => 'nullable|array',
             'file.*' => 'required|mimes:' . config('app.file_mimes_types'),
