@@ -5,14 +5,14 @@ namespace App\Models;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CustomSoftDeletes;
-use App\Traits\Models\TenantedThroughBranch;
+use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Incident extends BaseModel implements HasMedia, TenantedInterface
 {
-    use CustomSoftDeletes, BelongsToUser, InteractsWithMedia, TenantedThroughBranch;
+    use CustomSoftDeletes, BelongsToUser, InteractsWithMedia, TenantedThroughUser;
 
     protected $fillable = [
         'company_id',

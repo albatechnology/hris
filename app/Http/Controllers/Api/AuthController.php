@@ -98,4 +98,11 @@ class AuthController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
     }
+
+    public function logout()
+    {
+        auth('sanctum')->user()->updateQuietly(['fcm_token' => null]);
+
+        return $this->okResponse("Logged out successfully");
+    }
 }

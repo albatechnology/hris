@@ -441,4 +441,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('run-reprimands', RunReprimandController::class);
     Route::apiResource('reprimands', ReprimandController::class)->only(['index', 'show', 'destroy']);
+
+    Route::post('auth/logout', [AuthController::class, 'logout']);
 });
