@@ -127,8 +127,48 @@ class IncidentController extends BaseController
         return new DefaultResource($incident);
     }
 
+    public function export123(ExportRequest $request)
+    {
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Cache-Control' => 'max-age=0',
+            'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+        return (new \App\Exports\Incident\ExportIncident($request))->download('incidents.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
+    }
+
     public function export(ExportRequest $request)
     {
-        return (new \App\Exports\Incident\ExportIncident($request))->download('incidents.xlsx');
+        $companyId = $this->request['filter']['company_id'] ?? null;
+        $branchId = $this->request['filter']['branch_id'] ?? null;
+        $createdAtStartDate = $this->request['filter']['created_at_start_date'] ?? null;
+        $createdAtEndDate = $this->request['filter']['created_at_end_date'] ?? null;
+
+        $incidents =  Incident::tenanted()
+            ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->when($createdAtStartDate, fn($q) => $q->whereDate('created_at', '>=', $createdAtStartDate))
+            ->when($createdAtEndDate, fn($q) => $q->whereDate('created_at', '<=', $createdAtEndDate))
+            ->with('branch', fn($q) => $q->withTrashed()->select('id', 'name'))
+            ->with('user', fn($q) => $q->withTrashed()->select('id', 'name'))
+            ->with('incidentType', fn($q) => $q->withTrashed()->select('id', 'name'))
+            ->with('media')
+            ->get();
+
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Cache-Control' => 'max-age=0',
+            'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        $html = view('api.exports.incident.export', compact('incidents'))->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="report-incidents-' . now()->format('Ymd') . '.xls"')
+            ->header('Cache-Control', 'max-age=0');
+
     }
 }
