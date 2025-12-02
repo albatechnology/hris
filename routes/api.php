@@ -436,6 +436,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
 
     Route::apiResource('levels', LevelController::class);
 
+    Route::get('daily-activities/export', [DailyActivityController::class, 'export']);
     Route::apiResource('daily-activities', DailyActivityController::class)->except('update');
 
     Route::apiResource('run-reprimands', RunReprimandController::class);

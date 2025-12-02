@@ -30,12 +30,12 @@ class DailyActivity extends BaseModel implements TenantedInterface, HasMedia
         $query->whereHas('user', fn($q) => $q->where('branch_id', $branchId));
     }
 
-    public function scopeStartAtStart(Builder $query, $date)
+    public function scopeStartAt(Builder $query, $date)
     {
         $query->whereDate('start_at', '>=', date('Y-m-d', strtotime($date)));
     }
 
-    public function scopeEndAtEnd(Builder $query, $date)
+    public function scopeEndAt(Builder $query, $date)
     {
         $query->whereDate('end_at', '<=', date('Y-m-d', strtotime($date)));
     }

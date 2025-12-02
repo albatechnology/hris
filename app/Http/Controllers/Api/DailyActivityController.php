@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\DailyActivity\StoreRequest;
-use App\Http\Requests\Api\DailyActivity\UpdateRequest;
+use App\Http\Requests\Api\DailyActivity\ExportRequest;
 use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\DailyActivity\DailyActivityServiceInterface;
 use App\Models\DailyActivity;
@@ -87,33 +87,28 @@ class DailyActivityController extends BaseController
         return $this->deletedResponse();
     }
 
-    public function export()
+    public function export(ExportRequest $request)
     {
-        $data = QueryBuilder::for(DailyActivity::tenanted())
-            ->allowedFilters([
-                AllowedFilter::exact('user_id'),
-                AllowedFilter::scope('company_id', 'whereCompanyId'),
-                AllowedFilter::scope('branch_id', 'whereBranchId'),
-                AllowedFilter::scope('start_at', 'startAt'),
-                AllowedFilter::scope('end_at', 'endAt'),
-                'title',
-            ])
-            ->allowedIncludes(
-                AllowedInclude::callback('user', function ($query) {
-                    $query->select('id', 'name');
-                }),
-            )
-            ->allowedSorts([
-                'id',
-                'user_id',
-                'title',
-                'start_at',
-                'end_at',
-                'created_at',
-            ])
-            ->with(['media'])
-            ->paginate($this->per_page);
+        $startAt = $request->filter['start_at'];
+        $endAt = $request->filter['end_at'];
 
-        return DefaultResource::collection($data);
+        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
+        $dailyActivities = DailyActivity::query()
+            ->startAt($startAt)->endAt($endAt)
+            ->when($request->filter['company_id'] ?? null, fn($q) => $q->whereHas('user', fn($q2) => $q2->where('company_id', $request->filter['company_id'])))
+            ->when($request->filter['branch_id'] ?? null, fn($q) => $q->whereHas('user', fn($q2) => $q2->where('branch_id', $request->filter['branch_id'])))
+            ->when($userIds, fn($q) => $q->whereIn('user_id', $userIds))
+            ->with([
+                'user' => fn($q) => $q->select('id', 'name'),
+                'media',
+            ])
+            ->get();
+
+        $html = view('api.exports.daily-activity.daily-activity', compact('dailyActivities', 'startAt', 'endAt'))->render();
+
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="daily activity ' . $startAt . ' to ' . $endAt . '.xls"')
+            ->header('Cache-Control', 'max-age=0');
     }
 }

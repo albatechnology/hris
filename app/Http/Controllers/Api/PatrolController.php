@@ -461,16 +461,6 @@ class PatrolController extends BaseController
             ),
         ]);
 
-
-        // $headers = [
-        //     'Content-Type' => 'application/vnd.ms-excel',
-        //     'Cache-Control' => 'max-age=0',
-        //     'Content-Security-Policy' => "default-src 'self' data: https: 'unsafe-inline'",
-        //     'X-Content-Type-Options' => 'nosniff'
-        // ];
-
-        // return (new PatrolTaskExport($patrol, $startDate, $endDate, $useSigned))
-        //     ->download('new-report-patroli.xls', \Maatwebsite\Excel\Excel::XLS, $headers);
         $html = view('api.exports.patrol.export', compact('patrol', 'startDate', 'endDate'))->render();
 
         return response($html)

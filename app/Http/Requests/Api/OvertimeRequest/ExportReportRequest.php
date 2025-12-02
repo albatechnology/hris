@@ -10,8 +10,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ExportReportRequest extends FormRequest
 {
-
-
     /**
      * Prepare inputs for validation.
      *

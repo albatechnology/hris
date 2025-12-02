@@ -26,8 +26,8 @@ class StoreRequest extends FormRequest
             'start_at' => ['required', 'date_format:Y-m-d H:i:s'],
             'end_at' => ['required', 'date_format:Y-m-d H:i:s'],
             'description' => ['required', 'string'],
-            'images' => ['nullable', 'array'],
-            'images.*' => ['required', 'image', config('app.image_mimes_types'), 'max:5120']
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['required', 'image', 'mimes:' . config('app.image_mimes_types'), 'max:5120']
         ];
     }
 }
