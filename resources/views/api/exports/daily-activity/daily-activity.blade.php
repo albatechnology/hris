@@ -217,12 +217,12 @@
         <tbody>
             @foreach ($dailyActivities as $dailyActivity)
                 <tr>
-                    <td style="background: #F2F2F2;">{{ $dailyActivity->user->name }}</td>
-                    <td style="background: #F2F2F2;">{{ $dailyActivity->title }}</td>
-                    <td style="background: #F2F2F2;">{{ $dailyActivity->start_at }}</td>
-                    <td style="background: #F2F2F2;">{{ $dailyActivity->end_at }}</td>
-                    <td style="background: #F2F2F2;">{{ $dailyActivity->created_at }}</td>
-                    <td style="background: #F2F2F2;">{{ $dailyActivity->description }}</td>
+                    <td style="height: 100px;width: 130px;background: #F2F2F2;">{{ $dailyActivity->user->name }}</td>
+                    <td style="height: 100px;width: 130px;background: #F2F2F2;">{{ $dailyActivity->title }}</td>
+                    <td style="height: 100px;width: 130px;background: #F2F2F2;">{{ $dailyActivity->start_at }}</td>
+                    <td style="height: 100px;width: 130px;background: #F2F2F2;">{{ $dailyActivity->end_at }}</td>
+                    <td style="height: 100px;width: 130px;background: #F2F2F2;">{{ $dailyActivity->created_at }}</td>
+                    <td style="height: 100px;width: 130px;background: #F2F2F2;">{{ $dailyActivity->description }}</td>
                     @foreach ($dailyActivity->media as $media)
                         <td>
                             <v:shape id="img-{{ $media->id }}" type="#_x0000_t75" style='width:80pt;height:80pt'>
