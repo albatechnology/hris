@@ -19,7 +19,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use App\Services\ScheduleService;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
-class NewExportTaskOvertimeRequest implements WithMultipleSheets
+class NewExportTaskOvertimeRequestBackup implements WithMultipleSheets
 {
     use Exportable;
     public Collection $taskHours;
@@ -93,7 +93,7 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                     ];
 
                     $rows = [];
-                    $cumulativeDurationHours = 0.0;
+                    $cumulativeDurationHours = 0;
 
                     // For each taskHour, include all taskRequests for that task_hour for the user
                     foreach ($this->taskHours as $taskHour) {
@@ -108,15 +108,15 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                             $end = Carbon::parse($req->end_at);
 
                             $diffInSeconds = $end->diffInSeconds($start);
-                            $diffInHours = $diffInSeconds / 3600.0;
+                            $diffInHours = $diffInSeconds / 3600;
 
-                            $minWorkingHour = (float) ($taskHour->min_working_hour ?? 0.0);
+                            $minWorkingHour = $taskHour->min_working_hour ?? 0;
 
-                            // SUNDAY: always paid fully using sunday rate regardless of min_working_hour
+                            // Sunday: always paid fully using sunday rate regardless of min_working_hour
                             if ($overtimeDate->dayOfWeek === 0) {
                                 $billableHours = $diffInHours;
                                 $hasReachedThreshold = true; // mark as paid
-                                $duration = gmdate('H:i:s', (int)$diffInSeconds);
+                                $duration = gmdate('H:i:s', $diffInSeconds);
                                 $rate = $billableHours * $task->sunday_overtime_rate;
 
                                 $cumulativeDurationHours += $diffInHours;
@@ -138,7 +138,7 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                 continue;
                             }
 
-                            // SATURDAY: need to split if overtime goes beyond user's shift end
+                            // Saturday: need to split if overtime goes beyond user's shift end
                             if ($overtimeDate->dayOfWeek === 6) {
                                 $schedule = ScheduleService::getTodaySchedule($this->user, $req->start_at, [], ['clock_in', 'clock_out']);
                                 $shift = $schedule?->shift ?? null;
@@ -159,7 +159,7 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                 if (!$shiftEnd) {
                                     $billableHours = $diffInHours;
                                     $hasReachedThreshold = true;
-                                    $duration = gmdate('H:i:s', (int)$diffInSeconds);
+                                    $duration = gmdate('H:i:s', $diffInSeconds);
                                     $rate = $billableHours * $task->saturday_overtime_rate;
 
                                     $cumulativeDurationHours += $diffInHours;
@@ -189,7 +189,7 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                     // fully after shift -> saturday-paid fully
                                     $billableHours = $diffInHours;
                                     $hasReachedThreshold = true;
-                                    $duration = gmdate('H:i:s', (int)$diffInSeconds);
+                                    $duration = gmdate('H:i:s', $diffInSeconds);
                                     $rate = $billableHours * $task->saturday_overtime_rate;
 
                                     $cumulativeDurationHours += $diffInHours;
@@ -211,65 +211,34 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                     continue;
                                 } else {
                                     // overlaps: split into two segments
-                                    $mid = $shiftEnd->copy();
+                                    $mid = $shiftEnd;
 
-                                    // segment A: start -> mid (within shift) -> weekday portion
+                                    // segment A: start -> mid (within shift) -> weekday logic
                                     $endA = $mid;
                                     $startA = $start;
                                     $diffSecA = $endA->diffInSeconds($startA);
-                                    $diffHourA = $diffSecA / 3600.0;
+                                    $diffHourA = $diffSecA / 3600;
 
-                                    // segment B: mid -> end (after shift) -> saturday portion
-                                    $startB = $mid;
-                                    $endB = $end;
-                                    $diffSecB = $endB->diffInSeconds($startB);
-                                    $diffHourB = $diffSecB / 3600.0;
+                                    // compute billable for segment A using min_working_hour and cumulative
+                                    $billableA = 0;
+                                    $hasReachedA = false;
+                                    if ($cumulativeDurationHours < $minWorkingHour) {
+                                        if ($cumulativeDurationHours + $diffHourA <= $minWorkingHour) {
+                                            $billableA = 0;
+                                        } else {
+                                            $billableA = ($cumulativeDurationHours + $diffHourA) - $minWorkingHour;
+                                            $hasReachedA = true;
+                                        }
+                                    } else {
+                                        $billableA = $diffHourA;
+                                        $hasReachedA = true;
+                                    }
 
-                                    // --- NEW: compute billable for the entire request first (so crossing inside request is respected)
-                                    $prev = $cumulativeDurationHours;
-                                    $total = $diffHourA + $diffHourB;
-                                    $afterTotal = $prev + $total;
-                                    $min = $minWorkingHour;
+                                    $cumulativeDurationHours += $diffHourA;
 
-                                    // total billable contributed by this request across both segments
-                                    $billableTotalForRequest = (max(0.0, $afterTotal - $min) - max(0.0, $prev - $min));
-                                    $billableTotalForRequest = $billableTotalForRequest > 0 ? $billableTotalForRequest : 0.0;
-
-                                    // allocate billable to A as much as possible (but not more than diffHourA)
-                                    $billableA = min($diffHourA, $billableTotalForRequest);
-                                    // remaining billable goes to B
-                                    $billableB = max(0.0, $billableTotalForRequest - $billableA);
-
-                                    // NOTE: B is saturday-paid fully for whatever hours are in B (but billableB is the portion
-                                    // of the request that is counted as billable above the threshold; however any hours in B
-                                    // beyond billableB are still saturday-paid because saturday pays fully for B portion)
-                                    //
-                                    // We must charge:
-                                    // - For A: billableA * weekday_rate
-                                    // - For B: (billableB * weekday_rate_for_portion_above_threshold?) NO.
-                                    //   Business rule: hours after shiftEnd are paid with saturday rate.
-                                    // So B's pay will be:
-                                    //   - for hours that are billable but fall in B → they are paid with saturday rate (since they're after shift end)
-                                    //   - for hours in B that are not billable (i.e. still below threshold) → ??? but logically if they are after shiftEnd we considered them saturday-paid fully.
-                                    //
-                                    // Simpler and correct: treat segment B hours as saturday-paid fully (billableB not relevant for rate type),
-                                    // while the threshold crossing portion that occurs inside A (or B) is already accounted in billableTotalForRequest allocation above.
-                                    //
-                                    // Implementation detail below:
-                                    // - rateA computed from billableA * weekday_overtime_rate
-                                    // - rateB computed from diffHourB * saturday_overtime_rate
-
-                                    // Now apply cumulative update (total hours)
-                                    $cumulativeDurationHours += $total;
-
-                                    $durationA = gmdate('H:i:s', (int)$diffSecA);
-                                    $durationB = gmdate('H:i:s', (int)$diffSecB);
-
+                                    $durationA = gmdate('H:i:s', $diffSecA);
                                     $rateA = $billableA * $task->weekday_overtime_rate;
-                                    // For B, saturday pays full hours in B
-                                    $rateB = $diffHourB * $task->saturday_overtime_rate;
 
-                                    // Add row for segment A (weekday portion)
                                     $rows[] = array_merge($userInfo, [
                                         $req->note,
                                         $startA->toDateTimeString(),
@@ -278,15 +247,23 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                         $durationA,
                                         $rateA,
                                         $diffHourA,
-                                        // cumulative AFTER adding both segments (we keep consistency with previous behavior which shows
-                                        // the cumulative including the whole request on both segment rows; this matches the Excel you sent)
-                                        $cumulativeDurationHours - $diffHourB, // show cumulative after A (so subtract B part)
+                                        $cumulativeDurationHours,
                                         $overtimeDate->dayOfWeek,
-                                        ($billableA > 0.0) ? 1 : 0,
+                                        $hasReachedA ? 1 : 0,
                                         $minWorkingHour,
                                     ]);
 
-                                    // Add row for segment B (saturday-paid portion)
+                                    // segment B: mid -> end (after shift) -> saturday-paid fully
+                                    $startB = $mid;
+                                    $endB = $end;
+                                    $diffSecB = $endB->diffInSeconds($startB);
+                                    $diffHourB = $diffSecB / 3600;
+
+                                    $billableB = $diffHourB; // paid fully on saturday
+                                    $cumulativeDurationHours += $diffHourB;
+                                    $durationB = gmdate('H:i:s', $diffSecB);
+                                    $rateB = $billableB * $task->saturday_overtime_rate;
+
                                     $rows[] = array_merge($userInfo, [
                                         $req->note,
                                         $startB->toDateTimeString(),
@@ -295,7 +272,7 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                         $durationB,
                                         $rateB,
                                         $diffHourB,
-                                        $cumulativeDurationHours, // cumulative after both segments
+                                        $cumulativeDurationHours,
                                         $overtimeDate->dayOfWeek,
                                         1,
                                         $minWorkingHour,
@@ -305,19 +282,23 @@ class NewExportTaskOvertimeRequest implements WithMultipleSheets
                                 }
                             }
 
-                            // Weekday (or saturday fully within shift) -> robust min_working_hour handling
-                            $prev = $cumulativeDurationHours;
-                            $after = $prev + $diffInHours;
-                            $min = $minWorkingHour;
+                            // Weekday (or saturday fully within shift) -> apply min_working_hour logic
+                            $billableHours = $diffInHours;
+                            $hasReachedThreshold = false;
 
-                            // billable is hours of this request that fall above the minWorkingHour threshold
-                            $billableHours = (max(0.0, $after - $min) - max(0.0, $prev - $min));
-                            $billableHours = $billableHours > 0 ? $billableHours : 0.0;
-
-                            $hasReachedThreshold = ($after > $min) || ($prev > $min);
+                            if ($cumulativeDurationHours < $minWorkingHour) {
+                                if ($cumulativeDurationHours + $diffInHours <= $minWorkingHour) {
+                                    $billableHours = 0;
+                                } else {
+                                    $billableHours = ($cumulativeDurationHours + $diffInHours) - $minWorkingHour;
+                                    $hasReachedThreshold = true;
+                                }
+                            } else {
+                                $hasReachedThreshold = true;
+                            }
 
                             $cumulativeDurationHours += $diffInHours;
-                            $duration = gmdate('H:i:s', (int)$diffInSeconds);
+                            $duration = gmdate('H:i:s', $diffInSeconds);
 
                             $rate = $billableHours * $task->weekday_overtime_rate;
 
