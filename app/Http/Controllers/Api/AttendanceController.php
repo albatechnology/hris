@@ -544,7 +544,8 @@ class AttendanceController extends BaseController
 
     public function employees(ChildrenRequest $request)
     {
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
+        //default resignUser = false
+        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : false;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
         $companyId = isset($request['filter']['company_id']) && !empty($request['filter']['company_id']) ? $request['filter']['company_id'] : null;
