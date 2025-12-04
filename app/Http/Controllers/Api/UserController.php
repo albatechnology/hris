@@ -116,6 +116,7 @@ class UserController extends BaseController
         $query = QueryBuilder::for(
             User::tenanted(request()->filter['is_my_descendant'] ?? false)
                 ->with(['roles' => fn($q) => $q->select('id', 'name')])
+                ->showResignUsers(request()->filter['is_show_resign_users'] ?? false)
         )
             ->allowedFilters([
                 AllowedFilter::exact('branch_id'),
