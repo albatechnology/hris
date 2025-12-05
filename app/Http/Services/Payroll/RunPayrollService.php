@@ -829,7 +829,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                 $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
                 if ($user->userBpjs->bpjs_kesehatan_cost->is(PaidBy::COMPANY)) {
-                    $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
+                    // $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
                     $employee_totalBpjsKesehatan = 0;
                 }
 
@@ -852,7 +852,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
                 $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
                 if ($user->userBpjs->jht_cost->is(PaidBy::COMPANY)) {
-                    $company_totalJht += $employee_totalJht;
+                    // $company_totalJht += $employee_totalJht;
                     $employee_totalJht = 0;
                 }
 
@@ -873,7 +873,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
 
                     if ($user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::COMPANY)) {
-                        $company_totalJp += $employee_totalJp;
+                        // $company_totalJp += $employee_totalJp;
                         $employee_totalJp = 0;
                     }
                 }
