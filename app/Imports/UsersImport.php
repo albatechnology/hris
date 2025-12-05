@@ -215,7 +215,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'gender' => strtolower($row['gender']),
                 'join_date' => date('Y-m-d', strtotime($row['join_date'])),
                 'sign_date' => $row['sign_date'] ? date('Y-m-d', strtotime($row['sign_date'])) : date('Y-m-d', strtotime($row['join_date'])),
-                'resign_date' => date('Y-m-d', strtotime($row['resign_date'])),
+                'resign_date' => $row['resign_date'] ? date('Y-m-d', strtotime($row['resign_date'])) : null,
                 ...$password
             ]
         );
