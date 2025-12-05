@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PayrollComponentType;
+use App\Enums\TaxMethod;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -56,7 +57,11 @@ class RunPayrollUser extends BaseModel
 
     public function getTotalDeductionAttribute(): int
     {
-        return round($this->deduction + $this->tax);
+        if ($this->user->payrollInfo->tax_method->is(TaxMethod::GROSS)) {
+            return round($this->deduction + $this->tax);
+        }
+
+        return round($this->deduction);
     }
 
     public function getTotalBenefitAttribute(): int
