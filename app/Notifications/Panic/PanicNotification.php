@@ -36,11 +36,9 @@ class PanicNotification extends Notification
     {
         return [
             'token' => $notifiable->fcm_token,
-            'notification' => [
+            'data' => [
                 'title' => "Emergency",
                 'body' => $this->panic->user->name . " sedang dalam keadaan darurat",
-            ],
-            'data' => [
                 'notifiable_type' => "emergency",
                 'notifiable_id' => $this->panic->id,
                 'lat' => $this->panic->lat,
