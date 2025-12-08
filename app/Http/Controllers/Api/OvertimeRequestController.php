@@ -30,6 +30,7 @@ class OvertimeRequestController extends BaseController
         $this->middleware('permission:overtime_request_access', ['only' => ['restore']]);
         $this->middleware('permission:overtime_request_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:overtime_request_create', ['only' => 'store']);
+        $this->middleware('permission:overtime_request_export', ['only' => 'report']);
     }
 
     public function index(): ResourceCollection

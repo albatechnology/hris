@@ -197,6 +197,7 @@ class PermissionService
                 'overtime_request_create',
                 'overtime_request_edit',
                 'overtime_request_delete',
+                'overtime_request_export',
             ],
             'task_request_access' => [
                 'task_request_read',
@@ -494,6 +495,7 @@ class PermissionService
                 'overtime_request_create',
                 'overtime_request_edit',
                 'overtime_request_delete',
+                'overtime_request_export',
             ],
             'task_request_access' => [
                 'task_request_read',
