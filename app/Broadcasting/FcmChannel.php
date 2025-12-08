@@ -41,14 +41,14 @@ class FcmChannel
 
         try {
             if ($data['token']) {
-                $data = CloudMessage::withTarget('token', $data['token'])->withData($data['data']);
+                $message = CloudMessage::withTarget('token', $data['token'])->withData($data['data']);
                 // ->withNotification($data['notification'])
 
                 if (isset($data['notification'])) {
-                    $data->withNotification($data['notification']);
+                    $message = $message->withNotification($data['notification']);
                 }
 
-                $this->fcm->send($data);
+                $this->fcm->send($message);
             }
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());

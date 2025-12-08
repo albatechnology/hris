@@ -43,7 +43,7 @@ class FcmBulkChannel
             // ->withNotification($data['notification'])
 
             if (isset($data['notification'])) {
-                $data->withNotification($data['notification']);
+                $message = $message->withNotification($data['notification']);
             }
 
             $this->fcm->sendMulticast($message, $data['tokens']);
