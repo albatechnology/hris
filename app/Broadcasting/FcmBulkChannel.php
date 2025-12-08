@@ -39,14 +39,21 @@ class FcmBulkChannel
     {
         $data = $notification->toFcmBulk($notifiable);
         try {
-            $message = CloudMessage::new()->withData($data['data']);
-            // ->withNotification($data['notification'])
+            if (isset($data['tokens']) && count($data['tokens']) > 0) {
+                $message = CloudMessage::new()
+                    ->withNotification($data['notification'])
+                    ->withData($data['data']);
 
-            if (isset($data['notification'])) {
-                $message = $message->withNotification($data['notification']);
+                if (!empty($data['android'])) {
+                    $message = $message->withAndroidConfig($data['android']);
+                }
+
+                if (!empty($data['apns'])) {
+                    $message = $message->withApnsConfig($data['apns']);
+                }
+
+                $this->fcm->sendMulticast($message, $data['tokens']);
             }
-
-            $this->fcm->sendMulticast($message, $data['tokens']);
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
         }

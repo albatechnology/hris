@@ -40,15 +40,21 @@ class FcmChannel
         $data = $notification->toFcm($notifiable);
 
         try {
-            if ($data['token']) {
-                $message = CloudMessage::withTarget('token', $data['token'])->withData($data['data']);
-                // ->withNotification($data['notification'])
+            if (!empty($data['token'])) {
 
-                if (isset($data['notification'])) {
-                    $message = $message->withNotification($data['notification']);
+                $message = CloudMessage::withTarget('token', $data['token'])
+                    ->withNotification($data['notification'])
+                    ->withData($data['data']);
+
+                if (!empty($data['android'])) {
+                    $message = $message->withAndroidConfig($data['android']);
                 }
 
-                $this->fcm->send($message);
+                if (!empty($data['apns'])) {
+                    $message = $message->withApnsConfig($data['apns']);
+                }
+
+                $this->fcm->send($message); // ✔️ yang benar
             }
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
