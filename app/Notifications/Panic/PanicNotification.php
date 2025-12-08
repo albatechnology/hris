@@ -47,6 +47,15 @@ class PanicNotification extends Notification
                 'lng' => $this->panic->lng,
                 'user_id' => $this->panic->user_id,
             ],
+            "android" => [
+                "priority" => "high",
+                "notification" => [
+                    "channel_id" => "emergency_channel",
+                    "sound" => "nasty.mp3",
+                    "priority" => "high",
+                    "default_sound" => false
+                ]
+            ]
         ];
     }
 }
