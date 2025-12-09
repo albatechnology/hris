@@ -37,7 +37,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'branch_id' => [Rule::requiredIf(config('app.name') == "Syntegra"), new CompanyTenantedRule(Branch::class)],
+            'branch_id' => [Rule::requiredIf(config('app.name') == "SYNTEGRA"), new CompanyTenantedRule(Branch::class)],
             'incident_type_id' => 'required|exists:incident_types,id',
             'incident_type_custom' => 'nullable|string',
             'description' => 'required|string',

@@ -13,7 +13,7 @@ class BranchInitializeService
 {
     public function __invoke(Branch $branch): void
     {
-        if (config('app.name') == 'Syntegra') {
+        if (config('app.name') == 'SYNTEGRA') {
             AbsenceReminder::create([
                 'company_id' => $branch->company_id,
                 'branch_id' => $branch->id,

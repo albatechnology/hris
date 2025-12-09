@@ -13,7 +13,7 @@ class CompanyInitializeService
 {
     public function __invoke(Company $company): void
     {
-        if (config('app.name') != 'Syntegra') {
+        if (config('app.name') != 'SYNTEGRA') {
             $company->absenceReminder()->create();
             $company->branches()->create([
                 'name' => $company->name,

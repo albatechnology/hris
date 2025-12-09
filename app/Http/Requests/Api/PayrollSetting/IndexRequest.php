@@ -40,7 +40,7 @@ class IndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'filter.branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
+            'filter.branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'filter.company_id' => ['required', new CompanyTenantedRule()],
         ];
     }
