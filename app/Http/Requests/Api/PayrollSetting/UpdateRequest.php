@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 class UpdateRequest extends FormRequest
 {
     use RequestToBoolean;
-    
+
 
     /**
      * Prepare inputs for validation.
@@ -41,7 +41,7 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
+            'branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'company_id' => ['required', new CompanyTenantedRule()],
             // 'cut_off_date' => 'required|date_format:d',
             'cut_off_attendance_start_date' => 'required|date_format:d',

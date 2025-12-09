@@ -26,12 +26,19 @@ class BranchController extends BaseController
         $this->middleware('permission:branch_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    private function allowedIncludes(): array
+    {
+        return ['parent', 'childs'];
+    }
+
     public function index()
     {
         $data = QueryBuilder::for(Branch::tenanted())
             ->allowedFilters([
+                AllowedFilter::exact('parent_id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::callback('company_ids', fn($q, $value) => $q->whereIn('company_id', $value)),
+                AllowedFilter::scope('is_parent', 'whereIsParent'),
                 'name',
                 'country',
                 'province',
@@ -39,6 +46,7 @@ class BranchController extends BaseController
                 'zip_code',
                 'address',
             ])
+            ->allowedIncludes($this->allowedIncludes())
             ->allowedSorts([
                 'id',
                 'company_id',
@@ -50,6 +58,7 @@ class BranchController extends BaseController
                 'address',
                 'created_at',
             ])
+            ->allowedFields(['id', 'parent_id', 'name'])
             ->paginate($this->per_page);
 
         return BranchResource::collection($data);
@@ -57,14 +66,16 @@ class BranchController extends BaseController
 
     public function show(int $id)
     {
-        $branch = Branch::findTenanted($id);
-        return new BranchResource($branch);
+        $data = QueryBuilder::for(Branch::tenanted()->where('id', $id))
+            ->allowedIncludes($this->allowedIncludes())
+            ->firstOrFail();
+
+        return new BranchResource($data);
     }
 
     public function store(StoreRequest $request)
     {
         $branch = $this->service->create($request->validated());
-        // $branch = Branch::create($request->validated());
         return new BranchResource($branch);
     }
 

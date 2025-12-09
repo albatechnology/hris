@@ -16,6 +16,7 @@ class Branch extends BaseModel implements TenantedInterface
     use CustomSoftDeletes;
 
     protected $fillable = [
+        'parent_id',
         'company_id',
         'name',
         'country',
@@ -70,6 +71,16 @@ class Branch extends BaseModel implements TenantedInterface
         return $query->first();
     }
 
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function childs(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -97,6 +108,11 @@ class Branch extends BaseModel implements TenantedInterface
             'branches.created_at',
             ...$additionalColumns
         ]);
+    }
+
+    public function scopeWhereIsParent(Builder $query, bool $isParent = true)
+    {
+        $query->when($isParent, fn($q) => $q->whereNull('parent_id'), fn($q) => $q->whereNotNull('parent_id'));
     }
 
     public function createPayrollSetting(): void

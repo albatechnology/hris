@@ -61,7 +61,7 @@ class Event extends Model implements TenantedInterface
         }
 
         // return $query->whereIn('company_id', $user->companies()->get(['company_id'])?->pluck('company_id'));
-        if (config('app.name' == 'Syntegra')) {
+        if (config('app.name' == 'SYNTEGRA')) {
             return $query->where('branch_id', $user->branch_id);
         }
 

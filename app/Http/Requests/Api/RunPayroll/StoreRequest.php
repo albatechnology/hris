@@ -37,7 +37,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
+            'branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'company_id' => ['required', new CompanyTenantedRule()],
             'period' => ['required', 'string', function (string $attr, string $value, Closure $fail) {
                 // $runPayroll = RunPayroll::where('period', $value)->exists();

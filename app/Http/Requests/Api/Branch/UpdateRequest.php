@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Api\Branch;
 
+use App\Models\Branch;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
 {
-    
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -17,6 +18,11 @@ class UpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'parent_id' => ['nullable', new CompanyTenantedRule(Branch::class, 'Branch not found'), function ($attribute, $value, $fail) {
+                if (Branch::where('id', $value)->whereNull('parent_id')->doesntExist()) {
+                    $fail('Parent branch not found');
+                }
+            }],
             'company_id' => [new CompanyTenantedRule()],
             'name' => 'required|string',
             'country' => 'nullable|string',

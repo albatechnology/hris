@@ -48,7 +48,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => Rule::requiredIf(config('app.name') === "Syntegra"),
+            'branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'company_id' => ['required', new CompanyTenantedRule()],
             'name' => 'required|string',
             'type' => ['required', Rule::enum(PayrollComponentType::class)],

@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-    
+
 
     /**
      * Prepare inputs for validation.
@@ -38,7 +38,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'branch_id' => [Rule::requiredIf(config('app.name') === "Syntegra"), new CompanyTenantedRule(Branch::class)],
+            'branch_id' => [Rule::requiredIf(config('app.name') === "SYNTEGRA"), new CompanyTenantedRule(Branch::class)],
             'name' => 'required|string',
             'type' => ['required', Rule::enum(EventType::class)],
             'start_at' => 'required|date_format:Y-m-d',
