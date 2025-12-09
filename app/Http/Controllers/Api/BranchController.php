@@ -46,6 +46,7 @@ class BranchController extends BaseController
                 'zip_code',
                 'address',
             ])
+            ->allowedFields(['id', 'parent_id', 'name'])
             ->allowedIncludes($this->allowedIncludes())
             ->allowedSorts([
                 'id',
@@ -58,7 +59,6 @@ class BranchController extends BaseController
                 'address',
                 'created_at',
             ])
-            ->allowedFields(['id', 'parent_id', 'name'])
             ->paginate($this->per_page);
 
         return BranchResource::collection($data);
