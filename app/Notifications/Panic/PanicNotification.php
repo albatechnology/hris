@@ -39,6 +39,7 @@ class PanicNotification extends Notification
             'notification' => [
                 'title' => "Emergency",
                 'body' => $this->panic->user->name . " sedang dalam keadaan darurat",
+                'sound' => 'nasty.mp3', // iOS
             ],
             'data' => [
                 'notifiable_type' => "emergency",
@@ -47,15 +48,21 @@ class PanicNotification extends Notification
                 'lng' => $this->panic->lng,
                 'user_id' => $this->panic->user_id,
             ],
-            "android" => [
-                "priority" => "high",
-                "notification" => [
-                    "channel_id" => "emergency_channel",
-                    "sound" => "nasty.mp3",
-                    "priority" => "high",
-                    "default_sound" => false
-                ]
-            ]
+            'android' => [
+                'notification' => [
+                    'sound' => 'nasty',
+                    'channel_id' => 'emergency_channel', // optional tapi sangat disarankan
+                ],
+            ],
+
+            // Setting khusus iOS
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'nasty.mp3',
+                    ],
+                ],
+            ],
         ];
     }
 }
