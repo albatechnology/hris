@@ -116,10 +116,21 @@ class BranchController extends BaseController
     {
         $branchId = request()->filter['branch_id'] ?? null;
 
-        $data = Cache::remember('branch_summary_' . $branchId, now()->addHour(), function () use ($branchId) {
+        $data = Cache::remember('branch_summary_' . $branchId, now()->addSecond(), function () use ($branchId) {
+            $branch = Branch::tenanted()->where('id', $branchId)->first(['id', 'is_main']);
+
+            if (!$branch) {
+                return [
+                    'branch' => 0,
+                    'client' => 0,
+                    'users' => 0,
+                ];
+            }
+
+            $totalBranch = $branch->is_main ? Branch::tenanted()->whereIsParent()->where('is_main', false)->count() : 0;
             return [
-                'branch' => Branch::tenanted()->where('id', $branchId)->whereNull('parent_id')->count(),
-                'client' => Branch::tenanted()->where('parent_id', $branchId)->whereNotNull('parent_id')->count(),
+                'branch' => $totalBranch,
+                'client' => Branch::tenanted()->whereIsParent(false)->when(!$branch->is_main, fn($q) => $q->where('parent_id', $branchId))->count(),
                 'users' => User::tenanted()->where('branch_id', $branchId)->whereNull('resign_date')->count(),
             ];
         });
