@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Enums\CountrySettingKey;
+use App\Enums\JaminanPensiunCost;
+use App\Enums\PaidBy;
 use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Enums\PtkpStatus;
 use App\Enums\RunPayrollStatus;
 use App\Enums\TaxMethod;
+use App\Enums\TaxSalary;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
 use App\Models\RunThr;
@@ -21,6 +24,7 @@ use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class RunThrService
@@ -152,6 +156,33 @@ class RunThrService
         return $basicAmount;
     }
 
+    public static function prorateYear(User $user, int|float $basicAmount, Collection $updatePayrollComponentDetails, Carbon $cutOffStartDate, Carbon $cutOffEndDate)
+    {
+        $totalMonths = $cutOffStartDate->diffInMonths($cutOffEndDate); // harusnya 12 months
+        if ($totalMonths < 1) return $basicAmount;
+
+        $totalAmount = 0;
+
+        $remainMonths = $totalMonths;
+        foreach ($updatePayrollComponentDetails as $updatePayrollComponentDetail) {
+            $updatePayrollComponentTotalMonths = 0;
+            if ($updatePayrollComponentDetail->updatePayrollComponent->end_date) {
+                $updatePayrollComponentTotalMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($updatePayrollComponentDetail->updatePayrollComponent->end_date);
+            } else {
+                $updatePayrollComponentTotalMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($cutOffEndDate);
+            }
+            $remainMonths -= $updatePayrollComponentTotalMonths;
+
+            $totalAmount += ($updatePayrollComponentTotalMonths / $totalMonths) * $updatePayrollComponentDetail->new_amount;
+        }
+
+        if ($remainMonths > 0) {
+            $totalAmount += ($remainMonths / $totalMonths) * $basicAmount;
+        }
+
+        return $totalAmount;
+    }
+
     /**
      * create run payroll details
      *
@@ -162,8 +193,8 @@ class RunThrService
      */
     public static function createDetails(PayrollSetting $payrollSetting, RunThr $runThr, array $request): JsonResponse
     {
-        $cutOffStartDate = Carbon::parse($runThr->cut_off_start_date);
-        $cutOffEndDate = Carbon::parse($runThr->cut_off_end_date);
+        $cutOffStartDate = Carbon::parse($runThr->thr_date)->subYear();
+        $cutOffEndDate = Carbon::parse($runThr->thr_date);
         // $cutoffDiffDay = $cutOffStartDate->diff($cutOffEndDate)->days;
         $company = $payrollSetting->company;
 
@@ -186,23 +217,23 @@ class RunThrService
             $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
 
             $updatePayrollComponentDetails = UpdatePayrollComponentDetail::with('updatePayrollComponent')
-                ->where('user_id', $userId)
-                ->whereHas('updatePayrollComponent', function ($q) use ($request) {
-                    $q->whereCompany($request['company_id']);
-                    $q->where(function ($q2) {
-                        $q2->whereNull('end_date');
-                        $q2->orWhere('end_date', '>', now());
-                    });
-                    $q->where('effective_date', '<=', now());
-                })->orderByDesc('id')->get();
+                ->where('user_id', $user->id)
+                ->whereHas(
+                    'updatePayrollComponent',
+                    fn($q) => $q->whereCompany($runThr->company_id)
+                        ->whenBranch($runThr->branch_id)
+                        ->whereActive($cutOffStartDate, $cutOffEndDate)
+                )
+                ->orderByDesc('id')->get();
+
 
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
             $basicSalaryComponent = PayrollComponent::tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
-            $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
-
-            if ($updatePayrollComponentDetail) {
+            $updatePayrollComponentDetails = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id);
+            // dd($updatePayrollComponentDetails->toArray());
+            if ($updatePayrollComponentDetails->count()) {
                 // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
                 // end_date / endEffectiveDate can be null
@@ -210,7 +241,8 @@ class RunThrService
 
                 // calculate prorate
                 // $userBasicSalary = self::prorate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $totalWorkingDays, $cutOffStartDate, $cutOffEndDate, $startEffectiveDate, $endEffectiveDate);
-                $userBasicSalary = $updatePayrollComponentDetail->new_amount;
+                $userBasicSalary = self::prorateYear($user, $userBasicSalary, $updatePayrollComponentDetails, $cutOffStartDate, $cutOffEndDate);
+                // $userBasicSalary = $updatePayrollComponentDetail->new_amount;
             }
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runThrUser);
@@ -287,7 +319,32 @@ class RunThrService
              * fourth, calculate bpjs
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs) {
+                $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
                 $bpjsPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
+
+                $isEligibleToCalculateBpjsKesehatan = true;
+                // if (
+                //     !empty($user->userBpjs->bpjs_kesehatan_no)
+                //     && !empty($user->userBpjs->bpjs_kesehatan_date)
+                //     && (
+                //         date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) < date('Y', strtotime($cutOffStartDate))
+                //         || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($cutOffEndDate)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($cutOffStartDate)))
+                //     )
+                // ) {
+                //     $isEligibleToCalculateBpjsKesehatan = true;
+                // }
+
+                $isEligibleToCalculateBpjsKetenagakerjaan = true;
+                // if (
+                //     !empty($user->userBpjs->bpjs_ketenagakerjaan_no)
+                //     && !empty($user->userBpjs->bpjs_ketenagakerjaan_date)
+                //     && (
+                //         date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) < date('Y', strtotime($cutOffStartDate))
+                //         || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($cutOffEndDate)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($cutOffStartDate)))
+                //     )
+                // ) {
+                //     $isEligibleToCalculateBpjsKetenagakerjaan = true;
+                // }
 
                 // calculate bpjs
                 // init bpjs variable
@@ -297,14 +354,27 @@ class RunThrService
                 $current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
                 if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
 
+
                 // bpjs kesehatan
                 $company_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
 
                 $employee_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
+                if (!$isTaxable) {
+                    $company_percentageBpjsKesehatan += $employee_percentageBpjsKesehatan;
+                    $employee_percentageBpjsKesehatan = 0;
+                }
+                // dump($company_percentageBpjsKesehatan);
+                // dump($employee_percentageBpjsKesehatan);
 
                 $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
 
                 $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
+                if ($user->userBpjs->bpjs_kesehatan_cost->is(PaidBy::COMPANY)) {
+                    // $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
+                    $employee_totalBpjsKesehatan = 0;
+                }
+                // dump($company_totalBpjsKesehatan);
+                // dd($employee_totalBpjsKesehatan);
 
                 // jkk
                 $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
@@ -316,29 +386,60 @@ class RunThrService
 
                 // jht
                 $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
-                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
-
                 $employee_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
+                if (!$isTaxable) {
+                    $company_percentageJht += $employee_percentageJht;
+                    $employee_percentageJht = 0;
+                }
+
+                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
                 $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                if ($user->userBpjs->jht_cost->is(PaidBy::COMPANY)) {
+                    // $company_totalJht += $employee_totalJht;
+                    $employee_totalJht = 0;
+                }
 
                 // jp
-                $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
+                $company_totalJp = 0;
+                $employee_totalJp = 0;
+                if (!$user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::NOT_PAID)) {
+                    $company_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
 
-                $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+                    $employee_percentageJp = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
+                    if (!$isTaxable) {
+                        $company_percentageJp += $employee_percentageJp;
+                        $employee_percentageJp = 0;
+                    }
 
-                $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
+                    $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
 
-                $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+                    $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
+
+                    if ($user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::COMPANY)) {
+                        // $company_totalJp += $employee_totalJp;
+                        $employee_totalJp = 0;
+                    }
+                }
 
                 foreach ($bpjsPayrollComponents as $bpjsPayrollComponent) {
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
-                    if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+                    $amount = 0;
+                    if ($isEligibleToCalculateBpjsKesehatan) {
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_BPJS_KESEHATAN)) $amount = $company_totalBpjsKesehatan;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN)) $amount = $employee_totalBpjsKesehatan;
+                    }
+
+                    if ($isEligibleToCalculateBpjsKetenagakerjaan) {
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKK)) $amount = $company_totalJkk;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JKM)) $amount = $company_totalJkm;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JHT)) $amount = $company_totalJht;
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JHT)) $amount = $employee_totalJht;
+
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::COMPANY_JP)) $amount = $company_totalJp;
+                        if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
+                    }
 
                     $amount = self::calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $totalWorkingDays, $runThrUser);
 
@@ -525,7 +626,7 @@ class RunThrService
         //Hitung Prorate
         $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
         $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
-        $months = $joinDate->diffInMonths($thrDate,true,false);
+        $months = $joinDate->diffInMonths($thrDate, true, false);
         // $months = intdiv($days, 12);
         // dd($months);
         // $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
@@ -832,56 +933,3 @@ class RunThrService
         return $taxPercentage;
     }
 }
-// // calculate bpjs
-// if ($runThrUser->user->userBpjs) {
-//     // init bpjs variable
-//     $current_upahBpjsKesehatan = $runThrUser->user->userBpjs->upah_bpjs_kesehatan;
-//     $max_upahBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::BPJS_KESEHATAN_MAXIMUM_SALARY)?->value;
-//     if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
-
-
-//     $current_upahBpjsKetenagakerjaan = $runThrUser->user->userBpjs->upah_bpjs_ketenagakerjaan;
-//     $max_jp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::JP_MAXIMUM_SALARY)?->value;
-//     if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
-
-//     // bpjs kesehatan
-//     $company_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
-//     $employee_percentageBpjsKesehatan = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_BPJS_KESEHATAN_PERCENTAGE)?->value;
-
-//     $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
-//     $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
-
-//     // jkk
-//     $company_percentageJkk = $company->npp?->jkk ?? 0;
-//     $company_totalJkk = $current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
-
-//     // jkm
-//     $company_percentageJkm = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
-//     $company_totalJkm = $current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
-
-//     // jht
-//     $company_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
-//     $employee_percentageJht = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JHT_PERCENTAGE)?->value;
-//     $company_totalJht = $current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
-//     $employee_totalJht = $current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
-
-//     // jp
-//     $company_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JP_PERCENTAGE)?->value;
-//     $employee_percentageJp = $company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::EMPLOYEE_JP_PERCENTAGE)?->value;
-
-//     $company_totalJp = $current_upahBpjsKetenagakerjaan * ($company_percentageJp / 100);
-//     $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
-
-//     // company = benefit (tidak perlu kalkulasi, hanya catat)
-//     // employee = deduction (kalkulasi)
-//         'company_totalBpjsKesehatan' => $company_totalBpjsKesehatan,
-//         'employee_totalBpjsKesehatan' => $employee_totalBpjsKesehatan,
-//         'company_totalJkk' => $company_totalJkk,
-//         'company_totalJkm' => $company_totalJkm,
-//         'company_totalJht' => $company_totalJht,
-//         'employee_totalJht' => $employee_totalJht,
-//         'company_totalJp' => $company_totalJp,
-//         'employee_totalJp' => $employee_totalJp,
-//     ]);
-// }
-// // end calculate bpjs
