@@ -36,6 +36,8 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
+        return $query->whereHas('userPatrolBatch', fn($q) => $q->tenanted());
+
         if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
@@ -44,6 +46,7 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
         if ($user->is_super_admin) {
             return $query;
         }
+
         if ($user->is_administrator) {
             return $query->whereHas('userPatrolBatch', fn($q) => $q->whereHas('user', fn($q) => $q->where('group_id', $user->group_id)));
         }

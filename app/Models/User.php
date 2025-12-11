@@ -86,7 +86,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'image',
     ];
 
-    public function scopeTenanted(Builder $query, bool $isDescendant = false): Builder
+    public function scopeTenanted(Builder $query, ?bool $isDescendant = false): Builder
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
@@ -96,6 +96,27 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         //     return $query->whereIn('users.type', [UserType::ADMINISTRATOR, UserType::ADMIN, UserType::USER])
         //         ->whereHas('companies', fn($q) => $q->whereHas('company', fn($q) => $q->where('companies.group_id', $user->group_id)));
         // }
+
+        if (config('app.name') === 'SYNTEGRA') {
+            if ($user->is_admin) return $query->where('company_id', $user->company_id);
+
+            if ($user->is_supervisor) {
+                $branch = Branch::select('parent_id', 'is_main')->findOrFail($user->branch_id);
+
+                if ($branch->is_main) {
+                    return $query->where('company_id', $user->company_id);
+                }
+
+                // if branch parent_id is null, its mean branch, otherwise its client
+                if (!$branch->parent_id) {
+                    return $query->where(fn($q) => $q->where('branch_id', $user->branch_id)->orWhereHas('branch', fn($q) => $q->where('parent_id', $user->branch_id)));
+                }
+
+                return $query->where('branch_id', $user->branch_id);
+            }
+
+            return $query->where('branch_id', $user->branch_id);
+        }
 
         if (config('app.name') == 'SUNSHINE') {
             $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
@@ -514,6 +535,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function getIsAdminAttribute(): bool
     {
         return $this->type->is(UserType::ADMIN);
+    }
+
+    public function getIsSupervisorAttribute(): bool
+    {
+        return $this->type->in([UserType::SUPERVISOR, UserType::MANAGER]);
     }
 
     public function getIsUserAttribute(): bool

@@ -11,6 +11,7 @@ use App\Models\Branch;
 use App\Models\BranchLocation;
 use App\Models\User;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -113,16 +114,16 @@ class BranchController extends BaseController
 
     public function summary()
     {
-        $branchCount = Branch::tenanted()->count();
-        $branchLocationCount = BranchLocation::whereHas('branch', fn($q) => $q->tenanted())->count();
-        $userCount = User::tenanted()->whereNull('resign_date')->count();
+        $branchId = request()->filter['branch_id'] ?? null;
 
-        $summary = [
-            'branch' => $branchCount,
-            'branch_location' => $branchLocationCount,
-            'active_user' => $userCount,
-        ];
+        $data = Cache::remember('branch_summary_' . $branchId, now()->addHour(), function () use ($branchId) {
+            return [
+                'branch' => Branch::tenanted()->where('id', $branchId)->whereNull('parent_id')->count(),
+                'client' => Branch::tenanted()->where('parent_id', $branchId)->whereNotNull('parent_id')->count(),
+                'users' => User::tenanted()->where('branch_id', $branchId)->whereNull('resign_date')->count(),
+            ];
+        });
 
-        return new DefaultResource($summary);
+        return new DefaultResource($data);
     }
 }

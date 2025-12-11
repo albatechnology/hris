@@ -40,20 +40,43 @@ class Branch extends BaseModel implements TenantedInterface
     //     });
     // }
 
-    public function scopeTenanted(Builder $query): Builder
+    public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
-        if ($user->is_super_admin) {
-            return $query;
+
+        if (!$user) {
+            /** @var User $user */
+            $user = auth('sanctum')->user();
         }
 
         // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];
         // $query->whereIn('company_id', $companyIds);
 
+        $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
+
         if ($user->is_admin) {
             // return $query;
-            return $query->whereHas('company', fn($q) => $q->where('group_id', $user->group_id));
+            return $query;
+        }
+
+        if (config('app.name') === 'SYNTEGRA') {
+            if ($user->is_supervisor) {
+                $branch = Branch::select('parent_id', 'is_main')->findOrFail($user->branch_id);
+
+                if ($branch->is_main) {
+                    return $query;
+                }
+
+                // if branch parent_id is null, its mean branch, otherwise its client
+                if (!$branch->parent_id) {
+                    return $query->where(fn($q) => $q->where('parent_id', $user->branch_id)->orWhere('id', $user->branch_id));
+                }
+
+                return $query->where('id', $user->branch_id);
+            }
+
+            return $query->where('id', $user->branch_id);
         }
 
         $branchIds = $user->branches()->get(['branch_id'])?->pluck('branch_id') ?? [];
@@ -85,6 +108,7 @@ class Branch extends BaseModel implements TenantedInterface
     {
         return $this->belongsTo(Company::class);
     }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

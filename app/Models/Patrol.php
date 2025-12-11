@@ -89,6 +89,8 @@ class Patrol extends BaseModel implements TenantedInterface
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
+        return $query->whereHas('branch', fn($q) => $q->tenanted($user));
+        die;
         if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();
