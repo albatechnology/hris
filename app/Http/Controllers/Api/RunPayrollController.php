@@ -272,7 +272,7 @@ class RunPayrollController extends BaseController
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name')
-                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency'));
+                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency', 'tax_method'));
                 }
             ])
             ->get();
@@ -375,7 +375,7 @@ class RunPayrollController extends BaseController
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'nik')
-                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency'));
+                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'tax_method'));
                 }
             ])
             ->get();
