@@ -805,8 +805,8 @@ class UserController extends BaseController
             ->whereYear('thr_date', "$request->year")
             ->whereHas('users', fn($q) => $q->where('user_id', $user->id))
             ->orderByDesc('updated_at')
+            ->release()
             ->first();
-        // ->release()
 
         if (!$runThr) return $this->errorResponse(message: "Data THR not found", code: Response::HTTP_NOT_FOUND);
 
