@@ -19,11 +19,13 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained();
             $table->double('basic_salary', 13, 2)->unsigned()->default(0);
             $table->double('gross_salary', 13, 2)->unsigned()->default(0);
+            $table->double('tax_salary', 13, 2)->unsigned()->default(0);
+            $table->double('thr', 13, 2)->unsigned()->default(0);
+            $table->double('total_tax_thr', 13, 2)->unsigned()->default(0);
             $table->double('allowance', 13, 2)->unsigned()->default(0);
             $table->double('additional_earning', 13, 2)->unsigned()->default(0);
             $table->double('deduction', 13, 2)->unsigned()->default(0);
             $table->double('benefit', 13, 2)->unsigned()->default(0);
-            $table->double('tax', 13, 2)->unsigned()->default(0);
             $table->json('payroll_info')->nullable();
             $table->timestamps();
         });

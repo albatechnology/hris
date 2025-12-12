@@ -87,18 +87,17 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalThrProrate += $runThrUser->basic_salary;
-                    // $totalBasicSalary += $runThrUser->basic_salary;
-                    $totalBasicSalary += $runThrUser->base_salary_original;
+                    $totalThrProrate += $runThrUser->thr;
+                    $totalBasicSalary += $runThrUser->basic_salary;
                     if (config('app.name') == 'SUNSHINE') {
                         $totalAllowance += $runThrUser->tax_thr; // FOR SUNSHINE
                     }
                     $totalDeduction += $runThrUser->deduction;
-                    $totalTax += $runThrUser->tax;
-                    $totalThp += $runThrUser->total_month;
+                    $totalTax += $runThrUser->tax_salary;
+                    $totalThp += $runThrUser->gross_salary;
                     $totalBenefit += $runThrUser->benefit;
                     $totalBebanMonth += $runThrUser->total_beban_month;
-                    $totalTaxMonth += $runThrUser->total_tax_month;
+                    $totalTaxMonth += $runThrUser->total_tax_thr;
                     $taxThr += $runThrUser->tax_thr;
                     $thpThr += $runThrUser->thp_thr;
                 @endphp
@@ -125,8 +124,8 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
+                    <td>{{ $runThrUser->thr }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
-                    <td>{{ $runThrUser->base_salary_original }}</td>
 
                     {{-- @foreach ($allowances as $allowance)
                         @php
@@ -166,13 +165,13 @@
                     @endforeach
                     <td>{{ $runThrUser->benefit }}</td>
 
-                    <td>{{ $runThrUser->tax }}</td>
-                    <td>{{ $runThrUser->total_month }}</td>
+                    <td>{{ $runThrUser->tax_salary }}</td>
+                    <td>{{ $runThrUser->gross_salary }}</td>
                     <td>{{ $runThrUser->total_beban_month }}</td>
-                    <td>{{ $runThrUser->total_tax_month }}</td>
+                    <td>{{ $runThrUser->total_tax_thr }}</td>
                     <td>{{ $runThrUser->tax_thr }}</td>
                     @if (config('app.name') == 'SUNSHINE')
-                        <td>{{ $runThrUser->basic_salary }}</td>
+                        <td>{{ $runThrUser->thr }}</td>
                     @else
                         <td>{{ $runThrUser->thp_thr }}</td>
                     @endif
@@ -241,16 +240,15 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    // $totalBasicSalary += $runThrUser->thr_prorate;
-                    $totalBasicSalary += $runThrUser->base_salary_original;
-                    $totalThrProrate += $runThrUser->basic_salary;
+                    $totalBasicSalary += $runThrUser->basic_salary;
+                    $totalThrProrate += $runThrUser->thr;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
-                    $totalTax += $runThrUser->tax;
-                    $totalThp += $runThrUser->total_month;
+                    $totalTax += $runThrUser->tax_salary;
+                    $totalThp += $runThrUser->gross_salary;
                     $totalBenefit += $runThrUser->benefit;
                     $totalBebanMonth += $runThrUser->total_beban_month;
-                    $totalTaxMonth += $runThrUser->total_tax_month;
+                    $totalTaxMonth += $runThrUser->total_tax_thr;
                     $taxThr += $runThrUser->tax_thr;
                     $thpThr += $runThrUser->thp_thr;
                 @endphp
@@ -277,8 +275,8 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
+                    <td>{{ $runThrUser->thr }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
-                    <td>{{ $runThrUser->base_salary_original }}</td>
                     {{-- <td>{{ $runThrUser->thr_prorate }}</td> --}}
 
                     {{-- @foreach ($allowances as $allowance)
@@ -314,10 +312,10 @@
                     @endforeach
                     <td>{{ $runThrUser->benefit }}</td>
 
-                    <td>{{ $runThrUser->tax }}</td>
-                    <td>{{ $runThrUser->total_month }}</td>
+                    <td>{{ $runThrUser->tax_salary }}</td>
+                    <td>{{ $runThrUser->gross_salary }}</td>
                     <td>{{ $runThrUser->total_beban_month }}</td>
-                    <td>{{ $runThrUser->total_tax_month }}</td>
+                    <td>{{ $runThrUser->total_tax_thr }}</td>
                     <td>{{ $runThrUser->tax_thr }}</td>
                     <td>{{ $runThrUser->thp_thr }}</td>
                 </tr>
@@ -379,15 +377,15 @@
             @endphp
             @foreach ($group as $runThrUser)
                 @php
-                    $totalThrProrate += $runThrUser->basic_salary;
-                    $totalBasicSalary += $runThrUser->base_salary_original;
+                    $totalThrProrate += $runThrUser->thr;
+                    $totalBasicSalary += $runThrUser->basic_salary;
                     // $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
-                    $totalTax += $runThrUser->tax;
-                    $totalThp += $runThrUser->total_month;
+                    $totalTax += $runThrUser->tax_salary;
+                    $totalThp += $runThrUser->gross_salary;
                     $totalBenefit += $runThrUser->benefit;
                     $totalBebanMonth += $runThrUser->total_beban_month;
-                    $totalTaxMonth += $runThrUser->total_tax_month;
+                    $totalTaxMonth += $runThrUser->total_tax_thr;
                     $taxThr += $runThrUser->tax_thr;
                     $thpThr += $runThrUser->thp_thr;
                 @endphp
@@ -414,8 +412,8 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
+                    <td>{{ $runThrUser->thr }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
-                    <td>{{ $runThrUser->base_salary_original }}</td>
 
 
                     {{-- @foreach ($allowances as $allowance)
@@ -451,10 +449,10 @@
                     @endforeach
                     <td>{{ $runThrUser->benefit }}</td>
 
-                    <td>{{ $runThrUser->tax }}</td>
-                    <td>{{ $runThrUser->total_month }}</td>
+                    <td>{{ $runThrUser->tax_salary }}</td>
+                    <td>{{ $runThrUser->gross_salary }}</td>
                     <td>{{ $runThrUser->total_beban_month }}</td>
-                    <td>{{ $runThrUser->total_tax_month }}</td>
+                    <td>{{ $runThrUser->total_tax_thr }}</td>
                     <td>{{ $runThrUser->tax_thr }}</td>
                     <td>{{ $runThrUser->thp_thr }}</td>
                 </tr>

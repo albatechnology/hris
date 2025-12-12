@@ -27,7 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class RunThrService
+class RunThrServiceBackup
 {
     /**
      * execute run payroll
@@ -156,35 +156,28 @@ class RunThrService
         return $basicAmount;
     }
 
-    public static function prorateYear(User $user, int|float $basicAmount, Collection $updatePayrollComponentDetails, Carbon|string $cutOffStartDate, Carbon|string $cutOffEndDate)
+    public static function prorateYear(User $user, int|float $basicAmount, Collection $updatePayrollComponentDetails, Carbon $cutOffStartDate, Carbon $cutOffEndDate)
     {
-        if (!($cutOffStartDate instanceof Carbon)) {
-            $cutOffStartDate = Carbon::parse($cutOffStartDate);
-        }
-
-        if (!($cutOffEndDate instanceof Carbon)) {
-            $cutOffEndDate = Carbon::parse($cutOffEndDate);
-        }
-
-        $totalWorkingMonths = $cutOffStartDate->diffInMonths($cutOffEndDate); // harusnya 12 months
-
-        if ($totalWorkingMonths < 1) return $basicAmount;
+        $totalMonths = $cutOffStartDate->diffInMonths($cutOffEndDate); // harusnya 12 months
+        if ($totalMonths < 1) return $basicAmount;
 
         $totalAmount = 0;
-        foreach ($updatePayrollComponentDetails as $updatePayrollComponentDetail) {
-            $updatePayrollComponentTotalWorkingMonths = 0;
-            if ($updatePayrollComponentDetail->updatePayrollComponent->end_date) {
-                $updatePayrollComponentTotalWorkingMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($updatePayrollComponentDetail->updatePayrollComponent->end_date);
-            } else {
-                $updatePayrollComponentTotalWorkingMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($cutOffEndDate);
-            }
-            $totalWorkingMonths -= $updatePayrollComponentTotalWorkingMonths;
 
-            $totalAmount += ($updatePayrollComponentTotalWorkingMonths / 12) * $updatePayrollComponentDetail->new_amount;
+        $remainMonths = $totalMonths;
+        foreach ($updatePayrollComponentDetails as $updatePayrollComponentDetail) {
+            $updatePayrollComponentTotalMonths = 0;
+            if ($updatePayrollComponentDetail->updatePayrollComponent->end_date) {
+                $updatePayrollComponentTotalMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($updatePayrollComponentDetail->updatePayrollComponent->end_date);
+            } else {
+                $updatePayrollComponentTotalMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($cutOffEndDate);
+            }
+            $remainMonths -= $updatePayrollComponentTotalMonths;
+
+            $totalAmount += ($updatePayrollComponentTotalMonths / $totalMonths) * $updatePayrollComponentDetail->new_amount;
         }
 
-        if ($totalWorkingMonths > 0) {
-            $totalAmount += ($totalWorkingMonths / 12) * $basicAmount;
+        if ($remainMonths > 0) {
+            $totalAmount += ($remainMonths / $totalMonths) * $basicAmount;
         }
 
         return $totalAmount;
@@ -240,8 +233,6 @@ class RunThrService
             $basicSalaryComponent = PayrollComponent::tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
             $updatePayrollComponentDetails = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id);
             // dd($updatePayrollComponentDetails->toArray());
-
-            $cutOffJoinDate = $cutOffStartDate->lessThan($user->join_date) ? $user->join_date : $cutOffStartDate;
             if ($updatePayrollComponentDetails->count()) {
                 // $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
@@ -253,9 +244,9 @@ class RunThrService
                 $userBasicSalary = self::prorateYear($user, $userBasicSalary, $updatePayrollComponentDetails, $cutOffStartDate, $cutOffEndDate);
                 // $userBasicSalary = $updatePayrollComponentDetail->new_amount;
             }
-            $userBasicSalary = self::prorateYear($user, $userBasicSalary, collect([]), $cutOffJoinDate, $cutOffEndDate);
 
             $amount = self::calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runThrUser);
+
             // // prorate basic salary
             // $joinDate = Carbon::parse($user->join_date)->startOfDay();
             // $totalWorkingMonths = $joinDate->diffInDays($request['thr_date']);
@@ -572,28 +563,6 @@ class RunThrService
             $runThrUser = RunThrUser::findOrFail($runThrUser);
         }
 
-        $runThrUser->load('runThr');
-
-        $cutOffStartDate = Carbon::parse($runThrUser->runThr->thr_date)->subYear();
-        $cutOffEndDate = Carbon::parse($runThrUser->runThr->thr_date);
-
-        $basicSalaryComponentId = PayrollComponent::tenanted()->select('id')->where('company_id', $runThrUser->runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail()->id;
-
-        $updatePayrollComponentBasicSalary = UpdatePayrollComponentDetail::where('user_id', $runThrUser->user_id)
-            ->whereHas(
-                'updatePayrollComponent',
-                fn($q) => $q->whereCompany($runThrUser->runThr->company_id)
-                    ->whereActive($cutOffStartDate, $cutOffEndDate)
-                    ->where('payroll_component_id', $basicSalaryComponentId)
-            )
-            ->orderByDesc('id')
-            ->limit(1)
-            ->value('new_amount');
-
-        $userPayrollInfo = $runThrUser->user->payrollInfo;
-
-        $originalBasicSalary = $updatePayrollComponentBasicSalary && $updatePayrollComponentBasicSalary > 0 ? $updatePayrollComponentBasicSalary : $userPayrollInfo->basic_salary;
-
         $basicSalary = $runThrUser->components()->whereHas('payrollComponent', function ($q) {
             $q->where('category', PayrollComponentCategory::BASIC_SALARY);
             // $q->where('is_calculateable', true);
@@ -611,20 +580,11 @@ class RunThrService
             $q->where('is_taxable', false);
         })->sum('amount');
 
-        // dump($allowanceTaxable);
-        // dd($allowanceNonTaxable);
-
         $additionalEarning = 0; // belum kepake
 
-        $taxableBenefit = $runThrUser->components()->whereHas('payrollComponent', function ($q) {
+        $benefit = $runThrUser->components()->whereHas('payrollComponent', function ($q) {
             $q->where('type', PayrollComponentType::BENEFIT);
             $q->whereNotIn('category', [PayrollComponentCategory::COMPANY_JHT, PayrollComponentCategory::COMPANY_JP]);
-            // $q->where('is_calculateable', true);
-        })->sum('amount');
-
-        $totalAllBenefits = $runThrUser->components()->whereHas('payrollComponent', function ($q) {
-            $q->where('type', PayrollComponentType::BENEFIT);
-            // $q->whereNotIn('category', [PayrollComponentCategory::COMPANY_JHT, PayrollComponentCategory::COMPANY_JP]);
             // $q->where('is_calculateable', true);
         })->sum('amount');
 
@@ -634,97 +594,66 @@ class RunThrService
         })->sum('amount');
 
 
-        // dump($basicSalary);
-        // $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit;
-        // dump($grossSalary);
+        $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit;
 
-        $grossSalaryThisMonth = $originalBasicSalary + $allowanceTaxable + $additionalEarning + $taxableBenefit;
-        // dump($grossSalaryThisMonth);
+        $userPayrollInfo = $runThrUser->user->payrollInfo;
 
-        $taxPercentageGrossSalaryThisMonth = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $grossSalaryThisMonth);
-        // dump($taxPercentageGrossSalaryThisMonth);
+        $taxPercentage = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $grossSalary);
 
         if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
-            $grossUp1 = floatval(100 - $taxPercentageGrossSalaryThisMonth);
-            $grossSalary2 = ($grossSalaryThisMonth / $grossUp1) * 100;
+            $grossUp1 = floatval(100 - $taxPercentage);
+            $grossSalary2 = ($grossSalary / $grossUp1) * 100;
 
-            $taxPercentageGrossSalaryThisMonth = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $grossSalary2);
+            $taxPercentage = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $grossSalary2);
 
-            $taxGrossSalaryThisMonth = $grossSalary2 * ($taxPercentageGrossSalaryThisMonth / 100);
+            $tax = $grossSalary2 * ($taxPercentage / 100);
         } else {
-            $taxGrossSalaryThisMonth = $grossSalaryThisMonth * ($taxPercentageGrossSalaryThisMonth / 100);
+            $tax = $grossSalary * ($taxPercentage / 100);
         }
-        // dump($taxGrossSalaryThisMonth);
 
         //NEW THR Prorate disimpan ke dalam kolom baru di database
-        // $benefitForTotalMonth = $runThrUser->components()
-        //     ->whereHas('payrollComponent', fn($q) => $q->whereIn('category', [
-        //         PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
-        //         PayrollComponentCategory::COMPANY_JKK,
-        //         PayrollComponentCategory::COMPANY_JKM,
-        //     ]))
-        //     ->sum('amount');
+        $benefitForTotalMonth = $runThrUser->components()
+            ->whereHas('payrollComponent', fn($q) => $q->whereIn('category', [
+                PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
+                PayrollComponentCategory::COMPANY_JKK,
+                PayrollComponentCategory::COMPANY_JKM,
+            ]))
+            ->sum('amount');
 
-        $thrThisMonth = round($basicSalary + $allowanceTaxable + $additionalEarning);
-        // $totalMonth = round($thrThisMonth + $benefitForTotalMonth);
-        $totaBebanThislMonth = round($thrThisMonth + $grossSalaryThisMonth);
-        // dump($benefitForTotaBebanThislMonth);
-        // dump($thrThisMonth);
-        // dump($totaBebanThislMonth);
-        // dump('======');
-        // dd($runThrUser);
+        $totalEarning = round($basicSalary + ($allowanceTaxable + $allowanceNonTaxable) + $additionalEarning);
+        $totalMonth = round($totalEarning + $benefitForTotalMonth);
 
-        // //Hitung Prorate
-        // $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
-        // $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
-        // $months = $joinDate->diffInMonths($thrDate, true, false);
-        // // $months = intdiv($days, 12);
-        // // dd($months);
-        // // $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
-        // $thrMultiplier = $months >= 12 ? 1 : ($months / 12);
-        // dump($thrMultiplier, $months);
-        // $thrProrate = round($thrMultiplier * $basicSalary);
+        //Hitung Prorate
+        $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
+        $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
+        $months = $joinDate->diffInMonths($thrDate, true, false);
+        // $months = intdiv($days, 12);
+        // dd($months);
+        // $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
+        $thrMultiplier = $months >= 12 ? 1 : ($months / 12);
+        // dd($thrMultiplier, $months);
+        $thrProrate = round($thrMultiplier * $basicSalary);
         // dump($thrProrate);
 
-        // $totalBebanMonth = round($totalMonth + $thrProrate);
+        $totalBebanMonth = round($totalMonth + $thrProrate);
         // dump($totalBebanMonth);
-        // $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth) / 100);
+        $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth) / 100);
         // dump($taxAfter);
-        // $taxThr = round($taxAfter - $taxGrossSalaryThisMonth);
+        $taxThr = round($taxAfter - $tax);
         // dump($taxThr);
-        // $thpThr = round($thrProrate - $taxThr);
+        $thpThr = round($thrProrate - $taxThr);
         // dump($thpThr);
-        // $basicSalaryPersisted = $thrProrate;
-        // dd($basicSalaryPersisted);
-
-        $taxPercentageGrossSalaryThisMonthAndThr = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totaBebanThislMonth);
-        // dump($taxPercentageGrossSalaryThisMonthAndThr);
-        if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
-            $grossUp1 = floatval(100 - $taxPercentageGrossSalaryThisMonthAndThr);
-            $grossSalary2 = ($totaBebanThislMonth / $grossUp1) * 100;
-
-            $taxPercentageGrossSalaryThisMonthAndThr = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $grossSalary2);
-
-            $taxGrossSalaryThisMonthAndThr = $grossSalary2 * ($taxPercentageGrossSalaryThisMonthAndThr / 100);
-        } else {
-            $taxGrossSalaryThisMonthAndThr = $totaBebanThislMonth * ($taxPercentageGrossSalaryThisMonthAndThr / 100);
-        }
-        // dump($taxGrossSalaryThisMonthAndThr);
-        // $taxThr = round($taxGrossSalaryThisMonthAndThr - $taxGrossSalaryThisMonth);
-        // dd($taxThr);
+        $basicSalaryPersisted = $thrProrate;
+        // dump($basicSalaryPersisted);
 
         $runThrUser->update([
-            'basic_salary' => $originalBasicSalary,
-            'gross_salary' => $grossSalaryThisMonth,
-            'tax_salary' => $taxGrossSalaryThisMonth,
-
-            'thr' => $thrThisMonth,
-            'total_tax_thr' => round($taxGrossSalaryThisMonthAndThr),
-
+            'basic_salary' => $basicSalaryPersisted,
+            'gross_salary' => $grossSalary,
             'allowance' => $allowanceTaxable + $allowanceNonTaxable,
             'additional_earning' => $additionalEarning,
             'deduction' => $deduction,
-            'benefit' => $totalAllBenefits,
+            'benefit' => $benefit,
+            'tax' => round($tax),
             'payroll_info' => $userPayrollInfo,
         ]);
     }
