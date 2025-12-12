@@ -41,14 +41,14 @@ class RunThrUser extends BaseModel
     ];
 
     protected $appends = [
-        'thp',
-        'total_earning',
-        'total_deduction',
-        'total_month',
-        'thr_prorate',
-        'base_salary_original',
+        // 'thp',
+        // 'total_earning',
+        // 'total_deduction',
+        // 'total_month',
+        // 'thr_prorate',
+        // 'base_salary_original',
         'total_beban_month',
-        'total_tax_month',
+        // 'total_tax_month',
         'tax_thr',
         'thp_thr',
     ];
@@ -139,11 +139,11 @@ class RunThrUser extends BaseModel
     //     return round($this->total_earning - $this->total_deduction);
     // }
 
-    public function getTotalEarningAttribute(): int
-    {
-        // return round($this->basic_salary + $this->allowance + $this->additional_earning);
-        return round($this->base_salary_original + $this->allowance + $this->additional_earning);
-    }
+    // public function getTotalEarningAttribute(): int
+    // {
+    //     // return round($this->basic_salary + $this->allowance + $this->additional_earning);
+    //     return round($this->base_salary_original + $this->allowance + $this->additional_earning);
+    // }
 
     public function getTotalDeductionAttribute(): int
     {
