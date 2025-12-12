@@ -37,6 +37,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
         'is_include_backpay',
         'is_default',
         'is_hidden',
+        'is_calculate_thr',
         // 'is_calculateable',
     ];
 
@@ -56,6 +57,7 @@ class PayrollComponent extends BaseModel implements TenantedInterface
         'is_include_backpay' => 'boolean',
         'is_default' => 'boolean',
         'is_hidden' => 'boolean',
+        'is_calculate_thr' => 'boolean',
         // 'is_calculateable' => 'boolean',
     ];
 

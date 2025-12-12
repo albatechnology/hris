@@ -94,7 +94,7 @@ class PayrollComponentController extends BaseController
         return new PayrollComponentResource($payrollComponent->refresh());
     }
 
-    public function update(int $id, UpdateRequest $request): PayrollComponentResource|JsonResponse
+    public function update(UpdateRequest $request, int $id): PayrollComponentResource|JsonResponse
     {
         $payrollComponent = PayrollComponent::findTenanted($id);
         DB::beginTransaction();

@@ -36,6 +36,7 @@ class StoreRequest extends FormRequest
             'is_monthly_prorate' => $this->toBoolean($this->is_monthly_prorate),
             // 'is_daily_default' => $this->toBoolean($this->is_daily_default),
             // 'is_one_time_bonus' => $this->toBoolean($this->is_one_time_bonus),
+            'is_calculate_thr' => $this->toBoolean($this->is_calculate_thr),
             'is_include_backpay' => $this->toBoolean($this->is_include_backpay),
         ]);
     }
@@ -63,6 +64,7 @@ class StoreRequest extends FormRequest
             // 'daily_maximum_amount_type' => ['nullable', Rule::enum(PayrollComponentDailyMaximumAmountType::class)],
             // 'daily_maximum_amount' => 'nullable|numeric',
             // 'is_one_time_bonus' => 'nullable|boolean',
+            'is_calculate_thr' => 'nullable|boolean',
             'is_include_backpay' => 'nullable|boolean',
 
             'includes' => 'nullable|array',

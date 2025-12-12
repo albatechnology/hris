@@ -24,9 +24,9 @@ class RunThrExport implements FromView, WithColumnFormatting, ShouldAutoSize, Wi
 
     public function view(): View
     {
-        $payrollComponents = PayrollComponent::where('company_id', $this->runThr->company_id)->get(['id', 'name', 'type', 'category']);
+        $payrollComponents = PayrollComponent::where('company_id', $this->runThr->company_id)->get(['id', 'name', 'type', 'category','is_calculate_thr']);
 
-        // $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY);
+        $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY)->where('is_calculate_thr', true);
         $deductions = $payrollComponents->where('type', PayrollComponentType::DEDUCTION);
         $benefits = $payrollComponents->where('type', PayrollComponentType::BENEFIT)->whereNotIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN]);
 
@@ -45,11 +45,11 @@ class RunThrExport implements FromView, WithColumnFormatting, ShouldAutoSize, Wi
 
         // $runThrUsersGroups = $runThrUsers->sortBy('user.payrollInfo.bank.account_holder')->groupBy('user.payrollInfo.bank.id');
 
-        // $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
-        // $allowance->id => 0
-        // ])->reduce(function ($carry, $item) {
-        // return $carry + $item; // Menggabungkan array dengan mempertahankan key
-        // }, []);
+        $totalAllowancesStorages = $allowances->values()->map(fn($allowance) => [
+            $allowance->id => 0
+        ])->reduce(function ($carry, $item) {
+            return $carry + $item; // Menggabungkan array dengan mempertahankan key
+        }, []);
 
         $totalDeductionsStorages = $deductions->values()->map(fn($deduction) => [
             $deduction->id => 0
@@ -69,13 +69,13 @@ class RunThrExport implements FromView, WithColumnFormatting, ShouldAutoSize, Wi
             'resignUsers' => $resignUsers,
             'newUsers' => $newUsers,
             'payrollComponentType' => PayrollComponentType::class,
-            // 'allowances' => $allowances,
+            'allowances' => $allowances,
             'deductions' => $deductions,
             'benefits' => $benefits,
-            // 'totalAllowancesStorages' => $totalAllowancesStorages,
+            'totalAllowancesStorages' => $totalAllowancesStorages,
             'totalDeductionsStorages' => $totalDeductionsStorages,
             'totalBenefitsStorages' => $totalBenefitsStorages,
-            'totalColumns' =>  24 +  $deductions->count() + $benefits->count()
+            'totalColumns' =>  23 +  $deductions->count() + $benefits->count() + $allowances->count(),
             // 'totalColumns' =>  21 +  $allowances->count() + $deductions->count() + $benefits->count()
         ]);
     }

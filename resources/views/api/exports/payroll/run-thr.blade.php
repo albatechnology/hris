@@ -18,18 +18,19 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">Source Bank Code</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">THR Pro Rate</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Basic Salary</th>
-            {{-- FOR SUNSHINE --}}
-            @if (config('app.name') == 'SUNSHINE')
-                <th style="text-align: center; font-weight: bold" colspan="1">Allowance</th>
-                <th style="text-align: center; font-weight: bold" rowspan="2">Total Allowance</th>
-            @endif
-            {{-- FOR SUNSHINE --}}
+
+            <th style="text-align: center; font-weight: bold" colspan="{{ $allowances->count() }}">Allowance
+                {{ date('M-Y', strtotime($runThr->thr_date)) }}</th>
+            <th style="text-align: center; font-weight: bold" rowspan="2">Total Allowance</th>
+
             <th style="text-align: center; font-weight: bold" colspan="{{ $deductions->count() }}">Deduction
                 {{ date('M-Y', strtotime($runThr->thr_date)) }}</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total Deduction</th>
+
             <th style="text-align: center; font-weight: bold" colspan="{{ $benefits->count() }}">Benefit
                 {{ date('M-Y', strtotime($runThr->thr_date)) }}</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total Benefit</th>
+
             <th style="text-align: center; font-weight: bold" rowspan="2">PPH 21
                 {{ date('M-Y', strtotime($runThr->thr_date)) }}</th>
             <th style="text-align: center; font-weight: bold" rowspan="2">Total
@@ -42,14 +43,9 @@
             <th style="text-align: center; font-weight: bold" rowspan="2">THP THR</th>
         </tr>
         <tr>
-            {{-- @foreach ($allowances as $allowance)
+            @foreach ($allowances as $allowance)
                 <th>{{ $allowance->name }}</th>
-                @endforeach --}}
-
-            {{-- FOR SUNSHINE --}}
-            @if (config('app.name') == 'SUNSHINE')
-                <th>Allowance TAX</th>
-            @endif
+            @endforeach
 
             @foreach ($deductions as $deduction)
                 <th>{{ $deduction->name }}</th>
@@ -68,10 +64,7 @@
             @php
                 $totalBasicSalary = 0;
                 $totalThrProrate = 0;
-                if (config('app.name') == 'SUNSHINE') {
-                    $totalAllowance = 0; // FOR SUNSHINE
-                }
-
+                $totalAllowance = 0;
                 $totalDeduction = 0;
                 $totalTax = 0;
                 $totalThp = 0;
@@ -81,7 +74,7 @@
                 $taxThr = 0;
                 $thpThr = 0;
 
-                // $cloneTotalAllowancesStorages = $totalAllowancesStorages;
+                $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
             @endphp
@@ -89,9 +82,7 @@
                 @php
                     $totalThrProrate += $runThrUser->thr;
                     $totalBasicSalary += $runThrUser->basic_salary;
-                    if (config('app.name') == 'SUNSHINE') {
-                        $totalAllowance += $runThrUser->tax_thr; // FOR SUNSHINE
-                    }
+                    $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax_salary;
                     $totalThp += $runThrUser->gross_salary;
@@ -127,22 +118,17 @@
                     <td>{{ $runThrUser->thr }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
 
-                    {{-- @foreach ($allowances as $allowance)
+                    @foreach ($allowances as $allowance)
                         @php
                             $amount =
-                                $runThrUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                                $runThrUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ??
+                                0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
-                    <td>{{ $runThrUser->allowance }}</td> --}}
+                    <td>{{ $runThrUser->allowance }}</td>
 
-                    {{-- FOR SUNSHINE --}}
-                    @if(config('app.name') === 'SUNSHINE')
-                    <td>{{ $runThrUser->tax_thr }}</td>
-                    <td>{{ $runThrUser->tax_thr }}</td>
-                    @endif
                     @foreach ($deductions as $deduction)
                         @php
                             $amount =
@@ -170,11 +156,7 @@
                     <td>{{ $runThrUser->total_beban_month }}</td>
                     <td>{{ $runThrUser->total_tax_thr }}</td>
                     <td>{{ $runThrUser->tax_thr }}</td>
-                    @if (config('app.name') == 'SUNSHINE')
-                        <td>{{ $runThrUser->thr }}</td>
-                    @else
-                        <td>{{ $runThrUser->thp_thr }}</td>
-                    @endif
+                    <td>{{ $runThrUser->thp_thr }}</td>
                 </tr>
             @endforeach
             <tr>
@@ -182,16 +164,10 @@
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThrProrate }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
-                {{-- @foreach ($cloneTotalAllowancesStorages as $value)
+                @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td> --}}
-
-                {{-- FOR SUNSHINE --}}
-                @if (config('app.name') == 'SUNSHINE')
-                    <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-                    <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
-                @endif
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
 
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
@@ -224,7 +200,7 @@
             @php
                 $totalBasicSalary = 0;
                 $totalThrProrate = 0;
-                // $totalAllowance = 0;
+                $totalAllowance = 0;
                 $totalDeduction = 0;
                 $totalTax = 0;
                 $totalThp = 0;
@@ -234,7 +210,7 @@
                 $taxThr = 0;
                 $thpThr = 0;
 
-                // $cloneTotalAllowancesStorages = $totalAllowancesStorages;
+                $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
             @endphp
@@ -242,7 +218,7 @@
                 @php
                     $totalBasicSalary += $runThrUser->basic_salary;
                     $totalThrProrate += $runThrUser->thr;
-                    // $totalAllowance += $runThrUser->allowance;
+                    $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax_salary;
                     $totalThp += $runThrUser->gross_salary;
@@ -277,18 +253,17 @@
                     <td>{{ $runThrUser->user?->payrollInfo?->bank?->code ?? '' }}</td>
                     <td>{{ $runThrUser->thr }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
-                    {{-- <td>{{ $runThrUser->thr_prorate }}</td> --}}
 
-                    {{-- @foreach ($allowances as $allowance)
+                    @foreach ($allowances as $allowance)
                         @php
                             $amount =
-                                $runThrUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                                $runThrUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ??
+                                0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
-                    <td>{{ $runThrUser->allowance }}</td> --}}
+                    <td>{{ $runThrUser->allowance }}</td>
 
                     @foreach ($deductions as $deduction)
                         @php
@@ -325,10 +300,10 @@
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThrProrate }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
-                {{-- @foreach ($cloneTotalAllowancesStorages as $value)
+                @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td> --}}
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
 
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
@@ -361,7 +336,7 @@
             @php
                 $totalBasicSalary = 0;
                 $totalThrProrate = 0;
-                // $totalAllowance = 0;
+                $totalAllowance = 0;
                 $totalDeduction = 0;
                 $totalTax = 0;
                 $totalThp = 0;
@@ -371,7 +346,7 @@
                 $taxThr = 0;
                 $thpThr = 0;
 
-                // $cloneTotalAllowancesStorages = $totalAllowancesStorages;
+                $cloneTotalAllowancesStorages = $totalAllowancesStorages;
                 $cloneTotalDeductionsStorages = $totalDeductionsStorages;
                 $cloneTotalBenefitsStorages = $totalBenefitsStorages;
             @endphp
@@ -379,7 +354,7 @@
                 @php
                     $totalThrProrate += $runThrUser->thr;
                     $totalBasicSalary += $runThrUser->basic_salary;
-                    // $totalAllowance += $runThrUser->allowance;
+                    $totalAllowance += $runThrUser->allowance;
                     $totalDeduction += $runThrUser->deduction;
                     $totalTax += $runThrUser->tax_salary;
                     $totalThp += $runThrUser->gross_salary;
@@ -415,17 +390,16 @@
                     <td>{{ $runThrUser->thr }}</td>
                     <td>{{ $runThrUser->basic_salary }}</td>
 
-
-                    {{-- @foreach ($allowances as $allowance)
+                    @foreach ($allowances as $allowance)
                         @php
                             $amount =
-                                $runThrUser->components?->firstWhere('payroll_component_id', $allowance->id)
-                                    ?->amount ?? 0;
+                                $runThrUser->components?->firstWhere('payroll_component_id', $allowance->id)?->amount ??
+                                0;
                             $cloneTotalAllowancesStorages[$allowance->id] += $amount;
                         @endphp
                         <th>{{ $amount }}</th>
                     @endforeach
-                    <td>{{ $runThrUser->allowance }}</td> --}}
+                    <td>{{ $runThrUser->allowance }}</td>
 
                     @foreach ($deductions as $deduction)
                         @php
@@ -462,10 +436,10 @@
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalThrProrate }}</td>
                 <td style="font-weight: bold; background: #ffcbb1;">{{ $totalBasicSalary }}</td>
 
-                {{-- @foreach ($cloneTotalAllowancesStorages as $value)
+                @foreach ($cloneTotalAllowancesStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
                 @endforeach
-                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td> --}}
+                <td style="font-weight: bold; background: #ffcbb1;">{{ $totalAllowance }}</td>
 
                 @foreach ($cloneTotalDeductionsStorages as $value)
                     <th style="font-weight: bold; background: #ffcbb1;">{{ $value }}</th>
