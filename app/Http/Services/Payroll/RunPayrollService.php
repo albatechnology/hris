@@ -622,9 +622,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                 $userBasicSalary = $this->newProrate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
             } else {
-                // if ($basicSalaryComponent->is_prorate) {
-                //     $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
-                // }
+                if ($basicSalaryComponent->is_prorate) {
+                    $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                }
             }
 
             $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);

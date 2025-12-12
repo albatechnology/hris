@@ -7,6 +7,7 @@ use App\Exports\RunThrExport;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunThr\StoreRequest;
+use App\Http\Requests\Api\RunThr\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Models\Bank;
 use App\Models\Company;
@@ -83,27 +84,22 @@ class RunThrController extends BaseController
         return new DefaultResource($runThr);
     }
 
-    // public function update(int $id, UpdateRequest $request): DefaultResource|JsonResponse
-    // {
-    // $runThr = RunThr::findTenanted($id);
-    //     DB::beginTransaction();
-    //     try {
-    //         $runThr->update($request->validated());
 
-    //         self::saveRelationship($runThr, $request);
+    public function update(UpdateRequest $request, int $id)
+    {
+        $runThr = RunThr::findTenanted($id);
 
-    //         FormulaService::sync($runThr, $request->formulas);
+        DB::beginTransaction();
+        try {
+            $runThr->update($request->validated());
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
-    //         DB::commit();
-    //     } catch (Exception $th) {
-    //         DB::rollBack();
-
-    //         return $this->errorResponse($th->getMessage());
-    //     }
-
-    //     return (new DefaultResource($runThr->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
-    // }
-
+        return (new DefaultResource($runThr->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+    }
 
     public function updateUserComponent(RunThrUser $runThrUser, UpdateUserComponentRequest $request): DefaultResource|JsonResponse
     {
