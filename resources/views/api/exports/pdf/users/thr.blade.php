@@ -104,7 +104,7 @@
         </tr> --}}
         <tr>
             <td>Basic Salary</td>
-            <td class="text-right">{{ number_format($runThrUser->basic_salary) }}</td>
+            <td class="text-right">{{ number_format($runThrUser->thr) }}</td>
         </tr>
         <tr>
             <td>Pph 21 THR</td>
