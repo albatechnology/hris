@@ -583,33 +583,32 @@ class UserController extends BaseController
                     ->where('key', SettingKey::REQUEST_APPROVER)
                     ->value('value');
 
-                if($requestApproverId && User::where('id', $requestApproverId)->exists()){
+                if ($requestApproverId && User::where('id', $requestApproverId)->exists()) {
                     $approvers[] = ['user_id' => (int) $requestApproverId];
                 }
 
-                if($photoProfile){
+                if ($photoProfile) {
                     $profilePictureApproverId = $user->company?->settings()
-                        ->where('key',SettingKey::PROFILE_PICTURE_APPROVER)
+                        ->where('key', SettingKey::PROFILE_PICTURE_APPROVER)
                         ->value('value');
 
-                        if($profilePictureApproverId && User::where('id', $profilePictureApproverId)->exists()){
-                            $existingApproverIds = collect($approvers)->pluck('user_id')->toArray();
+                    if ($profilePictureApproverId && User::where('id', $profilePictureApproverId)->exists()) {
+                        $existingApproverIds = collect($approvers)->pluck('user_id')->toArray();
 
-                            if(!in_array((int) $profilePictureApproverId, $existingApproverIds)){
-                                $approvers[] = ['user_id' => (int) $profilePictureApproverId];
-                            }
+                        if (!in_array((int) $profilePictureApproverId, $existingApproverIds)) {
+                            $approvers[] = ['user_id' => (int) $profilePictureApproverId];
                         }
+                    }
                 }
                 // if($defaultApproverId && User::where('id',$defaultApproverId)->exists()){
                 //     $approvers[] = ['user_id' => (int)$defaultApproverId];
                 // }
 
-                if($approvers)
-                {
+                if ($approvers) {
                     $requestChangeData->approvals()->createMany($approvers);
 
-                    $firstApprover = User::find($approvers[0]['user_id'],['id','name','email','fcm_token']);
-                    if($firstApprover){
+                    $firstApprover = User::find($approvers[0]['user_id'], ['id', 'name', 'email', 'fcm_token']);
+                    if ($firstApprover) {
                         $requestChangeData->sendRequestNotification($firstApprover, $user, $requestChangeData);
                     }
                 }
@@ -813,7 +812,7 @@ class UserController extends BaseController
         $user->load([
             'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
             'detail' => fn($q) => $q->select('user_id', 'job_level'),
-            'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp'),
+            'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp', 'tax_method'),
         ]);
 
         $runThr->load([

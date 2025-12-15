@@ -26,6 +26,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use PDO;
 
 class RunThrService
 {
@@ -167,24 +168,35 @@ class RunThrService
         }
 
         $totalWorkingMonths = $cutOffStartDate->diffInMonths($cutOffEndDate); // harusnya 12 months
+        $remainingTotalWorkingMonths = $totalWorkingMonths;
 
         if ($totalWorkingMonths < 1) return $basicAmount;
 
         $totalAmount = 0;
+
+
         foreach ($updatePayrollComponentDetails as $updatePayrollComponentDetail) {
+            if ($remainingTotalWorkingMonths <= 0) break;
+
             $updatePayrollComponentTotalWorkingMonths = 0;
             if ($updatePayrollComponentDetail->updatePayrollComponent->end_date) {
                 $updatePayrollComponentTotalWorkingMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($updatePayrollComponentDetail->updatePayrollComponent->end_date);
             } else {
                 $updatePayrollComponentTotalWorkingMonths = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date)->diffInMonths($cutOffEndDate);
             }
-            $totalWorkingMonths -= $updatePayrollComponentTotalWorkingMonths;
+
+            if ($updatePayrollComponentTotalWorkingMonths > $totalWorkingMonths) {
+                $updatePayrollComponentTotalWorkingMonths = $totalWorkingMonths;
+            }
+
+            $remainingTotalWorkingMonths -= $updatePayrollComponentTotalWorkingMonths;
 
             $totalAmount += ($updatePayrollComponentTotalWorkingMonths / 12) * $updatePayrollComponentDetail->new_amount;
         }
 
-        if ($totalWorkingMonths > 0) {
-            $totalAmount += ($totalWorkingMonths / 12) * $basicAmount;
+
+        if ($remainingTotalWorkingMonths > 0) {
+            $totalAmount += ($remainingTotalWorkingMonths / 12) * $basicAmount;
         }
 
         return $totalAmount;
@@ -232,7 +244,6 @@ class RunThrService
                         ->whereActive($cutOffStartDate, $cutOffEndDate)
                 )
                 ->orderByDesc('id')->get();
-                // dump($updatePayrollComponentDetails->toArray());
 
 
             /**
@@ -269,7 +280,6 @@ class RunThrService
             // END
 
             $payrollComponents =  PayrollComponent::whereCompany($runThr->company_id)->whereNotDefault()->where('is_calculate_thr', true)->get();
-
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runThrUser, $cutOffJoinDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -278,10 +288,9 @@ class RunThrService
                     $amount = $payrollComponent->amount;
                 }
 
-                $upcd = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id)->first();
-                if ($upcd) {
-                    // $amount = self::prorateYear($user, $amount, $upcd, $cutOffJoinDate, $cutOffEndDate);
-                    $amount = $upcd->new_amount;
+                $upcd = $updatePayrollComponentDetails->where('payroll_component_id', $payrollComponent->id);
+                if ($upcd->count()) {
+                    $amount = self::prorateYear($user, $amount, $upcd, $cutOffJoinDate, $cutOffEndDate);
                 } else {
                     $amount = self::prorateYear($user, $amount, collect([]), $cutOffJoinDate, $cutOffEndDate);
                 }
@@ -394,8 +403,6 @@ class RunThrService
                     $company_percentageBpjsKesehatan += $employee_percentageBpjsKesehatan;
                     $employee_percentageBpjsKesehatan = 0;
                 }
-                // dump($company_percentageBpjsKesehatan);
-                // dump($employee_percentageBpjsKesehatan);
 
                 $company_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($company_percentageBpjsKesehatan / 100);
 
@@ -404,7 +411,6 @@ class RunThrService
                     // $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
                     $employee_totalBpjsKesehatan = 0;
                 }
-                // dump($company_totalBpjsKesehatan);
                 // dd($employee_totalBpjsKesehatan);
 
                 // jkk
@@ -635,9 +641,6 @@ class RunThrService
             $q->where('is_calculate_thr', true);
         })->sum('amount');
 
-        // dump($allowanceTaxable);
-        // dd($allowanceNonTaxable);
-
         $additionalEarning = 0; // belum kepake
 
         $taxableBenefit = $runThrUser->components()->whereHas('payrollComponent', function ($q) {
@@ -658,16 +661,13 @@ class RunThrService
         })->sum('amount');
 
 
-        // dump($basicSalary);
         // $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit;
-        // dump($grossSalary);
 
         $grossSalaryThisMonth = $originalBasicSalary + $allowanceTaxable + $additionalEarning + $taxableBenefit;
 
         $taxGrossSalaryThisMonth = 0;
         if ($userPayrollInfo->tax_salary->is(TaxSalary::TAXABLE)) {
             $taxPercentageGrossSalaryThisMonth = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $grossSalaryThisMonth);
-            // dump($taxPercentageGrossSalaryThisMonth);
 
             if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
                 $grossUp1 = floatval(100 - $taxPercentageGrossSalaryThisMonth);
@@ -680,7 +680,6 @@ class RunThrService
                 $taxGrossSalaryThisMonth = $grossSalaryThisMonth * ($taxPercentageGrossSalaryThisMonth / 100);
             }
         }
-        // dump($taxGrossSalaryThisMonth);
 
         //NEW THR Prorate disimpan ke dalam kolom baru di database
         // $benefitForTotalMonth = $runThrUser->components()
@@ -694,10 +693,6 @@ class RunThrService
         $thrThisMonth = round($basicSalary + $allowanceTaxable + $additionalEarning);
         // $totalMonth = round($thrThisMonth + $benefitForTotalMonth);
         $totaBebanThislMonth = round($thrThisMonth + $grossSalaryThisMonth);
-        // dump($benefitForTotaBebanThislMonth);
-        // dump($thrThisMonth);
-        // dump($totaBebanThislMonth);
-        // dump('======');
         // dd($runThrUser);
 
         // //Hitung Prorate
@@ -708,18 +703,12 @@ class RunThrService
         // // dd($months);
         // // $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
         // $thrMultiplier = $months >= 12 ? 1 : ($months / 12);
-        // dump($thrMultiplier, $months);
         // $thrProrate = round($thrMultiplier * $basicSalary);
-        // dump($thrProrate);
 
         // $totalBebanMonth = round($totalMonth + $thrProrate);
-        // dump($totalBebanMonth);
         // $taxAfter = $totalBebanMonth * (self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totalBebanMonth) / 100);
-        // dump($taxAfter);
         // $taxThr = round($taxAfter - $taxGrossSalaryThisMonth);
-        // dump($taxThr);
         // $thpThr = round($thrProrate - $taxThr);
-        // dump($thpThr);
         // $basicSalaryPersisted = $thrProrate;
         // dd($basicSalaryPersisted);
 
@@ -727,7 +716,6 @@ class RunThrService
         $taxGrossSalaryThisMonthAndThr = 0;
         if ($userPayrollInfo->tax_salary->is(TaxSalary::TAXABLE)) {
             $taxPercentageGrossSalaryThisMonthAndThr = self::calculateTax($runThrUser->user->payrollInfo->ptkp_status, $totaBebanThislMonth);
-            // dump($taxPercentageGrossSalaryThisMonthAndThr);
             if ($userPayrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
                 $grossUp1 = floatval(100 - $taxPercentageGrossSalaryThisMonthAndThr);
                 $grossSalary2 = ($totaBebanThislMonth / $grossUp1) * 100;
@@ -739,7 +727,6 @@ class RunThrService
                 $taxGrossSalaryThisMonthAndThr = $totaBebanThislMonth * ($taxPercentageGrossSalaryThisMonthAndThr / 100);
             }
         }
-        // dump($taxGrossSalaryThisMonthAndThr);
         // $taxThr = round($taxGrossSalaryThisMonthAndThr - $taxGrossSalaryThisMonth);
         // dd($taxThr);
 

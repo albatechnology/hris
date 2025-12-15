@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TaxMethod;
 use App\Traits\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -118,8 +119,12 @@ class RunThrUser extends BaseModel
 
     public function getThpThrAttribute(): int
     {
-        if (config('app.name') == 'SUNSHINE') {
-            return $this->basic_salary;
+        // if (config('app.name') == 'SUNSHINE') {
+        //     return $this->basic_salary;
+        // }
+
+        if ($this->user->payrollInfo->tax_method->is(TaxMethod::GROSS_UP)) {
+            return $this->thr;
         }
 
         return $this->thr - $this->tax_thr;
