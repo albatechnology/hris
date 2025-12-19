@@ -146,7 +146,7 @@ class OvertimeRequestController extends BaseController
         return new OvertimeRequestResource($overtimeRequest);
     }
 
-    public function cancelled(NewApproveRequest $request, int $id): OvertimeRequestResource|JsonResponse
+    public function cancel(NewApproveRequest $request, int $id): OvertimeRequestResource|JsonResponse
     {
         $overtimeRequest = OvertimeRequest::findTenanted($id);
         $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();

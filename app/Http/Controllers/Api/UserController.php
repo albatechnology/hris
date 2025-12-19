@@ -55,7 +55,7 @@ class UserController extends BaseController
         $this->middleware('permission:user_access', ['only' => ['restore']]);
         $this->middleware('permission:user_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:user_create', ['only' => 'store']);
-        $this->middleware('permission:user_edit', ['only' => 'update']);
+        $this->middleware('permission:user_edit', ['only' => 'update', 'detail']);
         $this->middleware('permission:user_delete', ['only' => ['destroy', 'forceDelete']]);
 
         $this->middleware('permission:request_change_data_create', ['only' => 'requestChangeData']);
@@ -392,9 +392,9 @@ class UserController extends BaseController
     {
         $user = User::findTenanted($id);
 
-        if (auth()->user()->is_user) {
-            return $this->errorResponse(message: 'Permission denied', code: 403);
-        }
+        // if (auth()->user()->is_user) {
+        //     return $this->errorResponse(message: 'Permission denied', code: 403);
+        // }
 
         DB::beginTransaction();
         try {

@@ -247,7 +247,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('overtime-requests/approvals', [OvertimeRequestController::class, 'approvals']);
     Route::get('overtime-requests/approvals/count-total', [OvertimeRequestController::class, 'countTotalApprovals']);
     Route::put('overtime-requests/{overtime_request}/approve', [OvertimeRequestController::class, 'approve']);
-    Route::put('overtime-requests/{overtime_request}/cancel', [OvertimeRequestController::class, 'cancelled']);
+    Route::put('overtime-requests/{overtime_request}/cancel', [OvertimeRequestController::class, 'cancel']);
     Route::put('overtime-requests/bulk-approve', [OvertimeRequestController::class, 'bulkApprove']);
     Route::put('overtime-requests/bulk-cancel', [OvertimeRequestController::class, 'bulkCancel']);
     Route::apiResource('overtime-requests', OvertimeRequestController::class)->except('update');
