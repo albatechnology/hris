@@ -18,7 +18,7 @@ class ImportDetails
         $userNiks = $rows->pluck(0)->unique();
         $payrollComponentNames = $rows->pluck(2)->unique();
         $users = User::where('company_id', $this->companyId)->whereIn('nik', $userNiks)->get(['id', 'name', 'nik'])->each->setAppends([]);
-        $payrollComponents = PayrollComponent::where('company_id', $this->companyId)->whereIn('name', $payrollComponentNames)->get(['id', 'name']);
+        $payrollComponents = PayrollComponent::where('company_id', $this->companyId)->whereIn('name', $payrollComponentNames)->get(['id', 'name', 'type']);
 
         $grouped = [];
 
@@ -42,6 +42,7 @@ class ImportDetails
             $grouped[$user->id]['payroll_components'][] = [
                 'id' => $payrollComponent->id,
                 'name' => $payrollComponent->name,
+                'type' => $payrollComponent->type->value,
                 'current_amount' => (int) $row[3],
                 'new_amount' => (int) $row[4],
             ];
