@@ -10,8 +10,6 @@ use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
-
-
     protected function prepareForValidation()
     {
         $branchId = $this->branch_id ?? null;

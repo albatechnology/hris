@@ -296,6 +296,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('payroll-prorate', [PayrollProrateController::class, 'index']);
     Route::put('payroll-prorate', [PayrollProrateController::class, 'update']);
 
+    Route::get('update-payroll-components/import-details/{download_template}', [UpdatePayrollComponentController::class, 'importDetails']);
+    Route::post('update-payroll-components/import-details', [UpdatePayrollComponentController::class, 'importDetails']);
     Route::apiResource('update-payroll-components', UpdatePayrollComponentController::class);
 
     Route::put('run-payrolls/user-components/{run_payroll_user}', [RunPayrollController::class, 'updateUserComponent']);

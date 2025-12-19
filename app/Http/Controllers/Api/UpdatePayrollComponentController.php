@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\UpdatePayrollComponent\TemplateImportDetails;
+use App\Http\Requests\Api\UpdatePayrollComponent\ImportDetailsRequest;
 use App\Http\Requests\Api\UpdatePayrollComponent\StoreRequest;
 use App\Http\Requests\Api\UpdatePayrollComponent\UpdateRequest;
+use App\Http\Resources\DefaultResource;
 use App\Http\Resources\UpdatePayrollComponent\UpdatePayrollComponentResource;
+use App\Imports\UpdatePayrollComponent\ImportDetails;
 use App\Models\UpdatePayrollComponent;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -149,5 +155,37 @@ class UpdatePayrollComponentController extends BaseController
         }
 
         return $this->deletedResponse();
+    }
+
+    public function importDetails(ImportDetailsRequest $request, ?string $isDownload = null)
+    {
+        if ($isDownload) {
+            return (new TemplateImportDetails($request->company_id))->download('template-import-payroll-component.xlsx');
+        }
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+
+            // Convert Excel rows to Collection
+            $rows = collect();
+            foreach ($worksheet->getRowIterator() as $row) {
+                $cellIterator = $row->getCellIterator();
+                $rowData = [];
+                foreach ($cellIterator as $cell) {
+                    $rowData[] = $cell->getValue();
+                }
+                $rows->push($rowData);
+            }
+
+            // Process using ImportDetails logic
+            $import = new ImportDetails($request->company_id);
+            $import->collection($rows);
+
+            return DefaultResource::collection($import->datas);
+        } catch (Exception $th) {
+            return $this->errorResponse($th->getMessage());
+        }
     }
 }
