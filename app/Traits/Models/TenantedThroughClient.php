@@ -11,7 +11,7 @@ trait TenantedThroughClient
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
-        return $query->whereHas('client', fn($q) => $q->tenanted());
+        return $query->whereHas('client', fn($q) => $q->tenanted($user));
     }
 
     public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self

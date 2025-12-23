@@ -6,6 +6,7 @@ use App\Enums\RateType;
 use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\MorphManyFormulas;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Overtime extends BaseModel
@@ -30,6 +31,15 @@ class Overtime extends BaseModel
         'rate_type' => RateType::class,
         'rate_amount' => 'double',
     ];
+
+    public function scopeTenanted(Builder $query, ?User $user = null): Builder
+    {
+        if (config('app.name') === 'SYNTEGRA') {
+            return $query->whereHas('branch', fn($q) => $q->tenanted($user));
+        }
+
+        return $query->whereHas('company', fn($q) => $q->tenanted($user));
+    }
 
     public function overtimeAllowances(): HasMany
     {

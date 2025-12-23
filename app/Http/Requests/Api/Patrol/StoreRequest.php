@@ -30,7 +30,7 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
+            'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found', fn($q) => $q->whereIsParent(false))],
             'name' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date',

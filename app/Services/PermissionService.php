@@ -325,11 +325,11 @@ class PermissionService
                 'bank_edit',
                 'bank_delete',
             ],
-            'lock_attendances_access' => [
-                'lock_attendances_read',
-                'lock_attendances_create',
-                'lock_attendances_edit',
-                'lock_attendances_delete',
+            'lock_attendance_access' => [
+                'lock_attendance_read',
+                'lock_attendance_create',
+                'lock_attendance_edit',
+                'lock_attendance_delete',
             ],
             'extra_off_access' => [
                 'extra_off_read',

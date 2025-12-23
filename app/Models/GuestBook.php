@@ -3,17 +3,16 @@
 namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
-use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CustomSoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
+use App\Traits\Models\TenantedThroughBranch;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class GuestBook extends BaseModel implements HasMedia, TenantedInterface
 {
-    use BelongsToUser, InteractsWithMedia, BelongsToBranch, CustomSoftDeletes;
+    use BelongsToUser, TenantedThroughBranch, InteractsWithMedia, CustomSoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -44,21 +43,6 @@ class GuestBook extends BaseModel implements HasMedia, TenantedInterface
         static::creating(function ($model) {
             $model->user_id = auth()->id();
         });
-    }
-
-    public function scopeTenanted(Builder $query, ?User $user = null): Builder
-    {
-        return $query->whereHas('branch', fn($q) => $q->tenanted());
-    }
-
-    public function scopeFindTenanted(Builder $query, int|string $id, bool $fail = true): self
-    {
-        $query->tenanted()->where('id', $id);
-        if ($fail) {
-            return $query->firstOrFail();
-        }
-
-        return $query->first();
     }
 
     public function getCheckInFilesAttribute()

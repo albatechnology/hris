@@ -4,12 +4,12 @@ namespace App\Models;
 
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToBranch;
-use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\TenantedThroughBranch;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AbsenceReminder extends BaseModel implements TenantedInterface
 {
-    use CompanyTenanted, BelongsToBranch;
+    use TenantedThroughBranch, BelongsToBranch;
 
     protected $fillable = [
         'company_id',

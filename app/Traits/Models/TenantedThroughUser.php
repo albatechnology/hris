@@ -12,6 +12,10 @@ trait TenantedThroughUser
 
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
+        if (config('app.name') === 'SYNTEGRA') {
+            return $query->whereHas('user', fn($q) => $q->tenanted($user));
+        }
+
         if (!$user) {
             /** @var User $user */
             $user = auth('sanctum')->user();

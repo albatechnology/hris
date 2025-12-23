@@ -11,6 +11,7 @@ use App\Models\Branch;
 use App\Models\BranchLocation;
 use App\Models\User;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -113,16 +114,27 @@ class BranchController extends BaseController
 
     public function summary()
     {
-        $branchCount = Branch::tenanted()->count();
-        $branchLocationCount = BranchLocation::whereHas('branch', fn($q) => $q->tenanted())->count();
-        $userCount = User::tenanted()->whereNull('resign_date')->count();
+        $branchId = request()->filter['branch_id'] ?? null;
 
-        $summary = [
-            'branch' => $branchCount,
-            'branch_location' => $branchLocationCount,
-            'active_user' => $userCount,
-        ];
+        $data = Cache::remember('branch_summary_' . $branchId, now()->addSecond(), function () use ($branchId) {
+            $branch = Branch::tenanted()->where('id', $branchId)->first(['id', 'is_main']);
 
-        return new DefaultResource($summary);
+            if (!$branch) {
+                return [
+                    'branch' => 0,
+                    'client' => 0,
+                    'users' => 0,
+                ];
+            }
+
+            $totalBranch = $branch->is_main ? Branch::tenanted()->whereIsParent()->where('is_main', false)->count() : 0;
+            return [
+                'branch' => $totalBranch,
+                'client' => Branch::tenanted()->whereIsParent(false)->when(!$branch->is_main, fn($q) => $q->where('parent_id', $branchId))->count(),
+                'users' => User::tenanted()->where('branch_id', $branchId)->whereNull('resign_date')->count(),
+            ];
+        });
+
+        return new DefaultResource($data);
     }
 }

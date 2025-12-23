@@ -49,6 +49,10 @@ class Company extends BaseModel implements TenantedInterface
 
         // if ($user->is_admin) return $query->where('group_id', $user->group_id);
 
+        if (config('app.name') === 'SYNTEGRA') {
+            return $query->where('id', $user->company_id);
+        }
+
         if ($user->is_admin) {
             return $query->where('group_id', $user->group_id);
         }

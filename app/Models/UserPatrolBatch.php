@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Models\CreatedUpdatedInfo;
 use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserPatrolBatch extends BaseModel
 {
@@ -24,6 +25,11 @@ class UserPatrolBatch extends BaseModel
                 $model->user_id = auth('sanctum')->id();
             }
         });
+    }
+
+    public function scopeTenanted(Builder $query): Builder
+    {
+        return $query->whereHas('patrol', fn($q) => $q->tenanted());
     }
 
     public function patrol()
