@@ -8,9 +8,12 @@ use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
 use App\Http\Requests\Api\NewApproveRequest;
 use App\Http\Requests\Api\OvertimeRequest\StoreRequest;
 use App\Http\Resources\OvertimeRequest\OvertimeRequestResource;
+use App\Models\Event;
 use App\Models\OvertimeRequest;
 use App\Models\User;
 use App\Services\AttendanceService;
+use App\Services\ScheduleService;
+use DateTime;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -87,6 +90,18 @@ class OvertimeRequestController extends BaseController
             );
         }
 
+        if (config('app.name') === 'LUMORA' && in_array($user->company_id, [5, 6])) {
+            $schedule = ScheduleService::getUserSchedule($user, $request->date, ['id']);
+            if ($schedule && $schedule['total_shifts'] == 7 && $schedule['order'] == 7) {
+                $isNationalHoliday = Event::tenanted()->whereNationalHoliday()
+                    ->whereDateBetween($request->date, $request->date)
+                    ->exists();
+                if (!$isNationalHoliday) {
+                    throw new UnprocessableEntityHttpException('Can not take overtime in day 7');
+                }
+            }
+        }
+
         // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
         // if (!$attendance) {
         //     return $this->errorResponse(message: 'Attendance not found at ' . $request->date, code: Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -151,12 +166,12 @@ class OvertimeRequestController extends BaseController
         $overtimeRequest = OvertimeRequest::findTenanted($id);
         $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
 
-        if(!$requestApproval) return $this->errorResponse(message: "You are not registered as approver", code: Response::HTTP_NOT_FOUND);
+        if (!$requestApproval) return $this->errorResponse(message: "You are not registered as approver", code: Response::HTTP_NOT_FOUND);
 
-        if(!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        if($overtimeRequest->approval_status == ApprovalStatus::PENDING->value || $requestApproval->approval_status->in([ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED, ApprovalStatus::PENDING])){
-            return $this->errorResponse(message:'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if ($overtimeRequest->approval_status == ApprovalStatus::PENDING->value || $requestApproval->approval_status->in([ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED, ApprovalStatus::PENDING])) {
+            return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         try {
@@ -264,7 +279,7 @@ class OvertimeRequestController extends BaseController
             throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
         }
 
-        if ($overtimeRequest->approval_status == ApprovalStatus::CANCELLED->value || $requestApproval->approval_status->in([ ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED])) {
+        if ($overtimeRequest->approval_status == ApprovalStatus::CANCELLED->value || $requestApproval->approval_status->in([ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED])) {
             throw new UnprocessableEntityHttpException('Status can not be changed');
         }
 

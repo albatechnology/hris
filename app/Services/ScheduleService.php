@@ -61,39 +61,12 @@ class ScheduleService
         }
 
         /** @var Schedule $schedule */
-        // if ($scheduleType == ScheduleType::ATTENDANCE->value) {
-        $schedule = $user->schedules()
-            ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-            ->whereApproved()
-            ->where('type', $scheduleType)
-            ->whereDate('effective_date', '<=', $date)
-            ->withCount('shifts')
-            ->orderByDesc('schedules.effective_date')
-            ->orderByDesc('schedules.created_at')->first();
-        // } else {
-        //     $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
-        //         $q->whereApproved();
-        //         $q->where('type', $scheduleType);
-        //         $q->whereDate('effective_date', '<=', $date);
-        //     })->first()?->schedule()
-        //         ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
-        //         ->where('type', $scheduleType)
-        //         ->whereDate('effective_date', '<=', $date)
-        //         ->withCount('shifts')
-        //         ->orderByDesc('schedules.effective_date')
-        //         ->orderByDesc('schedules.created_at')->first();
-        // }
+        $schedule = self::getUserSchedule($user, $date, $scheduleColumn);
+        if (!$schedule) return null;
 
-        if (!$schedule || $schedule->shifts_count === 0) return null;
-
-        $startDate = new DateTime($schedule->effective_date);
-        $endDate = new DateTime($date);
-        $interval = $startDate->diff($endDate)->days + 1;
-        $order = $interval % $schedule->shifts_count;
-        $order = $order > 0 ? $order : $schedule->shifts_count;
-        $previousOrder = ($order - 1) == 0 ? $schedule->shifts_count : ($order - 1);
-
-        unset($schedule->pivot);
+        $order = $schedule['order'];
+        $previousOrder = $schedule['previous_order'];
+        $schedule = $schedule['schedule'];
 
         if ($scheduleType == ScheduleType::PATROL->value) {
             $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)->where('clock_in', '<=', date('H:i:s'))->where('clock_out', '>=', date('H:i:s'))]);
@@ -198,5 +171,50 @@ class ScheduleService
         // }
 
         // return $totalDays;
+    }
+
+    public static function getUserSchedule(User $user, string $date, array $scheduleColumn = [], string $scheduleType = ScheduleType::ATTENDANCE->value): array|null
+    {
+        /** @var Schedule $schedule */
+        // if ($scheduleType == ScheduleType::ATTENDANCE->value) {
+        $schedule = $user->schedules()
+            ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+            ->whereApproved()
+            ->where('type', $scheduleType)
+            ->whereDate('effective_date', '<=', $date)
+            ->withCount('shifts')
+            ->orderByDesc('schedules.effective_date')
+            ->orderByDesc('schedules.created_at')->first();
+        // } else {
+        //     $schedule = $user->userPatrolSchedules()->whereHas('schedule', function ($q) use ($scheduleType, $date) {
+        //         $q->whereApproved();
+        //         $q->where('type', $scheduleType);
+        //         $q->whereDate('effective_date', '<=', $date);
+        //     })->first()?->schedule()
+        //         ->select(count($scheduleColumn) > 0 ? [...$scheduleColumn, 'effective_date'] : ['*'])
+        //         ->where('type', $scheduleType)
+        //         ->whereDate('effective_date', '<=', $date)
+        //         ->withCount('shifts')
+        //         ->orderByDesc('schedules.effective_date')
+        //         ->orderByDesc('schedules.created_at')->first();
+        // }
+
+        if (!$schedule || $schedule->shifts_count === 0) return null;
+
+        $startDate = new DateTime($schedule->effective_date);
+        $endDate = new DateTime($date);
+        $interval = $startDate->diff($endDate)->days + 1;
+        $order = $interval % $schedule->shifts_count;
+        $order = $order > 0 ? $order : $schedule->shifts_count;
+        $previousOrder = ($order - 1) == 0 ? $schedule->shifts_count : ($order - 1);
+
+        unset($schedule->pivot);
+
+        return [
+            'schedule' => $schedule,
+            'order' => $order,
+            'previous_order' => $previousOrder,
+            'total_shifts' => $schedule->shifts_count,
+        ];
     }
 }

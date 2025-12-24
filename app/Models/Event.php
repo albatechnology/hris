@@ -98,10 +98,10 @@ class Event extends Model implements TenantedInterface
         return $query->where('type', EventType::COMPANY_HOLIDAY);
     }
 
-    public function scopeWhereEvent(Builder $query)
-    {
-        return $query->where('type', EventType::EVENT);
-    }
+    // public function scopeWhereEvent(Builder $query)
+    // {
+    //     return $query->where('type', EventType::EVENT);
+    // }
 
     public function scopeWhereNationalHoliday(Builder $query)
     {
