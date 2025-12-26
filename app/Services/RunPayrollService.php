@@ -253,52 +253,52 @@ class RunPayrollService
             ->get()
             ->groupBy('user_id');
 
-        $basicSalaryComponent = PayrollComponent::tenanted()
+        $basicSalaryComponent = PayrollComponent::active()->tenanted()
             ->whereCompany($runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::BASIC_SALARY)
             ->first();
 
-        $reimbursementComponent = PayrollComponent::tenanted()
+        $reimbursementComponent = PayrollComponent::active()->tenanted()
             ->whereCompany($runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::REIMBURSEMENT)
             ->first();
 
-        $payrollComponents = PayrollComponent::tenanted()
+        $payrollComponents = PayrollComponent::active()->tenanted()
             ->where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->whereNotDefault()
             ->get();
 
-        $alpaComponent = PayrollComponent::tenanted()
+        $alpaComponent = PayrollComponent::active()->tenanted()
             ->where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::ALPA)
             ->first();
 
-        $loanComponent = PayrollComponent::tenanted()
+        $loanComponent = PayrollComponent::active()->tenanted()
             ->where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::LOAN)
             ->first();
 
-        $insuranceComponent = PayrollComponent::tenanted()
+        $insuranceComponent = PayrollComponent::active()->tenanted()
             ->where('company_id', $runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::INSURANCE)->first();
 
-        $bpjsPayrollComponents = PayrollComponent::tenanted()
+        $bpjsPayrollComponents = PayrollComponent::active()->tenanted()
             ->whereCompany($runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->whereBpjs()->get();
 
-        $overtimePayrollComponent = PayrollComponent::tenanted()
+        $overtimePayrollComponent = PayrollComponent::active()->tenanted()
             ->whereCompany($runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::OVERTIME)->first();
 
-        $bpjsKesehatanFamilyComponent = PayrollComponent::tenanted()
+        $bpjsKesehatanFamilyComponent = PayrollComponent::active()->tenanted()
             ->whereCompany($runPayroll->company_id)
             ->whenBranch($runPayroll->branch_id)
             ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
@@ -540,7 +540,7 @@ class RunPayrollService
 
                 // task overtime (app specific)
                 if (config('app.name') == 'SUNSHINE') {
-                    $taskOvertimePayrollComponent = PayrollComponent::tenanted()
+                    $taskOvertimePayrollComponent = PayrollComponent::active()->tenanted()
                         ->whereCompany($runPayroll->company_id)
                         ->whenBranch($runPayroll->branch_id)
                         ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
@@ -656,7 +656,7 @@ class RunPayrollService
 
                     // Add each updated component (e.g., severance pay) for the user
                     foreach ($updatePayrollComponentDetails as $upd) {
-                        $component = PayrollComponent::tenanted()
+                        $component = PayrollComponent::active()->tenanted()
                             ->whereCompany($runPayroll->company_id)
                             ->whenBranch($runPayroll->branch_id)
                             ->where('id', $upd->payroll_component_id)
@@ -712,7 +712,7 @@ class RunPayrollService
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
-            $basicSalaryComponent = PayrollComponent::tenanted()
+            $basicSalaryComponent = PayrollComponent::active()->tenanted()
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
@@ -739,7 +739,7 @@ class RunPayrollService
             /**
              * five, calculate reimbursement
              */
-            $reimbursementComponent = PayrollComponent::tenanted()
+            $reimbursementComponent = PayrollComponent::active()->tenanted()
                 ->whereCompany($runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::REIMBURSEMENT)->first();
@@ -754,7 +754,7 @@ class RunPayrollService
             /**
              * second, calculate payroll component where not default
              */
-            $payrollComponents = PayrollComponent::tenanted()
+            $payrollComponents = PayrollComponent::active()->tenanted()
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->whereNotDefault()->get();
@@ -790,7 +790,7 @@ class RunPayrollService
              * third, calculate alpa
              */
             if ($user->payrollInfo?->is_ignore_alpa == false && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && (config('app.name') == 'SUNSHINE' && !$isFirstTimePayroll)) {
-                $alpaComponent = PayrollComponent::tenanted()
+                $alpaComponent = PayrollComponent::active()->tenanted()
                     ->where('company_id', $runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->where('category', PayrollComponentCategory::ALPA)->first();
@@ -817,7 +817,7 @@ class RunPayrollService
             /**
              * calculate LOAN
              */
-            $loanComponent = PayrollComponent::tenanted()
+            $loanComponent = PayrollComponent::active()->tenanted()
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::LOAN)->first();
@@ -838,7 +838,7 @@ class RunPayrollService
             /**
              * calculate INSURANCE
              */
-            $insuranceComponent = PayrollComponent::tenanted()
+            $insuranceComponent = PayrollComponent::active()->tenanted()
                 ->where('company_id', $runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::INSURANCE)->first();
@@ -862,7 +862,7 @@ class RunPayrollService
              * fourth, calculate bpjs
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs) {
-                $bpjsPayrollComponents = PayrollComponent::tenanted()
+                $bpjsPayrollComponents = PayrollComponent::active()->tenanted()
                     ->whereCompany($runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->whereBpjs()->get();
@@ -991,7 +991,7 @@ class RunPayrollService
             /**
              * five, calculate overtime
              */
-            $overtimePayrollComponent = PayrollComponent::tenanted()
+            $overtimePayrollComponent = PayrollComponent::active()->tenanted()
                 ->whereCompany($runPayroll->company_id)
                 ->whenBranch($runPayroll->branch_id)
                 ->where('category', PayrollComponentCategory::OVERTIME)->first();
@@ -1009,7 +1009,7 @@ class RunPayrollService
              * six, calculate task overtime
              */
             if (config('app.name') == 'SUNSHINE') {
-                $taskOvertimePayrollComponent = PayrollComponent::tenanted()
+                $taskOvertimePayrollComponent = PayrollComponent::active()->tenanted()
                     ->whereCompany($runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
@@ -1026,7 +1026,7 @@ class RunPayrollService
              * seven, calculate BPJS FAMILY
              */
             if ($user->userBpjs && !$user->userBpjs->bpjs_kesehatan_family_no->is(\App\Enums\BpjsKesehatanFamilyNo::ZERO)) {
-                $bpjsKesehatanFamilyComponent = PayrollComponent::tenanted()
+                $bpjsKesehatanFamilyComponent = PayrollComponent::active()->tenanted()
                     ->whereCompany($runPayroll->company_id)
                     ->whenBranch($runPayroll->branch_id)
                     ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();

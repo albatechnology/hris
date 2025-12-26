@@ -24,7 +24,7 @@ class RunPayrollExport implements FromView, WithColumnFormatting, ShouldAutoSize
 
     public function view(): View
     {
-        $payrollComponents = PayrollComponent::where('company_id', $this->runPayroll->company_id)->get(['id', 'name', 'type', 'category']);
+        $payrollComponents = PayrollComponent::active()->where('company_id', $this->runPayroll->company_id)->get(['id', 'name', 'type', 'category']);
 
         $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY);
         $deductions = $payrollComponents->where('type', PayrollComponentType::DEDUCTION);

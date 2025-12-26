@@ -13,9 +13,9 @@ abstract class BaseModel extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
-    public function scopeActive(Builder $query)
+    public function scopeActive(Builder $query, bool $value = true)
     {
-        $query->where('is_active', true);
+        $query->where('is_active', $value);
     }
 
     public function scopeWhereStatus(Builder $query, $value)

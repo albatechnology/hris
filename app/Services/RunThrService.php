@@ -249,7 +249,7 @@ class RunThrService
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
-            $basicSalaryComponent = PayrollComponent::tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+            $basicSalaryComponent = PayrollComponent::active()->tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
             $basicSalaryUpdatePayrollComponentDetails = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id);
 
             $cutOffJoinDate = $cutOffStartDate->lessThan($user->join_date) ? $user->join_date : $cutOffStartDate;
@@ -279,7 +279,7 @@ class RunThrService
             self::createComponent($runThrUser, $basicSalaryComponent, $amount);
             // END
 
-            $payrollComponents =  PayrollComponent::whereCompany($runThr->company_id)->whereNotDefault()->where('is_calculate_thr', true)->get();
+            $payrollComponents =  PayrollComponent::active()->whereCompany($runThr->company_id)->whereNotDefault()->where('is_calculate_thr', true)->get();
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runThrUser, $cutOffJoinDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -301,7 +301,7 @@ class RunThrService
             /**
              * second, calculate payroll component where not default
              */
-            // $payrollComponents = PayrollComponent::tenanted()->where('company_id', $runThr->company_id)->whereNotDefault()->get();
+            // $payrollComponents = PayrollComponent::active()->tenanted()->where('company_id', $runThr->company_id)->whereNotDefault()->get();
             // dd($payrollComponents);
             // $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runThrUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
@@ -332,7 +332,7 @@ class RunThrService
              * third, calculate alpa
              */
             // if ($user->payrollInfo?->is_ignore_alpa == false) {
-            //     $alpaComponent = PayrollComponent::tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::ALPA)->first();
+            //     $alpaComponent = PayrollComponent::active()->tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::ALPA)->first();
             //     if ($alpaComponent) {
             //         $alpaUpdateComponent = $updatePayrollComponentDetails->where('payroll_component_id', $alpaComponent->id)->first();
             //         if ($alpaUpdateComponent) {
@@ -360,7 +360,7 @@ class RunThrService
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs) {
                 $isTaxable = $user->payrollInfo?->tax_salary->is(TaxSalary::TAXABLE) ?? true;
-                $bpjsPayrollComponents = PayrollComponent::tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
+                $bpjsPayrollComponents = PayrollComponent::active()->tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
 
                 $isEligibleToCalculateBpjsKesehatan = true;
                 // if (
@@ -488,7 +488,7 @@ class RunThrService
             /**
              * five, calculate overtime
              */
-            // $overtimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
+            // $overtimePayrollComponent = PayrollComponent::active()->tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::OVERTIME)->first();
 
             // $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
 
@@ -502,7 +502,7 @@ class RunThrService
             /**
              * six, calculate task overtime
              */
-            // $taskOvertimePayrollComponent = PayrollComponent::tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
+            // $taskOvertimePayrollComponent = PayrollComponent::active()->tenanted()->whereCompany($request['company_id'])->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
             // if ($taskOvertimePayrollComponent) {
             //     $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
 
@@ -605,7 +605,7 @@ class RunThrService
         $cutOffStartDate = Carbon::parse($runThrUser->runThr->thr_date)->subYear();
         $cutOffEndDate = Carbon::parse($runThrUser->runThr->thr_date);
 
-        $basicSalaryComponentId = PayrollComponent::tenanted()->select('id')->where('company_id', $runThrUser->runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail()->id;
+        $basicSalaryComponentId = PayrollComponent::active()->tenanted()->select('id')->where('company_id', $runThrUser->runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail()->id;
 
         $updatePayrollComponentBasicSalary = UpdatePayrollComponentDetail::where('user_id', $runThrUser->user_id)
             ->whereHas(

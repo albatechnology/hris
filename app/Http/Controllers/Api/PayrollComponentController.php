@@ -35,6 +35,7 @@ class PayrollComponentController extends BaseController
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('type'),
+                AllowedFilter::exact('is_active'),
                 AllowedFilter::scope('has_formulas'),
                 AllowedFilter::scope('available_for_update_payroll_component'),
             ])

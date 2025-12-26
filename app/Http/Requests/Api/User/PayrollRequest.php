@@ -6,8 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class PayrollRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

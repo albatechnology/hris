@@ -446,7 +446,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             ->with('payrollInfo')
             ->get();
 
-        $allPayrollComponents = PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->get();
+        $allPayrollComponents = PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->get();
 
         $basicSalaryComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
         $reimbursementComponent = $allPayrollComponents->where('category', PayrollComponentCategory::REIMBURSEMENT)->first();
@@ -455,8 +455,8 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $insuranceComponent = $allPayrollComponents->where('category', PayrollComponentCategory::INSURANCE)->first();
         $overtimePayrollComponent = $allPayrollComponents->where('category', PayrollComponentCategory::OVERTIME)->first();
         $bpjsKesehatanFamilyComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
-        $payrollComponents =  PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
-        $bpjsPayrollComponents =  PayrollComponent::whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
+        $payrollComponents =  PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
+        $bpjsPayrollComponents =  PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
 
         // calculate for each user
         // foreach ($userIds as $userId) {
@@ -502,7 +502,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                     // Add each updated component (e.g., severance pay) for the user
                     foreach ($updatePayrollComponentDetails as $upd) {
-                        $component = PayrollComponent::tenanted()
+                        $component = PayrollComponent::active()->tenanted()
                             ->whereCompany($runPayroll->company_id)
                             ->whenBranch($runPayroll->branch_id)
                             ->where('id', $upd->payroll_component_id)
@@ -703,7 +703,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * third, calculate alpa
              */
-            if ($user->payrollInfo?->is_ignore_alpa == false && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && (config('app.name') != 'SUNSHINE' || !$isFirstTimePayroll)) {
+            if ($alpaComponent && $user->payrollInfo?->is_ignore_alpa == false && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && (config('app.name') != 'SUNSHINE' || !$isFirstTimePayroll)) {
                 // $alpaComponent = PayrollComponent::tenanted()
                 //     ->where('company_id', $runPayroll->company_id)
                 //     ->whenBranch($runPayroll->branch_id)

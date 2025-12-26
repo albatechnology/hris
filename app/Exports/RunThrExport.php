@@ -24,7 +24,7 @@ class RunThrExport implements FromView, WithColumnFormatting, ShouldAutoSize, Wi
 
     public function view(): View
     {
-        $payrollComponents = PayrollComponent::where('company_id', $this->runThr->company_id)->get(['id', 'name', 'type', 'category','is_calculate_thr']);
+        $payrollComponents = PayrollComponent::active()->where('company_id', $this->runThr->company_id)->get(['id', 'name', 'type', 'category','is_calculate_thr']);
 
         $allowances = $payrollComponents->where('type', PayrollComponentType::ALLOWANCE)->where('category', '!=', PayrollComponentCategory::BASIC_SALARY)->where('is_calculate_thr', true);
         $deductions = $payrollComponents->where('type', PayrollComponentType::DEDUCTION);

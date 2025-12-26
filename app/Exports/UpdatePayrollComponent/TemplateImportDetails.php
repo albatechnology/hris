@@ -50,7 +50,7 @@ class ListOfComponents implements FromQuery, WithHeadings, WithMapping, WithTitl
 
     public function query()
     {
-        return PayrollComponent::select('id', 'name', 'type')->whereCompany($this->companyId)->where('type', '!=', PayrollComponentType::BENEFIT)->whereNotIn('category', [
+        return PayrollComponent::active()->select('id', 'name', 'type')->whereCompany($this->companyId)->where('type', '!=', PayrollComponentType::BENEFIT)->whereNotIn('category', [
             PayrollComponentCategory::COMPANY_BPJS_KESEHATAN,
             PayrollComponentCategory::EMPLOYEE_BPJS_KESEHATAN,
             PayrollComponentCategory::COMPANY_JKK,
