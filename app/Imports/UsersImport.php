@@ -73,15 +73,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'schedule_id' => ['nullable', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
             'name' => 'required|min:2|max:100',
-            'last_name' => 'nullable|max:100',
             'email' => 'nullable|email',
-            // 'email' => 'nullable|email|unique:users,email',
-            // 'email' => ['nullable', 'email', function ($attribute, string $value, $fail) {
-            //     $user = User::where('nik', $this->nik)->first(['id', 'email']);
-            //     if ($user->email != $value && User::where('email', $value)->exists()) {
-            //         return $fail("The email has already been taken.");
-            //     }
-            // }],
             'password' => 'nullable|min:6|max:50',
             'nik' => 'required|max:50',
             'phone' => 'required|max:20',
@@ -188,9 +180,6 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
         }
 
         $name = $row['name'];
-        if (isset($row['last_name']) && !empty($row['last_name'])) {
-            $name .= ' ' . $row['last_name'];
-        }
 
         $password = [];
         if ($row['password']) {
@@ -205,9 +194,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'branch_id' => $branch->id,
                 'live_attendance_id' => $row['live_attendance_id'],
                 'name' => $name,
-                // // 'last_name' => $row['last_name'],
                 'email' => $row['email'],
-                // 'work_email',
                 'email_verified_at' => $this->emailVerifiedAt,
                 'type' => $this->userType,
                 'nik' => $row['nik'],

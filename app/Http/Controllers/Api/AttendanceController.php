@@ -42,7 +42,6 @@ use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
 use App\Models\OvertimeRequest;
-use App\Services\OvertimeService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 

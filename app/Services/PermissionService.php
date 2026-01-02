@@ -130,6 +130,7 @@ class PermissionService
                 'attendance_create',
                 'attendance_edit',
                 'attendance_delete',
+                'attendance_read_all',
             ],
             'time_management_access' => [
                 'time_management_read',
@@ -428,6 +429,7 @@ class PermissionService
                 'attendance_create',
                 'attendance_edit',
                 'attendance_delete',
+                'attendance_read_all',
             ],
             'time_management_access' => [
                 'time_management_read',

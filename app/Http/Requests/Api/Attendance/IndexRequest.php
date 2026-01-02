@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\UserType;
+use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,10 @@ class IndexRequest extends FormRequest
                         if ($user->id === $userLogin->id) return;
 
                         if ($userLogin->is_admin || $userLogin->is_super_admin) {
+                            return;
+                        }
+
+                        if($userLogin->hasPermissionTo(Permission::select('id')->firstWhere('name', 'attendance_read_all'))){
                             return;
                         }
 
