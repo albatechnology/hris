@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->monthlyOn(5, '13:49');
+        $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->monthlyOn(5, '13:54');
         // $schedule->job(new \App\Jobs\AnnualLeave\NewEmployeeCharyuning)->dailyAt('18:06');
         $schedule->job(new \App\Jobs\UserTransfer\ExecuteUserTransfer)->dailyAt('02:00');
         $schedule->job(new AbsenceReminderBatch())->everyFiveMinutes()->when(fn () => config('app.name') === 'SYNTEGRA');

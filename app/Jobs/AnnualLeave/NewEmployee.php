@@ -94,6 +94,7 @@ class NewEmployee implements ShouldQueue
                 ->where('company_id', $company->id)
                 ->whereDate('join_date', '<=', $threeMonthsAgo)
                 ->whereNotIn('id', [357, 362])
+                ->where('id','>',115)
                 ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
