@@ -41,6 +41,14 @@ class NewEmployee implements ShouldQueue
 
     private function getQuotaStartDate(Carbon $joinDate): Carbon
     {
+        $yearStart = now()->startOfYear();
+
+        // user join sebelum tahun ini → mulai Januari
+        if ($joinDate->lt($yearStart)) {
+            return $yearStart->copy();
+        }
+
+        // user join di tahun ini
         return $joinDate->day > 15
             ? $joinDate->copy()->addMonth()->startOfMonth()
             : $joinDate->copy()->startOfMonth();
@@ -49,17 +57,22 @@ class NewEmployee implements ShouldQueue
     private function getQuotas(Carbon $joinDate)
     {
         $start = $this->getQuotaStartDate($joinDate);
-        $end = now()->endOfYear(); // atau now() kalau mau strictly sampai bulan ini
+        $end   = now()->endOfYear();
+
+        // safety guard
+        if ($start->gt($end)) {
+            return collect();
+        }
 
         return collect(CarbonPeriod::create($start, '1 month', $end))
             ->map(function (Carbon $date) {
                 return [
                     'quota' => 1,
                     'effective_start_date' => $date->format('Y-m-01'),
-                    'effective_end_date' => $date->copy()->endOfYear()->format('Y-m-d'),
+                    'effective_end_date'   => $date->copy()->endOfYear()->format('Y-m-d'),
                     'description' => sprintf(
                         'AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)',
-                        $date->format('Y-m-01')
+                        $date->format('Y-m')
                     ),
                 ];
             });
