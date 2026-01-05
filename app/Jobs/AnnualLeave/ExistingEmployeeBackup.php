@@ -6,6 +6,7 @@ use App\Enums\TimeoffPolicyType;
 use App\Models\Company;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
-class ExistingEmployeeBackup implements ShouldQueue
+class NewEmployee implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -27,63 +28,133 @@ class ExistingEmployeeBackup implements ShouldQueue
      */
     public function handle(): void
     {
-        $today = Carbon::now()->startOfMonth();
-        $date = Carbon::now()->startOfMonth()->subMonths(3);
-        $startYearDate = date('Y-01-01');
-        $endYearDate = date('Y-12-31');
-        $description = sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $date->format('F Y'));
+        if (config('app.name') == 'LUMORA') {
+            $this->lumoraTimeoff();
+            return;
+        }
 
-        $companies = Company::select('id')->get();
+        if (config('app.name') == 'SUNSHINE') {
+            $this->sunshineTimeoff();
+            return;
+        }
+    }
+
+    private function getQuotas(Carbon $joinDate)
+    {
+        if ($joinDate->format('d') > 15) {
+            $joinDate = $joinDate->copy()->addMonth();
+        }
+
+        return collect(CarbonPeriod::create($joinDate, '1 month', date('Y-12-31')))
+            ->filter(function ($joinDate) {
+                return $joinDate->format('Y') === date('Y');
+            })
+            ->map(function ($joinDate) {
+                return [
+                    'quota' => 1,
+                    'effective_start_date' => $joinDate->format('Y-m-01'),
+                    'effective_end_date' => $joinDate->format('Y') . '-12-31',
+                    'description' => sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $joinDate->format('Y-m-01'))
+                ];
+            })->values();
+    }
+
+    private function sunshineTimeoff()
+    {
+        /**
+         * 1. get users yang masa kerjanya < 1 tahun
+         * 2. where belum dapet jatah cuti di tahun ini
+         * 3. where masa kerjanya >= 3 bulan
+         * 4. user eligible to get the quota of the month user join, if join_date <= 15
+         */
+
+        // date to compare that the user should be working at least 3 months since join_date
+        $joinMonth = now()->subMonths(3);
+
+        $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
-            $timeoffPolicy = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id']);
+            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
             $users = User::query()
+                ->whereNull('resign_date')
                 ->where('company_id', $company->id)
-                ->whereMonth('join_date', '<', $date->format('Y-m-d'))
+                ->whereDate('join_date', '>', now()->subYear())
+                ->whereDate('join_date', '<=', $joinMonth)
+                ->whereDoesntHave(
+                    'timeoffQuotas',
+                    fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
+                        ->whereHas(
+                            'timeoffQuotaHistories',
+                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinMonth->format('Y'))
+                        )
+                )
                 ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
-                $totalQuota = $this->getQuota($user->join_date, $today);
+                $dataQuotas = $this->getQuotas(Carbon::parse($user->join_date));
+                DB::transaction(function () use ($user, $dataQuotas, $timeoffPolicyId) {
+                    foreach ($dataQuotas as $dataQuota) {
+                        $timeoffQuota = $user->timeoffQuotas()->create([
+                            'timeoff_policy_id' => $timeoffPolicyId,
+                            'effective_start_date' => $dataQuota['effective_start_date'],
+                            'effective_end_date' => $dataQuota['effective_end_date'],
+                            'quota' => $dataQuota['quota'],
+                        ]);
 
-                DB::transaction(function () use ($user, $totalQuota, $timeoffPolicy, $startYearDate, $endYearDate, $description) {
+                        $timeoffQuota->timeoffQuotaHistories()->create([
+                            'user_id' => $timeoffQuota->user_id,
+                            'is_increment' => true,
+                            'is_automatic' => true,
+                            'new_balance' => $timeoffQuota->quota,
+                            'description' => $dataQuota['description'],
+                        ]);
+                    }
+                });
+            }
+        }
+    }
+    private function lumoraTimeoff()
+    {
+        $today = date('Y-m-d');
+        $todayNextYear = date('Y-m-d', strtotime('+1 year'));
+        $year = date('Y');
+
+        $companies = Company::select('id')->get();
+        foreach ($companies as $company) {
+            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])?->id;
+
+            if (!$timeoffPolicyId) continue;
+
+            $users = User::where('company_id', $company->id)
+                ->whereDate('join_date', $today)->whereYear('join_date', '<', $year)
+                ->whereDoesntHave(
+                    'timeoffQuotas',
+                    fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
+                        ->whereHas(
+                            'timeoffQuotaHistories',
+                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $year)
+                        )
+                )
+                ->orderBy('join_date')
+                ->get(['id', 'join_date', 'name']);
+
+            foreach ($users as $user) {
+                DB::transaction(function () use ($user, $timeoffPolicyId, $today, $todayNextYear) {
                     $timeoffQuota = $user->timeoffQuotas()->create([
-                        'timeoff_policy_id' => $timeoffPolicy->id,
-                        'effective_start_date' => $startYearDate,
-                        'effective_end_date' => $endYearDate,
-                        'quota' => $totalQuota,
+                        'timeoff_policy_id' => $timeoffPolicyId,
+                        'effective_start_date' => $today,
+                        'effective_end_date' => $todayNextYear,
+                        'quota' => 12,
                     ]);
 
                     $timeoffQuota->timeoffQuotaHistories()->create([
                         'user_id' => $timeoffQuota->user_id,
                         'is_increment' => true,
+                        'is_automatic' => true,
                         'new_balance' => $timeoffQuota->quota,
-                        'description' => $description,
+                        'description' => "AUTOMATICALLY GENERATED FROM THE SYSTEM AT " . $today,
                     ]);
                 });
             }
         }
-    }
-
-    public function getQuota($joinDate, Carbon $compareDate): int
-    {
-        $joinDate = Carbon::parse($joinDate);
-        $year = $joinDate->diffInYears($compareDate);
-        $totalQuota = 1;
-        if ($year > 3 && $year <= 5) {
-            $totalQuota = match ($compareDate->format('m')) {
-                '01',
-                '07' => 2,
-                default => 1,
-            };
-        } elseif ($year > 5) {
-            $totalQuota = match ($compareDate->format('m')) {
-                '01',
-                '04',
-                '07',
-                '10' => 2,
-                default => 1,
-            };
-        }
-
-        return $totalQuota;
     }
 }

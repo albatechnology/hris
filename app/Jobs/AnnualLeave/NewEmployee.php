@@ -39,79 +39,83 @@ class NewEmployee implements ShouldQueue
         }
     }
 
+    private function getQuotaStartDate(Carbon $joinDate): Carbon
+    {
+        return $joinDate->day > 15
+            ? $joinDate->copy()->addMonth()->startOfMonth()
+            : $joinDate->copy()->startOfMonth();
+    }
+
     private function getQuotas(Carbon $joinDate)
     {
-        if ($joinDate->format('d') > 15) {
-            $joinDate = $joinDate->copy()->addMonth();
-        }
+        $start = $this->getQuotaStartDate($joinDate);
+        $end = now()->endOfYear(); // atau now() kalau mau strictly sampai bulan ini
 
-        return collect(CarbonPeriod::create($joinDate, '1 month', date('Y-12-31')))
-            ->filter(function ($joinDate) {
-                return $joinDate->format('Y') === date('Y');
-            })
-            ->map(function ($joinDate) {
+        return collect(CarbonPeriod::create($start, '1 month', $end))
+            ->map(function (Carbon $date) {
                 return [
                     'quota' => 1,
-                    'effective_start_date' => $joinDate->format('Y-m-01'),
-                    'effective_end_date' => $joinDate->format('Y') . '-12-31',
-                    'description' => sprintf('AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)', $joinDate->format('Y-m-01'))
+                    'effective_start_date' => $date->format('Y-m-01'),
+                    'effective_end_date' => $date->copy()->endOfYear()->format('Y-m-d'),
+                    'description' => sprintf(
+                        'AUTOMATICALLY GENERATED FROM THE SYSTEM (L %s)',
+                        $date->format('Y-m-01')
+                    ),
                 ];
-            })->values();
+            });
     }
 
     private function sunshineTimeoff()
     {
-        /**
-         * 1. get users yang masa kerjanya < 1 tahun
-         * 2. where belum dapet jatah cuti di tahun ini
-         * 3. where masa kerjanya >= 3 bulan
-         * 4. user eligible to get the quota of the month user join, if join_date <= 15
-         */
+        $threeMonthsAgo = now()->subMonths(3);
 
-        // date to compare that the user should be working at least 3 months since join_date
-        $joinMonth = now()->subMonths(3);
+        $companies = Company::where('id', 1)->get();
 
-        $companies = Company::select('id')->where('id', 1)->get();
         foreach ($companies as $company) {
-            $timeoffPolicyId = $company->timeoffPolicies()->where('type', TimeoffPolicyType::ANNUAL_LEAVE)->first(['id'])->id;
+            $policyId = $company->timeoffPolicies()
+                ->where('type', TimeoffPolicyType::ANNUAL_LEAVE)
+                ->value('id');
+
             $users = User::query()
                 ->whereNull('resign_date')
                 ->where('company_id', $company->id)
-                ->whereDate('join_date', '>', now()->subYear())
-                ->whereDate('join_date', '<=', $joinMonth)
-                ->whereDoesntHave(
-                    'timeoffQuotas',
-                    fn($q) => $q->whereHas('timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::ANNUAL_LEAVE))
-                        ->whereHas(
-                            'timeoffQuotaHistories',
-                            fn($q) => $q->where('is_automatic', true)->whereYear('created_at', $joinMonth->format('Y'))
-                        )
-                )
+                ->whereDate('join_date', '<=', $threeMonthsAgo)
+                ->whereNotIn('id', [357, 362])
                 ->get(['id', 'join_date']);
 
             foreach ($users as $user) {
-                $dataQuotas = $this->getQuotas(Carbon::parse($user->join_date));
-                DB::transaction(function () use ($user, $dataQuotas, $timeoffPolicyId) {
-                    foreach ($dataQuotas as $dataQuota) {
-                        $timeoffQuota = $user->timeoffQuotas()->create([
-                            'timeoff_policy_id' => $timeoffPolicyId,
-                            'effective_start_date' => $dataQuota['effective_start_date'],
-                            'effective_end_date' => $dataQuota['effective_end_date'],
-                            'quota' => $dataQuota['quota'],
-                        ]);
+                $quotas = $this->getQuotas(Carbon::parse($user->join_date));
 
-                        $timeoffQuota->timeoffQuotaHistories()->create([
-                            'user_id' => $timeoffQuota->user_id,
-                            'is_increment' => true,
-                            'is_automatic' => true,
-                            'new_balance' => $timeoffQuota->quota,
-                            'description' => $dataQuota['description'],
-                        ]);
+                DB::transaction(function () use ($user, $quotas, $policyId) {
+                    foreach ($quotas as $data) {
+                        $quota = $user->timeoffQuotas()->firstOrCreate(
+                            [
+                                'timeoff_policy_id' => $policyId,
+                                'effective_start_date' => $data['effective_start_date'],
+                            ],
+                            [
+                                'effective_end_date' => $data['effective_end_date'],
+                                'quota' => $data['quota'],
+                            ]
+                        );
+
+                        // history hanya kalau quota BARU dibuat
+                        if ($quota->wasRecentlyCreated) {
+                            $quota->timeoffQuotaHistories()->create([
+                                'user_id' => $user->id,
+                                'is_increment' => true,
+                                'is_automatic' => true,
+                                'old_balance' => 0,
+                                'new_balance' => $quota->quota,
+                                'description' => $data['description'],
+                            ]);
+                        }
                     }
                 });
             }
         }
     }
+
     private function lumoraTimeoff()
     {
         $today = date('Y-m-d');
