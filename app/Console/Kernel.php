@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
         $schedule->job(new \App\Jobs\AnnualLeave\NewEmployee)->monthlyOn(1, '02:00');
         // $schedule->job(new \App\Jobs\AnnualLeave\NewEmployeeCharyuning)->dailyAt('18:06');
         $schedule->job(new \App\Jobs\UserTransfer\ExecuteUserTransfer)->dailyAt('02:00');
-        $schedule->job(new AbsenceReminderBatch())->everyFiveMinutes();
+        $schedule->job(new AbsenceReminderBatch())->everyFiveMinutes()->when(fn () => config('app.name') === 'SYNTEGRA');
 
         // cron untuk company yang punya timeoff regulation monthly
         // cron untuk company yang punya timeoff regulation user_period
