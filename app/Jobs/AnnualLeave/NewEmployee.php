@@ -93,9 +93,13 @@ class NewEmployee implements ShouldQueue
                 ->whereNull('resign_date')
                 ->where('company_id', $company->id)
                 ->whereDate('join_date', '<=', $threeMonthsAgo)
-                ->whereNotIn('id', [357, 362])
-                ->where('id','>',115)
-                ->get(['id', 'join_date']);
+                // ->get(['id', 'join_date']);
+                // ->whereDoesntHave('timeoffQuotas', function ($q) use ($policyId, $yearStart, $yearEnd) {
+                //     $q->where('timeoff_policy_id', $policyId)
+                //         ->whereBetween('effective_start_date', [$yearStart, $yearEnd]);
+                // })
+                ->select('id', 'join_date')
+                ->cursor();
 
             foreach ($users as $user) {
                 $quotas = $this->getQuotas(Carbon::parse($user->join_date));
