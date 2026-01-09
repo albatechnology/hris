@@ -266,6 +266,10 @@ class AttendanceService
             }
         }
 
+        if($user->payrollInfo->is_ignore_alpa) {
+            return $user->payrollInfo->total_working_days;
+        }
+
         $dateRange = CarbonPeriod::create($startDate, $endDate);
         $attendances = Attendance::where('user_id', $userId)
             ->where(

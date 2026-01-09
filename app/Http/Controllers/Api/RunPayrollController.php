@@ -3,17 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\CountrySettingKey;
+use App\Exports\Payroll\TemplateImportPayroll;
 use App\Exports\RunPayrollExport;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
 use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Requests\Api\RunPayroll\UpdateRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
+use App\Http\Requests\Api\RunPayroll\ImportRequest;
+use App\Http\Resources\DefaultResource;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
+use App\Imports\Payroll\ImportPayroll;
 use App\Interfaces\Services\Payroll\RunPayrollServiceInterface;
 use App\Models\Bank;
 use App\Models\Company;
 use App\Models\CountrySetting;
 use App\Models\LoanDetail;
+use App\Models\PayrollSetting;
 use App\Models\RunPayroll;
 use App\Models\RunPayrollUser;
 use App\Models\RunPayrollUserComponent;
@@ -23,6 +28,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -431,5 +437,56 @@ class RunPayrollController extends BaseController
             'Content-type' => 'text/plain',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
         ]);
+    }
+
+    public function import(ImportRequest $request, ?string $isDownload = null)
+    {
+        if ($isDownload) {
+            return (new TemplateImportPayroll($request->company_id))->download('template-import-payroll.xlsx');
+        }
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+
+            // Convert Excel rows to Collection
+            $rows = collect();
+            foreach ($worksheet->getRowIterator() as $row) {
+                $cellIterator = $row->getCellIterator();
+                $rowData = [];
+                foreach ($cellIterator as $cell) {
+                    $rowData[] = $cell->getValue();
+                }
+                $rows->push($rowData);
+            }
+
+            $payrollSetting = PayrollSetting::with('company')
+                ->whereCompany($request->company_id)
+                ->whenBranch($request->branch_id ?? null)
+                ->first();
+
+            $cutOffAttendance = \App\Http\Services\Payroll\RunPayrollService::generateDate($payrollSetting->cut_off_attendance_start_date, $payrollSetting->cut_off_attendance_end_date, $request->period, $payrollSetting->is_attendance_pay_last_month);
+            $payrollDate = \App\Http\Services\Payroll\RunPayrollService::generateDate($payrollSetting->payroll_start_date, $payrollSetting->payroll_end_date, $request->period);
+
+            // Process using ImportPayroll logic
+            $import = new ImportPayroll(
+                $request->company_id,
+                [
+                    'branch_id' => $request->branch_id ?? null,
+                    'period' => $request->period ?? date('Y-m'),
+                    'payment_schedule' => $request->payment_schedule ?? now(),
+                    'cut_off_start_date' => $cutOffAttendance['start'],
+                    'cut_off_end_date' => $cutOffAttendance['end'],
+                    'payroll_start_date' => $payrollDate['start'],
+                    'payroll_end_date' => $payrollDate['end'],
+                ]
+            );
+            $import->collection($rows);
+
+            return DefaultResource::collection($import->datas);
+        } catch (Exception $th) {
+            return $this->errorResponse($th->getMessage());
+        }
     }
 }
