@@ -455,6 +455,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $insuranceComponent = $allPayrollComponents->where('category', PayrollComponentCategory::INSURANCE)->first();
         $overtimePayrollComponent = $allPayrollComponents->where('category', PayrollComponentCategory::OVERTIME)->first();
         $bpjsKesehatanFamilyComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
+        $taskOvertimePayrollComponent = $allPayrollComponents->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
         $payrollComponents =  PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
         $bpjsPayrollComponents =  PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
 
@@ -605,39 +606,32 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
-            // $basicSalaryComponent = PayrollComponent::tenanted()
-            //     ->where('company_id', $runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+            if ($basicSalaryComponent) {
+                $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
+                // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
+                //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
+                // }
+                if ($updatePayrollComponentDetail) {
+                    $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
 
-            $updatePayrollComponentDetail = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id)->first();
-            // if ($isFirstTimePayroll && $joinDate->between($cutOffStartDate, $cutOffEndDate)) {
-            //     $userBasicSalary = $totalWorkingDays / $user->payrollInfo->total_working_days * $userBasicSalary;
-            // }
-            if ($updatePayrollComponentDetail) {
-                $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+                    // end_date / endEffectiveDate can be null
+                    $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
 
-                // end_date / endEffectiveDate can be null
-                $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
-
-                $userBasicSalary = $this->newProrate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
-            } else {
-                if ($basicSalaryComponent->is_prorate) {
-                    $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                    $userBasicSalary = $this->newProrate($userBasicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
+                } else {
+                    if ($basicSalaryComponent->is_prorate) {
+                        $userBasicSalary = $this->newProrate(0, $userBasicSalary, $dataTotalAttendance, $cutOffStartDate, $cutOffEndDate, $cutOffStartDate, $cutOffEndDate);
+                    }
                 }
+
+                $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
+                $this->createComponent($runPayrollUser, $basicSalaryComponent, $amount);
             }
 
-            $amount = $this->calculatePayrollComponentPeriodType($basicSalaryComponent, $userBasicSalary, $totalWorkingDays, $runPayrollUser);
-            $this->createComponent($runPayrollUser, $basicSalaryComponent, $amount);
 
             /**
              * five, calculate reimbursement
              */
-            // $reimbursementComponent = PayrollComponent::tenanted()
-            //     ->whereCompany($runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->where('category', PayrollComponentCategory::REIMBURSEMENT)->first();
-
             if ($reimbursementComponent) {
                 $amount = app(\App\Http\Services\Reimbursement\ReimbursementService::class)->getTotalReimbursementTaken(userId: $user, startDate: $cutOffStartDate, endDate: $cutOffEndDate);
 
@@ -648,12 +642,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * second, calculate payroll component where not default
              */
-            // $payrollComponents = PayrollComponent::tenanted()
-            //     ->where('id', 127)
-            //     ->where('company_id', $runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->whereNotDefault()->get();
-
             $payrollComponents->each(function ($payrollComponent) use ($user, $dataTotalAttendance, $updatePayrollComponentDetails, $runPayrollUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -704,11 +692,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
              * third, calculate alpa
              */
             if ($alpaComponent && $user->payrollInfo?->is_ignore_alpa == false && !$joinDate->between($cutOffStartDate, $cutOffEndDate) && (config('app.name') != 'SUNSHINE' || !$isFirstTimePayroll)) {
-                // $alpaComponent = PayrollComponent::tenanted()
-                //     ->where('company_id', $runPayroll->company_id)
-                //     ->whenBranch($runPayroll->branch_id)
-                //     ->where('category', PayrollComponentCategory::ALPA)->first();
-
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
                 $totalAlpa = $totalWorkingDays - $dataTotalAttendance['total_present'];
 
@@ -734,11 +717,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * calculate LOAN
              */
-            // $loanComponent = PayrollComponent::tenanted()
-            //     ->where('company_id', $runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->where('category', PayrollComponentCategory::LOAN)->first();
-
             if ($loanComponent) {
                 $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
                 $loans = Loan::where('user_id', $user->id)->whereLoan()->whereHas('details', $whereHas)->get(['id']);
@@ -755,11 +733,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * calculate INSURANCE
              */
-            // $insuranceComponent = PayrollComponent::tenanted()
-            //     ->where('company_id', $runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->where('category', PayrollComponentCategory::INSURANCE)->first();
-
             if ($insuranceComponent) {
                 $whereHas = fn($q) => $q->whereNull('run_payroll_user_id')->where('payment_period_year', $startDate->format('Y'))->where('payment_period_month', $startDate->format('m'));
                 $insurances = Loan::where('user_id', $user->id)->whereInsurance()->whereHas('details', $whereHas)->get(['id']);
@@ -778,12 +751,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * fourth, calculate bpjs
              */
-            if ($company->countryTable?->id == 1 && $user->userBpjs) {
-                // $bpjsPayrollComponents = PayrollComponent::tenanted()
-                //     ->whereCompany($runPayroll->company_id)
-                //     ->whenBranch($runPayroll->branch_id)
-                //     ->whereBpjs()->get();
-
+            if ($company->countryTable?->id == 1 && $user->userBpjs && $bpjsPayrollComponents->count()) {
                 $isEligibleToCalculateBpjsKesehatan = false;
                 if (
                     !empty($user->userBpjs->bpjs_kesehatan_no)
@@ -908,11 +876,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             /**
              * five, calculate overtime
              */
-            // $overtimePayrollComponent = PayrollComponent::tenanted()
-            //     ->whereCompany($runPayroll->company_id)
-            //     ->whenBranch($runPayroll->branch_id)
-            //     ->where('category', PayrollComponentCategory::OVERTIME)->first();
-
             $isUserOvertimeEligible = $user->payrollInfo->overtime_setting->is(OvertimeSetting::ELIGIBLE);
 
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
@@ -926,11 +889,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
              * six, calculate task overtime
              */
             if (config('app.name') == 'SUNSHINE') {
-                $taskOvertimePayrollComponent = PayrollComponent::tenanted()
-                    ->whereCompany($runPayroll->company_id)
-                    ->whenBranch($runPayroll->branch_id)
-                    ->where('category', PayrollComponentCategory::TASK_OVERTIME)->first();
-
                 if ($taskOvertimePayrollComponent) {
                     $amount = OvertimeService::calculateTaskOvertime($user, $cutOffStartDate, $cutOffEndDate);
 
@@ -943,11 +901,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
              * seven, calculate BPJS FAMILY
              */
             if ($user->userBpjs && !$user->userBpjs->bpjs_kesehatan_family_no->is(\App\Enums\BpjsKesehatanFamilyNo::ZERO)) {
-                // $bpjsKesehatanFamilyComponent = PayrollComponent::tenanted()
-                //     ->whereCompany($runPayroll->company_id)
-                //     ->whenBranch($runPayroll->branch_id)
-                //     ->where('category', PayrollComponentCategory::BPJS_KESEHATAN_FAMILY)->first();
-
                 if ($bpjsKesehatanFamilyComponent) {
                     $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
                     if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;

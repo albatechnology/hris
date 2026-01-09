@@ -20,8 +20,8 @@ class ExportRequest extends FormRequest
     {
         $this->merge([
             'filter' => [
-                'is_resign' => !empty($this->filter['is_resign']) ? $this->toBoolean($this->is_resign) : null,
-                'is_active' => !empty($this->filter['is_active']) ? $this->toBoolean($this->is_active) : null,
+                'is_resign' => !empty($this->filter['is_resign']) ? $this->toBoolean($this->filter['is_resign']) : null,
+                'is_active' => !empty($this->filter['is_active']) ? $this->toBoolean($this->filter['is_active']) : null,
             ],
         ]);
     }
