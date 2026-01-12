@@ -458,8 +458,12 @@ class NewRunPayrollService
                 if ($updatePayrollComponentBpjsKesehatan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKesehatan->id)->first()) $current_upahBpjsKesehatan = $updatePayrollComponentBpjsKesehatan->new_amount;
                 if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
 
+                $original_current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
                 $current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
-                if ($updatePayrollComponentBpjsKetenagakerjaan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKetenagakerjaan->id)->first()) $current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
+                if ($updatePayrollComponentBpjsKetenagakerjaan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKetenagakerjaan->id)->first()) {
+                    $original_current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
+                    $current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
+                }
                 if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
 
                 // bpjs kesehatan
@@ -481,11 +485,13 @@ class NewRunPayrollService
 
                 // jkk
                 $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
-                $company_totalJkk = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkk / 100);
+                // $company_totalJkk = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkk / 100);
+                $company_totalJkk = $original_current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
 
                 // jkm
                 $company_percentageJkm = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
-                $company_totalJkm = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkm / 100);
+                // $company_totalJkm = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkm / 100);
+                $company_totalJkm = $original_current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
 
                 // jht
                 $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
@@ -495,8 +501,10 @@ class NewRunPayrollService
                     $employee_percentageJht = 0;
                 }
 
-                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
-                $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                // $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
+                $company_totalJht = $original_current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
+                // $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                $employee_totalJht = $original_current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
                 if ($user->userBpjs->jht_cost->is(PaidBy::COMPANY)) {
                     $company_totalJht += $employee_totalJht;
                     $employee_totalJht = 0;
@@ -580,7 +588,10 @@ class NewRunPayrollService
              */
             if ($user->userBpjs && !$user->userBpjs->bpjs_kesehatan_family_no->is(\App\Enums\BpjsKesehatanFamilyNo::ZERO)) {
                 if ($bpjsKesehatanFamilyComponent) {
+                    // $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+
                     $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+                    if ($updatePayrollComponentBpjsKesehatan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKesehatan->id)->first()) $current_upahBpjsKesehatan = $updatePayrollComponentBpjsKesehatan->new_amount;
                     if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
 
                     // one percent from current_upahBpjsKesehatan, dikali bpjs_kesehatan_family_no
