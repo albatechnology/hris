@@ -243,6 +243,9 @@ class NewRunPayrollService
         $payrollComponents =  PayrollComponent::active()->tenanted()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
         $bpjsPayrollComponents =  PayrollComponent::active()->tenanted()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
 
+        $bpjsKesehatan = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN)->first();
+        $bpjsKetenagakerjaan = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KETENAGAKERJAAN)->first();
+
         // calculate for each user
         foreach ($users as $user) {
             $cutOffStartDate = $runPayroll->cut_off_start_date;
@@ -452,9 +455,11 @@ class NewRunPayrollService
                 // calculate bpjs
                 // init bpjs variable
                 $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+                if ($updatePayrollComponentBpjsKesehatan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKesehatan->id)->first()) $current_upahBpjsKesehatan = $updatePayrollComponentBpjsKesehatan->new_amount;
                 if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
 
                 $current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
+                if ($updatePayrollComponentBpjsKetenagakerjaan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKetenagakerjaan->id)->first()) $current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
                 if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
 
                 // bpjs kesehatan
