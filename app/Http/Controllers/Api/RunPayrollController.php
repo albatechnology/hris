@@ -484,7 +484,7 @@ class RunPayrollController extends BaseController
             );
             $import->collection($rows);
 
-            return DefaultResource::collection($import->datas);
+            return $this->createdResponse();
         } catch (Exception $th) {
             return $this->errorResponse($th->getMessage());
         }
