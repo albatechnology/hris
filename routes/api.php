@@ -305,6 +305,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('run-payrolls/{run_payroll}/export/ocbc', [RunPayrollController::class, 'exportOcbc']);
     Route::get('run-payrolls/{run_payroll}/export/bca', [RunPayrollController::class, 'exportBca']);
     Route::delete('run-payrolls/bulk-delete', [RunPayrollController::class, 'bulkDestroy']);
+    Route::get('run-payrolls/import/{download_template}', [RunPayrollController::class, 'import']);
+    Route::post('run-payrolls/import', [RunPayrollController::class, 'import']);
     Route::apiResource('run-payrolls', RunPayrollController::class);
 
     Route::put('run-thrs/user-components/{run_thr_user}', [RunThrController::class, 'updateUserComponent']);

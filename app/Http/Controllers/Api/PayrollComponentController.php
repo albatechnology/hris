@@ -128,6 +128,7 @@ class PayrollComponentController extends BaseController
     {
         $payrollComponent = PayrollComponent::findTenanted($id);
         try {
+            $payrollComponent->update(['name' => $payrollComponent->name . '-deleted-' . date('YmdHis')]);
             // sync with empty data []
             $payrollComponent->includes()->delete();
             FormulaService::sync($payrollComponent, []);

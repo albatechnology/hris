@@ -7,7 +7,6 @@ use App\Enums\MediaCollection;
 use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\UserTransfer\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Jobs\UserTransfer\ExecuteUserTransfer;
 use App\Models\UserTransfer;
 use Exception;
 use Illuminate\Http\Response;
@@ -143,9 +142,13 @@ class UserTransferController extends BaseController
             return $this->errorResponse('User transfer already approved', code: Response::HTTP_CONFLICT);
         }
 
+        DB::beginTransaction();
         try {
             $userTransfer->update($request->validated());
+
+            DB::commit();
         } catch (Exception $th) {
+            DB::rollBack();
             return $this->errorResponse($th->getMessage());
         }
 

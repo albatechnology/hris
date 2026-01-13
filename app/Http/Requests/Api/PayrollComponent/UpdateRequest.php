@@ -6,6 +6,7 @@ use App\Enums\PayrollComponentCategory;
 use App\Enums\PayrollComponentPeriodType;
 use App\Enums\PayrollComponentType;
 use App\Models\Branch;
+use App\Models\PayrollComponent;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -49,10 +50,16 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->id;
         return [
             'branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'company_id' => ['required', new CompanyTenantedRule()],
-            'name' => 'required|string',
+            'name' => ['required', 'string', function ($attribute, $value, $fail) use ($id) {
+                $isExists = PayrollComponent::where('name', $value)->where('company_id', $this->company_id)->where('id', '!=', $id)->limit(1)->exists();
+                if ($isExists) {
+                    $fail('The name has already been taken.');
+                }
+            }],
             'type' => ['required', Rule::enum(PayrollComponentType::class)],
             'category' => ['nullable', Rule::enum(PayrollComponentCategory::class)],
             // 'setting' => ['nullable', Rule::enum(PayrollComponentSetting::class)],
