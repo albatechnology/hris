@@ -752,14 +752,15 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
              * fourth, calculate bpjs
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs && $bpjsPayrollComponents->count()) {
+                $bpjsKesehatanDate = strtotime($user->userBpjs->bpjs_kesehatan_date);
+                $bpjsKetenagakerjaanDate = strtotime($user->userBpjs->bpjs_ketenagakerjaan_date);
+                $payrollDate = strtotime($runPayroll->payroll_start_date);
+
                 $isEligibleToCalculateBpjsKesehatan = false;
                 if (
                     !empty($user->userBpjs->bpjs_kesehatan_no)
                     && !empty($user->userBpjs->bpjs_kesehatan_date)
-                    && (
-                        date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) < date('Y', strtotime($runPayroll->payroll_start_date))
-                        || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
-                    )
+                    && $bpjsKesehatanDate <= $payrollDate
                 ) {
                     $isEligibleToCalculateBpjsKesehatan = true;
                 }
@@ -768,10 +769,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 if (
                     !empty($user->userBpjs->bpjs_ketenagakerjaan_no)
                     && !empty($user->userBpjs->bpjs_ketenagakerjaan_date)
-                    && (
-                        date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) < date('Y', strtotime($runPayroll->payroll_start_date))
-                        || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
-                    )
+                    && $bpjsKetenagakerjaanDate <= $payrollDate
                 ) {
                     $isEligibleToCalculateBpjsKetenagakerjaan = true;
                 }

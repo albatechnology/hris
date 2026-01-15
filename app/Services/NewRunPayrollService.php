@@ -229,7 +229,6 @@ class NewRunPayrollService
             ->has('payrollInfo')
             ->with('payrollInfo')
             ->get();
-        // dump($users->pluck('id', 'name')->toArray());
 
         $allPayrollComponents = PayrollComponent::active()->tenanted()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->get();
 
@@ -303,7 +302,6 @@ class NewRunPayrollService
                         ->whereActive($startDate, $endDate)
                 )
                 ->orderByDesc('id')->get();
-            // dump($updatePayrollComponentDetails->toArray());
 
             /**
              * first, calculate basic salary. for now basic salary component is required
@@ -430,14 +428,15 @@ class NewRunPayrollService
              * fourth, calculate bpjs
              */
             if ($company->countryTable?->id == 1 && $user->userBpjs && $bpjsPayrollComponents->count()) {
+                $bpjsKesehatanDate = strtotime($user->userBpjs->bpjs_kesehatan_date);
+                $bpjsKetenagakerjaanDate = strtotime($user->userBpjs->bpjs_ketenagakerjaan_date);
+                $payrollDate = strtotime($runPayroll->payroll_start_date);
+
                 $isEligibleToCalculateBpjsKesehatan = false;
                 if (
                     !empty($user->userBpjs->bpjs_kesehatan_no)
                     && !empty($user->userBpjs->bpjs_kesehatan_date)
-                    && (
-                        date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('Y', strtotime($runPayroll->payroll_start_date))
-                        || (date('Y', strtotime($user->userBpjs->bpjs_kesehatan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_kesehatan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
-                    )
+                    && $bpjsKesehatanDate <= $payrollDate
                 ) {
                     $isEligibleToCalculateBpjsKesehatan = true;
                 }
@@ -446,10 +445,7 @@ class NewRunPayrollService
                 if (
                     !empty($user->userBpjs->bpjs_ketenagakerjaan_no)
                     && !empty($user->userBpjs->bpjs_ketenagakerjaan_date)
-                    && (
-                        date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('Y', strtotime($runPayroll->payroll_start_date))
-                        || (date('Y', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) && date('m', strtotime($user->userBpjs->bpjs_ketenagakerjaan_date)) <= date('m', strtotime($runPayroll->payroll_start_date)))
-                    )
+                    && $bpjsKetenagakerjaanDate <= $payrollDate
                 ) {
                     $isEligibleToCalculateBpjsKetenagakerjaan = true;
                 }
@@ -458,10 +454,8 @@ class NewRunPayrollService
                 // init bpjs variable
                 $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
                 $updatePayrollComponentBpjsKesehatan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKesehatan->id)->first();
-                // dd($updatePayrollComponentBpjsKesehatan);
                 if ($updatePayrollComponentBpjsKesehatan) $current_upahBpjsKesehatan = $updatePayrollComponentBpjsKesehatan->new_amount;
                 if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
-                // dump($current_upahBpjsKesehatan);
 
                 $original_current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
                 $current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
@@ -470,7 +464,6 @@ class NewRunPayrollService
                     $current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
                 }
                 if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
-                // dd($current_upahBpjsKetenagakerjaan);
 
                 // bpjs kesehatan
                 $company_percentageBpjsKesehatan = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_BPJS_KESEHATAN_PERCENTAGE)?->value;
