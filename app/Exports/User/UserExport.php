@@ -105,12 +105,18 @@ class UserExport extends DefaultValueBinder implements FromQuery, WithHeadings, 
             ->pad(4, null)
             ->values();
 
+        $department = $user->positions[0]?->department_id ?? null;
+        $position = $user->positions[0]?->position_id ?? null;
+        if (config('app.name') == 'SUNSHINE') {
+            $department = $user->positions[0]?->department?->name ?? null;
+            $position = $user->positions[0]?->position?->name ?? null;
+        }
         return [
             ...$supervisorsNik,
             $user->roles[0]?->id ?? null,
             $user->branch_id,
-            $user->positions[0]?->department_id ?? null,
-            $user->positions[0]?->position_id ?? null,
+            $department,
+            $position,
             $user->live_attendance_id,
             null,
             $user->nik,

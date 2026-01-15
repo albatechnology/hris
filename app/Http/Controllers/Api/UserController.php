@@ -907,11 +907,11 @@ class UserController extends BaseController
                 'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
                 'roles' => fn($q) => $q->select('id'),
                 'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
-                'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
-                // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
-                //     'position' => fn($q) => $q->select('id'),
-                //     'department' => fn($q) => $q->select('id'),
-                // ])
+                // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
+                'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+                    'position' => fn($q) => $q->select('id','name'),
+                    'department' => fn($q) => $q->select('id','name'),
+                ])
             ]);
 
         if ($request->is_json == true) {
