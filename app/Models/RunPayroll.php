@@ -36,6 +36,23 @@ class RunPayroll extends BaseModel
         'status' => RunPayrollStatus::class,
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (!$model->code) {
+                $date = date('dmy');
+
+                if ($latestCode = RunPayroll::where('code', 'LIKE', "TRX.$model->company_id.$date.%")->latest()->first()?->code) {
+                    $increment = sprintf('%03s', (int)explode('.', $latestCode)[3] + 1);
+                } else {
+                    $increment = sprintf('%03s', 1);
+                }
+
+                $model->code = "TRX.$model->company_id.$date.$increment";
+            }
+        });
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(RunPayrollUser::class);
@@ -46,19 +63,19 @@ class RunPayroll extends BaseModel
         $query->where('status', RunPayrollStatus::RELEASE);
     }
 
-    public static function generateCode()
-    {
-        $companyId = auth()->user()->company_id ?? 0;
-        $date = date('dmy');
+    // public static function generateCode()
+    // {
+    //     $companyId = auth()->user()->company_id ?? 0;
+    //     $date = date('dmy');
 
-        if ($latestCode = RunPayroll::where('code', 'LIKE', "TRX.$companyId.$date.%")->latest()->first()?->code) {
-            $increment = sprintf('%03s', (int)explode('.', $latestCode)[3] + 1);
-        } else {
-            $increment = sprintf('%03s', 1);
-        }
+    //     if ($latestCode = RunPayroll::where('code', 'LIKE', "TRX.$companyId.$date.%")->latest()->first()?->code) {
+    //         $increment = sprintf('%03s', (int)explode('.', $latestCode)[3] + 1);
+    //     } else {
+    //         $increment = sprintf('%03s', 1);
+    //     }
 
-        $code = "TRX.$companyId.$date.$increment";
+    //     $code = "TRX.$companyId.$date.$increment";
 
-        return $code;
-    }
+    //     return $code;
+    // }
 }

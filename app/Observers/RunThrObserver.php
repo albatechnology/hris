@@ -11,6 +11,6 @@ class RunThrObserver
      */
     public function creating(RunThr $runThr): void
     {
-        $runThr->code = $runThr->generateCode();
+        // $runThr->code = $runThr->generateCode();
     }
 }

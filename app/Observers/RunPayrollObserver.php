@@ -11,6 +11,6 @@ class RunPayrollObserver
      */
     public function creating(RunPayroll $runPayroll): void
     {
-        $runPayroll->code = $runPayroll->generateCode();
+        // $runPayroll->code = $runPayroll->generateCode();
     }
 }

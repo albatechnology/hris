@@ -6,15 +6,9 @@ use App\Events\Attendance\AttendanceRequested;
 use App\Events\Subscription\SubscriptionCreated;
 use App\Listeners\Attendance\RequestAttendanceNotification;
 use App\Listeners\Subscription\SendSubscriptionEmail;
-use App\Models\Loan;
 use App\Models\OvertimeRequest;
-use App\Models\RunPayroll;
-use App\Models\RunThr;
 use App\Models\User;
-use App\Observers\LoanObserver;
 use App\Observers\OvertimeRequestObserver;
-use App\Observers\RunPayrollObserver;
-use App\Observers\RunThrObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -47,9 +41,9 @@ class EventServiceProvider extends ServiceProvider
         OvertimeRequest::observe(OvertimeRequestObserver::class);
         // TimeoffRegulation::observe(TimeoffRegulationObserver::class);
         User::observe(UserObserver::class);
-        RunPayroll::observe(RunPayrollObserver::class);
-        RunThr::observe(RunThrObserver::class);
-        Loan::observe(LoanObserver::class);
+        // RunPayroll::observe(RunPayrollObserver::class);
+        // RunThr::observe(RunThrObserver::class);
+        // Loan::observe(LoanObserver::class);
     }
 
     /**

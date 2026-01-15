@@ -11,6 +11,6 @@ class LoanObserver
      */
     public function creating(Loan $loan): void
     {
-        $loan->code = $loan->generateCode();
+        // $loan->code = $loan->generateCode();
     }
 }

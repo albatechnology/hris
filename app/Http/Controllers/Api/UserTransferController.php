@@ -95,6 +95,10 @@ class UserTransferController extends BaseController
                 $userTransfer->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
             }
 
+            if ($userTransfer->effective_date <= date('Y-m-d')) {
+                app(\App\Http\Services\UserTransfer\UserTransferService::class)->execute($userTransfer);
+            }
+
             DB::commit();
 
             // if ($userTransfer->is_notify_manager) {

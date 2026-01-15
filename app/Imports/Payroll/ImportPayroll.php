@@ -119,7 +119,7 @@ class ImportPayroll
             'company_id' => $this->companyId,
             'branch_id' => $this->runPayrollData['branch_id'] ?? null,
             'user_id' => auth()->id(),
-            'code' => RunPayroll::generateCode(),
+            // 'code' => RunPayroll::generateCode(),
             'period' => $this->runPayrollData['period'] ?? date('Y-m'),
             'payment_schedule' => $this->runPayrollData['payment_schedule'] ?? now(),
             'status' => RunPayrollStatus::REVIEW,

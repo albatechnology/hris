@@ -30,7 +30,7 @@ class StoreRequest extends FormRequest
             'branch_id' => ['nullable', function ($attribute, $value, Closure $fail) {
                 if (
                     Branch::tenanted()->where('id', $value)
-                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    // ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
                     ->doesntExist()
                 ) {
                     $fail("Branch not found");
@@ -39,7 +39,7 @@ class StoreRequest extends FormRequest
             'supervisor_id' => ['nullable', function ($attribute, $value, Closure $fail) {
                 if (
                     User::tenanted()->where('id', $value)
-                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    // ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
                     ->doesntExist()
                 ) {
                     $fail("Supervisor not found");
@@ -48,7 +48,7 @@ class StoreRequest extends FormRequest
             'position_id' => ['required_with:department_id', function ($attribute, $value, Closure $fail) {
                 if (
                     Position::tenanted()->where('id', $value)
-                    ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+                    // ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
                     ->doesntExist()
                 ) {
                     $fail("Position not found");
@@ -57,7 +57,7 @@ class StoreRequest extends FormRequest
             'department_id' => ['required_with:position_id', function ($attribute, $value, Closure $fail) {
                 if (
                     Department::tenanted()->where('id', $value)
-                    ->when($this->company_id, fn($q) => $q->whereHas('division', fn($q) => $q->where('company_id', $this->company_id)))
+                    // ->when($this->company_id, fn($q) => $q->whereHas('division', fn($q) => $q->where('company_id', $this->company_id)))
                     ->doesntExist()
                 ) {
                     $fail("Department not found");

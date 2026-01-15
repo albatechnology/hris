@@ -33,6 +33,23 @@ class Loan extends BaseModel implements TenantedInterface
     //     'outstanding',
     // ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (!$model->code) {
+                $date = date('dmy');
+
+                if ($latestCode = self::where('code', 'LIKE', "TRX.$model->company_id.$date.%")->withTrashed()->latest()->first()?->code) {
+                    $increment = sprintf('%03s', (int)explode('.', $latestCode)[3] + 1);
+                } else {
+                    $increment = sprintf('%03s', 1);
+                }
+
+                $model->code = "TRX.$model->company_id.$date.$increment";
+            }
+        });
+    }
+
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
         if (!$user) {
@@ -91,19 +108,19 @@ class Loan extends BaseModel implements TenantedInterface
         return max($this->amount - $this->details()->whereNotNull('run_payroll_user_id')->sum('basic_payment'), 0);
     }
 
-    public static function generateCode()
-    {
-        $companyId = auth()->user()->company_id ?? 0;
-        $date = date('dmy');
+    // public static function generateCode()
+    // {
+    //     $companyId = auth()->user()->company_id ?? 0;
+    //     $date = date('dmy');
 
-        if ($latestCode = self::where('code', 'LIKE', "TRX.$companyId.$date.%")->withTrashed()->latest()->first()?->code) {
-            $increment = sprintf('%03s', (int)explode('.', $latestCode)[3] + 1);
-        } else {
-            $increment = sprintf('%03s', 1);
-        }
+    //     if ($latestCode = self::where('code', 'LIKE', "TRX.$companyId.$date.%")->withTrashed()->latest()->first()?->code) {
+    //         $increment = sprintf('%03s', (int)explode('.', $latestCode)[3] + 1);
+    //     } else {
+    //         $increment = sprintf('%03s', 1);
+    //     }
 
-        $code = "TRX.$companyId.$date.$increment";
+    //     $code = "TRX.$companyId.$date.$increment";
 
-        return $code;
-    }
+    //     return $code;
+    // }
 }
