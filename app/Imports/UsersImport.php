@@ -116,7 +116,6 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 }
             }],
 
-            'basic_salary' => 'required|numeric',
             'overtime_setting' => ['required', function ($attribute, $value, $fail) {
                 if (!in_array(strtolower($value), OvertimeSetting::getValues())) {
                     $fail('Invalid Overtime Setting value.');
@@ -281,7 +280,6 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                 'user_id' => $user->id
             ],
             [
-                'basic_salary' => $row['basic_salary'],
                 'overtime_setting' => strtolower($row['overtime_setting']),
                 'bank_name' => $row['bank_name'],
                 'bank_account_no' => $row['bank_account_number'],

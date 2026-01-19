@@ -71,8 +71,6 @@ class UserSunImport implements ToCollection, WithHeadingRow
 
                 // create user_payroll_infos
                 $user->payrollInfo()->update([
-                    'basic_salary' => $data['basic_salary'],
-                    'salary_type' => $data['salary_type'],
                     'payment_schedule' => $data['payment_schedule'],
                     'prorate_setting' => $data['prorate_setting'],
                     'overtime_setting' => $data['overtime_setting'],
