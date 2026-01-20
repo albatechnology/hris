@@ -90,17 +90,17 @@ class OvertimeRequestController extends BaseController
             );
         }
 
-        if (config('app.name') === 'LUMORA' && in_array($user->company_id, [5, 6])) {
-            $schedule = ScheduleService::getUserSchedule($user, $request->date, ['id']);
-            if ($schedule && $schedule['total_shifts'] == 7 && $schedule['order'] == 7) {
-                $isNationalHoliday = Event::tenanted()->whereNationalHoliday()
-                    ->whereDateBetween($request->date, $request->date)
-                    ->exists();
-                if (!$isNationalHoliday) {
-                    throw new UnprocessableEntityHttpException('Can not take overtime in day 7');
-                }
-            }
-        }
+        // if (config('app.name') === 'LUMORA' && in_array($user->company_id, [5, 6])) {
+        //     $schedule = ScheduleService::getUserSchedule($user, $request->date, ['id']);
+        //     if ($schedule && $schedule['total_shifts'] == 7 && $schedule['order'] == 7) {
+        //         $isNationalHoliday = Event::tenanted()->whereNationalHoliday()
+        //             ->whereDateBetween($request->date, $request->date)
+        //             ->exists();
+        //         if (!$isNationalHoliday) {
+        //             throw new UnprocessableEntityHttpException('Can not take overtime in day 7');
+        //         }
+        //     }
+        // }
 
         // $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, $user);
         // if (!$attendance) {
