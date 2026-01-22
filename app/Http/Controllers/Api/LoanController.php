@@ -30,6 +30,9 @@ class LoanController extends BaseController
     {
         $data = QueryBuilder::for(Loan::tenanted())
             ->allowedFilters([
+                AllowedFilter::callback('name', function ($query, $value) {
+                    $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
+                }),
                 AllowedFilter::exact('user_id'),
                 'code',
                 'effective_date',
