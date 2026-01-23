@@ -281,6 +281,7 @@ class NewRunPayrollService
                 $cutOffStartDate = $joinDate;
                 $cutOffEndDate = $endDate;
                 $totalWorkingDays = AttendanceService::getTotalWorkingDaysNewUser($user, $cutOffStartDate, $cutOffEndDate);
+                $totalWorkingDays = $totalWorkingDays > $user->payrollInfo->total_working_days ? $user->payrollInfo->total_working_days : $totalWorkingDays;
             } elseif ($resignDate && $resignDate->between($startDate, $endDate)) {
                 $cutOffStartDate = $startDate;
                 $cutOffEndDate = $resignDate;
