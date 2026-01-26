@@ -57,7 +57,7 @@ class RunPayrollUser extends BaseModel
 
     public function getTotalDeductionAttribute(): int
     {
-        if ($this->user->payrollInfo->tax_method->is(TaxMethod::GROSS)) {
+        if ($this->user->payrollInfo?->tax_method->is(TaxMethod::GROSS)) {
             return round($this->deduction + $this->tax);
         }
 
