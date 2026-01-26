@@ -73,7 +73,7 @@ class RunPayrollController extends BaseController
     public function show(int $id): RunPayrollResource
     {
         $runPayroll = RunPayroll::findTenanted($id);
-        return new RunPayrollResource($runPayroll->load(['users.user', 'users.components.payrollComponent']));
+        return new RunPayrollResource($runPayroll->load(['users' => fn($q) => $q->has('user')->with('user.payrollInfo'), 'users.components.payrollComponent']));
     }
 
     public function store(StoreRequest $request)
