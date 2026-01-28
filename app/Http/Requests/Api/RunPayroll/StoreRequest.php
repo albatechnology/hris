@@ -40,6 +40,16 @@ class StoreRequest extends FormRequest
             'branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'company_id' => ['required', new CompanyTenantedRule()],
             'period' => ['required', 'string', function (string $attr, string $value, Closure $fail) {
+                list($month, $year) = explode('-', $value);
+                $month = intval($month);
+                if ($month < 1 || $month > 12) {
+                    return $fail('The month must be between 01 and 12.');
+                }
+
+                $year = intval($year);
+                if ($year < 2020) {
+                    return $fail('The year must be greater than 2020.');
+                }
                 // $runPayroll = RunPayroll::where('period', $value)->exists();
                 // if ($runPayroll) {
                 //     $fail('Cannot run payroll in the same period');
