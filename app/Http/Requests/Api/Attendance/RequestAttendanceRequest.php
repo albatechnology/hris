@@ -15,7 +15,7 @@ class RequestAttendanceRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
+
 
     /**
      * Prepare inputs for validation.
@@ -40,8 +40,10 @@ class RequestAttendanceRequest extends FormRequest
     {
         return [
             'user_id' => 'nullable|exists:users,id',
-            'schedule_id' => ['required', new CompanyTenantedRule(model: Schedule::class, message: 'Schedule not found', outsideQuery: fn($q) => $q->withTrashed())],
-            'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'), fn($q) => $q->withTrashed())],
+            // 'schedule_id' => ['required', new CompanyTenantedRule(model: Schedule::class, message: 'Schedule not found', outsideQuery: fn($q) => $q->withTrashed())],
+            // 'shift_id' => ['required', new CompanyTenantedRule(Shift::class, 'Shift not found', fn($q) => $q->orWhereNull('company_id'), fn($q) => $q->withTrashed())],
+            'schedule_id' => ['required', 'exists:schedules,id'],
+            'shift_id' => ['required', 'exists:shifts,id'],
             'is_clock_in' => ['boolean', function (string $attribute, mixed $value, Closure $fail) {
                 if (!$value && !$this->is_clock_out) $fail("The {$attribute} field is required.");
             },],

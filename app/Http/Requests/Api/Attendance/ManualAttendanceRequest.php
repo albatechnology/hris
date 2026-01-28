@@ -15,7 +15,7 @@ class ManualAttendanceRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
+
 
     protected function prepareForValidation()
     {
