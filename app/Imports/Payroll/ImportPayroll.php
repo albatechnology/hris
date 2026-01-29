@@ -45,9 +45,9 @@ class ImportPayroll
         $allComponents = $this->getAllComponents();
 
         // Define column ranges
-        $allowanceRange = range(2, 11);   // C2:L2
-        $deductionRange = range(12, 21);  // M2:V2
-        $benefitRange = range(22, 31);    // W2:AF2
+        $allowanceRange = range(3, 12);   // C2:L2
+        $deductionRange = range(13, 22);  // M2:V2
+        $benefitRange = range(23, 32);    // W2:AF2
 
         // Extract component names from row 1
         $componentMap = [];
@@ -132,6 +132,10 @@ class ImportPayroll
 
     private function processUserRow(array $row, User $user, array $componentMap, Collection $allComponents): void
     {
+        // Extract tax from column C (index 2)
+        $tax = $row[2] ?? 0;
+        $tax = is_numeric($tax) ? (float)$tax : 0;
+
         // Create RunPayrollUser with initial values
         $runPayrollUser = RunPayrollUser::create([
             'run_payroll_id' => $this->runPayroll->id,
@@ -142,7 +146,7 @@ class ImportPayroll
             'additional_earning' => 0,
             'deduction' => 0,
             'benefit' => 0,
-            'tax' => 0,
+            'tax' => $tax,
         ]);
         // Process each column that has a component name
         foreach ($componentMap as $colIndex => $componentInfo) {

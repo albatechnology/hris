@@ -43,14 +43,14 @@ class WorkSheet implements FromArray, WithEvents
         $data = [];
 
         // Row 1: Main headers
-        $row1 = ['ID / NIK Employee', 'Full Name Employee'];
+        $row1 = ['ID / NIK Employee', 'Full Name Employee', 'Tax'];
         $row1 = array_merge($row1, array_fill(0, self::COMPONENTS_PER_TYPE, 'Allowance Components'));
         $row1 = array_merge($row1, array_fill(0, self::COMPONENTS_PER_TYPE, 'Deduction Components'));
         $row1 = array_merge($row1, array_fill(0, self::COMPONENTS_PER_TYPE, 'Benefit Components'));
         $data[] = $row1;
 
         // Row 2: Sub-headers for component columns
-        $row2 = ['', '']; // Empty cells for ID/NIK and Name columns
+        $row2 = ['', '', '']; // Empty cells for ID/NIK, Name, and Tax columns
         for ($type = 0; $type < 3; $type++) {
             for ($i = 1; $i <= self::COMPONENTS_PER_TYPE; $i++) {
                 $row2[] = "Component Name (do not delete it, just replace it)";
@@ -59,7 +59,7 @@ class WorkSheet implements FromArray, WithEvents
         $data[] = $row2;
 
         // Empty rows for user input
-        $totalColumns = 2 + (3 * self::COMPONENTS_PER_TYPE);
+        $totalColumns = 3 + (3 * self::COMPONENTS_PER_TYPE); // ID/NIK + Name + Tax + components
         for ($i = 0; $i < self::EMPTY_ROWS; $i++) {
             $data[] = array_fill(0, $totalColumns, 0);
         }
@@ -75,6 +75,8 @@ class WorkSheet implements FromArray, WithEvents
                 $event->sheet->mergeCells('A1:A2');
                 // Merge B1:B2
                 $event->sheet->mergeCells('B1:B2');
+                // Merge C1:C2
+                $event->sheet->mergeCells('C1:C2');
             },
         ];
     }
