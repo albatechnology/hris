@@ -126,7 +126,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                     ->whereHas('payrollComponent', fn($q) => $q->where('category', PayrollComponentCategory::BASIC_SALARY))
                     ->with('payrollComponent')
                     ->with('updatePayrollComponent')
-                    ->orderByDesc('id')->limit(1),
+                    ->orderByDesc('id'),
                 // optional: kurangi N+1 di map()
                 'branch:id,name',
                 'company:id,name',
@@ -362,6 +362,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 $totalPayment,
             ];
         }
+
         return $datas;
     }
 
