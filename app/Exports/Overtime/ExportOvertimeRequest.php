@@ -13,7 +13,6 @@ use App\Models\Event;
 use App\Models\Overtime;
 use App\Models\PayrollComponent;
 use App\Models\PayrollSetting;
-use App\Models\UpdatePayrollComponentDetail;
 use App\Models\User;
 use App\Services\OvertimeService;
 use App\Services\ScheduleService;
@@ -363,7 +362,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 $totalPayment,
             ];
         }
-                        dd($datas);
         return $datas;
     }
 
