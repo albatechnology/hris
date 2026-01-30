@@ -281,22 +281,22 @@ class OvertimeService
                     }
                     break;
                 case FormulaComponentEnum::BRANCH:
-                    dump('BRANCH');
+                    // dump('BRANCH');
                     break;
                 case FormulaComponentEnum::EMPLOYEMENT_STATUS:
-                    dump('BRANCH');
+                    // dump('BRANCH');
                     break;
                 case FormulaComponentEnum::JOB_POSITION:
-                    dump('BRANCH');
+                    // dump('BRANCH');
                     break;
                 case FormulaComponentEnum::GENDER:
-                    dump('BRANCH');
+                    // dump('BRANCH');
                     break;
                 case FormulaComponentEnum::RELIGION:
-                    dump('BRANCH');
+                    // dump('BRANCH');
                     break;
                 case FormulaComponentEnum::MARITAL_STATUS:
-                    dump('BRANCH');
+                    // dump('BRANCH');
                     break;
                 case FormulaComponentEnum::ELSE:
                     $amount = self::sumAmount($model, $formula, $startPeriod, $endPeriod, $user);

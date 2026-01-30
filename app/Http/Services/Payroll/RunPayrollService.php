@@ -459,6 +459,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         $payrollComponents =  PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereNotDefault()->get();
         $bpjsPayrollComponents =  PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->whereBpjs()->get();
 
+        $bpjsKesehatan = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN)->first();
+        $bpjsKetenagakerjaan = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KETENAGAKERJAAN)->first();
+
         // calculate for each user
         // foreach ($userIds as $userId) {
         foreach ($users as $user) {
@@ -775,9 +778,16 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 // calculate bpjs
                 // init bpjs variable
                 $current_upahBpjsKesehatan = $user->userBpjs->upah_bpjs_kesehatan;
+                $updatePayrollComponentBpjsKesehatan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKesehatan->id)->first();
+                if ($updatePayrollComponentBpjsKesehatan) $current_upahBpjsKesehatan = $updatePayrollComponentBpjsKesehatan->new_amount;
                 if ($current_upahBpjsKesehatan > $max_upahBpjsKesehatan) $current_upahBpjsKesehatan = $max_upahBpjsKesehatan;
 
+                $original_current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
                 $current_upahBpjsKetenagakerjaan = $user->userBpjs->upah_bpjs_ketenagakerjaan;
+                if ($updatePayrollComponentBpjsKetenagakerjaan = $updatePayrollComponentDetails->where('payroll_component_id', $bpjsKetenagakerjaan->id)->first()) {
+                    $original_current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
+                    $current_upahBpjsKetenagakerjaan = $updatePayrollComponentBpjsKetenagakerjaan->new_amount;
+                }
                 if ($current_upahBpjsKetenagakerjaan > $max_jp) $current_upahBpjsKetenagakerjaan = $max_jp;
 
                 // bpjs kesehatan
@@ -793,17 +803,19 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
                 $employee_totalBpjsKesehatan = $current_upahBpjsKesehatan * ($employee_percentageBpjsKesehatan / 100);
                 if ($user->userBpjs->bpjs_kesehatan_cost->is(PaidBy::COMPANY)) {
-                    // $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
+                    $company_totalBpjsKesehatan += $employee_totalBpjsKesehatan;
                     $employee_totalBpjsKesehatan = 0;
                 }
 
                 // jkk
                 $company_percentageJkk = $company->jkk_tier->getValue() ?? 0;
-                $company_totalJkk = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkk / 100);
+                // $company_totalJkk = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkk / 100);
+                $company_totalJkk = $original_current_upahBpjsKetenagakerjaan * ($company_percentageJkk / 100);
 
                 // jkm
                 $company_percentageJkm = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JKM_PERCENTAGE)?->value;
-                $company_totalJkm = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkm / 100);
+                // $company_totalJkm = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJkm / 100);
+                $company_totalJkm = $original_current_upahBpjsKetenagakerjaan * ($company_percentageJkm / 100);
 
                 // jht
                 $company_percentageJht = (float)$company->countryTable->countrySettings()->firstWhere('key', CountrySettingKey::COMPANY_JHT_PERCENTAGE)?->value;
@@ -813,10 +825,12 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $employee_percentageJht = 0;
                 }
 
-                $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
-                $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                // $company_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($company_percentageJht / 100);
+                $company_totalJht = $original_current_upahBpjsKetenagakerjaan * ($company_percentageJht / 100);
+                // $employee_totalJht = $user->userBpjs->upah_bpjs_ketenagakerjaan * ($employee_percentageJht / 100);
+                $employee_totalJht = $original_current_upahBpjsKetenagakerjaan * ($employee_percentageJht / 100);
                 if ($user->userBpjs->jht_cost->is(PaidBy::COMPANY)) {
-                    // $company_totalJht += $employee_totalJht;
+                    $company_totalJht += $employee_totalJht;
                     $employee_totalJht = 0;
                 }
 
@@ -837,7 +851,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                     $employee_totalJp = $current_upahBpjsKetenagakerjaan * ($employee_percentageJp / 100);
 
                     if ($user->userBpjs->jaminan_pensiun_cost->is(JaminanPensiunCost::COMPANY)) {
-                        // $company_totalJp += $employee_totalJp;
+                        $company_totalJp += $employee_totalJp;
                         $employee_totalJp = 0;
                     }
                 }
@@ -862,9 +876,9 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                         if ($bpjsPayrollComponent->category->is(PayrollComponentCategory::EMPLOYEE_JP)) $amount = $employee_totalJp;
                     }
 
-                    $amount = $this->calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
+                    $amount = self::calculatePayrollComponentPeriodType($bpjsPayrollComponent, $amount, $totalWorkingDays, $runPayrollUser);
 
-                    $this->createComponent($runPayrollUser, $bpjsPayrollComponent, $amount);
+                    self::createComponent($runPayrollUser, $bpjsPayrollComponent, $amount);
                 }
             }
             // END
