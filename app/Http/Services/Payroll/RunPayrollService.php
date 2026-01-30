@@ -876,7 +876,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
                 $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
-                dd($amount);
+
                 $this->createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
             }
             // END
