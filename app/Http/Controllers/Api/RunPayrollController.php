@@ -10,7 +10,6 @@ use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Requests\Api\RunPayroll\UpdateRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Requests\Api\RunPayroll\ImportRequest;
-use App\Http\Resources\DefaultResource;
 use App\Http\Resources\RunPayroll\RunPayrollResource;
 use App\Imports\Payroll\ImportPayroll;
 use App\Interfaces\Services\Payroll\RunPayrollServiceInterface;

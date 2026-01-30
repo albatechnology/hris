@@ -518,6 +518,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(Reprimand::class);
     }
 
+    public function updatePayrollComponentDetails(): HasMany
+    {
+        return $this->hasMany(UpdatePayrollComponentDetail::class);
+    }
+
     public function userBpjs(): HasOne
     {
         return $this->hasOne(UserBpjs::class);

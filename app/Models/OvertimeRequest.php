@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Enums\ApprovalStatus;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\BelongsToUser;
+use App\Traits\Models\CustomSoftDeletes;
 use App\Traits\Models\TenantedThroughUser;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OvertimeRequest extends RequestedBaseModel implements TenantedInterface
 {
-    use BelongsToUser, TenantedThroughUser;
+    use BelongsToUser, TenantedThroughUser, CustomSoftDeletes;
 
     protected $fillable = [
         'overtime_id',

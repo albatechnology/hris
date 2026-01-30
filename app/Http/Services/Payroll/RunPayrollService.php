@@ -588,7 +588,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                 // $totalWorkingDays = AttendanceService::getTotalWorkingDays($user, $cutOffStartDate, $cutOffEndDate);
                 // $totalWorkingDays = AttendanceService::getTotalAttend($user, $cutOffStartDate, $cutOffEndDate);
                 $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $cutOffStartDate, $cutOffEndDate);
-                // dd($dataTotalAttendance);
                 $totalPresent = $dataTotalAttendance['total_present'];
                 $totalWorkingDays = $dataTotalAttendance['total_working_days'];
             }
@@ -602,7 +601,6 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
                         ->whereActive($startDate, $endDate)
                 )
                 ->orderByDesc('id')->get();
-
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
@@ -878,7 +876,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
             if ($isUserOvertimeEligible && $overtimePayrollComponent) {
                 $amount = OvertimeService::calculate($user, $cutOffStartDate, $cutOffEndDate, $userBasicSalary);
-
+                dd($amount);
                 $this->createComponent($runPayrollUser, $overtimePayrollComponent, $amount);
             }
             // END

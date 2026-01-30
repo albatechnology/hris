@@ -2,12 +2,18 @@
 
 namespace App\Exports\Overtime;
 
+use App\Enums\PayrollComponentCategory;
 use App\Enums\RateType;
+use App\Helpers\AttendanceHelper;
 use App\Http\Requests\Api\OvertimeRequest\ExportReportRequest;
+use App\Http\Services\Payroll\RunPayrollService;
 use App\Models\Attendance;
 use App\Models\Company;
 use App\Models\Event;
 use App\Models\Overtime;
+use App\Models\PayrollComponent;
+use App\Models\PayrollSetting;
+use App\Models\UpdatePayrollComponentDetail;
 use App\Models\User;
 use App\Services\OvertimeService;
 use App\Services\ScheduleService;
@@ -25,6 +31,8 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings, ShouldAutoSize, WithEvents
 {
     use Exportable;
+    public Collection $payrollSettings;
+    public Collection $basicSalaryPayrollComponents;
     public Collection $overtimes;
     public Collection $companies;
     public Collection $nationalHolidays;
@@ -60,6 +68,9 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             ->whereIn('company_id', $companyIds)
             ->whereDateBetween($this->startDate, $this->endDate)
             ->get();
+
+        $this->payrollSettings = PayrollSetting::whereIn('company_id', $companyIds)->get();
+        $this->basicSalaryPayrollComponents = PayrollComponent::where('category', PayrollComponentCategory::BASIC_SALARY)->get();
     }
 
     public function collection()
@@ -111,7 +122,12 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                         ->with('overtime:id,name,rate_type,rate_amount,compensation_rate_per_day');
                 },
                 'detail' => fn($q) => $q->select('user_id', 'employment_status'),
-                'payrollInfo' => fn($q) => $q->select('user_id', 'basic_salary'),
+                'payrollInfo' => fn($q) => $q->select('user_id', 'basic_salary', 'is_ignore_alpa'),
+                'updatePayrollComponentDetails' => fn($q) => $q->whereHas('updatePayrollComponent', fn($q) => $q->whereActive($this->startDate, $this->endDate))
+                    ->whereHas('payrollComponent', fn($q) => $q->where('category', PayrollComponentCategory::BASIC_SALARY))
+                    ->with('payrollComponent')
+                    ->with('updatePayrollComponent')
+                    ->orderByDesc('id')->limit(1),
                 // optional: kurangi N+1 di map()
                 'branch:id,name',
                 'company:id,name',
@@ -139,6 +155,31 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
             'clockIn' => fn($q) => $q->select('attendance_id', 'time'),
             'clockOut' => fn($q) => $q->select('attendance_id', 'time'),
         ])->get();
+
+
+        $payrollSetting = $this->payrollSettings->where('company_id', $user->company_id)->first();
+        $basicSalary = $user->payrollInfo?->basic_salary ?? 0;
+
+        if (config('app.name') == 'SUNSHINE') {
+        } else {
+            $startDate = Carbon::parse($this->startDate);
+            $endDate = Carbon::parse($this->endDate);
+            $dataTotalAttendance = AttendanceHelper::getTotalAttendanceForPayroll($payrollSetting, $user, $startDate, $endDate);
+            if ($user->updatePayrollComponentDetails->count()) {
+                $updatePayrollComponentDetail = $user->updatePayrollComponentDetails[0];
+                $startEffectiveDate = Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->effective_date);
+
+                // end_date / endEffectiveDate can be null
+                $endEffectiveDate = $updatePayrollComponentDetail->updatePayrollComponent->end_date ? Carbon::parse($updatePayrollComponentDetail->updatePayrollComponent->end_date) : null;
+
+                $basicSalary = app(RunPayrollService::class)->newProrate($basicSalary, $updatePayrollComponentDetail->new_amount, $dataTotalAttendance, $startDate, $endDate, $startEffectiveDate, $endEffectiveDate);
+            } else {
+                $basicSalaryComponent = $this->basicSalaryPayrollComponents->where('company_id', $user->company_id)->first();
+                if ($basicSalaryComponent?->is_prorate) {
+                    $basicSalary = app(RunPayrollService::class)->newProrate(0, $basicSalary, $dataTotalAttendance, $startDate, $endDate, $startDate, $endDate);
+                }
+            }
+        }
 
         foreach ($user->overtimeRequests as $overtimeRequest) {
             $attendance = $attendances->where('date', $overtimeRequest->date)->first();
@@ -168,46 +209,48 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
 
             $overtimeMultiplier = 1;
 
-            // from OvertimeService::calculateOb
-            if (strtolower($overtimeRequest->overtime->name) == 'ob') {
-                // return OvertimeService::calculateOb($overtimeRequest->user, collect($overtimeRequest));
-                $user = $overtimeRequest->user;
-                $umk = $user->branch?->umk ?? 0;
-                $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
+            if (config('app.name') == 'SUNSHINE') {
+                // from OvertimeService::calculateOb
+                if (strtolower($overtimeRequest->overtime->name) == 'ob') {
+                    // return OvertimeService::calculateOb($overtimeRequest->user, collect($overtimeRequest));
+                    $user = $overtimeRequest->user;
+                    $umk = $user->branch?->umk ?? 0;
+                    $basicSalary = $user->payrollInfo?->basic_salary > $umk ? $user->payrollInfo?->basic_salary : $umk;
 
-                $durationInHours = OvertimeService::calculateOvertimeDuration($overtimeRequest->real_duration);
-                $durationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
-                $overtimeRate = ($basicSalary / 160);
-                $totalPayment = $overtimeRate * $durationInHours;
+                    $durationInHours = OvertimeService::calculateOvertimeDuration($overtimeRequest->real_duration);
+                    $durationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
+                    $overtimeRate = ($basicSalary / 160);
+                    $totalPayment = $overtimeRate * $durationInHours;
 
-                $datas[] = [
-                    ...$dataHeader,
-                    $durationInHours,
-                    $overtimeMultiplier,
-                    $overtimeRate,
-                    $totalPayment,
-                ];
-                continue;
-            }
+                    $datas[] = [
+                        ...$dataHeader,
+                        $durationInHours,
+                        $overtimeMultiplier,
+                        $overtimeRate,
+                        $totalPayment,
+                    ];
+                    continue;
+                }
 
-            // from OvertimeService::calculateObSunEnglish
-            if (strtolower($overtimeRequest->overtime->name) == 'ob_sun_english') {
-                // return OvertimeService::calculateObSunEnglish($overtimeRequest->user, $overtime, collect($overtimeRequest));
-                $durationInHours = OvertimeService::calculateOvertimeDuration($overtimeRequest->real_duration);
-                $durationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
+                // from OvertimeService::calculateObSunEnglish
+                if (strtolower($overtimeRequest->overtime->name) == 'ob_sun_english') {
+                    // return OvertimeService::calculateObSunEnglish($overtimeRequest->user, $overtime, collect($overtimeRequest));
+                    $durationInHours = OvertimeService::calculateOvertimeDuration($overtimeRequest->real_duration);
+                    $durationInHours = ($durationInHours > 9 ? 9 : $durationInHours);
 
-                $overtimeRate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 17500;
+                    $overtimeRate = $overtime->rate_type->is(RateType::AMOUNT) && !is_null($overtime->rate_amount) ? floatval($overtime->rate_amount) : 17500;
 
-                $totalPayment = $overtimeRate * $durationInHours;
+                    $totalPayment = $overtimeRate * $durationInHours;
 
-                $datas[] = [
-                    ...$dataHeader,
-                    $durationInHours,
-                    $overtimeMultiplier,
-                    $overtimeRate,
-                    $totalPayment,
-                ];
-                continue;
+                    $datas[] = [
+                        ...$dataHeader,
+                        $durationInHours,
+                        $overtimeMultiplier,
+                        $overtimeRate,
+                        $totalPayment,
+                    ];
+                    continue;
+                }
             }
             $overtimeDate = Carbon::parse($overtimeRequest->date);
 
@@ -273,25 +316,22 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
 
                         break;
                     case RateType::BASIC_SALARY:
-                        $basicSalary = $overtimeRequest->user->payrollInfo?->basic_salary ?? 0;
                         $overtimeAmountMultiply = $basicSalary / $overtime->rate_amount;
                         break;
-                        // case RateType::ALLOWANCES:
-                        //     $overtimeAmountMultiply = 0;
+                    // case RateType::ALLOWANCES:
+                    //     $overtimeAmountMultiply = 0;
 
-                        //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
-                        //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
-                        //     }
+                    //     foreach ($overtime->overtimeAllowances as $overtimeAllowance) {
+                    //         $overtimeAmountMultiply += $overtimeAllowance->payrollComponent?->amount > 0 ? ($overtimeAllowance->payrollComponent?->amount / $overtimeAllowance->amount) : 0;
+                    //     }
 
-                        //     break;
-                        case RateType::FORMULA:
+                    //     break;
+                    case RateType::FORMULA:
                         // $overtimeAmountMultiply = FormulaService::calculate(user: $user, model: $overtime, formulas: $overtime->formulas, startPeriod: $cutOffStartDate, endPeriod: $cutOffEndDate);
 
-                        // dd($overtime->formulas);
                         $overtimeAmountMultiply = OvertimeService::calculateFormula($user, $overtimeRequest, $overtime, $overtime->formulas, $this->startDate, $this->endDate);
                         break;
                     default:
-                        // dd('dd dari feault lur');
                         $overtimeAmountMultiply = 0;
 
                         break;
@@ -314,7 +354,6 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                     $overtimeMultiplier += ($om['duration'] * $om['multiply']);
                 }
             }
-            // dump($overtimeRate, "tes");
 
             $datas[] = [
                 ...$dataHeader,
@@ -324,6 +363,7 @@ class ExportOvertimeRequest implements FromCollection, WithMapping, WithHeadings
                 $totalPayment,
             ];
         }
+                        dd($datas);
         return $datas;
     }
 
