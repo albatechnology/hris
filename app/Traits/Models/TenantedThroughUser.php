@@ -2,6 +2,7 @@
 
 namespace App\Traits\Models;
 
+use App\Models\Permission;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,10 @@ trait TenantedThroughUser
         if ($user->is_admin) {
             return $query;
             // return $query->whereHas('user', fn($q) => $q->where('group_id', $user->group_id));
+        }
+
+        if ($user->hasPermissionTo(Permission::select('id')->firstWhere('name', 'can_read_all_users'))) {
+            return $query;
         }
 
         if (UserService::hasDescendants($user)) {
