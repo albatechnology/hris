@@ -73,18 +73,20 @@ class OvertimeRequestController extends BaseController
             throw new UnprocessableEntityHttpException('Attendance is locked');
         }
 
-        if (OvertimeRequest::hasPendingOnDate($request->user_id, $request->date)) {
-            return $this->errorResponse(
-                message: 'You already have an pending overtime request on ' . $request->date,
-                code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
+        if (config('app.name') != 'SUNSHINE') {
+            if (OvertimeRequest::hasPendingOnDate($request->user_id, $request->date)) {
+                return $this->errorResponse(
+                    message: 'You already have an pending overtime request on ' . $request->date,
+                    code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
 
-        if (OvertimeRequest::hasApprovedOnDate($request->user_id, $request->date)) {
-            return $this->errorResponse(
-                message: 'You already have an approved overtime request on ' . $request->date,
-                code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
-            );
+            if (OvertimeRequest::hasApprovedOnDate($request->user_id, $request->date)) {
+                return $this->errorResponse(
+                    message: 'You already have an approved overtime request on ' . $request->date,
+                    code: \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
         }
 
         // if (config('app.name') === 'LUMORA' && in_array($user->company_id, [5, 6])) {
