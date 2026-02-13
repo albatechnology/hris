@@ -774,9 +774,13 @@ class UserController extends BaseController
         ]);
 
         $runPayroll->load([
-            'company' => fn($q) => $q->select('id','name'),
+            'company' => fn($q) => $q->select('id', 'name'),
             'users' => fn($q) => $q->where('user_id', $user->id)
-            ->with('components', fn($q) =>  $q->where('amount','>',0)->with('payrollComponent', fn($q) => $q->select('id','name','type'))),
+                ->with(
+                    'components',
+                    fn($q) => $q->when(config('app.name') === 'SUNSHINE', fn($q) => $q->where('amount', '>', 0))
+                        ->with('payrollComponent', fn($q) => $q->select('id', 'name', 'type'))
+                ),
             // ->with('components.payrollComponent'),
         ]);
 
@@ -819,7 +823,7 @@ class UserController extends BaseController
         ]);
 
         $runThr->load([
-            'company' => fn($q) => $q->select('id','name'),
+            'company' => fn($q) => $q->select('id', 'name'),
             'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
         ]);
 
@@ -912,8 +916,8 @@ class UserController extends BaseController
                 'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
                 // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
                 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
-                    'position' => fn($q) => $q->select('id','name'),
-                    'department' => fn($q) => $q->select('id','name'),
+                    'position' => fn($q) => $q->select('id', 'name'),
+                    'department' => fn($q) => $q->select('id', 'name'),
                 ])
             ]);
 
