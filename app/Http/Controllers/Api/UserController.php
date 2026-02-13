@@ -774,14 +774,17 @@ class UserController extends BaseController
         ]);
 
         $runPayroll->load([
-            'company',
-            'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
+            'company' => fn($q) => $q->select('id','name'),
+            'users' => fn($q) => $q->where('user_id', $user->id)
+            ->with('components', fn($q) =>  $q->where('amount','>',0)->with('payrollComponent', fn($q) => $q->select('id','name','type'))),
+            // ->with('components.payrollComponent'),
         ]);
 
         $cutoffDate = date('Y', strtotime($runPayroll->cut_off_start_date)) == date('Y', strtotime($runPayroll->cut_off_end_date)) ? date('d M', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date)) : date('d M Y', strtotime($runPayroll->cut_off_start_date)) . ' - ' . date('d M Y', strtotime($runPayroll->cut_off_end_date));
 
         $payrollPeriod = date('F Y', strtotime("01-" . $runPayroll->period));
 
+        // dd($runPayroll->users[0]->components[0]->toArray());
         $earnings = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::ALLOWANCE)->values();
         $deductions = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::DEDUCTION)->values();
         $benefits = $runPayroll->users[0]->components->where('payrollComponent.type', PayrollComponentType::BENEFIT)->values();
@@ -816,7 +819,7 @@ class UserController extends BaseController
         ]);
 
         $runThr->load([
-            'company',
+            'company' => fn($q) => $q->select('id','name'),
             'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
         ]);
 
