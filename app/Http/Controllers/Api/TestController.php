@@ -19,7 +19,7 @@ class TestController extends BaseController
     {
 
         NewEmployee::dispatch();
-        die;
+        return "done";
 
         $getAttendance = AttendanceHelper::getTotalAttendance($request->user_id, $request->start_date, $request->end_date);
 

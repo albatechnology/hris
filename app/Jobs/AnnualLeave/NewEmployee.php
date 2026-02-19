@@ -99,6 +99,7 @@ class NewEmployee implements ShouldQueue
                 //         ->whereBetween('effective_start_date', [$yearStart, $yearEnd]);
                 // })
                 ->select('id', 'join_date')
+                ->where('id', 395)
                 ->cursor();
 
             foreach ($users as $user) {
