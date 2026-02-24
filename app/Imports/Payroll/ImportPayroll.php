@@ -45,9 +45,9 @@ class ImportPayroll
         $allComponents = $this->getAllComponents();
 
         // Define column ranges
-        $allowanceRange = range(3, 12);   // C2:L2
-        $deductionRange = range(13, 22);  // M2:V2
-        $benefitRange = range(23, 32);    // W2:AF2
+        $allowanceRange = range(3, 17);   // C2:L2
+        $deductionRange = range(18, 32);  // M2:V2
+        $benefitRange = range(33, 47);    // W2:AF2
 
         // Extract component names from row 1
         $componentMap = [];

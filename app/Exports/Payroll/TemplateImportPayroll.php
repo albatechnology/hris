@@ -35,8 +35,8 @@ class TemplateImportPayroll implements WithMultipleSheets
 
 class WorkSheet implements FromArray, WithEvents
 {
-    private const COMPONENTS_PER_TYPE = 10;
-    private const EMPTY_ROWS = 10;
+    private const COMPONENTS_PER_TYPE = 15;
+    private const EMPTY_ROWS = 15;
 
     public function array(): array
     {
