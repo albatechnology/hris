@@ -404,7 +404,7 @@ class AttendanceController extends BaseController
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
         $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
 
-        $query = User::select('id', 'branch_id', 'name', 'nik')
+        $query = User::select('id', 'company_id', 'branch_id', 'name', 'nik')
             ->tenanted(true)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
