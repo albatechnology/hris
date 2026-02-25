@@ -3,14 +3,36 @@
 namespace App\Services;
 
 use App\Enums\ScheduleType;
+use App\Models\Event;
 use App\Models\RequestShift;
 use App\Models\Schedule;
 use App\Models\Shift;
 use App\Models\User;
 use DateTime;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ScheduleService
 {
+    public static function getNationalHoliday(int $companyId, $startDate = null, $endDate = null): Collection
+    {
+        if (!$startDate) {
+            $startDate = date('Y-m-01');
+        } else {
+            $startDate = date('Y-m-d', strtotime($startDate));
+        }
+
+        if (!$endDate) {
+            $endDate = date('Y-12-31');
+        } else {
+            $endDate = date('Y-m-d', strtotime($endDate));
+        }
+
+        return Cache::rememberForever('national_holiday_' . $companyId . '_' . $startDate . '_' . $endDate, function () use ($companyId, $startDate, $endDate) {
+            return Event::selectMinimalist()->whereCompany($companyId)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+        });
+    }
+
     /**
      * get user today schedule.
      */
@@ -68,13 +90,24 @@ class ScheduleService
         $previousOrder = $schedule['previous_order'];
         $schedule = $schedule['schedule'];
 
+        if (!$schedule->is_overide_national_holiday) {
+            $nationalHoliday = self::getNationalHoliday($user->company_id)->first(function ($nh) use ($date) {
+                return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+            });
+
+            if ($nationalHoliday) {
+                return $schedule->load([
+                    'shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('shift_id', 1)
+                ]);
+            }
+        }
+
         if ($scheduleType == ScheduleType::PATROL->value) {
             $result = $schedule->load(['shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $order)->where('clock_in', '<=', date('H:i:s'))->where('clock_out', '>=', date('H:i:s'))]);
         } else {
             // check if shift accross the day
             $result = $schedule->load([
-                'shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])
-                    ->where('order', $previousOrder)
+                'shift' => fn($q) => $q->select(count($shiftColumn) > 0 ? $shiftColumn : ['*'])->where('order', $previousOrder)
                 // ->whereTime('clock_out', '<', 'clock_in')
             ]);
 
