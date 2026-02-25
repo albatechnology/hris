@@ -27,7 +27,7 @@ class ShiftUsersImport implements ToCollection
 
         foreach ($rows as $row) {
             /** @var User $user */
-            $user = User::where('nik', $row[0])->first(['id']);
+            $user = User::where('nik', $row[0])->first(['id', 'company_id']);
             $row = $row->forget([0, 1])->values();
 
             foreach ($header as $key => $value) {
