@@ -207,7 +207,7 @@ class AttendanceService
         $dateRange = CarbonPeriod::create($startDate, $endDate);
 
         // $companyHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereCompanyHoliday()->get();
-        $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+        // $nationalHolidays = Event::selectMinimalist()->whereCompany($user->company_id)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
 
         $totalWorkingDays = 0;
         foreach ($dateRange as $date) {
@@ -219,17 +219,17 @@ class AttendanceService
 
             $totalWorkingDays++;
 
-            if (!$schedule->is_overide_national_holiday) {
-                $date = $date->format('Y-m-d');
-                $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
-                    return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
-                });
+            // if (!$schedule->is_overide_national_holiday) {
+            //     $date = $date->format('Y-m-d');
+            //     $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
+            //         return date('Y-m-d', strtotime($nh->start_at)) <= $date && date('Y-m-d', strtotime($nh->end_at)) >= $date;
+            //     });
 
-                if ($nationalHoliday) {
-                    $totalWorkingDays--;
-                    continue;
-                }
-            }
+            //     if ($nationalHoliday) {
+            //         $totalWorkingDays--;
+            //         continue;
+            //     }
+            // }
 
             if (
                 $schedule->shift->is_dayoff
