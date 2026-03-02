@@ -216,7 +216,7 @@ class RunThrController extends BaseController
             // } else {
             //     $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
             // }
-            $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
 
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
 
@@ -295,7 +295,7 @@ class RunThrController extends BaseController
             // } else {
             //     $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
             // }
-            $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thr, 2, '', ''), -15, 15); // 15 pay_amount
+            $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
 
             $body .= substr($runThrUser->user->nik . str_repeat(' ', 10), 0, 10); // 10 nik;
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30); // 30 name
