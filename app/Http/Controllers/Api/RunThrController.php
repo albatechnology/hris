@@ -178,7 +178,7 @@ class RunThrController extends BaseController
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'join_date')
-                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency', 'ptkp_status'));
+                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'currency', 'ptkp_status','tax_method'));
                 }
             ])
             ->get();
@@ -211,11 +211,12 @@ class RunThrController extends BaseController
             $body .= substr(trim($runThrUser->user->payrollInfo->bank_account_no) . str_repeat(' ', 34), 0, 34); // 34 M
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
 
-            if (config('app.name') === 'SUNSHINE') {
-                $body .= substr(str_repeat('0', 14) . number_format($runThrUser->basic_salary, 2, '.', ''), -18, 18); // 18 M(decimal 2)
-            } else {
-                $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
-            }
+            // if (config('app.name') === 'SUNSHINE') {
+            //     $body .= substr(str_repeat('0', 14) . number_format($runThrUser->basic_salary, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            // } else {
+            //     $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thp_thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
+            // }
+            $body .= substr(str_repeat('0', 14) . number_format($runThrUser->thr, 2, '.', ''), -18, 18); // 18 M(decimal 2)
 
             $body .= substr(trim($runThrUser->user->payrollInfo->currency->value ?? 'IDR') . str_repeat(' ', 3), 0, 3); // 3 M
 
@@ -262,7 +263,7 @@ class RunThrController extends BaseController
             ->with([
                 'user' => function ($q) {
                     $q->withTrashed()->select('id', 'name', 'join_date', 'nik')
-                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'ptkp_status'));
+                        ->with('payrollInfo', fn($q) => $q->select('user_id', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'ptkp_status','tax_method'));
                 }
             ])
             ->get();
@@ -289,11 +290,12 @@ class RunThrController extends BaseController
             $body .= '0'; // 1 default_1
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_no, 0, 10); // 10 account_number
 
-            if (config('app.name') === 'SUNSHINE') {
-                $body .= substr(str_repeat('0', 15) . number_format($runThrUser->basic_salary, 2, '', ''), -15, 15); // 15 pay_amount
-            } else {
-                $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
-            }
+            // if (config('app.name') === 'SUNSHINE') {
+            //     $body .= substr(str_repeat('0', 15) . number_format($runThrUser->basic_salary, 2, '', ''), -15, 15); // 15 pay_amount
+            // } else {
+            //     $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thp_thr, 2, '', ''), -15, 15); // 15 pay_amount
+            // }
+            $body .= substr(str_repeat('0', 15) . number_format($runThrUser->thr, 2, '', ''), -15, 15); // 15 pay_amount
 
             $body .= substr($runThrUser->user->nik . str_repeat(' ', 10), 0, 10); // 10 nik;
             $body .= substr($runThrUser->user->payrollInfo->secondary_bank_account_holder . str_repeat(' ', 30), 0, 30); // 30 name
