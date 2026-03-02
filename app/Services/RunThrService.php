@@ -337,7 +337,6 @@ class RunThrService
              * second, calculate payroll component where not default
              */
             // $payrollComponents = PayrollComponent::active()->tenanted()->where('company_id', $runThr->company_id)->whereNotDefault()->get();
-            // dd($payrollComponents);
             // $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runThrUser,  $totalWorkingDays, $cutOffStartDate, $cutOffEndDate) {
 
             //     if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {
@@ -732,14 +731,12 @@ class RunThrService
         $thrThisMonth = round($basicSalary + $additionalEarning);
         // $totalMonth = round($thrThisMonth + $benefitForTotalMonth);
         $totaBebanThislMonth = round($thrThisMonth + $grossSalaryThisMonth);
-        // dd($runThrUser);
 
         // //Hitung Prorate
         // $joinDate = Carbon::parse($runThrUser->user->join_date)->startOfDay();
         // $thrDate = Carbon::parse($runThrUser->runThr->thr_date)->startOfDay();
         // $months = $joinDate->diffInMonths($thrDate, true, false);
         // // $months = intdiv($days, 12);
-        // // dd($months);
         // // $thrMultiplier = $months >= 12 ? 1 : (($months + 1) / 12);
         // $thrMultiplier = $months >= 12 ? 1 : ($months / 12);
         // $thrProrate = round($thrMultiplier * $basicSalary);
@@ -749,7 +746,6 @@ class RunThrService
         // $taxThr = round($taxAfter - $taxGrossSalaryThisMonth);
         // $thpThr = round($thrProrate - $taxThr);
         // $basicSalaryPersisted = $thrProrate;
-        // dd($basicSalaryPersisted);
 
 
         $taxGrossSalaryThisMonthAndThr = 0;
@@ -767,7 +763,6 @@ class RunThrService
             }
         }
         // $taxThr = round($taxGrossSalaryThisMonthAndThr - $taxGrossSalaryThisMonth);
-        // dd($taxThr);
 
         $runThrUser->update([
             'basic_salary' => $originalBasicSalary,
