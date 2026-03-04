@@ -163,12 +163,15 @@ class OvertimeRequestController extends BaseController
     public function cancel(NewApproveRequest $request, int $id): OvertimeRequestResource|JsonResponse
     {
         $overtimeRequest = OvertimeRequest::findTenanted($id);
-        $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
 
-        if (!$requestApproval) return $this->errorResponse(message: "You are not registered as approver", code: Response::HTTP_NOT_FOUND);
-
-        if (!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-
+        if($overtimeRequest->user_id != auth()->id()){
+            $requestApproval = $overtimeRequest->approvals()->where('user_id', auth()->id())->first();
+            
+            if (!$requestApproval) return $this->errorResponse(message: "You are not registered as approver", code: Response::HTTP_NOT_FOUND);
+            
+            if (!$overtimeRequest->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+            
         if ($overtimeRequest->approval_status == ApprovalStatus::PENDING->value || $requestApproval->approval_status->in([ApprovalStatus::REJECTED, ApprovalStatus::CANCELLED, ApprovalStatus::PENDING])) {
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
