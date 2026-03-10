@@ -26,7 +26,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use PDO;
 
 class RunThrService
 {
@@ -226,27 +225,20 @@ class RunThrService
 
         $users = User::query()
             ->when(isset($request['user_ids']) && !empty($request['user_ids']), fn($q) => $q->whereIn('id', explode(',', $request['user_ids'])))
-            // ->whenBranch($runThr->branch_id)
-            // ->whereDoesntHave('runPayrollUser', function ($q) use ($runThr) {
-            //     $q->whereHas('runPayroll', function ($rp) use ($runThr) {
-            //         $rp->where('period', $runThr->period)
-            //             ->where('company_id', $runThr->company_id)
-            //             ->when($runThr->branch_id, fn($b) => $b->where('branch_id', $runThr->branch_id))
-            //             ->where('status', RunPayrollStatus::RELEASE);
-            //     });
-            // })
             ->where('company_id', $runThr->company_id)
             ->whereDate('join_date', '<=', $runThr->thr_date)
             ->has('payrollInfo')
             ->with('payrollInfo')
             ->get();
 
-        $allPayrollComponents = PayrollComponent::active()->tenanted()->whereCompany($runThr->company_id)
-        ->whereIn('category', [PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN])
-        ->get();
-        $bpjsPayrollComponents = PayrollComponent::active()->tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
+        $allPayrollComponents = PayrollComponent::active()->tenanted()->whereCompany($runThr->company_id)->whereIn('category', [PayrollComponentCategory::BASIC_SALARY, PayrollComponentCategory::BPJS_KESEHATAN, PayrollComponentCategory::BPJS_KETENAGAKERJAAN])->get();
+        
+        $basicSalaryComponent = $allPayrollComponents->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
         $bpjsKesehatan = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KESEHATAN)->first();
         $bpjsKetenagakerjaan = $allPayrollComponents->where('category', PayrollComponentCategory::BPJS_KETENAGAKERJAAN)->first();
+        
+        $bpjsPayrollComponents = PayrollComponent::active()->tenanted()->whereCompany($request['company_id'])->whereBpjs()->get();
+        $payrollComponents = PayrollComponent::active()->whereCompany($runThr->company_id)->whereNotDefault()->where('is_calculate_thr', true)->get();
 
         // foreach (explode(',', $request['user_ids']) as $userId) {
         foreach ($users as $user) {
@@ -276,7 +268,7 @@ class RunThrService
             /**
              * first, calculate basic salary. for now basic salary component is required
              */
-            $basicSalaryComponent = PayrollComponent::active()->tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
+            // $basicSalaryComponent = PayrollComponent::active()->tenanted()->where('company_id', $runThr->company_id)->where('category', PayrollComponentCategory::BASIC_SALARY)->firstOrFail();
             $basicSalaryUpdatePayrollComponentDetails = $updatePayrollComponentDetails->where('payroll_component_id', $basicSalaryComponent->id);
 
             $cutOffJoinDate = $cutOffStartDate->lessThan($user->join_date) ? $user->join_date : $cutOffStartDate;
@@ -310,7 +302,7 @@ class RunThrService
             self::createComponent($runThrUser, $basicSalaryComponent, $amount);
             // END
 
-            $payrollComponents =  PayrollComponent::active()->whereCompany($runThr->company_id)->whereNotDefault()->where('is_calculate_thr', true)->get();
+            // $payrollComponents =  PayrollComponent::active()->whereCompany($runThr->company_id)->whereNotDefault()->where('is_calculate_thr', true)->get();
             $payrollComponents->each(function ($payrollComponent) use ($user, $updatePayrollComponentDetails, $runThrUser, $cutOffJoinDate, $cutOffEndDate) {
 
                 if ($payrollComponent->amount == 0 && count($payrollComponent->formulas)) {

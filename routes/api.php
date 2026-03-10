@@ -312,6 +312,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::get('run-thrs/{run_thr}/export', [RunThrController::class, 'export']);
     Route::get('run-thrs/{run_thr}/export/ocbc', [RunThrController::class, 'exportOcbc']);
     Route::get('run-thrs/{run_thr}/export/bca', [RunThrController::class, 'exportBca']);
+    Route::get('run-thrs/import/{download_template}', [RunThrController::class, 'import']);
+    Route::post('run-thrs/import', [RunThrController::class, 'import']);
     Route::apiResource('run-thrs', RunThrController::class);
 
     Route::get('request-change-datas/approvals', [RequestChangeDataController::class, 'approvals']);

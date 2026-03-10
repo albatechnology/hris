@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\CountrySettingKey;
+use App\Exports\Payroll\TemplateImportThr;
 use App\Exports\RunThrExport;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Requests\Api\RunPayroll\UpdateUserComponentRequest;
+use App\Http\Requests\Api\RunThr\ImportRequest;
 use App\Http\Requests\Api\RunThr\StoreRequest;
 use App\Http\Requests\Api\RunThr\UpdateRequest;
 use App\Http\Resources\DefaultResource;
+use App\Imports\Payroll\ImportThr;
 use App\Models\Bank;
 use App\Models\Company;
 use App\Models\CountrySetting;
@@ -21,6 +24,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -331,5 +335,53 @@ class RunThrController extends BaseController
             'Content-type' => 'text/plain',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
         ]);
+    }
+
+    public function import(ImportRequest $request, ?string $isDownload = null)
+    {
+        if ($isDownload) {
+            return (new TemplateImportThr($request->company_id))->download('template-import-thr.xlsx');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+
+            // Convert Excel rows to Collection
+            $rows = collect();
+            foreach ($worksheet->getRowIterator() as $row) {
+                $cellIterator = $row->getCellIterator();
+                $rowData = [];
+                foreach ($cellIterator as $cell) {
+                    $rowData[] = $cell->getValue();
+                }
+                $rows->push($rowData);
+            }
+
+            // $payrollSetting = PayrollSetting::with('company')
+            //     ->whereCompany($request->company_id)
+            //     ->whenBranch($request->branch_id ?? null)
+            //     ->first();
+
+            // Process using ImportPayroll logic
+            $import = new ImportThr(
+                $request->company_id,
+                [
+                    'thr_date' => $request->thr_date,
+                    'payment_date' => $request->payment_date,
+                ]
+            );
+            $import->collection($rows);
+
+            DB::commit();
+
+            return $this->createdResponse();
+        } catch (Exception $th) {
+            DB::rollBack();
+            return $this->errorResponse($th->getMessage());
+        }
     }
 }
