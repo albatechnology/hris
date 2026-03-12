@@ -50,7 +50,7 @@ class UpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->id;
+        $id = $this->payroll_component;
         return [
             'branch_id' => Rule::requiredIf(config('app.name') === "SYNTEGRA"),
             'company_id' => ['required', new CompanyTenantedRule()],
