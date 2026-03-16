@@ -286,6 +286,7 @@ class TimeoffController extends BaseController
     public function approvals()
     {
         $query = Timeoff::myApprovals()
+            ->where('is_cancelled', false)
             ->with([
                 'user' => fn($q) => $q->select('id', 'name'),
                 'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
