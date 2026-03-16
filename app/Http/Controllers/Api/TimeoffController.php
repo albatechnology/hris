@@ -274,6 +274,7 @@ class TimeoffController extends BaseController
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
         $total = Timeoff::myApprovals()
+            ->where('is_cancelled', false)
             ->whereApprovalStatus($request->filter['approval_status'])
             ->when($request->branch_id, fn($q) => $q->whereBranch($request->branch_id))
             ->when($request->name, fn($q) => $q->whereUserName($request->name))
