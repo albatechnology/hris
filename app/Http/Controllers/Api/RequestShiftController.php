@@ -154,7 +154,7 @@ class RequestShiftController extends BaseController
 
     public function approveValidate(int $id, ?int $approverId = null)
     {
-        $requestShift = RequestShift::findTenanted($id);
+        $requestShift = RequestShift::findOrFail($id);
         $requestApproval = $requestShift->approvals()->where('user_id', $approverId ?? auth()->id())->first();
 
         if (!$requestApproval) {
