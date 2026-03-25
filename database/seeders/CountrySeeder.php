@@ -18,9 +18,9 @@ class CountrySeeder extends Seeder
       [
         'name' => 'Indonesia',
       ],
-    //   [
-    //     'name' => 'Malaysia',
-    //   ],
+      //   [
+      //     'name' => 'Malaysia',
+      //   ],
     ]);
 
     foreach (Country::all() as $country) {
@@ -58,7 +58,7 @@ class CountrySeeder extends Seeder
         [
           'country_id' => $country->id,
           'key' => CountrySettingKey::JP_MAXIMUM_SALARY,
-          'value' => 10547400,
+          'value' => 11086300,
         ],
         [
           'country_id' => $country->id,
