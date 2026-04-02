@@ -37,11 +37,14 @@ use App\Http\Requests\Api\Attendance\StoreRequest;
 use App\Http\Requests\Api\Attendance\ChildrenRequest;
 use App\Http\Resources\Attendance\AttendanceResource;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
+use App\Http\Requests\Api\Attendance\GenerateAttendanceOneMonthRequest;
 use App\Http\Resources\Attendance\AttendanceDetailResource;
 use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
-use App\Models\OvertimeRequest;
+use App\Jobs\GenerateAttendancesOneMonthJob;
+use App\Models\PayrollSetting;
+use App\Services\NewRunPayrollService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -924,6 +927,8 @@ class AttendanceController extends BaseController
                     // 'approved_at' => now(),
                     // 'approved_by' => auth('sanctum')->id(),
                 ]);
+            } else {
+                $attendance->details()->where('is_clock_in', true)->delete();
             }
 
             // clock out
@@ -938,6 +943,8 @@ class AttendanceController extends BaseController
                     // 'approved_at' => now(),
                     // 'approved_by' => auth('sanctum')->id(),
                 ]);
+            } else {
+                $attendance->details()->where('is_clock_in', false)->delete();
             }
 
             DB::commit();
@@ -1456,5 +1463,68 @@ class AttendanceController extends BaseController
         $stats['skipped_invalid'] = max(($stats['skipped'] ?? 0) - $summaryCount, 0);
 
         return $stats;
+    }
+
+    public function generateAttendancesOneMonth(GenerateAttendanceOneMonthRequest $request)
+    {
+        if (config('app.name') != 'SUNSHINE') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This feature is only available for SUNSHINE',
+            ], 400);
+        }
+
+        $companyId = $request->company_id;
+        $date = Carbon::parse($request->date);
+        $period = $date->format('m-Y');
+
+        // Get payroll setting for the company
+        $payrollSetting = PayrollSetting::where('company_id', $companyId)->first();
+        if (!$payrollSetting) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payroll setting not found for the company',
+            ], 404);
+        }
+
+        // Generate date range using the same logic as payroll
+        $dates = NewRunPayrollService::generateDate(
+            $payrollSetting->cut_off_attendance_start_date,
+            $payrollSetting->cut_off_attendance_end_date,
+            $period,
+            // $payrollSetting->is_attendance_pay_last_month
+        );
+
+        $startDate = $dates['start'];
+        $endDate = $dates['end'];
+
+        // Get user IDs for the company
+        $userIds = User::where('company_id', $companyId)
+            // ->whereIn('id', [19, 20])
+            // ->limit(3)
+            ->pluck('id')->toArray();
+
+        // Chunk into groups of 10
+        $userChunks = array_chunk($userIds, 3);
+        $jobCount = count($userChunks);
+
+        // Dispatch jobs for each chunk
+        foreach ($userChunks as $chunk) {
+            GenerateAttendancesOneMonthJob::dispatch(
+                $chunk,
+                $startDate->toDateString(),
+                $endDate->toDateString()
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$jobCount} attendance generation jobs have been queued.",
+            'data' => [
+                'jobs_queued' => $jobCount,
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+            ],
+        ]);
     }
 }

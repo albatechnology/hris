@@ -15,8 +15,6 @@ class ManualAttendanceRequest extends FormRequest
 {
     use RequestToBoolean;
 
-
-
     protected function prepareForValidation()
     {
         $type = $this->type ?? AttendanceType::MANUAL->value;

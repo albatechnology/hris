@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class IndexRequest extends FormRequest
 {
-
     /**
      * Prepare inputs for validation.
      *

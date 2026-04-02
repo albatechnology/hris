@@ -3,9 +3,6 @@
 namespace App\Http\Requests\Api\Attendance;
 
 use App\Enums\AttendanceType;
-use App\Models\Schedule;
-use App\Models\Shift;
-use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -14,8 +11,6 @@ use Illuminate\Validation\Rule;
 class RequestAttendanceRequest extends FormRequest
 {
     use RequestToBoolean;
-
-
 
     /**
      * Prepare inputs for validation.

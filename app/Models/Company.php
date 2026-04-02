@@ -45,6 +45,11 @@ class Company extends BaseModel implements TenantedInterface
     {
         /** @var User $user */
         $user = auth('sanctum')->user();
+        if (!$user) {
+            // If no user (e.g., in queue jobs), skip tenanted filter
+            return $query;
+        }
+        
         if ($user->is_super_admin) return $query;
 
         // if ($user->is_admin) return $query->where('group_id', $user->group_id);

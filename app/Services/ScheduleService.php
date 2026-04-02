@@ -29,7 +29,7 @@ class ScheduleService
         }
 
         return Cache::rememberForever('national_holiday_' . $companyId . '_' . $startDate . '_' . $endDate, function () use ($companyId, $startDate, $endDate) {
-            return Event::selectMinimalist()->whereCompany($companyId)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
+            return Event::selectMinimalist()->where('company_id', $companyId)->whereDateBetween($startDate, $endDate)->whereNationalHoliday()->get();
         });
     }
 
