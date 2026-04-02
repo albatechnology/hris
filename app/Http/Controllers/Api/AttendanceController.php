@@ -917,8 +917,8 @@ class AttendanceController extends BaseController
 
             // clock in
             if ($request->clock_in) {
-                $attendance->details()->where('is_clock_in', true)->orderByDesc('id')->limit(1)->delete();
-                
+                $attendance->details()->where('is_clock_in', true)->orderByDesc('id')->limit(1)->forceDelete();
+
                 $attendance->details()->create([
                     'is_clock_in' => true,
                     'time' => $request->date . ' ' . $request->clock_in,
@@ -930,12 +930,12 @@ class AttendanceController extends BaseController
                     // 'approved_by' => auth('sanctum')->id(),
                 ]);
             } else {
-                $attendance->details()->where('is_clock_in', true)->delete();
+                $attendance->details()->where('is_clock_in', true)->forceDelete();
             }
 
             // clock out
             if ($request->clock_out) {
-                $attendance->details()->where('is_clock_in', false)->orderByDesc('id')->limit(1)->delete();
+                $attendance->details()->where('is_clock_in', false)->orderByDesc('id')->limit(1)->forceDelete();
 
                 $attendance->details()->create([
                     'is_clock_in' => false,
@@ -948,7 +948,7 @@ class AttendanceController extends BaseController
                     // 'approved_by' => auth('sanctum')->id(),
                 ]);
             } else {
-                $attendance->details()->where('is_clock_in', false)->delete();
+                $attendance->details()->where('is_clock_in', false)->forceDelete();
             }
 
             DB::commit();
