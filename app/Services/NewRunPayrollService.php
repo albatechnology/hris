@@ -743,13 +743,21 @@ class NewRunPayrollService
             // $q->where('is_calculateable', true);
         })->sum('amount');
 
-        $deduction = $runPayrollUser->components()->whereHas('payrollComponent', function ($q) {
-            $q->where('type', PayrollComponentType::DEDUCTION);
-            // $q->where('is_calculateable', true);
-        })->sum('amount');
+        $deduction = $runPayrollUser->components()
+            ->whereHas('payrollComponent', function ($q) {
+                $q->where('type', PayrollComponentType::DEDUCTION);
+                // $q->where('is_calculateable', true);
+            })
+            ->with('payrollComponent', fn($q) => $q->select('id', 'is_taxable'))
+            ->get(['amount', 'payroll_component_id']);
 
-        $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit;
 
+        // deductionTaxable is $deduction where payrollComponent is_taxable is true 
+        $deductionTaxable = $deduction->where('payrollComponent.is_taxable', 1)->sum('amount');
+        $deduction = $deduction->sum('amount');
+
+
+        $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit - $deductionTaxable;
         $tax = 0;
         $userPayrollInfo = $runPayrollUser->user->payrollInfo;
         if ($userPayrollInfo->tax_salary->is(TaxSalary::TAXABLE)) {
