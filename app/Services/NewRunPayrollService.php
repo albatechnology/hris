@@ -751,11 +751,9 @@ class NewRunPayrollService
             ->with('payrollComponent', fn($q) => $q->select('id', 'is_taxable'))
             ->get(['amount', 'payroll_component_id']);
 
-
         // deductionTaxable is $deduction where payrollComponent is_taxable is true 
         $deductionTaxable = $deduction->where('payrollComponent.is_taxable', 1)->sum('amount');
         $deduction = $deduction->sum('amount');
-
 
         $grossSalary = $basicSalary + $allowanceTaxable + $additionalEarning + $benefit - $deductionTaxable;
         $tax = 0;
@@ -776,12 +774,12 @@ class NewRunPayrollService
 
         $runPayrollUser->update([
             'basic_salary' => $basicSalary,
-            'gross_salary' => $grossSalary,
+            'gross_salary' => max($grossSalary, 0),
             'allowance' => $allowanceTaxable + $allowanceNonTaxable,
             'additional_earning' => $additionalEarning,
             'deduction' => $deduction,
             'benefit' => $benefit,
-            'tax' => round($tax),
+            'tax' => max(round($tax), 0),
             'payroll_info' => $userPayrollInfo,
         ]);
     }
