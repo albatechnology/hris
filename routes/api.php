@@ -150,6 +150,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('roles', RoleController::class);
     Route::get('permissions/all', [\App\Http\Controllers\Api\PermissionController::class, 'all']);
 
+    Route::group(['prefix' => 'groups/{group}'], function () {
+        Route::put('restore', [GroupController::class, 'restore']);
+        Route::delete('force', [GroupController::class, 'forceDelete']);
+    });
     Route::apiResource('groups', GroupController::class);
 
     Route::group(['prefix' => 'companies/{company}'], function () {
@@ -165,20 +169,46 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::put('timeoff-regulation', [TimeoffRegulationController::class, 'update']);
         Route::get('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'index']);
         Route::post('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'store']);
+
+        Route::put('restore', [CompanyController::class, 'restore']);
+        Route::delete('force', [CompanyController::class, 'forceDelete']);
     });
     Route::apiResource('companies', CompanyController::class)->except('destroy');
 
     Route::get('branches/summaries', [BranchController::class, 'summary']);
+    Route::group(['prefix' => 'branches/{branch}'], function () {
+        Route::put('restore', [BranchController::class, 'restore']);
+        Route::delete('force', [BranchController::class, 'forceDelete']);
+    });
     Route::apiResource('branches', BranchController::class);
+
     Route::post('branch-locations/generate-qr-code', [BranchLocationController::class, 'generateQrCode']);
+    Route::group(['prefix' => 'branch-locations/{branch_location}'], function () {
+        Route::put('restore', [BranchLocationController::class, 'restore']);
+        Route::delete('force', [BranchLocationController::class, 'forceDelete']);
+    });
     Route::apiResource('branch-locations', BranchLocationController::class);
 
     Route::apiResource('positions', PositionController::class);
+
+    Route::group(['prefix' => 'divisions/{division}'], function () {
+        Route::put('restore', [DivisionController::class, 'restore']);
+        Route::delete('force', [DivisionController::class, 'forceDelete']);
+    });
     Route::apiResource('divisions', DivisionController::class);
+
+    Route::group(['prefix' => 'departments/{department}'], function () {
+        Route::put('restore', [DepartmentController::class, 'restore']);
+        Route::delete('force', [DepartmentController::class, 'forceDelete']);
+    });
     Route::apiResource('departments', DepartmentController::class);
 
     Route::get('announcements/export', [AnnouncementController::class, 'export']);
     Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show', 'store', 'destroy']);
+    Route::group(['prefix' => 'announcements/{announcement}'], function () {
+        Route::put('restore', [AnnouncementController::class, 'restore']);
+        Route::delete('force', [AnnouncementController::class, 'forceDelete']);
+    });
 
     Route::get('shifts/report-shift-users/{export?}', [ShiftController::class, 'reportShiftUsers']);
     Route::post('shifts/import-shift-users', [ShiftController::class, 'importShiftUsers']);
@@ -192,7 +222,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('users', [UserScheduleController::class, 'index']);
         Route::post('users', [UserScheduleController::class, 'store']);
         Route::put('restore', [ScheduleController::class, 'restore']);
-        Route::delete('force-delete', [ScheduleController::class, 'forceDelete']);
+        Route::delete('force', [ScheduleController::class, 'forceDelete']);
         Route::delete('users/{user}', [UserScheduleController::class, 'destroy']);
     });
     Route::apiResource('schedules', ScheduleController::class);
@@ -214,7 +244,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::put('bulk-approve', [AttendanceController::class, 'bulkApprove']);
         Route::put('approvals/{attendance_detail}', [AttendanceController::class, 'approve']);
         Route::put('{attendance}/restore', [AttendanceController::class, 'restore']);
-        Route::delete('{attendance}/force-delete', [AttendanceController::class, 'forceDelete']);
+        Route::delete('{attendance}/force', [AttendanceController::class, 'forceDelete']);
     });
     Route::apiResource('attendances', AttendanceController::class);
 
@@ -256,6 +286,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     // Route::get('live-attendances/locations', [LiveAttendanceController::class, 'locations']);
     Route::group(['prefix' => 'live-attendances/{live_attendance}'], function () {
         Route::apiResource('locations', LiveAttendanceLocationController::class);
+        Route::put('restore', [LiveAttendanceController::class, 'restore']);
+        Route::delete('force', [LiveAttendanceController::class, 'forceDelete']);
     });
     Route::apiResource('live-attendances', LiveAttendanceController::class);
 
@@ -268,6 +300,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     });
     Route::get('calendar', [EventController::class, 'calendar']);
     Route::apiResource('events', EventController::class);
+
+    Route::group(['prefix' => 'custom-fields/{custom_field}'], function () {
+        Route::put('restore', [CustomFieldController::class, 'restore']);
+        Route::delete('force', [CustomFieldController::class, 'forceDelete']);
+    });
     Route::apiResource('custom-fields', CustomFieldController::class);
 
     Route::get('notifications', [NotificationController::class, 'index']);
@@ -351,7 +388,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('task-hours', TaskHourController::class);
     Route::group(['prefix' => 'tasks/{task}'], function () {
         Route::put('restore', [TaskController::class, 'restore']);
-        Route::delete('force-delete', [TaskController::class, 'forceDelete']);
+        Route::delete('force', [TaskController::class, 'forceDelete']);
     });
     Route::apiResource('tasks', TaskController::class);
 
@@ -377,6 +414,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     // Route::apiResource('client-locations', ClientLocationController::class);
 
     Route::get('guest-books/export', [GuestBookController::class, 'export']);
+    Route::group(['prefix' => 'guest-books/{guest_book}'], function () {
+        Route::put('restore', [GuestBookController::class, 'restore']);
+        Route::delete('force', [GuestBookController::class, 'forceDelete']);
+    });
     Route::apiResource('guest-books', GuestBookController::class);
 
     Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
@@ -402,7 +443,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('user-patrols', UserPatrolController::class);
 
     Route::post('user-patrol-batches/sync', [UserPatrolBatchController::class, 'sync']);
-    Route::delete('user-patrol-batches/{user_patrol_batch}/force-delete', [UserPatrolBatchController::class, 'forceDelete']);
+    Route::delete('user-patrol-batches/{user_patrol_batch}/force', [UserPatrolBatchController::class, 'forceDelete']);
     Route::apiResource('user-patrol-batches', UserPatrolBatchController::class);
     Route::apiResource('user-patrol-movements', UserPatrolMovementController::class);
 
@@ -412,20 +453,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
     Route::apiResource('banks', BankController::class);
     Route::group(['prefix' => 'banks/{bank}'], function () {
         Route::put('restore', [BankController::class, 'restore']);
-        Route::delete('force-delete', [BankController::class, 'forceDelete']);
+        Route::delete('force', [BankController::class, 'forceDelete']);
     });
 
     Route::get('extra-offs/users', [ExtraOffController::class, 'users']);
     Route::get('extra-offs/eligible-users', [ExtraOffController::class, 'eligibleUsers']);
     Route::apiResource('extra-offs', ExtraOffController::class)->only(['index', 'show', 'store']);
+    
+     Route::group(['prefix' => 'loans/{loan}'], function () {
+        Route::put('restore', [LoanController::class, 'restore']);
+        Route::delete('force', [LoanController::class, 'forceDelete']);
+    });
     Route::apiResource('loans', LoanController::class);
+    
+    Route::get('lock-attendances/{lock_attendance}/details', [LockAttendanceController::class, 'details']);
+    Route::apiResource('lock-attendances', LockAttendanceController::class);
 
     Route::apiResource('absence-reminders', AbsenceReminderController::class)->only(['index', 'show', 'update']);
     Route::delete('media/bulk-delete', [MediaController::class, 'bulkDestroy']);
     Route::apiResource('media', MediaController::class)->only(['index', 'show', 'destroy']);
 
-    Route::get('lock-attendances/{lock_attendance}/details', [LockAttendanceController::class, 'details']);
-    Route::apiResource('lock-attendances', LockAttendanceController::class);
 
     Route::get('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'getUsers']);
     Route::post('reimbursement-categories/{reimbursement_category}/users', [ReimbursementCategoryController::class, 'addUsers']);

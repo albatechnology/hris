@@ -5,62 +5,46 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\UserCustomField\StoreRequest;
 use App\Http\Requests\Api\UserCustomField\UpdateRequest;
 use App\Http\Resources\UserCustomField\UserCustomFieldResource;
-use App\Models\CustomField;
-use App\Models\User;
+use App\Interfaces\Services\UserCustomField\UserCustomFieldServiceInterface;
 use App\Models\UserCustomField;
 use Illuminate\Http\Response;
 
 class UserCustomFieldController extends BaseController
 {
+    public function __construct(private UserCustomFieldServiceInterface $service)
+    {
+        parent::__construct();
+    }
+
     public function index(int $id)
     {
-        $user = User::findTenanted($id);
-        $customFields = CustomField::tenanted()->get();
+        $datas = $this->service->listByUser($id);
 
-        $customFields = $customFields->map(function ($customField) use ($user) {
-            $userCustomField = $user->customFields()->where('custom_field_id', $customField->id)->first();
-            $customField->custom_field_id = $customField->id;
-            $customField->id = null;
-            $customField->value = null;
-
-            if ($userCustomField) {
-                $customField->id = $userCustomField->id;
-                $customField->value = $userCustomField->value;
-            }
-
-            return $customField;
-        });
-
-        return UserCustomFieldResource::collection($customFields);
+        return UserCustomFieldResource::collection($datas);
     }
 
     public function show(int $id, UserCustomField $customField)
     {
-        $user = User::findTenanted($id);
-        $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
-
+        $userCustomField = $this->service->findByUser($id, $customField->id);
         return new UserCustomFieldResource($userCustomField);
     }
 
     public function store(int $id, StoreRequest $request)
     {
-        $user = User::findTenanted($id);
-        $userCustomField = $user->customFields()->where('custom_field_id', $request->custom_field_id)->exists();
-        if ($userCustomField) {
-            return $this->errorResponse('Custom field already exists', code: Response::HTTP_BAD_REQUEST);
+        try {
+            $this->service->createForUser($id, $request->validated());
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), code: Response::HTTP_BAD_REQUEST);
         }
 
-        $userCustomField = $user->customFields()->create($request->validated());
-
-        return new UserCustomFieldResource($userCustomField);
+        return $this->createdResponse();
     }
 
     public function update(int $id, UserCustomField $customField, UpdateRequest $request)
     {
-        $user = User::findTenanted($id);
-        $userCustomField = $user->customFields()->where('id', $customField->id)->firstOrFail();
-        $userCustomField->update($request->validated());
+        $userCustomField = $this->service->findByUser($id, $customField->id);
+        $this->service->updateForUser($id, $customField->id, $request->validated());
 
-        return (new UserCustomFieldResource($userCustomField))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 }

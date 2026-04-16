@@ -3,37 +3,37 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Subscription;
-use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
 use App\Http\Resources\DefaultResource;
 use App\Http\Requests\Api\Subscription\StoreRequest;
 use App\Http\Requests\Api\Subscription\UpdateRequest;
 use App\Interfaces\Services\Subscription\SubscriptionServiceInterface;
+use Illuminate\Support\Facades\Gate;
 
 class SubscriptionController extends BaseController
 {
-    public function __construct(protected SubscriptionServiceInterface $service)
+    public function __construct(private SubscriptionServiceInterface $service)
     {
         parent::__construct();
-        // $this->middleware('permission:subscription_access', ['only' => ['restore']]);
-        // $this->middleware('permission:subscription_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:subscription_create', ['only' => 'store']);
-        // $this->middleware('permission:subscription_edit', ['only' => 'update']);
-        // $this->middleware('permission:subscription_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Subscription::class)
-            ->allowedFilters([
+        Gate::authorize('viewAny', Subscription::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::exact('company_id'),
                 'name',
                 'account_no',
                 'account_holder',
                 'code',
                 'branch',
-            ])
-            ->allowedSorts([
+            ],
+            [],
+            [
                 'id',
                 'company_id',
                 'name',
@@ -42,28 +42,34 @@ class SubscriptionController extends BaseController
                 'code',
                 'branch',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
         $subscription = $this->service->findById($id);
+        Gate::authorize('view', $subscription);
+
         return new DefaultResource($subscription);
     }
 
     public function store(StoreRequest $request)
     {
+        Gate::authorize('create', Subscription::class);
+
         $subscription = $this->service->create($request->validated());
 
-        return new DefaultResource($subscription);
+        return $this->createdResponse();
     }
 
     public function update(int $id, UpdateRequest $request)
     {
-        $this->service->findById($id);
+        $subscription = $this->service->findById($id);
+        Gate::authorize('update', $subscription);
+
         $this->service->update($id, $request->validated());
 
         return $this->updatedResponse();
@@ -71,7 +77,9 @@ class SubscriptionController extends BaseController
 
     public function destroy(int $id)
     {
-        $this->service->findById($id);
+        $subscription = $this->service->findById($id);
+        Gate::authorize('delete', $subscription);
+
         $this->service->delete($id);
 
         return $this->deletedResponse();
@@ -79,16 +87,22 @@ class SubscriptionController extends BaseController
 
     public function forceDelete(int $id)
     {
+        $subscription = $this->service->findById($id, fn($q) => $q->withTrashed());
+        Gate::authorize('forceDelete', $subscription);
+
         $this->service->forceDelete($id);
 
-        return $this->deletedResponse();
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
+        $subscription = $this->service->findById($id, fn($q) => $q->withTrashed());
+        Gate::authorize('restore', $subscription);
+
         $this->service->restore($id);
 
-        return $this->okResponse();
+        return $this->restoredResponse();
     }
 
     public function quotaInfo()

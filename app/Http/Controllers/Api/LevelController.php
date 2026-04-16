@@ -17,9 +17,6 @@ class LevelController extends BaseController
         parent::__construct();
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $data = QueryBuilder::for(Level::tenanted())
@@ -39,35 +36,23 @@ class LevelController extends BaseController
         return DefaultResource::collection($data);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StorelRequest $request)
     {
         $level = $this->service->create($request->validated());
 
-        return (new DefaultResource($level))
-            ->response()
-            ->setStatusCode(201);
+        return $this->createdResponse();
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(int $id)
     {
         try {
-             $level = $this->service->findById($id);
+            $level = $this->service->findById($id);
             return new DefaultResource($level);
         } catch (ModelNotFoundException $e) {
-            return $this->errorResponse("Data tidak ditemukan",[],404);
+            return $this->errorResponse("Data tidak ditemukan", [], 404);
         }
-       
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(StorelRequest $request, int $id)
     {
         $this->service->findById($id);
@@ -76,9 +61,6 @@ class LevelController extends BaseController
         return $this->updatedResponse();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(int $id)
     {
         $this->service->findById($id);

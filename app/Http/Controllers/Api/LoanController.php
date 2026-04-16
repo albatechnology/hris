@@ -6,30 +6,36 @@ use App\Http\Requests\Api\Loan\StoreRequest;
 use App\Http\Requests\Api\Loan\UpdateRequest;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\Loan\LoanResource;
+use App\Interfaces\Services\Loan\LoanServiceInterface;
 use App\Models\Loan;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class LoanController extends BaseController
 {
-    public function __construct()
+    public function __construct(private LoanServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:loan_access', ['only' => ['restore']]);
-        $this->middleware('permission:loan_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:loan_create', ['only' => 'store']);
-        $this->middleware('permission:loan_edit', ['only' => 'update']);
-        $this->middleware('permission:loan_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return [
+            AllowedInclude::callback('user', function ($query) {
+                $query->select('id', 'name', 'nik', 'email');
+            }),
+        ];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Loan::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Loan::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::callback('name', function ($query, $value) {
                     $query->whereHas('user', fn($q) => $q->whereLike('name', $value));
                 }),
@@ -37,44 +43,40 @@ class LoanController extends BaseController
                 'code',
                 'effective_date',
                 'type',
-                // 'installment',
                 'interest',
-            ])
-            ->allowedIncludes([
-                AllowedInclude::callback('user', function ($query) {
-                    $query->select('id', 'name', 'nik', 'email');
-                }),
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'user_id',
                 'code',
                 'effective_date',
                 'type',
-                // 'installment',
                 'interest',
                 'amount',
                 'created_at',
-            ])
-            ->paginate($this->per_page)
-            ->through(function ($loan) {
-                $loan->installment = $loan->installment;
-                $loan->outstanding = $loan->outstanding;
-                $loan->end_date = $loan->end_date;
-                $loan->balance = $loan->balance;
-                return $loan;
-            });
+            ],
+            ['id', 'name'],
+        )->through(function ($data) {
+            $data->installment = $data->installment;
+            $data->outstanding = $data->outstanding;
+            $data->end_date = $data->end_date;
+            $data->balance = $data->balance;
+            return $data;
+        });
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $loan = Loan::findTenanted($id);
-        return new LoanResource($loan->loadMissing([
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new LoanResource($data->loadMissing([
             'details' => fn($q) => $q->with([
                 'runPayrollUser' => fn($q) => $q->select('id', 'run_payroll_id')->with('runPayroll'),
-                'userContact'
+                'userContact',
             ]),
             'user' => fn($q) => $q->select('id', 'name', 'nik', 'email'),
         ]));
@@ -82,64 +84,56 @@ class LoanController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $loan = Loan::create($request->validated());
-            $loan->details()->createMany($request->details);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
-        }
+        Gate::authorize('create', Loan::class);
 
-        return new DefaultResource($loan);
+        $data = $request->validated();
+        $data['details'] = $request->details;
+
+        $this->service->create($data);
+
+        return $this->createdResponse();
     }
 
     public function update(int $id, UpdateRequest $request)
     {
-        $loan = Loan::findTenanted($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        $amountPaid = $loan->details->whereNotNull('run_payroll_user_id')->sum('basic_payment');
-        $newTotalAmount = collect($request->details)->sum('basic_payment');
-        if ($amountPaid + $newTotalAmount != $request->amount) {
-            return $this->errorResponse(message: 'Payments is not correct with total amount', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        $data = $request->validated();
+        $data['details'] = $request->details;
 
-        DB::beginTransaction();
-        try {
-            $loan->update($request->validated());
-            $loan->details()->whereNull('run_payroll_user_id')->delete();
-            $loan->details()->createMany($request->details);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->update($id, $data);
 
-        return (new DefaultResource($loan))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $loan = Loan::findTenanted($id);
-        $loan->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $loan = Loan::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $loan->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
-        $loan = Loan::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $loan->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new DefaultResource($loan);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

@@ -2,94 +2,58 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\MediaCollection;
 use App\Http\Requests\Api\UserEducation\StoreRequest;
 use App\Http\Resources\UserEducation\UserEducationResource;
-use App\Models\User;
+use App\Interfaces\Services\UserEducation\UserEducationServiceInterface;
 use App\Models\UserEducation;
-use Exception;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class UserEducationController extends BaseController
 {
+    public function __construct(private UserEducationServiceInterface $service)
+    {
+        parent::__construct();
+    }
+
     public function index(int $id)
     {
-        $user = User::findTenanted($id);
-        $data = QueryBuilder::for(UserEducation::where('user_id', $user->id))
-            ->allowedFilters([
-                'type',
-                'level',
-                'name',
-                'institution_name',
-                'majors',
-                'start_date',
-                'end_date',
-                'expired_date',
-                'score',
-                'fee',
-            ])
-            ->allowedSorts([
-                'id',
-                'name',
-                'institution_name',
-                'majors',
-                'start_date',
-                'end_date',
-                'expired_date',
-                'score',
-                'fee',
-                'created_at',
-            ])
-            ->paginate($this->per_page);
+        $datas = $this->service->listByUser($id);
 
-        return UserEducationResource::collection($data);
+        return UserEducationResource::collection($datas);
     }
 
     public function show(int $id, UserEducation $education)
     {
-        $user = User::findTenanted($id);
-        return new UserEducationResource($education);
+        $userEducation = $this->service->findByUser($id, $education->id);
+        return new UserEducationResource($userEducation);
     }
 
     public function store(int $id, StoreRequest $request)
     {
-        $user = User::findTenanted($id);
         try {
-            $education = $user->educations()->create($request->validated());
-
-            $mediaCollection = MediaCollection::USER_EDUCATION->value;
-            if ($request->hasFile('file') && $request->file('file')->isValid()) {
-                $education->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
-            }
-        } catch (Exception $e) {
+            $this->service->createForUser($id, $request->validated());
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
 
-        return new UserEducationResource($education);
+        return $this->createdResponse();
     }
 
     public function update(int $id, StoreRequest $request, UserEducation $education)
     {
-        $user = User::findTenanted($id);
+        $this->service->findByUser($id, $education->id);
         try {
-            $education->update($request->validated());
-
-            $mediaCollection = MediaCollection::USER_EDUCATION->value;
-            if ($request->hasFile('file') && $request->file('file')->isValid()) {
-                $education->clearMediaCollection($mediaCollection);
-                $education->addMediaFromRequest('file')->toMediaCollection($mediaCollection);
-            }
-        } catch (Exception $e) {
+            $this->service->updateForUser($id, $education->id, $request->validated());
+        } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage());
         }
 
-        return new UserEducationResource($education);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id, UserEducation $education)
     {
-        $user = User::findTenanted($id);
-        $education->delete();
+        $this->service->findByUser($id, $education->id);
+        $this->service->delete($education->id);
 
         return $this->deletedResponse();
     }

@@ -7,26 +7,29 @@ use App\Http\Requests\Api\Company\UpdateRequest;
 use App\Http\Resources\Company\CompanyResource;
 use App\Interfaces\Services\Company\CompanyServiceInterface;
 use App\Models\Company;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class CompanyController extends BaseController
 {
     public function __construct(private CompanyServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:company_access', ['only' => ['restore']]);
-        $this->middleware('permission:company_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:company_create', ['only' => 'store']);
-        $this->middleware('permission:company_edit', ['only' => 'update']);
-        $this->middleware('permission:company_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return [];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Company::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Company::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('group_id'),
                 'name',
                 'country',
@@ -34,8 +37,9 @@ class CompanyController extends BaseController
                 'city',
                 'zip_code',
                 'address',
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'group_id',
                 'name',
@@ -45,53 +49,76 @@ class CompanyController extends BaseController
                 'zip_code',
                 'address',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+            [
+                'id',
+                'group_id',
+                'name',
+                'country',
+                'province',
+                'city',
+                'zip_code',
+                'address',
+                'created_at',
+            ],
+        );
 
-        return CompanyResource::collection($data);
+        return CompanyResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $company = Company::findTenanted($id);
-        return new CompanyResource($company);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new CompanyResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $company = $this->service->create($request->validated());
-        return new CompanyResource($company);
+        Gate::authorize('create', Company::class);
+
+        $data = $this->service->create($request->validated());
+        return new CompanyResource($data);
     }
 
-    public function update(int $id, UpdateRequest $request)
+    public function update(string $id, UpdateRequest $request)
     {
-        $company = Company::findTenanted($id);
-        $company->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new CompanyResource($company))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $company = Company::findTenanted($id);
-        $company->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete($id)
+    public function forceDelete(string $id)
     {
-        $company = Company::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $company->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore($id)
+    public function restore(string $id)
     {
-        $company = Company::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $company->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new CompanyResource($company);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

@@ -4,84 +4,101 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Division\StoreRequest;
 use App\Http\Resources\Division\DivisionResource;
+use App\Interfaces\Services\Division\DivisionServiceInterface;
 use App\Models\Division;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class DivisionController extends BaseController
 {
-    public function __construct()
+    public function __construct(private DivisionServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:division_access', ['only' => ['restore']]);
-        $this->middleware('permission:division_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:division_create', ['only' => 'store']);
-        $this->middleware('permission:division_edit', ['only' => 'update']);
-        $this->middleware('permission:division_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return ['company'];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Division::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Division::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('company_id'),
                 'name',
-            ])
-            ->allowedIncludes(['company'])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'name',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DivisionResource::collection($data);
+        return DivisionResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $division = Division::findTenanted($id);
-        return new DivisionResource($division);
+        $data = $this->service->findById($id, fn($q) => $q->tenanted());
+        Gate::authorize('view', $data);
+
+        return new DivisionResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $division = Division::create($request->validated());
+        Gate::authorize('create', Division::class);
 
-        return new DivisionResource($division);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $division = Division::findTenanted($id);
-        $division->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new DivisionResource($division))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $division = Division::findTenanted($id);
-        $division->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $division = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $division->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $division = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $division->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new DivisionResource($division);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

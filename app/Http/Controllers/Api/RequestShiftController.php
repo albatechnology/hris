@@ -70,13 +70,13 @@ class RequestShiftController extends BaseController
 
     public function show(int $id): DefaultResource
     {
-        $requestShift = RequestShift::with([
+        $data = RequestShift::with([
             'user' => fn($q) => $q->select('id', 'name'),
             'oldShift' => fn($q) => $q->selectMinimalist(),
             'newShift' => fn($q) => $q->selectMinimalist(),
         ])->findTenanted($id);
 
-        return new DefaultResource($requestShift);
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request): DefaultResource|JsonResponse
@@ -133,48 +133,48 @@ class RequestShiftController extends BaseController
 
         DB::beginTransaction();
         try {
-            $requestShift = RequestShift::create($data);
+            $data = RequestShift::create($data);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($requestShift);
+        return new DefaultResource($data);
     }
 
     public function destroy(int $id)
     {
-        $requestShift = RequestShift::findTenanted($id);
-        if (!$requestShift->approval_status->is(ApprovalStatus::PENDING)) return $this->errorResponse(message: 'Cannot delete pending overtime request', code: 422);
+        $data = RequestShift::findTenanted($id);
+        if (!$data->approval_status->is(ApprovalStatus::PENDING)) return $this->errorResponse(message: 'Cannot delete pending overtime request', code: 422);
 
-        $requestShift->delete();
+        $data->delete();
         return $this->deletedResponse();
     }
 
     public function approveValidate(int $id, ?int $approverId = null)
     {
-        $requestShift = RequestShift::findOrFail($id);
-        $requestApproval = $requestShift->approvals()->where('user_id', $approverId ?? auth()->id())->first();
+        $data = RequestShift::findOrFail($id);
+        $requestApproval = $data->approvals()->where('user_id', $approverId ?? auth()->id())->first();
 
         if (!$requestApproval) {
             throw new NotFoundHttpException('You are not registered as approved');
         }
 
-        if ($requestShift->approval_status == ApprovalStatus::REJECTED->value) {
+        if ($data->approval_status == ApprovalStatus::REJECTED->value) {
             throw new UnprocessableEntityHttpException('Request has been rejected');
         }
 
-        if (!$requestShift->isDescendantApproved()) {
+        if (!$data->isDescendantApproved()) {
             throw new UnprocessableEntityHttpException('You have to wait for your subordinates to approve');
         }
 
-        if ($requestShift->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+        if ($data->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
             throw new UnprocessableEntityHttpException('Status can not be changed');
         }
 
         return [
-            'request_shift' => $requestShift,
+            'request_shift' => $data,
             'request_approval' => $requestApproval,
         ];
     }
@@ -200,22 +200,22 @@ class RequestShiftController extends BaseController
 
     public function approve(NewApproveRequest $request, int $id): DefaultResource|JsonResponse
     {
-        // $requestShift = RequestShift::findTenanted($id);
-        // $requestApproval = $requestShift->approvals()->where('user_id', auth()->id())->first();
+        // $data = RequestShift::findTenanted($id);
+        // $requestApproval = $data->approvals()->where('user_id', auth()->id())->first();
 
         // if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
 
-        // if ($requestShift->approval_status == ApprovalStatus::REJECTED->value) return $this->errorResponse(message: 'Request has been rejected', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // if ($data->approval_status == ApprovalStatus::REJECTED->value) return $this->errorResponse(message: 'Request has been rejected', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        // if (!$requestShift->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        // if (!$data->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        // if ($requestShift->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+        // if ($data->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
         //     return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         // }
 
         $data = $this->approveValidate($id);
         $requestApproval = $data['request_approval'];
-        $requestShift = $data['request_shift'];
+        $data = $data['request_shift'];
 
         DB::beginTransaction();
         try {
@@ -226,7 +226,7 @@ class RequestShiftController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($requestShift);
+        return new DefaultResource($data);
     }
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)

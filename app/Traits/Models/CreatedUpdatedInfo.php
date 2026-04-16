@@ -14,6 +14,7 @@ trait CreatedUpdatedInfo
         });
 
         static::updating(function (self $model) {
+            dd('updateingggg');
             $model->updated_by = auth('sanctum')->id();
         });
     }

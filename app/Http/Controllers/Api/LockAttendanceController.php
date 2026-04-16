@@ -5,73 +5,88 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\LockAttendance\SearchRequest;
 use App\Http\Requests\Api\LockAttendance\StoreRequest;
 use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\LockAttendance\LockAttendanceServiceInterface;
 use App\Models\Event;
 use App\Models\LockAttendance;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\ScheduleService;
 use Carbon\CarbonPeriod;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class LockAttendanceController extends BaseController
 {
-    public function __construct()
+    public function __construct(private LockAttendanceServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:lock_attendance_access', ['only' => ['restore']]);
-        $this->middleware('permission:lock_attendance_read', ['only' => ['index', 'show', 'details']]);
-        $this->middleware('permission:lock_attendance_create', ['only' => 'store']);
-        $this->middleware('permission:lock_attendance_edit', ['only' => 'update']);
-        $this->middleware('permission:lock_attendance_delete', ['only' => ['destroy']]);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(LockAttendance::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', LockAttendance::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::exact('company_id'),
                 'start_date',
                 'end_date',
-            ])
-            ->allowedSorts([
+            ],
+            [],
+            [
                 'id',
                 'company_id',
                 'start_date',
                 'end_date',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+            [
+                'id',
+                'company_id',
+                'start_date',
+                'end_date',
+                'created_at',
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $lockAttendance = LockAttendance::findTenanted($id);
-        return new DefaultResource($lockAttendance);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $lockAttendance = LockAttendance::create($request->validated());
+        Gate::authorize('create', LockAttendance::class);
 
-        return new DefaultResource($lockAttendance);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
     public function update(StoreRequest $request, int $id)
     {
-        $lockAttendance = LockAttendance::findTenanted($id);
-        $lockAttendance->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new DefaultResource($lockAttendance))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $lockAttendance = LockAttendance::findTenanted($id);
-        $lockAttendance->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }

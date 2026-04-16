@@ -5,42 +5,34 @@ namespace App\Http\Controllers\Api;
 use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffPolicy\StoreRequest;
 use App\Http\Resources\TimeoffPolicy\TimeoffPolicyResource;
+use App\Interfaces\Services\TimeoffPolicy\TimeoffPolicyServiceInterface;
 use App\Models\TimeoffPolicy;
-use Exception;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class TimeoffPolicyController extends BaseController
 {
-    public function __construct()
+    public function __construct(private TimeoffPolicyServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:timeoff_policy_access', ['only' => ['restore']]);
-        // $this->middleware('permission:timeoff_policy_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:timeoff_policy_create', ['only' => 'store']);
-        $this->middleware('permission:timeoff_policy_edit', ['only' => 'update']);
-        $this->middleware('permission:timeoff_policy_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(TimeoffPolicy::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', TimeoffPolicy::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::scope('start_effective_date'),
                 AllowedFilter::scope('end_effective_date'),
                 AllowedFilter::callback('has_quota', function ($query, bool $value) {
-                    if ($value == true) {
+                    if ($value === true) {
                         $query->whereIn('type', TimeoffPolicyType::hasQuotas());
                     }
                 }),
-                // AllowedFilter::callback('has_quota', function ($query, bool $value) {
-                //     if ($value == true) {
-                //         $query->whereNotIn('type', TimeoffPolicyType::hasQuotas())
-                //             ->orWhereHas('timeoffQuotas', fn($q) => $q->where('user_id', auth()->id())->whereActive());
-                //     }
-                // }),
                 'type',
                 'name',
                 'code',
@@ -48,9 +40,9 @@ class TimeoffPolicyController extends BaseController
                 'is_for_all_user',
                 'is_enable_block_leave',
                 'is_unlimited_day',
-            ])
-            ->allowedIncludes(['company'])
-            ->allowedSorts([
+            ],
+            ['company'],
+            [
                 'id',
                 'company_id',
                 'effective_date',
@@ -63,74 +55,66 @@ class TimeoffPolicyController extends BaseController
                 'is_enable_block_leave',
                 'is_unlimited_day',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return TimeoffPolicyResource::collection($data);
+        return TimeoffPolicyResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $timeoffPolicy = TimeoffPolicy::findTenanted($id);
-        $data = QueryBuilder::for(TimeoffPolicy::findTenanted($timeoffPolicy->id))
-            ->allowedIncludes(['company'])
-            ->firstOrFail();
-
-        return new TimeoffPolicyResource($data);
-    }
-
-    public function store(StoreRequest $request)
-    {
-        try {
-            $timeoffPolicy = TimeoffPolicy::create($request->validated());
-
-            if ($request->user_ids && count($request->user_ids) > 0) {
-                $timeoffPolicy->users()->sync($request->user_ids);
-            }
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $timeoffPolicy = $this->service->findByIdOrFail($id, null, ['company']);
+        Gate::authorize('view', $timeoffPolicy);
 
         return new TimeoffPolicyResource($timeoffPolicy);
     }
 
+    public function store(StoreRequest $request)
+    {
+        Gate::authorize('create', TimeoffPolicy::class);
+
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
+    }
+
     public function update(int $id, StoreRequest $request)
     {
-        $timeoffPolicy = TimeoffPolicy::findTenanted($id);
-        try {
-            $timeoffPolicy->update($request->validated());
+        $timeoffPolicy = $this->service->findByIdOrFail($id);
+        Gate::authorize('update', $timeoffPolicy);
 
-            if ($request->user_ids && count($request->user_ids) > 0) {
-                $timeoffPolicy->users()->sync($request->user_ids);
-            }
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->update($id, $request->validated());
 
-        return (new TimeoffPolicyResource($timeoffPolicy))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $timeoffPolicy = TimeoffPolicy::findTenanted($id);
-        $timeoffPolicy->delete();
+        $timeoffPolicy = $this->service->findByIdOrFail($id);
+        Gate::authorize('delete', $timeoffPolicy);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $timeoffPolicy = TimeoffPolicy::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $timeoffPolicy->forceDelete();
+        $timeoffPolicy = $this->service->findByIdOrFail($id, fn($q) => $q->withTrashed());
+        Gate::authorize('forceDelete', $timeoffPolicy);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
-        $timeoffPolicy = TimeoffPolicy::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $timeoffPolicy->restore();
+        $timeoffPolicy = $this->service->findByIdOrFail($id, fn($q) => $q->withTrashed());
+        Gate::authorize('restore', $timeoffPolicy);
 
-        return new TimeoffPolicyResource($timeoffPolicy);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

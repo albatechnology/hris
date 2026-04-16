@@ -3,217 +3,138 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Shift\StoreRequest;
-use App\Http\Resources\Shift\ShiftResource;
-use App\Models\Shift;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
-use App\Exports\UserShiftsReport;
 use App\Http\Requests\Api\Attendance\ExportReportRequest;
 use App\Http\Resources\DefaultResource;
-use App\Imports\ShiftUsersImport;
-use App\Models\Event;
-use App\Models\User;
-use App\Services\ScheduleService;
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Interfaces\Services\Shift\ShiftServiceInterface;
+use App\Models\Shift;
+use Illuminate\Support\Facades\Gate;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 
 class ShiftController extends BaseController
 {
-    public function __construct()
+    public function __construct(private ShiftServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:shift_access', ['only' => ['restore']]);
-        $this->middleware('permission:shift_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:shift_create', ['only' => 'store']);
-        $this->middleware('permission:shift_edit', ['only' => 'update']);
-        $this->middleware('permission:shift_delete', ['only' => ['destroy', 'forceDelete']]);
-        $this->middleware('permission:shift_import', ['only' => 'importShiftUsers']);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return [
+            'company',
+            AllowedInclude::callback('schedules', function ($query) {
+                $query->select('id', 'name');
+            }),
+        ];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Shift::where(fn($q) => $q->tenanted()->orWhereNull('company_id')))
-            ->allowedFilters([
+        Gate::authorize('viewAny', Shift::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->where(fn($q) => $q->orWhereNull('company_id')),
+            [
                 AllowedFilter::exact('company_id'),
                 'name',
                 'type',
                 'clock_in',
                 'clock_out',
-            ])
-            ->allowedIncludes([
-                'company',
-                AllowedInclude::callback('schedules', function ($query) {
-                    $query->select('id', 'name');
-                }),
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'name',
                 'clock_in',
                 'clock_out',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return ShiftResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $shift = Shift::findTenanted($id);
+        $shift = $this->service->findById($id);
+        Gate::authorize('view', $shift);
+
         $shift->load(['schedules' => fn($q) => $q->select('id', 'name')]);
-        return new ShiftResource($shift);
+        return new DefaultResource($shift);
     }
 
     public function store(StoreRequest $request)
     {
-        $data = $request->validated();
-        $data['show_in_request_branch_ids'] = $request->branch_ids;
-        $data['show_in_request_department_ids'] = $request->department_ids;
-        $data['show_in_request_position_ids'] = $request->position_ids;
-        $shift = Shift::create($data);
+        Gate::authorize('create', Shift::class);
 
-        return new ShiftResource($shift);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $shift = Shift::findTenanted($id);
+        $shift = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $shift);
 
-        $data = $request->validated();
-        $data['show_in_request_branch_ids'] = $request->branch_ids;
-        $data['show_in_request_department_ids'] = $request->department_ids;
-        $data['show_in_request_position_ids'] = $request->position_ids;
-        $shift->update($data);
+        $this->service->update($id, $request->validated());
 
-        return (new ShiftResource($shift))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $shift = Shift::withCount('schedules')->findTenanted($id);
+        $shift = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $shift);
 
-        if ($shift->schedules_count > 0) {
-            return $this->errorResponse(message: 'Shift is being used in the schedule. Remove it from the schedule first', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $shift->delete();
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $shift = Shift::withTrashed()->tenanted()->where('id', $id)->fisrtOrFail();
+        $shift = $this->service->findById($id, fn($q) => $q->withTrashed());
+        Gate::authorize('forceDelete', $shift);
 
-        if ($shift->schedules_count > 0) {
-            return $this->errorResponse(message: 'Shift is being used in the schedule. Remove it from the schedule first', code: Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+        $this->service->forceDelete($id);
 
-        $shift->forceDelete();
-
-        return $this->deletedResponse();
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $shift = Shift::withTrashed()->tenanted()->where('id', $id)->fisrtOrFail();
-        $shift->restore();
+        $shift = $this->service->findById($id, fn($q) => $q->withTrashed());
+        Gate::authorize('restore', $shift);
 
-        return new ShiftResource($shift);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 
     public function reportShiftUsers(ExportReportRequest $request, ?string $export = null)
     {
-        $startDate = Carbon::createFromFormat('Y-m-d', $request->filter['start_date']);
-        $endDate = Carbon::createFromFormat('Y-m-d', $request->filter['end_date']);
-        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $result = $this->service->reportShiftUsers($request->filter, $export);
 
-        $isShowResignUsers = isset($request['filter']['is_show_resign_users']) && !empty($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
-        $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
-        $userIds = isset($request['filter']['user_ids']) && !empty($request['filter']['user_ids']) ? explode(',', $request['filter']['user_ids']) : null;
-
-        $users = User::tenanted(true)
-            ->where('join_date', '<=', $startDate)
-            ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
-            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
-            ->get(['id', 'company_id', 'name', 'nik']);
-
-        $data = [];
-        $companyId = null;
-        foreach ($users as $user) {
-            if ($companyId !== $user->company_id) {
-                // $companyHolidays = Event::whereCompany($user->company_id)->whereCompanyHoliday()->get(['name', 'start_at', 'end_at']);
-                $nationalHolidays = Event::whereCompany($user->company_id)->whereNationalHoliday()->get(['name', 'start_at', 'end_at']);
-                $companyId = $user->company_id;
-            }
-
-            $user->setAppends([]);
-            $dataShifts = [];
-            foreach ($dateRange as $date) {
-                $schedule = ScheduleService::getTodaySchedule($user, $date, ['id', 'name', 'is_overide_national_holiday', 'is_overide_company_holiday'], ['id', 'name']);
-
-                $shift = $schedule?->shift?->name ?? null;
-
-                // if ($schedule?->is_overide_company_holiday == false) {
-                //     $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
-                //         return date('Y-m-d', strtotime($ch->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($ch->end_at)) >= $date->format("Y-m-d");
-                //     });
-
-                //     if ($companyHoliday) {
-                //         $shift = 'company_holiday';
-                //         // $shiftType = 'company_holiday';
-                //     }
-                // }
-
-                // if ($schedule?->is_overide_national_holiday == false && is_null($companyHoliday)) {
-                if ($schedule?->is_overide_national_holiday == false) {
-                    $nationalHoliday = $nationalHolidays->first(function ($nh) use ($date) {
-                        return date('Y-m-d', strtotime($nh->start_at)) <= $date->format("Y-m-d") && date('Y-m-d', strtotime($nh->end_at)) >= $date->format("Y-m-d");
-                    });
-
-                    if ($nationalHoliday) {
-                        $shift = 'national_holiday';
-                        // $shiftType = 'national_holiday';
-                    }
-                }
-
-                $dataShifts[] = [
-                    'date' => $date->format("Y-m-d"),
-                    'shift' => $shift,
-                ];
-            }
-
-            $data[] = [
-                'user' => $user,
-                'shifts' => $dataShifts,
-            ];
+        if ($export) {
+            return $result;
         }
 
-        $data = [
-            'dates' => $dateRange,
-            'users' => $data,
-        ];
-
-        if ($export) return Excel::download(new UserShiftsReport($data), 'user_shifts.xlsx');
-
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($result);
     }
 
     public function importShiftUsers(\Illuminate\Http\Request $request)
     {
+        Gate::authorize('viewAny', Shift::class);
+
         $request->validate([
             'file' => 'required|file|mimes:xlsx',
         ]);
 
-        Excel::import(new ShiftUsersImport(auth()->user()), $request->file('file'));
+        $this->service->importShiftUsers($request->file('file'));
 
-        return $this->updatedResponse();
+        return $this->createdResponse("File imported successfully");
     }
 }

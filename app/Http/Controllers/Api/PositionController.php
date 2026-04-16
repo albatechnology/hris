@@ -3,86 +3,102 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Position\StoreRequest;
-use App\Http\Resources\Position\PositionResource;
+use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\Position\PositionServiceInterface;
 use App\Models\Position;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class PositionController extends BaseController
 {
-    public function __construct()
+    public function __construct(private PositionServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:position_access', ['only' => ['restore']]);
-        $this->middleware('permission:position_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:position_create', ['only' => 'store']);
-        $this->middleware('permission:position_edit', ['only' => 'update']);
-        $this->middleware('permission:position_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return ['company'];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Position::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Position::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::exact('company_id'),
                 'name',
-            ])
-            ->allowedIncludes(['company'])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'name',
                 'order',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return PositionResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $position = Position::findTenanted($id);
-        return new PositionResource($position);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $position = Position::create($request->validated());
+        Gate::authorize('create', Position::class);
 
-        return new PositionResource($position);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $position = Position::findTenanted($id);
-        $position->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new PositionResource($position))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $position = Position::findTenanted($id);
-        $position->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $position = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $position->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
-        $position = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $position->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new PositionResource($position);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

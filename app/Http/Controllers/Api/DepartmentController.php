@@ -4,85 +4,101 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Department\StoreRequest;
 use App\Http\Resources\Department\DepartmentResource;
+use App\Interfaces\Services\Department\DepartmentServiceInterface;
 use App\Models\Department;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class DepartmentController extends BaseController
 {
-    public function __construct()
+    public function __construct(private DepartmentServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:department_access', ['only' => ['restore']]);
-        $this->middleware('permission:department_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:department_create', ['only' => 'store']);
-        $this->middleware('permission:department_edit', ['only' => 'update']);
-        $this->middleware('permission:department_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return ['division'];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Department::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Department::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('division_id'),
                 AllowedFilter::scope('company_id'),
                 'name',
-            ])
-            ->allowedIncludes(['division'])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'division_id',
                 'name',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DepartmentResource::collection($data);
+        return DepartmentResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $department = Department::findTenanted($id);
-        return new DepartmentResource($department);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DepartmentResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $department = Department::create($request->validated());
+        Gate::authorize('create', Department::class);
 
-        return new DepartmentResource($department);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $department = Department::findTenanted($id);
-        $department->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new DepartmentResource($department))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $department = Department::findTenanted($id);
-        $department->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $department = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $department->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $department = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $department->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new DepartmentResource($department);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

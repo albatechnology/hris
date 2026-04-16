@@ -13,63 +13,74 @@ use App\Http\Services\Reimbursement\ReimbursementService;
 use App\Interfaces\Services\ReimbursementCategory\ReimbursementCategoryServiceInterface;
 use App\Models\ReimbursementCategory;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ReimbursementCategoryController extends BaseController
 {
-    public function __construct(protected ReimbursementCategoryServiceInterface $service)
+    public function __construct(private ReimbursementCategoryServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:reimbursement_category_access', ['only' => ['restore']]);
-        // $this->middleware('permission:reimbursement_category_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:reimbursement_category_create', ['only' => 'store']);
-        $this->middleware('permission:reimbursement_category_edit', ['only' => 'update']);
-        $this->middleware('permission:reimbursement_category_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return [
+            AllowedInclude::callback('company', fn($q) => $q->select('id', 'name'))
+        ];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(ReimbursementCategory::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', ReimbursementCategory::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::exact('company_id'),
                 'name',
                 'limit_amount',
                 'period_type',
-            ])
-            ->allowedIncludes([
-                AllowedInclude::callback('company', fn($q) => $q->select('id', 'name'))
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'name',
                 'limit_amount',
                 'period_type',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $reimbursementCategory = $this->service->findById($id);
-        return new DefaultResource($reimbursementCategory);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $reimbursementCategory = $this->service->create($request->validated());
+        Gate::authorize('create', ReimbursementCategory::class);
 
-        return new DefaultResource($reimbursementCategory);
+        $data = $this->service->create($request->validated());
+
+        return new DefaultResource($data);
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $this->service->findById($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
+
         $this->service->update($id, $request->validated());
 
         return $this->updatedResponse();
@@ -77,7 +88,9 @@ class ReimbursementCategoryController extends BaseController
 
     public function destroy(int $id)
     {
-        $this->service->findById($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
         $this->service->delete($id);
 
         return $this->deletedResponse();
@@ -85,16 +98,22 @@ class ReimbursementCategoryController extends BaseController
 
     public function forceDelete(int $id)
     {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
+
         $this->service->forceDelete($id);
 
-        return $this->deletedResponse();
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
+
         $this->service->restore($id);
 
-        return $this->okResponse();
+        return $this->restoredResponse();
     }
 
     public function getUserBalance(GetUserReimbursementRequest $request, int $userId)
@@ -131,7 +150,7 @@ class ReimbursementCategoryController extends BaseController
 
     public function getUsers(int $id)
     {
-        $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id'));
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
 
         $users = QueryBuilder::for(
             User::tenanted()->select('users.id', 'users.name', 'users.email', 'users.nik', 'user_reimbursement_categories.limit_amount')
@@ -165,34 +184,34 @@ class ReimbursementCategoryController extends BaseController
 
     public function addUsers(AddUsersRequest $request, int $id)
     {
-        $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id', 'limit_amount'));
+        $data = $this->service->findById($id, fn($q) => $q->select('id', 'limit_amount'));
 
-        $data = collect($request->users ?? [])->map(function ($item) {
+        $datas = collect($request->users ?? [])->map(function ($item) {
             return [
                 'user_id' => $item['id'],
                 'limit_amount' => $item['limit_amount'],
             ];
         });
 
-        $this->service->addUsers($reimbursementCategory, $data);
+        $this->service->addUsers($data, $datas);
 
         return $this->createdResponse();
     }
 
     public function editUser(EditUserRequest $request, int $id)
     {
-        $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id'));
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
 
-        $this->service->editUsers($reimbursementCategory, $request->validated());
+        $this->service->editUsers($data, $request->validated());
 
         return $this->updatedResponse();
     }
 
     public function deleteUsers(DeleteUsersRequest $request, int $id)
     {
-        $reimbursementCategory = $this->service->findById($id, fn($q) => $q->select('id'));
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
 
-        $this->service->deleteUsers($reimbursementCategory, $request->user_ids ?? []);
+        $this->service->deleteUsers($data, $request->user_ids ?? []);
 
         return $this->deletedResponse();
     }
