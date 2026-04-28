@@ -81,10 +81,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
 
     public function store(RunPayrollDTO $dto): RunPayroll|JsonResponse
     {
-
         return $this->execute($dto);
-
-
         // return $this->baseRepository->create($dto);
     }
 
@@ -443,8 +440,10 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
             ->where('company_id', $runPayroll->company_id)
             ->whereDate('join_date', '<=', $runPayroll->payroll_end_date)
             ->has('payrollInfo')
-            ->with('payrollInfo')
-            ->get();
+            ->with([
+                'payrollInfo'
+            ])
+            ->get(['id', 'group_id', 'company_id', 'join_date', 'resign_date']);
 
         $allPayrollComponents = PayrollComponent::active()->whereCompany($runPayroll->company_id)->whenBranch($runPayroll->branch_id)->get();
 

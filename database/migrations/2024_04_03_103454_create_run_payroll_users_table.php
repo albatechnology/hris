@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('run_payroll_users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('run_payroll_id')->constrained();
+            $table->foreignId('run_payroll_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained();
             $table->double('basic_salary', 13, 2)->unsigned()->default(0);
             $table->double('gross_salary', 13, 2)->unsigned()->default(0);
