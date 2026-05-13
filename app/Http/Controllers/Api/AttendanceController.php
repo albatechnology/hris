@@ -1504,6 +1504,7 @@ class AttendanceController extends BaseController
 
         // Get user IDs for the company
         $userIds = User::where('company_id', $companyId)
+            ->whereNull('deleted_at')
             // ->whereIn('id', [19, 20])
             // ->limit(3)
             ->pluck('id')->toArray();

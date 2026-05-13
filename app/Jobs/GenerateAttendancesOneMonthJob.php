@@ -44,6 +44,7 @@ class GenerateAttendancesOneMonthJob implements ShouldQueue
         // Get users with minimal columns
         $users = User::whereIn('id', $this->userIds)
             ->select('id', 'group_id', 'company_id', 'type', 'resign_date')
+            ->whereNull('deleted_at')
             ->get();
 
         $createdCount = 0;
