@@ -57,7 +57,7 @@ class GenerateAttendancesOneMonthJob implements ShouldQueue
 
                 foreach ($users as $user) {
                     // Skip if user is resigned
-                    if ($user->resign_date && $user->resign_date->lte($dateString)) {
+                    if ($user->resign_date && Carbon::parse($user->resign_date)->lte($dateString)) {
                         $skippedCount++;
                         continue;
                     }
