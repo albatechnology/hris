@@ -63,15 +63,15 @@ class GenerateAttendancesOneMonthJob implements ShouldQueue
                         continue;
                     }
 
-                    // Check if attendance already exists for this user and date
-                    $existingAttendance = Attendance::where('user_id', $user->id)
+                    // Find attendance for this user and date, including clock-in / clock-out detail relations
+                    $attendance = Attendance::select('id', 'user_id', 'date')
+                        ->where('user_id', $user->id)
                         ->where('date', $dateString)
-                        ->exists(); // Use exists() for performance
-
-                    if ($existingAttendance) {
-                        $skippedCount++;
-                        continue;
-                    }
+                        ->with([
+                            'clockIn' => fn($q) => $q->select('id', 'attendance_id', 'type'),
+                            'clockOut' => fn($q) => $q->select('id', 'attendance_id', 'type'),
+                        ])
+                        ->first();
 
                     // Get schedule for the user on this date
                     $schedule = ScheduleService::getTodaySchedule($user, $dateString);
@@ -82,28 +82,37 @@ class GenerateAttendancesOneMonthJob implements ShouldQueue
 
                     $shift = $schedule->shift;
 
-                    // Create attendance record
-                    $attendance = Attendance::create([
-                        'user_id' => $user->id,
-                        'date' => $dateString,
-                        'schedule_id' => $schedule->id,
-                        'shift_id' => $shift->id,
-                    ]);
+                    if (!$attendance) {
+                        $attendance = Attendance::create([
+                            'user_id' => $user->id,
+                            'date' => $dateString,
+                            'schedule_id' => $schedule->id,
+                            'shift_id' => $shift->id,
+                        ]);
+                        $createdCount++;
+                    }
 
-                    // Create attendance details (clock in and clock out)
-                    $attendance->details()->create([
-                        'is_clock_in' => true,
-                        'time' => $dateString . ' ' . $shift->clock_in,
-                        'type' => AttendanceType::AUTOMATIC,
-                    ]);
+                    if ($attendance->clockIn) {
+                        $attendance->clockIn->update(['type' => AttendanceType::AUTOMATIC]);
+                    } else {
+                        $attendance->details()->create([
+                            'is_clock_in' => true,
+                            'time' => $dateString . ' ' . $shift->clock_in,
+                            'type' => AttendanceType::AUTOMATIC,
+                        ]);
+                        $createdCount++;
+                    }
 
-                    $attendance->details()->create([
-                        'is_clock_in' => false,
-                        'time' => $dateString . ' ' . $shift->clock_out,
-                        'type' => AttendanceType::AUTOMATIC,
-                    ]);
-
-                    $createdCount++;
+                    if ($attendance->clockOut) {
+                        $attendance->clockOut->update(['type' => AttendanceType::AUTOMATIC]);
+                    } else {
+                        $attendance->details()->create([
+                            'is_clock_in' => false,
+                            'time' => $dateString . ' ' . $shift->clock_out,
+                            'type' => AttendanceType::AUTOMATIC,
+                        ]);
+                        $createdCount++;
+                    }
                 }
             }
 

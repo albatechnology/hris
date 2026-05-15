@@ -492,11 +492,9 @@ class AttendanceController extends BaseController
                     $summaryAwayTimeOff += 1;
                 }
             } else {
-                // dump('test 1');
                 $shift = $schedule?->shift ?? null;
                 $companyHoliday = null;
                 $isHoliday = false;
-                //   dump($user->payrollInfo?->is_ignore_alpa, $shift?->is_dayoff, $isHoliday);
                 if ($schedule?->is_overide_company_holiday == false) {
                     $companyHoliday = $companyHolidays->first(function ($ch) use ($date) {
                         return date('Y-m-d', strtotime($ch->start_at)) <= $date && date('Y-m-d', strtotime($ch->end_at)) >= $date;
@@ -860,7 +858,6 @@ class AttendanceController extends BaseController
     // {
     //     try {
     //         $user = auth('sanctum')->user();
-    //         // dd($request->validated());
     //         $attendance = $this->attendanceService->storeAttendance($request->validated(),$user);
     //         return new AttendanceResource($attendance);
     //     } catch (\DomainException $e) {
@@ -1505,7 +1502,7 @@ class AttendanceController extends BaseController
         // Get user IDs for the company
         $userIds = User::where('company_id', $companyId)
             ->whereNull('deleted_at')
-            // ->whereIn('id', [19, 20])
+            ->whereIn('id', [24])
             // ->limit(3)
             ->pluck('id')->toArray();
 
