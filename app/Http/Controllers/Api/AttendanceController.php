@@ -76,10 +76,10 @@ class AttendanceController extends BaseController
 
         $users = User::tenanted(true)
             // ->where('join_date', '<=', $startDate)
-            ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
+            // ->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $endDate))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
-            ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
+            // ->when($isShowResignUsers, fn($q) => $q->showResignUsers($isShowResignUsers))
             ->get(['id', 'company_id', 'name', 'nik']);
 
         $data = [];
