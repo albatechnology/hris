@@ -1475,6 +1475,7 @@ class AttendanceController extends BaseController
             ], 400);
         }
 
+        $userIds = $request->user_ids ? explode(',', $request->user_ids) : null;
         $companyId = $request->company_id;
         $date = Carbon::parse($request->date);
         $period = $date->format('m-Y');
@@ -1502,8 +1503,7 @@ class AttendanceController extends BaseController
         // Get user IDs for the company
         $userIds = User::where('company_id', $companyId)
             ->whereNull('deleted_at')
-            ->whereIn('id', [412])
-            // ->limit(3)
+            ->when($userIds, fn($q) => $q->whereIn('id', $userIds))
             ->pluck('id')->toArray();
 
         // Chunk into groups of 10
