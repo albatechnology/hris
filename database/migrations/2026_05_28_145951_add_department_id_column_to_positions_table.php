@@ -15,10 +15,12 @@ return new class extends Migration
     {
         Schema::table('divisions', function (Blueprint $table) {
             $table->foreignIdFor(User::class)->after('id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedSmallInteger('order')->after('name')->default(1);
         });
 
         Schema::table('departments', function (Blueprint $table) {
             $table->foreignIdFor(User::class)->after('id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedSmallInteger('order')->after('name')->default(1);
         });
 
         Schema::table('positions', function (Blueprint $table) {
@@ -33,14 +35,14 @@ return new class extends Migration
     {
         Schema::table('divisions', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
-            $table->dropColumn(['user_id']);
+            $table->dropColumn(['user_id', 'order']);
         });
 
         Schema::table('departments', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
-            $table->dropColumn(['user_id']);
+            $table->dropColumn(['user_id', 'order']);
         });
-        
+
         Schema::table('positions', function (Blueprint $table) {
             $table->dropForeign(['department_id']);
             $table->dropColumn(['department_id']);

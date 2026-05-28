@@ -1,11 +1,10 @@
 <?php
 
+use App\Models\Division;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Department;
-use App\Models\Position;
 
 return new class extends Migration
 {
@@ -15,32 +14,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignIdFor(Department::class)
+            $table->foreignIdFor(Division::class)
                 ->nullable()
                 ->after('overtime_id')
-                ->constrained()
-                ->nullOnDelete();
-
-            $table->foreignIdFor(Position::class)
-                ->nullable()
-                ->after('department_id')
                 ->constrained()
                 ->nullOnDelete();
         });
 
         /*
         |--------------------------------------------------------------------------
-        | Copy existing data
+        | Copy division_id from departments
         |--------------------------------------------------------------------------
         */
 
         DB::statement("
             UPDATE users u
-            INNER JOIN user_department_positions udp
-                ON udp.user_id = u.id
+            INNER JOIN departments d
+                ON d.id = u.department_id
             SET
-                u.department_id = udp.department_id,
-                u.position_id = udp.position_id
+                u.division_id = d.division_id
         ");
     }
 
@@ -50,12 +42,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['department_id']);
-            $table->dropForeign(['position_id']);
+            $table->dropForeign(['division_id']);
 
             $table->dropColumn([
-                'department_id',
-                'position_id',
+                'division_id',
             ]);
         });
     }
