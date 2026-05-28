@@ -25,9 +25,6 @@ class PositionController extends BaseController
     private function getAllowedIncludes()
     {
         return [
-            AllowedInclude::callback('user', function ($query) {
-                $query->select('id', 'name');
-            }),
             AllowedInclude::callback('company', function ($query) {
                 $query->select('id', 'name');
             }),
@@ -41,7 +38,6 @@ class PositionController extends BaseController
     {
         $datas = QueryBuilder::for(Position::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('department_id'),
                 'name',
@@ -49,7 +45,6 @@ class PositionController extends BaseController
             ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
-                'user_id',
                 'company_id',
                 'department_id',
                 'name',

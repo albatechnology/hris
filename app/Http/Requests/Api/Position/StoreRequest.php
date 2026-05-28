@@ -17,7 +17,6 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['nullable', new CompanyTenantedRule(User::class, 'User not found')],
             'company_id' => [new CompanyTenantedRule()],
             'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             'name' => ['required', 'string'],

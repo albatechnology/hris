@@ -22,7 +22,6 @@ return new class extends Migration
         });
 
         Schema::table('positions', function (Blueprint $table) {
-            $table->foreignIdFor(User::class)->after('id')->nullable()->constrained()->nullOnDelete();
             $table->foreignIdFor(Department::class)->after('id')->nullable()->constrained()->cascadeOnDelete();
         });
     }
@@ -44,8 +43,7 @@ return new class extends Migration
         
         Schema::table('positions', function (Blueprint $table) {
             $table->dropForeign(['department_id']);
-            $table->dropForeign(['user_id']);
-            $table->dropColumn(['department_id', 'user_id']);
+            $table->dropColumn(['department_id']);
         });
     }
 };
