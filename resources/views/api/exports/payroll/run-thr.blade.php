@@ -101,12 +101,13 @@
                     </td>
                     <td>{{ $runThrUser->user?->resign_date ? date('d-M-Y', strtotime($runThrUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runThrUser->user?->positions
+                    <td>{{ $runThrUser->user?->department->name .' / '. $runThrUser->user?->position->name }}</td>
+                    {{-- <td>{{ $runThrUser->user?->positions
                         ?->map(function ($position) {
                             return ($position->department?->name ?? '') . ' / ' . ($position->position?->name ?? '');
                         })
                         ?->implode(', ') }}
-                    </td>
+                    </td> --}}
                     <td>{{ $runThrUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>
@@ -237,12 +238,13 @@
                     </td>
                     <td>{{ $runThrUser->user?->resign_date ? date('d-M-Y', strtotime($runThrUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runThrUser->user?->positions
+                    <td>{{ $runThrUser->user?->department->name .' / '. $runThrUser->user?->position->name }}</td>
+                    {{-- <td>{{ $runThrUser->user?->positions
                         ?->map(function ($position) {
                             return $position->department->name . ' / ' . $position->position->name;
                         })
                         ?->implode(', ') }}
-                    </td>
+                    </td> --}}
                     <td>{{ $runThrUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>
@@ -373,12 +375,13 @@
                     </td>
                     <td>{{ $runThrUser->user?->resign_date ? date('d-M-Y', strtotime($runThrUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runThrUser->user?->positions
+                    <td>{{ $runThrUser->user?->department->name .' / '. $runThrUser->user?->position->name }}</td>
+                    {{-- <td>{{ $runThrUser->user?->positions
                         ?->map(function ($position) {
                             return $position->department->name . ' / ' . $position->position->name;
                         })
                         ?->implode(', ') }}
-                    </td>
+                    </td> --}}
                     <td>{{ $runThrUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                     <td>{{ $runThrUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>

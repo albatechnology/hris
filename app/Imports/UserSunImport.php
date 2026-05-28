@@ -3,16 +3,10 @@
 namespace App\Imports;
 
 use App\Enums\JaminanPensiunCost;
-use App\Enums\MaritalStatus;
 use App\Enums\MediaCollection;
 use App\Enums\PaidBy;
-use App\Models\Company;
-use App\Models\Department;
-use App\Models\Position;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;

@@ -39,6 +39,7 @@ class GroupSeeder extends Seeder
         //     'created_at' => now(),
         //     'updated_at' => now(),
         // ]);
+        
         $departments = [
             [
                 'name' => 'Marketing',

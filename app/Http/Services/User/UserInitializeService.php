@@ -14,6 +14,7 @@ class UserInitializeService
     public function __invoke(User $user): void
     {
         $user->absenceReminder()->create();
+        
         $user->banks()->create([
             'name' => BankName::BCA,
             'account_no' => '0000000000',
@@ -36,12 +37,12 @@ class UserInitializeService
         $division = $user->divisions()->create([
             'name' => 'Operational',
         ]);
-        $division = $division->departments()->create([
+        $department = $division->departments()->create([
             'name' => 'HR'
         ]);
-        $user->positions()->create([
-            'name' => 'Manager'
-        ]);
+        // $user->positions()->create([
+        //     'name' => 'Manager'
+        // ]);
 
         $dates = collect(EventService::getCalendarDate())->map(function ($date) {
             $date['start_at'] = $date['date'];

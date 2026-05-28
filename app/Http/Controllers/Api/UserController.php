@@ -76,12 +76,18 @@ class UserController extends BaseController
             AllowedInclude::callback('branches', function ($query) {
                 $query->select('user_id', 'branch_id')->with('branch', fn($q) => $q->select('id', 'name'));
             }),
-            AllowedInclude::callback('positions', function ($query) {
-                $query->select('user_id', 'department_id', 'position_id')->with([
-                    'position' => fn($q) => $q->select('id', 'name'),
-                    'department' => fn($q) => $q->select('id', 'name'),
-                ]);
+            AllowedInclude::callback('department', function ($query) {
+                $query->select('id', 'name');
             }),
+            AllowedInclude::callback('position', function ($query) {
+                $query->select('id', 'name');
+            }),
+            // AllowedInclude::callback('positions', function ($query) {
+            //     $query->select('user_id', 'department_id', 'position_id')->with([
+            //         'department' => fn($q) => $q->select('id', 'name'),
+            //         'position' => fn($q) => $q->select('id', 'name'),
+            //     ]);
+            // }),
             AllowedInclude::callback('roles', function ($query) {
                 $query->select('id', 'name');
             }),
@@ -416,10 +422,10 @@ class UserController extends BaseController
                 $user->detail()->create($request->validated());
             }
 
-            if (count($request->positions) > 0) {
-                $user->positions()->delete();
-                $user->positions()->createMany($request->positions ?? []);
-            }
+            // if (count($request->positions) > 0) {
+            //     $user->positions()->delete();
+            //     $user->positions()->createMany($request->positions ?? []);
+            // }
 
             DB::commit();
         } catch (Exception $e) {
@@ -710,15 +716,18 @@ class UserController extends BaseController
     public function getAvailableSupervisor(int $id, Request $request)
     {
         $user = User::findTenanted($id);
-        $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
-        $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
+        $user->load('position', fn($q) => $q->select('id', 'order'));
+        $order = $user->position ? $user->position->order : null;
+        // $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
+        // $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
         if (!is_null($order)) {
             $name = $request->filter['name'] ?? null;
             $users = User::select('id', 'name')
                 ->tenanted()->where('id', '!=', $user->id)
                 ->when($request->filter['company_id'] ?? null, fn($q) => $q->where('company_id', $request->filter['company_id']))
-                ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
+                ->whereHas('position', fn($q) => $q->where('order', '>=', $order));
+            // ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
 
             if ($name) {
                 $users = $users->whereLike('name', $name);
@@ -768,15 +777,16 @@ class UserController extends BaseController
         if (!$runPayroll) return $this->errorResponse(message: "Data payroll not found", code: Response::HTTP_NOT_FOUND);
 
         $user->load([
-            'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
+            'position' => fn($q) => $q->select('id', 'name'),
+            // 'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
             'detail' => fn($q) => $q->select('user_id', 'job_level'),
             'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp'),
         ]);
 
         $runPayroll->load([
-            'company' => fn($q) => $q->select('id','name'),
+            'company' => fn($q) => $q->select('id', 'name'),
             'users' => fn($q) => $q->where('user_id', $user->id)
-            ->with('components', fn($q) => $q->where('amount','>',0)->with('payrollComponent', fn($q) => $q->select('id','name','type'))),
+                ->with('components', fn($q) => $q->where('amount', '>', 0)->with('payrollComponent', fn($q) => $q->select('id', 'name', 'type'))),
             // ->with('components.payrollComponent'),
         ]);
 
@@ -813,13 +823,14 @@ class UserController extends BaseController
         if (!$runThr) return $this->errorResponse(message: "Data THR not found", code: Response::HTTP_NOT_FOUND);
 
         $user->load([
-            'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
+            'position' => fn($q) => $q->select('id', 'name'),
+            // 'positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'name')),
             'detail' => fn($q) => $q->select('user_id', 'job_level'),
             'payrollInfo' => fn($q) => $q->select('user_id', 'ptkp_status', 'npwp', 'tax_method'),
         ]);
 
         $runThr->load([
-            'company' => fn($q) => $q->select('id','name'),
+            'company' => fn($q) => $q->select('id', 'name'),
             'users' => fn($q) => $q->where('user_id', $user->id)->with('components.payrollComponent'),
         ]);
 
@@ -910,11 +921,12 @@ class UserController extends BaseController
                 'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
                 'roles' => fn($q) => $q->select('id'),
                 'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
-                // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')
-                'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
-                    'position' => fn($q) => $q->select('id','name'),
-                    'department' => fn($q) => $q->select('id','name'),
-                ])
+                'position' => fn($q) => $q->select('id', 'name'),
+                'department' => fn($q) => $q->select('id', 'name'),
+                // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
+                //     'position' => fn($q) => $q->select('id', 'name'),
+                //     'department' => fn($q) => $q->select('id', 'name'),
+                // ])
             ]);
 
         if ($request->is_json == true) {

@@ -91,16 +91,18 @@ class AnnouncementController extends BaseController
 
             if ($request->position_ids) {
                 $announcement->positions()->attach(explode(',', $request->position_ids));
-                $query->whereHas('positions', function ($q) use ($request) {
-                    $q->whereIn('position_id', explode(',', $request->position_ids));
-                });
+                $query->whereIn('position_id', explode(',', $request->position_ids));
+                // $query->whereHas('positions', function ($q) use ($request) {
+                //     $q->whereIn('position_id', explode(',', $request->position_ids));
+                // });
             }
 
             if ($request->department_ids) {
                 $announcement->positions()->attach(explode(',', $request->department_ids));
-                $query->whereHas('positions', function ($q) use ($request) {
-                    $q->whereIn('department_id', explode(',', $request->department_ids));
-                });
+                $query->whereIn('department_id', explode(',', $request->department_ids));
+                // $query->whereHas('positions', function ($q) use ($request) {
+                //     $q->whereIn('department_id', explode(',', $request->department_ids));
+                // });
             }
 
             //   if ($request->job_levels) {

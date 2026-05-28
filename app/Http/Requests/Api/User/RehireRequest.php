@@ -15,8 +15,6 @@ use Illuminate\Validation\Rule;
 
 class RehireRequest extends FormRequest
 {
-    
-
     /**
      * Prepare inputs for validation.
      *

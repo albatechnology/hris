@@ -57,11 +57,13 @@ class UserResignation extends BaseModel implements TenantedInterface
 
             if ($model->type->is(ResignationType::REHIRE)) {
                 UserSchedule::where('user_id', $model->user_id)->delete();
-                $user->positions()->delete();
+                // $user->positions()->delete();
                 $user->branches()->delete();
                 $user->companies()->delete();
 
                 $user->update([
+                    'department_id' => $model->department_id ?? null,
+                    'position_id' => $model->position_id ?? null,
                     'nik' => $model->nik,
                     'branch_id' => $model->branch_id,
                     'resign_date' => null,
@@ -104,10 +106,10 @@ class UserResignation extends BaseModel implements TenantedInterface
                     'schedule_id' => $model->schedule_id,
                 ]);
 
-                $user->positions()->create([
-                    'department_id' => $model->department_id,
-                    'position_id' => $model->position_id,
-                ]);
+                // $user->positions()->create([
+                //     'department_id' => $model->department_id,
+                //     'position_id' => $model->position_id,
+                // ]);
             } else {
                 $user->update([
                     'resign_date' => $model->resignation_date,

@@ -41,6 +41,8 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'branch_id',
         'level_id',
         'live_attendance_id',
+        'department_id',
+        'position_id',
         'name',
         'last_name',
         'email',
@@ -290,6 +292,16 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->belongsTo(Branch::class);
     }
 
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
+    }
+
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);
@@ -355,10 +367,10 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         return $this->hasMany(RequestChangeData::class);
     }
 
-    public function positions(): HasMany
-    {
-        return $this->hasMany(UserDepartmentPosition::class);
-    }
+    // public function positions(): HasMany
+    // {
+    //     return $this->hasMany(UserDepartmentPosition::class);
+    // }
 
     public function reimbursementCategories(): BelongsToMany
     {

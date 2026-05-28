@@ -12,8 +12,6 @@ use Illuminate\Validation\Rule;
 
 class DetailStoreRequest extends FormRequest
 {
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -27,9 +25,11 @@ class DetailStoreRequest extends FormRequest
             'nik' => 'nullable|string|unique:users,nik,' . $this->user,
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
             'join_date' => 'nullable|date',
-            'positions' => 'nullable|array',
-            'positions.*.position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
-            'positions.*.department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            // 'positions' => 'nullable|array',
+            // 'positions.*.position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            // 'positions.*.department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
         ];
     }
 }

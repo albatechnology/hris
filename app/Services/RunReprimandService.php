@@ -226,25 +226,33 @@ class RunReprimandService
     {
         $monthTypeRule = $reprimand->context['rule'];
 
-        $user = $reprimand->user->load(['positions' => fn($q) => $q->with([
+        $user = $reprimand->user->load([
             'department' => fn($q) => $q->select('id', 'name'),
             'position' => fn($q) => $q->select('id', 'name'),
-        ])]);
+        ]);
 
-        $position = null;
-        $department = null;
-        if ($user->positions->count()) {
-            $position = $user->positions[0]->position?->name ?? null;
-            $department = $user->positions[0]->department?->name ?? null;
-        }
+        $department = $user->department?->name ?? null;
+        $position = $user->position?->name ?? null;
+
+        // $user = $reprimand->user->load(['positions' => fn($q) => $q->with([
+        //     'department' => fn($q) => $q->select('id', 'name'),
+        //     'position' => fn($q) => $q->select('id', 'name'),
+        // ])]);
+
+        // $position = null;
+        // $department = null;
+        // if ($user->positions->count()) {
+        //     $position = $user->positions[0]->position?->name ?? null;
+        //     $department = $user->positions[0]->department?->name ?? null;
+        // }
 
         $data = [
             'reprimand' => $reprimand,
             'number' => rand(100, 999),
             'user_name' => $user->name,
             'user_title' => $user->gender->getTitle(),
-            'position' => $position,
             'department' => $department,
+            'position' => $position,
             'letter_title' => $monthTypeRule['letter_title'],
             'letter_subject' => $monthTypeRule['letter_subject'],
             'letter_number' => $monthTypeRule['letter_number'],

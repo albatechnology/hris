@@ -123,6 +123,8 @@ class UserSeeder extends Seeder
                 'nik' => rand(16, 100),
                 'sign_date' => date('Y') . '-01-01',
                 'join_date' => date('Y') . '-01-01',
+                'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $company->id))->where('name', 'HR')->firstOrFail(['id'])->id,
+                'position_id' => Position::where('company_id', $company->id)->where('name', 'Manager')->firstOrFail(['id'])->id,
             ]);
             $admin->payrollInfo()->create([
                 'basic_salary' => 10000000
@@ -141,10 +143,10 @@ class UserSeeder extends Seeder
             $admin->companies()->create(['company_id' => $admin->company_id]);
 
             // set positions
-            $admin->positions()->create([
-                'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $admin->company_id))->where('name', 'HR')->firstOrFail(['id'])->id,
-                'position_id' => Position::where('company_id', $admin->company_id)->where('name', 'Manager')->firstOrFail(['id'])->id,
-            ]);
+            // $admin->positions()->create([
+            //     'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $admin->company_id))->where('name', 'HR')->firstOrFail(['id'])->id,
+            //     'position_id' => Position::where('company_id', $admin->company_id)->where('name', 'Manager')->firstOrFail(['id'])->id,
+            // ]);
 
             Setting::where('key', SettingKey::REQUEST_APPROVER)->where('company_id', $admin->company_id)->update(['value' => $admin->id]);
 

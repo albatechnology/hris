@@ -20,10 +20,14 @@ class ReprimandMail extends Mailable implements ShouldQueue
      */
     public function __construct(private User $user, private Reprimand $reprimand)
     {
-        $this->user->load(['positions' => fn($q) => $q->with([
+        $this->user->load([
             'department' => fn($q) => $q->select('id', 'name'),
             'position' => fn($q) => $q->select('id', 'name'),
-        ])]);
+        ]);
+        // $this->user->load(['positions' => fn($q) => $q->with([
+        //     'department' => fn($q) => $q->select('id', 'name'),
+        //     'position' => fn($q) => $q->select('id', 'name'),
+        // ])]);
     }
 
     /**
@@ -41,12 +45,14 @@ class ReprimandMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        $position = null;
-        $department = null;
-        if ($this->user->positions->count()) {
-            $position = $this->user->positions[0]->position?->name ?? null;
-            $department = $this->user->positions[0]->department?->name ?? null;
-        }
+        $department = $this->user->department ? $this->user->department->name : null;
+        $position = $this->user->position ? $this->user->position->name : null;
+        // $position = null;
+        // $department = null;
+        // if ($this->user->positions->count()) {
+        //     $position = $this->user->positions[0]->position?->name ?? null;
+        //     $department = $this->user->positions[0]->department?->name ?? null;
+        // }
 
         return new Content(
             view: 'mails.reprimand.reprimand',
@@ -54,8 +60,8 @@ class ReprimandMail extends Mailable implements ShouldQueue
                 'number' => rand(100, 999),
                 'user_name' => $this->user->name,
                 'user_title' => $this->user->gender->getTitle(),
-                'position' => $position,
                 'department' => $department,
+                'position' => $position,
                 'download_url' => $this->reprimand->file  && isset($this->reprimand->file['url']) ?  $this->reprimand->file['url'] : null,
             ],
         );

@@ -66,7 +66,8 @@
                     </tr>
                     <tr>
                         <th class="text-left">Job Position</th>
-                        <td>: {{ $user->positions->pluck('position.name')->implode(', ') }}</td>
+                        <td>: {{ $user->position->name }}</td>
+                        {{-- <td>: {{ $user->positions->pluck('position.name')->implode(', ') }}</td> --}}
                     </tr>
                     <tr>
                         <th class="text-left">Organization</th>

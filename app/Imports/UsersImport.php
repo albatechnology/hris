@@ -240,11 +240,15 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
         $user->roles()->syncWithPivotValues([$row['role_id']], ['group_id' => $user->group_id]);
 
         if (isset($row['department_id']) && !empty($row['department_id']) && isset($row['position_id']) && !empty($row['position_id'])) {
-            $user->positions()->delete();
-            $user->positions()->create([
+            $user->update([
                 'department_id' => $row['department_id'],
                 'position_id' => $row['position_id'],
             ]);
+            // $user->positions()->delete();
+            // $user->positions()->create([
+            //     'department_id' => $row['department_id'],
+            //     'position_id' => $row['position_id'],
+            // ]);
         }
 
         if (isset($row['schedule_id']) && !empty($row['schedule_id'])) {

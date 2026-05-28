@@ -163,9 +163,11 @@ class RegisterRequest extends FormRequest
             'jaminan_pensiun_cost' => ['nullable', Rule::enum(JaminanPensiunCost::class)],
             'jaminan_pensiun_date' => 'nullable|date',
 
-            'positions' => 'nullable|array',
-            'positions.*.position_id' => 'required|exists:positions,id',
-            'positions.*.department_id' => 'required|exists:departments,id',
+            'position_id' => ['nullable', 'exists:positions,id'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            // 'positions' => 'nullable|array',
+            // 'positions.*.position_id' => 'required|exists:positions,id',
+            // 'positions.*.department_id' => 'required|exists:departments,id',
 
             'role_ids' => 'nullable|array',
             'role_ids.*' => 'required|exists:roles,id',

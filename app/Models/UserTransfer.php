@@ -83,10 +83,12 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
                 'supervisors' => fn($q) => $q->with('supervisor', fn($q) => $q->select('id', 'name')),
                 'companies',
                 'branches',
-                'positions' => fn($q) => $q->with([
-                    'department' => fn($q) => $q->select('id', 'name'),
-                    'position' => fn($q) => $q->select('id', 'name')
-                ]),
+                'department' => fn($q) => $q->select('id', 'name'),
+                'position' => fn($q) => $q->select('id', 'name')
+                // 'positions' => fn($q) => $q->with([
+                //     'department' => fn($q) => $q->select('id', 'name'),
+                //     'position' => fn($q) => $q->select('id', 'name')
+                // ]),
             ]);
         });
 
@@ -174,13 +176,20 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
                         }
                     }
 
-                    if ($column == 'department' && !empty($this->context['positions'])) {
-                        $data['department'] = $this->context['positions'][0]['department'] ?? '';
+                    if ($column == 'department' && !empty($this->context['department'])) {
+                        $data['department'] = $this->context['department'] ?? '';
                     }
 
-                    if ($column == 'position' && !empty($this->context['positions'])) {
-                        $data['position'] = $this->context['positions'][0]['position'] ?? '';
+                    if ($column == 'position' && !empty($this->context['position'])) {
+                        $data['position'] = $this->context['position'] ?? '';
                     }
+                    // if ($column == 'department' && !empty($this->context['positions'])) {
+                    //     $data['department'] = $this->context['positions'][0]['department'] ?? '';
+                    // }
+
+                    // if ($column == 'position' && !empty($this->context['positions'])) {
+                    //     $data['position'] = $this->context['positions'][0]['position'] ?? '';
+                    // }
 
                     if ($column == 'employment_status' && !empty($this->context['detail']['employment_status'])) {
                         $data['employment_status'] = $this->context['detail']['employment_status'] ?? '';

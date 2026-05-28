@@ -279,10 +279,13 @@ class RequestShiftController extends BaseController
     {
         /** @var User $user */
         $user = auth()->user()?->load('positions');
+        // $user = auth()->user()?->load('positions');
 
         $branchId = $user->branch_id;
-        $departmentIds = $user->positions->pluck('department_id')?->toArray();
-        $positionIds = $user->positions->pluck('position_id')?->toArray();
+        $departmentIds = $user->department_id;
+        $positionIds = $user->position_id;
+        // $departmentIds = $user->positions->pluck('department_id')?->toArray();
+        // $positionIds = $user->positions->pluck('position_id')?->toArray();
 
         $schedule = ScheduleService::getTodaySchedule(scheduleColumn: ['id'], shiftColumn: ['id']);
 

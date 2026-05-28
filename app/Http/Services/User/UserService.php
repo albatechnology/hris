@@ -70,7 +70,7 @@ class UserService extends BaseService implements UserServiceInterface
             }
             $user->detail()->create($request->validated());
             $user->payrollInfo()->create($request->validated());
-            $user->positions()->createMany($request->positions ?? []);
+            // $user->positions()->createMany($request->positions ?? []);
             $user->roles()->syncWithPivotValues($request->role_ids ?? [], ['group_id' => $user->group_id]);
             $user->schedules()->sync([
                 'schedule_id' => $request->schedule_id
