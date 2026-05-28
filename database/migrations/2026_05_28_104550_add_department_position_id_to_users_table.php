@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Department;
+use App\Models\Position;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,8 +14,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('department_id')->nullable()->after('overtime_id')->constrained();
-            $table->foreignId('position_id')->nullable()->after('position_id')->constrained();
+            $table->foreignIdFor(Department::class)->after('overtime_id')->constrained();
+            $table->foreignIdFor(Position::class)->after('overtime_id')->constrained();
         });
     }
 
