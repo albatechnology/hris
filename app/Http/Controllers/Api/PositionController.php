@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Position\StoreRequest;
-use App\Http\Resources\Position\PositionResource;
+use App\Http\Resources\DefaultResource;
+use App\Models\Department;
 use App\Models\Position;
-use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class PositionController extends BaseController
@@ -21,68 +22,94 @@ class PositionController extends BaseController
         $this->middleware('permission:position_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    private function getAllowedIncludes()
+    {
+        return [
+            AllowedInclude::callback('user', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('company', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('department', function ($query) {
+                $query->select('id', 'name');
+            }),
+        ];
+    }
+
     public function index()
     {
-        $data = QueryBuilder::for(Position::tenanted())
+        $datas = QueryBuilder::for(Position::tenanted())
             ->allowedFilters([
+                AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('department_id'),
                 'name',
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
+                'user_id',
                 'company_id',
+                'department_id',
                 'name',
                 'order',
                 'created_at',
             ])
             ->paginate($this->per_page);
 
-        return PositionResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $position = Position::findTenanted($id);
-        return new PositionResource($position);
+        $data = QueryBuilder::for(Position::tenanted()->where('id', $id))
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->firstOrFail();
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $position = Position::create($request->validated());
+        $data = Position::create($request->validated());
 
-        return new PositionResource($position);
+        return new DefaultResource($data);
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $position = Position::findTenanted($id);
-        $position->update($request->validated());
+        $data = Position::findTenanted($id);
+        $companyId = Department::findTenanted($data->department_id)->company_id;
 
-        return (new PositionResource($position))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $updatedData = $request->validated();
+        $updatedData['company_id'] = $companyId;
+        $data->update($updatedData);
+
+        return new DefaultResource($data);
     }
 
     public function destroy(int $id)
     {
-        $position = Position::findTenanted($id);
-        $position->delete();
+        $data = Position::findTenanted($id);
+        $data->delete();
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $position = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $position->forceDelete();
+        $data = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->forceDelete();
 
         return $this->deletedResponse();
     }
 
     public function restore(int $id)
     {
-        $position = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $position->restore();
+        $data = Position::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->restore();
 
-        return new PositionResource($position);
+        return new DefaultResource($data);
     }
 }

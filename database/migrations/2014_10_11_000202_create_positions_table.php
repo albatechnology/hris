@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
+            // $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
             $table->foreignId('company_id')->constrained();
             $table->string('name', 100);
             $table->unsignedSmallInteger('order')->default(1);

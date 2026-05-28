@@ -12,7 +12,9 @@ class Department extends BaseModel implements TenantedInterface
     use CustomSoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'division_id',
+        'user_id',
         'name',
     ];
 
@@ -39,5 +41,15 @@ class Department extends BaseModel implements TenantedInterface
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);
+    }
+
+    public function positions(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

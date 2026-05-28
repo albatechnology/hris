@@ -13,6 +13,8 @@ class Position extends BaseModel implements TenantedInterface
 
     protected $fillable = [
         'company_id',
+        'department_id',
+        'user_id',
         'name',
         'order',
     ];
@@ -20,5 +22,15 @@ class Position extends BaseModel implements TenantedInterface
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

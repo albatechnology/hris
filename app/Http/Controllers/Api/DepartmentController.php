@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Department\StoreRequest;
-use App\Http\Resources\Department\DepartmentResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Department;
-use Illuminate\Http\Response;
+use App\Models\Division;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class DepartmentController extends BaseController
@@ -21,68 +22,93 @@ class DepartmentController extends BaseController
         $this->middleware('permission:department_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    private function getAllowedIncludes()
+    {
+        return [
+            AllowedInclude::callback('company', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('division', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('user', function ($query) {
+                $query->select('id', 'name');
+            }),
+        ];
+    }
+
     public function index()
     {
         $data = QueryBuilder::for(Department::tenanted())
             ->allowedFilters([
-                AllowedFilter::exact('division_id'),
                 AllowedFilter::scope('company_id'),
+                AllowedFilter::exact('division_id'),
+                AllowedFilter::exact('user_id'),
                 'name',
             ])
-            ->allowedIncludes(['division'])
+            ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
+                'company_id',
                 'division_id',
+                'user_id',
                 'name',
                 'created_at',
             ])
             ->paginate($this->per_page);
 
-        return DepartmentResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function show(int $id)
     {
-        $department = Department::findTenanted($id);
-        return new DepartmentResource($department);
+        $data = QueryBuilder::for(Department::tenanted()->where('id', $id))
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->firstOrFail();
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $department = Department::create($request->validated());
+        $data = Department::create($request->validated());
 
-        return new DepartmentResource($department);
+        return new DefaultResource($data);
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $department = Department::findTenanted($id);
-        $department->update($request->validated());
+        $data = Department::findTenanted($id);
+        $companyId = Division::findTenanted($data->division_id)->company_id;
 
-        return (new DepartmentResource($department))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $updatedData = $request->validated();
+        $updatedData['company_id'] = $companyId;
+        $data->update($updatedData);
+
+        return new DefaultResource($data);
     }
 
     public function destroy(int $id)
     {
-        $department = Department::findTenanted($id);
-        $department->delete();
+        $data = Department::findTenanted($id);
+        $data->delete();
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $department = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $department->forceDelete();
+        $data = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->forceDelete();
 
         return $this->deletedResponse();
     }
 
     public function restore(int $id)
     {
-        $department = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $department->restore();
+        $data = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->restore();
 
-        return new DepartmentResource($department);
+        return new DefaultResource($data);
     }
 }

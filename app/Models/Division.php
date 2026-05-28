@@ -14,6 +14,7 @@ class Division extends BaseModel implements TenantedInterface
 
     protected $fillable = [
         'company_id',
+        'user_id',
         'name',
     ];
 
@@ -25,5 +26,10 @@ class Division extends BaseModel implements TenantedInterface
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

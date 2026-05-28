@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Position;
 
+use App\Models\Department;
+use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -15,9 +17,11 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'user_id' => ['nullable', new CompanyTenantedRule(User::class, 'User not found')],
             'company_id' => [new CompanyTenantedRule()],
-            'name' => 'required|string',
-            'order' => 'required|integer',
+            'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            'name' => ['required', 'string'],
+            'order' => ['required', 'integer'],
         ];
     }
 }

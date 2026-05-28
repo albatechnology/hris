@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Division\StoreRequest;
-use App\Http\Resources\Division\DivisionResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Division;
-use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class DivisionController extends BaseController
@@ -21,67 +21,84 @@ class DivisionController extends BaseController
         $this->middleware('permission:division_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    private function getAllowedIncludes()
+    {
+        return [
+            AllowedInclude::callback('company', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('user', function ($query) {
+                $query->select('id', 'name');
+            }),
+        ];
+    }
+
     public function index()
     {
-        $data = QueryBuilder::for(Division::tenanted())
+        $datas = QueryBuilder::for(Division::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
+                AllowedFilter::exact('user_id'),
                 'name',
             ])
-            ->allowedIncludes(['company'])
+            ->allowedIncludes($this->getAllowedIncludes())
             ->allowedSorts([
                 'id',
                 'company_id',
+                'user_id',
                 'name',
                 'created_at',
             ])
             ->paginate($this->per_page);
 
-        return DivisionResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $division = Division::findTenanted($id);
-        return new DivisionResource($division);
+        $data = QueryBuilder::for(Division::tenanted()->where('id', $id))
+            ->allowedIncludes($this->getAllowedIncludes())
+            ->firstOrFail();
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $division = Division::create($request->validated());
+        $data = Division::create($request->validated());
 
-        return new DivisionResource($division);
+        return new DefaultResource($data);
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $division = Division::findTenanted($id);
-        $division->update($request->validated());
+        $data = Division::findTenanted($id);
+        $data->update($request->validated());
 
-        return (new DivisionResource($division))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return new DefaultResource($data);
     }
 
     public function destroy(int $id)
     {
-        $division = Division::findTenanted($id);
-        $division->delete();
+        $data = Division::findTenanted($id);
+        $data->delete();
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $division = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $division->forceDelete();
+        $data = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->forceDelete();
 
         return $this->deletedResponse();
     }
 
     public function restore(int $id)
     {
-        $division = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $division->restore();
+        $data = Division::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->restore();
 
-        return new DivisionResource($division);
+        return new DefaultResource($data);
     }
 }
