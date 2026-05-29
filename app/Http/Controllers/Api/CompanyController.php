@@ -94,4 +94,56 @@ class CompanyController extends BaseController
 
         return new CompanyResource($company);
     }
+
+    public function organizationChart(int $id)
+    {
+        $companies = Company::tenanted()
+            ->where('id', $id)
+            ->with([
+                'divisions' => fn($query) => $query->orderBy('order'),
+                'divisions.user:id,name,email',
+                'divisions.departments' => fn($query) => $query->orderBy('order'),
+                'divisions.departments.user:id,name,email',
+                'divisions.departments.positions' => fn($query) => $query->orderBy('order'),
+                'divisions.departments.positions.users:id,name,email,position_id,department_id',
+            ])
+            ->get();
+
+        $payload = $companies->map(fn($company) => [
+            'id' => $company->id,
+            'name' => $company->name,
+            'divisions' => $company->divisions->map(fn($division) => [
+                'id' => $division->id,
+                'name' => $division->name,
+                'order' => $division->order,
+                'leader' => $division->user ? [
+                    'id' => $division->user->id,
+                    'name' => $division->user->name,
+                    'email' => $division->user->email,
+                ] : null,
+                'departments' => $division->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'order' => $department->order,
+                    'leader' => $department->user ? [
+                        'id' => $department->user->id,
+                        'name' => $department->user->name,
+                        'email' => $department->user->email,
+                    ] : null,
+                    'positions' => $department->positions->map(fn($position) => [
+                        'id' => $position->id,
+                        'name' => $position->name,
+                        'order' => $position->order,
+                        'users' => $position->users->map(fn($user) => [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                        ]),
+                    ]),
+                ]),
+            ]),
+        ]);
+
+        return response()->json(['data' => $payload]);
+    }
 }

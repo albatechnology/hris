@@ -6,6 +6,7 @@ use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends BaseModel implements TenantedInterface
 {
@@ -43,9 +44,9 @@ class Department extends BaseModel implements TenantedInterface
         return $this->belongsTo(Division::class);
     }
 
-    public function positions(): BelongsTo
+    public function positions(): HasMany
     {
-        return $this->belongsTo(Position::class);
+        return $this->hasMany(Position::class);
     }
 
     public function user(): BelongsTo

@@ -166,6 +166,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::get('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'index']);
         Route::post('request-change-data-allowances', [RequestChangeDataAllowesController::class, 'store']);
     });
+
+    Route::get('companies/{company}/organization-chart', [CompanyController::class, 'organizationChart']);
     Route::apiResource('companies', CompanyController::class)->except('destroy');
 
     Route::get('branches/summaries', [BranchController::class, 'summary']);
@@ -238,7 +240,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function () {
         Route::put('approve', [TimeoffController::class, 'approve']);
     });
     Route::apiResource('timeoffs', TimeoffController::class);
-
 
     Route::apiResource('overtimes', OvertimeController::class);
     Route::post('overtimes/user-settings', [OvertimeController::class, 'userSetting']);
