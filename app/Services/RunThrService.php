@@ -80,7 +80,7 @@ class RunThrService
     public static function createRunThr(array $request): RunThr
     {
         return RunThr::create([
-            'user_id' => auth('sanctum')->id(),
+            'user_id' => auth('api')->id(),
             'company_id' => $request['company_id'],
             'thr_date' => $request['thr_date'],
             'payment_date' => $request['payment_date'],

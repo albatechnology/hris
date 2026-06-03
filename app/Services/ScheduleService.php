@@ -40,7 +40,7 @@ class ScheduleService
     {
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         $datetime = is_null($datetime) ? date('Y-m-d H:i:00') : date('Y-m-d H:i:00', strtotime($datetime));
@@ -146,7 +146,7 @@ class ScheduleService
     {
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         $startDate = is_null($startDate) ? date('Y-m-d') : date('Y-m-d', strtotime($startDate));

@@ -17,7 +17,7 @@ class ApproveAttendanceRequest extends FormRequest
     {
         $this->merge([
             'approved_at' => now(),
-            'approved_by' => auth('sanctum')->id(),
+            'approved_by' => auth('api')->id(),
         ]);
     }
 

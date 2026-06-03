@@ -50,7 +50,7 @@ class Event extends Model implements TenantedInterface
     {
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         if (!$user) {

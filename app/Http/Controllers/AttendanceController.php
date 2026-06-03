@@ -78,7 +78,7 @@ class AttendanceController extends Controller
      */
     public function store(StoreRequest $request): RedirectResponse
     {
-        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('sanctum')->user(), $request->time);
+        $attendance = AttendanceService::getTodayAttendance($request->schedule_id, $request->shift_id, auth('api')->user(), $request->time);
 
         DB::beginTransaction();
         try {

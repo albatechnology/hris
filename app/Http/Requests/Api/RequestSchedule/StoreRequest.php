@@ -29,7 +29,7 @@ class StoreRequest extends FormRequest
   protected function prepareForValidation()
   {
     $this->merge([
-      'name' => auth('sanctum')->user()->name . ' schedule',
+      'name' => auth('api')->user()->name . ' schedule',
       'is_overide_national_holiday' => $this->toBoolean($this->is_overide_national_holiday),
       'is_overide_company_holiday' => $this->toBoolean($this->is_overide_company_holiday),
       'is_include_late_in' => $this->toBoolean($this->is_include_late_in),

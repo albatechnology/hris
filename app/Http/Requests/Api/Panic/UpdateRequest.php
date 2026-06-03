@@ -16,7 +16,7 @@ class UpdateRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'solved_by_id' => auth('sanctum')->id(),
+            'solved_by_id' => auth('api')->id(),
             'solved_at' => now()
         ]);
     }

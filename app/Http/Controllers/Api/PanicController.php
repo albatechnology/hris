@@ -69,7 +69,7 @@ class PanicController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         DB::beginTransaction();
         try {
             $panic = $user->panics()->create($request->validated());
@@ -201,7 +201,7 @@ class PanicController extends BaseController
 
     public function myPanic()
     {
-        $panic = auth('sanctum')->user()->panics()->with('user')->where('status', PanicStatus::PANIC)->get();
+        $panic = auth('api')->user()->panics()->with('user')->where('status', PanicStatus::PANIC)->get();
         return new DefaultResource($panic);
     }
 

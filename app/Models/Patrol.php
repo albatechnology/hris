@@ -93,7 +93,7 @@ class Patrol extends BaseModel implements TenantedInterface
         die;
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         // if ($user->is_super_admin) {

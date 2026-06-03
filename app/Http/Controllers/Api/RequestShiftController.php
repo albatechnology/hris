@@ -181,7 +181,7 @@ class RequestShiftController extends BaseController
 
     public function bulkApprove(BulkApproveRequest $request)
     {
-        $approverId = auth('sanctum')->id();
+        $approverId = auth('api')->id();
         $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId)['request_approval']);
 
         $data = $request->only(['approval_status', 'approved_by', 'approved_at']);

@@ -21,14 +21,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
-use Laravel\Sanctum\HasApiTokens;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail
+class User extends Authenticatable implements TenantedInterface, HasMedia, MustVerifyEmail, JWTSubject
 {
-    use HasApiTokens, HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToBranch;
+    use HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToBranch;
 
     /**
      * The attributes that are mass assignable.
@@ -88,10 +88,35 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'image',
     ];
 
+    /**
+     * Get the identifier that will be stored in the subject claim of the JWT.
+     *
+     * @return mixed
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     *
+     * @return array
+     */
+    public function getJWTCustomClaims()
+    {
+        return [
+            'group_id' => $this->group_id,
+            'company_id' => $this->company_id,
+            'branch_id' => $this->branch_id,
+            'email' => $this->email,
+        ];
+    }
+
     public function scopeTenanted(Builder $query, ?bool $isDescendant = false): Builder
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         if ($user->is_super_admin) return $query;
 
         // if ($user->is_administrator) {
@@ -325,6 +350,11 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
     public function resignation(): HasOne
     {
         return $this->hasOne(UserResignation::class)->where('type', \App\Enums\ResignationType::RESIGN)->orderByDesc('id');
+    }
+
+    public function tokens(): HasMany
+    {
+        return $this->hasMany(Token::class);
     }
 
     public function attendances(): HasMany

@@ -15,7 +15,7 @@ class TeamsPermission
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         if (! empty($user) && ! $user->is_super_admin) {
             // dd($user->branch->company->group_id);
             // session value set on login

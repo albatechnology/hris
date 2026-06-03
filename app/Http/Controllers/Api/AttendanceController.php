@@ -225,7 +225,7 @@ class AttendanceController extends BaseController
         if (isset($request->filter['user_id'])) {
             $user = User::where('id', $request->filter['user_id'])->with('payrollInfo', fn($q) => $q->select('user_id', 'is_ignore_alpa'))->firstOrFail(['id', 'company_id']);
         } else {
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         $filterStartDate = $request->filter['start_date'] ?? null;
@@ -401,7 +401,7 @@ class AttendanceController extends BaseController
 
     public function employeesSummary(ChildrenRequest $request)
     {
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         $isShowResignUsers = isset($request['filter']['is_show_resign_users']) ? $request['filter']['is_show_resign_users'] : null;
         $branchId = isset($request['filter']['branch_id']) && !empty($request['filter']['branch_id']) ? $request['filter']['branch_id'] : null;
@@ -680,7 +680,7 @@ class AttendanceController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         if (AttendanceService::inLockAttendance($request->time, $user)) {
             throw new UnprocessableEntityHttpException('Attendance is locked');
@@ -857,7 +857,7 @@ class AttendanceController extends BaseController
     // public function store(StoreRequest $request)
     // {
     //     try {
-    //         $user = auth('sanctum')->user();
+    //         $user = auth('api')->user();
     //         $attendance = $this->attendanceService->storeAttendance($request->validated(),$user);
     //         return new AttendanceResource($attendance);
     //     } catch (\DomainException $e) {
@@ -924,7 +924,7 @@ class AttendanceController extends BaseController
                     'lng' => $request->lng ?? null,
                     // 'approval_status' => ApprovalStatus::APPROVED,
                     // 'approved_at' => now(),
-                    // 'approved_by' => auth('sanctum')->id(),
+                    // 'approved_by' => auth('api')->id(),
                 ]);
             } else {
                 $attendance->details()->where('is_clock_in', true)->forceDelete();
@@ -942,7 +942,7 @@ class AttendanceController extends BaseController
                     'lng' => $request->lng ?? null,
                     // 'approval_status' => ApprovalStatus::APPROVED,
                     // 'approved_at' => now(),
-                    // 'approved_by' => auth('sanctum')->id(),
+                    // 'approved_by' => auth('api')->id(),
                 ]);
             } else {
                 $attendance->details()->where('is_clock_in', false)->forceDelete();
@@ -959,7 +959,7 @@ class AttendanceController extends BaseController
 
     public function update(StoreRequest $request)
     {
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         if (AttendanceService::inLockAttendance($request->time, $user)) {
             throw new UnprocessableEntityHttpException('Attendance is locked');
@@ -1025,7 +1025,7 @@ class AttendanceController extends BaseController
          * masalah nya ada disitu. kalo schedule_id atau shift_id nya beda, maka akan membuat attendance baru.
          *
          */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         if ($request->user_id) {
             $user = User::select('id', 'company_id')->where('id', $request->user_id)->firstOrFail();
         }
@@ -1035,7 +1035,7 @@ class AttendanceController extends BaseController
         }
 
         // pemeriksaan kehadiran hri ini
-        $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('sanctum')->user(), false);
+        $attendance = AttendanceService::getTodayAttendance($request->date, $request->schedule_id, $request->shift_id, auth('api')->user(), false);
         //request overtime
         $defaultOvertime = $user->overtimes()->wherePivot('is_default', true)->first();
         $defaultFlag = (bool) ($defaultOvertime?->pivot?->is_default ?? false);
@@ -1242,7 +1242,7 @@ class AttendanceController extends BaseController
 
     public function bulkApprove(BulkApproveRequest $request)
     {
-        $approverId = auth('sanctum')->id();
+        $approverId = auth('api')->id();
         $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId));
 
         $data = $request->only(['approval_status', 'approved_by', 'approved_at']);

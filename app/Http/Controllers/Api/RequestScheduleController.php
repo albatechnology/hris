@@ -59,7 +59,7 @@ class RequestScheduleController extends BaseController
     {
         DB::beginTransaction();
         try {
-            $requestSchedule = auth('sanctum')->user()->requestSchedules()->create($request->validated());
+            $requestSchedule = auth('api')->user()->requestSchedules()->create($request->validated());
 
             $data = [];
             foreach ($request->shifts ?? [] as $shift) {

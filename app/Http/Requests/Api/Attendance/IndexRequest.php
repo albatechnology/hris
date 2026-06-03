@@ -37,7 +37,7 @@ class IndexRequest extends FormRequest
             'filter' => 'nullable|array',
             'filter.user_id' => ['nullable', function ($attribute, $value, \Closure $fail) {
                 if ($value) {
-                    $userLogin = auth('sanctum')->user();
+                    $userLogin = auth('api')->user();
 
                     if (!$userLogin->is_super_admin) {
                         $user = User::where('id', $value)->firstOrFail();

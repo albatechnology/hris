@@ -42,7 +42,7 @@ class AttendanceService extends BaseService implements AttendanceServiceInterfac
 
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         return LockAttendance::whereCompany($user->company_id)

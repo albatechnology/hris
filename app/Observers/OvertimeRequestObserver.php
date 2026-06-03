@@ -20,7 +20,7 @@ class OvertimeRequestObserver
     public function updating(OvertimeRequest $overtimeRequest): void
     {
         if ($overtimeRequest->isDirty('approval_status')) {
-            $overtimeRequest->approved_by = auth('sanctum')->id();
+            $overtimeRequest->approved_by = auth('api')->id();
             $overtimeRequest->approved_at = now();
         }
     }

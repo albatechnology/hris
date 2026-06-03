@@ -16,7 +16,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'branch_id' => $this->branch_id ?? auth('sanctum')->user()->branch_id
+            'branch_id' => $this->branch_id ?? auth('api')->user()->branch_id
         ]);
     }
 

@@ -19,7 +19,7 @@ trait CompanyTenanted
         return $query->whereHas('company', fn($q) => $q->tenanted($user));
         // if (!$user) {
         //     /** @var User $user */
-        //     $user = auth('sanctum')->user();
+        //     $user = auth('api')->user();
         // }
 
         // if ($user->is_super_admin) return $query;

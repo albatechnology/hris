@@ -186,7 +186,7 @@ class OvertimeRequestController extends BaseController
 
     public function bulkCancel(BulkApproveRequest $request)
     {
-        $approverId = auth('sanctum')->id();
+        $approverId = auth('api')->id();
         $requestApprovals = collect($request->ids)->map(fn($id) => $this->cancelValidate($id, $approverId));
 
         $data = $request->only(['approval_status', 'approved_by', 'approved_at']);
@@ -290,7 +290,7 @@ class OvertimeRequestController extends BaseController
 
     public function bulkApprove(BulkApproveRequest $request)
     {
-        $approverId = auth('sanctum')->id();
+        $approverId = auth('api')->id();
         $requestApprovals = collect($request->ids)->map(fn($id) => $this->approveValidate($id, $approverId));
 
         $data = $request->only(['approval_status', 'approved_by', 'approved_at']);

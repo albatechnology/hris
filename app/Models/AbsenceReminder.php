@@ -26,7 +26,7 @@ class AbsenceReminder extends BaseModel implements TenantedInterface
     protected static function booted(): void
     {
         static::updating(function (self $model) {
-            $model->updated_by = auth('sanctum')->id();
+            $model->updated_by = auth('api')->id();
         });
     }
 

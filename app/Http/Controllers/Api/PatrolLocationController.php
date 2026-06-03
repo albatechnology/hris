@@ -126,7 +126,7 @@ class PatrolLocationController extends BaseController
     public function attend(AttendRequest $request)
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         $patrolLocation = PatrolLocation::where('id', $request->patrol_location_id)
             ->whereHas('patrol', function ($q) use ($user) {
@@ -157,7 +157,7 @@ class PatrolLocationController extends BaseController
     public function scanQrCode(ScanQrCodeRequest $request)
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         $splittedToken = explode(';', $request->token);
         $type = $splittedToken[0] ?? null;

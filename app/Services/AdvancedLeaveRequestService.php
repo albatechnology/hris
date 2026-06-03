@@ -72,7 +72,7 @@ class AdvancedLeaveRequestService
     {
         if (!$user) {
             /** @var \App\Models\User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         $timeoffRegulation = TimeoffRegulation::tenanted()->where('company_id', $user->company_id)->first();

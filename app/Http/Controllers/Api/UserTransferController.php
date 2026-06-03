@@ -161,14 +161,14 @@ class UserTransferController extends BaseController
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
     {
-        $total = DB::table('user_transfers')->where('approved_by', auth('sanctum')->id())->where('approval_status', $request->filter['approval_status'])->count();
+        $total = DB::table('user_transfers')->where('approved_by', auth('api')->id())->where('approval_status', $request->filter['approval_status'])->count();
 
         return response()->json(['message' => $total]);
     }
 
     public function approvals()
     {
-        $query = UserTransfer::tenanted()->whereHas('user', fn($q) => $q->where('approval_id', auth('sanctum')->id()));
+        $query = UserTransfer::tenanted()->whereHas('user', fn($q) => $q->where('approval_id', auth('api')->id()));
         // ->with([
         //     'user' => fn ($q) => $q->select('id', 'name', 'nik'),
         //     // 'approvedBy' => fn ($q) => $q->select('id', 'name'),

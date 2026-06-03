@@ -21,7 +21,7 @@ class PatrolLocation extends BaseModel
 
     // public function getAttendedAtAttribute()
     // {
-    //     return $this->userPatrolLocations()->where('user_id', auth('sanctum')->id())->first()?->created_at ?? null;
+    //     return $this->userPatrolLocations()->where('user_id', auth('api')->id())->first()?->created_at ?? null;
     // }
 
     // public function getStatusAttribute()

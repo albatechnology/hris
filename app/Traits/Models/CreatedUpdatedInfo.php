@@ -10,11 +10,11 @@ trait CreatedUpdatedInfo
     public static function bootCreatedUpdatedInfo()
     {
         static::creating(function (self $model) {
-            $model->created_by = auth('sanctum')->id();
+            $model->created_by = auth('api')->id();
         });
 
         static::updating(function (self $model) {
-            $model->updated_by = auth('sanctum')->id();
+            $model->updated_by = auth('api')->id();
         });
     }
 

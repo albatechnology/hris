@@ -52,7 +52,7 @@ class Schedule extends BaseModel implements TenantedInterface
         $query->where('is_need_approval', 1);
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         if ($user->is_super_admin) return $query;

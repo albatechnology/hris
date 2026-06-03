@@ -109,7 +109,7 @@ class UserPatrolTaskController extends BaseController
                 return response()->json(['message' => 'Schedule not found'], Response::HTTP_NOT_FOUND);
             }
 
-            $checkPatrol = auth('sanctum')->user()->patrols()
+            $checkPatrol = auth('api')->user()->patrols()
                 ->whereDate('patrols.start_date', '<=', now())
                 ->whereDate('patrols.end_date', '>=', now())
                 ->whereHas('patrolLocations.tasks', function ($q) use ($request) {
@@ -135,7 +135,7 @@ class UserPatrolTaskController extends BaseController
                 return $this->errorResponse('Task have been submitted in this period');
             }
 
-            $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->create([
+            $userPatrolTask = auth('api')->user()->userPatrolTasks()->create([
                 'patrol_task_id' => $request->patrol_task_id,
                 'description' => $request->description,
                 'schedule_id' => $schedule->id,
@@ -204,7 +204,7 @@ class UserPatrolTaskController extends BaseController
 
     public function destroy(int $id)
     {
-        $userPatrolTask = auth('sanctum')->user()->userPatrolTasks()->firstWhere('id', $id);
+        $userPatrolTask = auth('api')->user()->userPatrolTasks()->firstWhere('id', $id);
         $userPatrolTask->delete();
 
         return $this->deletedResponse();

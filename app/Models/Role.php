@@ -19,14 +19,14 @@ class Role extends ModelsRole implements TenantedInterface
     protected static function booted(): void
     {
         static::saving(function (self $model) {
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
             // if (empty($model->group_id) && !$user->is_super_admin) $model->group_id = $user->group_id ?? null;
         });
     }
 
     public function scopeTenanted(Builder $query): Builder
     {
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         if ($user->is_super_admin) {
             return $query;
         }

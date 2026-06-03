@@ -17,7 +17,7 @@ class TodayScheduleResource extends JsonResource
     public function toArray(Request $request)
     {
         /** @var \App\Models\LiveAttendance $liveAttendance */
-        $liveAttendance = auth('sanctum')->user()?->liveAttendance()->first(['id', 'name', 'is_flexible'])?->load('locations');
+        $liveAttendance = auth('api')->user()?->liveAttendance()->first(['id', 'name', 'is_flexible'])?->load('locations');
 
         return [
             ...parent::toArray($request),

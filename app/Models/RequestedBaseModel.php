@@ -85,7 +85,7 @@ abstract class RequestedBaseModel extends BaseModel implements Requested
 
     public function scopeMyApprovals(Builder $query): void
     {
-        $query->whereHas('approvals', fn($q) => $q->where('user_id', auth('sanctum')->id()));
+        $query->whereHas('approvals', fn($q) => $q->where('user_id', auth('api')->id()));
     }
 
     /**

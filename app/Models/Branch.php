@@ -43,11 +43,11 @@ class Branch extends BaseModel implements TenantedInterface
     public function scopeTenanted(Builder $query, ?User $user = null): Builder
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         // $companyIds = $user->companies()->get(['company_id'])?->pluck('company_id') ?? [];

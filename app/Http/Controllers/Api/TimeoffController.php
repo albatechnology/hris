@@ -191,7 +191,7 @@ class TimeoffController extends BaseController
 
                 $timeoff->update([
                     'is_cancelled' => true,
-                    'cancelled_by' => auth('sanctum')->id(),
+                    'cancelled_by' => auth('api')->id(),
                     'cancelled_at' => now(),
                     'timeoff_quota_histories' => null,
                 ]);
@@ -209,7 +209,7 @@ class TimeoffController extends BaseController
     {
         if ($timeoff->is_cancelled) return $this->errorResponse(message: 'Request is cancelled', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        $requestApproval = $timeoff->approvals()->where('user_id', auth('sanctum')->id())->first();
+        $requestApproval = $timeoff->approvals()->where('user_id', auth('api')->id())->first();
 
         if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
 

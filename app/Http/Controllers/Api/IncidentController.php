@@ -61,7 +61,7 @@ class IncidentController extends BaseController
     public function store(StoreRequest $request)
     {
         try {
-            $incident = auth('sanctum')->user()->incidents()->create($request->validated());
+            $incident = auth('api')->user()->incidents()->create($request->validated());
 
             if ($request->hasFile('file')) {
                 foreach ($request->file('file') as $file) {

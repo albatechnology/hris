@@ -19,7 +19,7 @@ trait TenantedThroughUser
 
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         if ($user->is_super_admin) return $query;

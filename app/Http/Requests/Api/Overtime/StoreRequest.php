@@ -23,7 +23,7 @@ class StoreRequest extends FormRequest
     {
         $this->merge([
             'compensation_rate_per_day' => $this->compensation_rate_per_day ?? 0,
-            'company_id' => $this->company_id ? $this->company_id : auth('sanctum')->user()->company_id,
+            'company_id' => $this->company_id ? $this->company_id : auth('api')->user()->company_id,
             'is_rounding' => $this->toBoolean($this->is_rounding),
         ]);
     }

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Overtime;
+namespace App\Http\Requests\Api\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserSettingRequest extends FormRequest
+class RefreshTokenRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -14,8 +14,7 @@ class UserSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer|exists:users,id',
-            'overtime_id' => 'required|integer|exists:overtimes,id',
+            'refresh_token' => ['required', 'string'],
         ];
     }
 }

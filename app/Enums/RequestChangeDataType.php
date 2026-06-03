@@ -104,7 +104,7 @@ enum RequestChangeDataType: string
 
     public function getValue(?int $userId = null)
     {
-        if (!$userId) $userId = auth('sanctum')->id();
+        if (!$userId) $userId = auth('api')->id();
 
         return match ($this) {
             self::PHOTO_PROFILE => \App\Models\User::where('id', $userId)->first(['id'])->getFirstMediaUrl(MediaCollection::USER->value),

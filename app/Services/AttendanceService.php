@@ -28,7 +28,7 @@ class AttendanceService
          */
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         $date = is_null($date) ? date('Y-m-d') : date('Y-m-d', strtotime($date));
@@ -577,7 +577,7 @@ class AttendanceService
 
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         return LockAttendance::whereCompany($user->company_id)

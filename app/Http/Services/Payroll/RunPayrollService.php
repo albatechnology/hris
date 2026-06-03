@@ -134,7 +134,7 @@ class RunPayrollService extends BaseService implements RunPayrollServiceInterfac
         DB::beginTransaction();
         try {
             // $runPayroll = self::createRunPayroll($request);
-            $runPayroll = auth('sanctum')->user()->runPayrolls()->create([
+            $runPayroll = auth('api')->user()->runPayrolls()->create([
                 'branch_id' => $dto->branch_id ?? null,
                 'company_id' => $dto->company_id,
                 'period' => $dto->period,

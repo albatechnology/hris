@@ -16,7 +16,7 @@ class ApproveRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'approved_by' => auth('sanctum')->id(),
+            'approved_by' => auth('api')->id(),
             'approved_at' => now()
         ]);
     }

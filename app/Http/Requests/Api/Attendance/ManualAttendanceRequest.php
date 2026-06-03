@@ -19,7 +19,7 @@ class ManualAttendanceRequest extends FormRequest
     {
         $type = $this->type ?? AttendanceType::MANUAL->value;
 
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         if (!$user->is_user) {
             $type = AttendanceType::AUTOMATIC->value;
         } elseif (($user->id != $this->user_id) && UserService::isMyDescendant($user, $this->user_id)) {

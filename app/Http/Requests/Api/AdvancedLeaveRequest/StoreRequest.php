@@ -19,7 +19,7 @@ class StoreRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'user_id' => $this->user_id ? $this->user_id : auth('sanctum')->id(),
+            'user_id' => $this->user_id ? $this->user_id : auth('api')->id(),
         ]);
     }
 

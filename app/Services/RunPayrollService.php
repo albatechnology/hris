@@ -118,7 +118,7 @@ class RunPayrollService
      */
     public static function createRunPayroll(array $request): RunPayroll
     {
-        return auth('sanctum')->user()->runPayrolls()->create([
+        return auth('api')->user()->runPayrolls()->create([
             'branch_id' => $request['branch_id'] ?? null,
             'company_id' => $request['company_id'],
             'period' => $request['period'],

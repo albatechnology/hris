@@ -40,7 +40,7 @@ class UserPatrolTask extends BaseModel implements HasMedia, TenantedInterface
 
         if (!$user) {
             /** @var User $user */
-            $user = auth('sanctum')->user();
+            $user = auth('api')->user();
         }
 
         if ($user->is_super_admin) {

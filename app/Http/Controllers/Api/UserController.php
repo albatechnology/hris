@@ -238,7 +238,7 @@ class UserController extends BaseController
     public function me()
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         $user = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes($this->getAllowedIncludes())
             ->firstOrFail();
@@ -359,7 +359,7 @@ class UserController extends BaseController
     public function destroy(int $id)
     {
         $user = User::findTenanted($id);
-        if ($user->id == 1 || $user->id == auth('sanctum')->id()) {
+        if ($user->id == 1 || $user->id == auth('api')->id()) {
             return response()->json(['message' => 'User can not be deleted!']);
         }
 
@@ -481,7 +481,7 @@ class UserController extends BaseController
     public function uploadPhoto(UploadPhotoRequest $request)
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         DB::beginTransaction();
         try {
@@ -644,7 +644,7 @@ class UserController extends BaseController
     public function fcmToken(FcmTokenRequest $request)
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
         $user->update([
             'fcm_token' => $request->fcm_token,
         ]);
@@ -674,7 +674,7 @@ class UserController extends BaseController
     public function updatePassword(UpdatePasswordRequest $request)
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         if (Hash::check($request->old_password, $user->password)) {
             $user->update([
@@ -690,7 +690,7 @@ class UserController extends BaseController
     public function updateDevice(UpdateDeviceRequest $request)
     {
         /** @var User $user */
-        $user = auth('sanctum')->user();
+        $user = auth('api')->user();
 
         DB::beginTransaction();
         try {
