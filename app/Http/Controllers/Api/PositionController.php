@@ -67,7 +67,15 @@ class PositionController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $data = Position::create($request->validated());
+        $companyId = Department::findTenanted($request->department_id)->company_id;
+        if (!$companyId) {
+            return $this->errorResponse('Department ID is required');
+        }
+
+        $updatedData = $request->validated();
+        $updatedData['company_id'] = $companyId;
+
+        $data = Position::create($updatedData);
 
         return new DefaultResource($data);
     }
@@ -75,7 +83,13 @@ class PositionController extends BaseController
     public function update(int $id, StoreRequest $request)
     {
         $data = Position::findTenanted($id);
-        $companyId = Department::findTenanted($data->department_id)->company_id;
+
+        $departmentId = $request->department_id ?? $data->department_id;
+        if (!$departmentId) {
+            return $this->errorResponse('Department ID is required');
+        }
+
+        $companyId = Department::findTenanted($departmentId)->company_id;
 
         $updatedData = $request->validated();
         $updatedData['company_id'] = $companyId;

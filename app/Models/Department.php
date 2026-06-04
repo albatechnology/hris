@@ -30,7 +30,6 @@ class Department extends BaseModel implements TenantedInterface
         if ($fail) {
             return $query->firstOrFail();
         }
-
         return $query->first();
     }
 

@@ -71,7 +71,15 @@ class DepartmentController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        $data = Department::create($request->validated());
+        $companyId = Division::findTenanted($request->division_id)->company_id;
+        if (!$companyId) {
+            return $this->errorResponse('Division ID is required');
+        }
+
+        $updatedData = $request->validated();
+        $updatedData['company_id'] = $companyId;
+
+        $data = Department::create($updatedData);
 
         return new DefaultResource($data);
     }
@@ -79,7 +87,13 @@ class DepartmentController extends BaseController
     public function update(int $id, StoreRequest $request)
     {
         $data = Department::findTenanted($id);
-        $companyId = Division::findTenanted($data->division_id)->company_id;
+
+        $divisionId = $request->division_id ?? $data->division_id;
+        if (!$divisionId) {
+            return $this->errorResponse('Division ID is required');
+        }
+
+        $companyId = Division::findTenanted($divisionId)->company_id;
 
         $updatedData = $request->validated();
         $updatedData['company_id'] = $companyId;
