@@ -30,6 +30,7 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
 {
     use HasRoles, Notifiable, InteractsWithMedia, CustomSoftDeletes, CreatedUpdatedInfo, BelongsToBranch;
 
+    protected string $guard_name = 'web';
     /**
      * The attributes that are mass assignable.
      *
