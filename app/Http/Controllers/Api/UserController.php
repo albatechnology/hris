@@ -716,7 +716,7 @@ class UserController extends BaseController
     public function getAvailableSupervisor(int $id, Request $request)
     {
         $user = User::findTenanted($id);
-        $user->load('position', fn($q) => $q->select('id', 'order'));
+        $user->load(['position' => fn($q) => $q->select('id', 'order')]);
         $order = $user->position ? $user->position->order : null;
         // $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
         // $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
