@@ -90,7 +90,6 @@ class RegisterRequest extends FormRequest
             // 'approval_id' => 'nullable|exists:users,id',
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
-            // 'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'work_email' => 'nullable|email',
             'email_verified_at' => 'nullable|date_format:Y-m-d H:i:s',

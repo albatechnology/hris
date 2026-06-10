@@ -202,7 +202,6 @@ class UserController extends BaseController
                 'level_id',
                 'live_attendance_id',
                 'name',
-                'last_name',
                 'email',
                 'work_email',
                 'password',
@@ -233,6 +232,25 @@ class UserController extends BaseController
         $users = $query->paginate($this->per_page);
 
         return UserResource::collection($users);
+    }
+
+    public function subordinates()
+    {
+        $datas = QueryBuilder::for(
+            User::select('id', 'name', 'email', 'nik')->whereHas('supervisors', fn($q) => $q->where('supervisor_id', auth('api')->id()))
+        )
+            ->allowedFilters([
+                AllowedFilter::scope('search'),
+            ])
+            // ->allowedIncludes($this->getAllowedIncludes())
+            ->allowedSorts([
+                'id',
+                'name',
+                'email',
+                'nik',
+            ])->paginate($this->per_page);
+
+        return DefaultResource::collection($datas);
     }
 
     public function me()

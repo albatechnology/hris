@@ -46,7 +46,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'department_id',
         'position_id',
         'name',
-        'last_name',
         'email',
         'work_email',
         'password',
@@ -232,6 +231,15 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         }
 
         return $query;
+    }
+
+    public function scopeSearch(Builder $query, string $value)
+    {
+        $query->where(
+            fn($q) => $q->where('name', 'like', '%' . $value . '%')
+                ->orWhere('email', 'like', '%' . $value . '%')
+                ->orWhere('nik', 'like', '%' . $value . '%')
+        );
     }
 
     public function scopeWhereName(Builder $query, string $value)

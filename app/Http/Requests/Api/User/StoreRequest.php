@@ -52,7 +52,6 @@ class StoreRequest extends FormRequest
             // 'approval_id' => 'nullable|exists:users,id',
             // 'parent_id' => 'nullable|exists:users,id',
             'name' => 'required|string',
-            // 'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'work_email' => 'required|email',
             'password' => 'required|string',

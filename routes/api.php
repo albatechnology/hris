@@ -107,6 +107,7 @@ Route::group(['prefix' => 'auth/forgot-password/', 'controller' => ForgotPasswor
 Route::get('users/backupPhoto', [UserController::class, 'backupPhoto']);
 Route::group(['middleware' => ['auth:api', 'verified']], function () {
     Route::post('import-timeoff-quotas', [TimeoffQuotaController::class, 'importTimeoffQuota']);
+    Route::get('users/subordinates', [UserController::class, 'subordinates']);
     Route::get('users/updateSupervisor', [UserController::class, 'updateSupervisor']);
     Route::get('users/export', [UserController::class, 'export']);
     Route::get('users/import/{sample?}', [UserController::class, 'import']);
