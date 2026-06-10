@@ -36,6 +36,12 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Repositories\Attendance\AttendanceRepositoryInterface::class => \App\Repositories\AttendanceRepository::class,
         \App\Interfaces\Services\Attendance\AttendanceServiceInterface::class => \App\Http\Services\Attendance\AttendanceService::class,
 
+        \App\Interfaces\Repositories\JobPositionRepositoryInterface::class => \App\Http\Repositories\JobPositionRepository::class,
+        \App\Interfaces\Services\JobPositionServiceInterface::class => \App\Http\Services\JobPositionService::class,
+
+        \App\Interfaces\Repositories\JobLevelRepositoryInterface::class => \App\Http\Repositories\JobLevelRepository::class,
+        \App\Interfaces\Services\JobLevelServiceInterface::class => \App\Http\Services\JobLevelService::class,
+
         \App\Interfaces\Repositories\Level\LevelRepositoryInterface::class => \App\Http\Repositories\Level\LevelRepository::class,
         \App\Interfaces\Services\Level\LevelServiceInterface::class => \App\Http\Services\Level\LevelService::class,
 

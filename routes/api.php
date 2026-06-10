@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\BranchLocationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CustomFieldController;
+use App\Http\Controllers\Api\JobLevelController;
+use App\Http\Controllers\Api\JobPositionController;
 use App\Http\Controllers\Api\DailyActivityController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DivisionController;
@@ -414,6 +416,19 @@ Route::group(['middleware' => ['auth:api', 'verified']], function () {
     Route::group(['prefix' => 'banks/{bank}'], function () {
         Route::put('restore', [BankController::class, 'restore']);
         Route::delete('force-delete', [BankController::class, 'forceDelete']);
+    });
+
+    Route::get('job-positions/{company}/chart', [JobPositionController::class, 'chartView']);
+    Route::apiResource('job-positions', JobPositionController::class);
+    Route::group(['prefix' => 'job-positions/{job_position}'], function () {
+        Route::put('restore', [JobPositionController::class, 'restore']);
+        Route::delete('force-delete', [JobPositionController::class, 'forceDelete']);
+    });
+
+    Route::apiResource('job-levels', JobLevelController::class);
+    Route::group(['prefix' => 'job-levels/{job_level}'], function () {
+        Route::put('restore', [JobLevelController::class, 'restore']);
+        Route::delete('force-delete', [JobLevelController::class, 'forceDelete']);
     });
 
     Route::get('extra-offs/users', [ExtraOffController::class, 'users']);

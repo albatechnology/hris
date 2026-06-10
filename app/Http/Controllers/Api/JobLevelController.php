@@ -2,50 +2,44 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\Api\Bank\StoreRequest;
-use App\Http\Requests\Api\Bank\UpdateRequest;
+use App\Http\Requests\Api\JobLevel\StoreRequest;
+use App\Http\Requests\Api\JobLevel\UpdateRequest;
 use App\Http\Resources\DefaultResource;
-use App\Interfaces\Services\BankServiceInterface;
-use App\Models\Bank;
+use App\Interfaces\Services\JobLevelServiceInterface;
+use App\Models\JobLevel;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class BankController extends BaseController
+class JobLevelController extends BaseController
 {
-    public function __construct(protected BankServiceInterface $service)
+    public function __construct(protected JobLevelServiceInterface $service)
     {
         parent::__construct();
-        // $this->middleware('permission:bank_access', ['only' => ['restore']]);
-        // $this->middleware('permission:bank_read', ['only' => ['index', 'show']]);
-        // $this->middleware('permission:bank_create', ['only' => 'store']);
-        // $this->middleware('permission:bank_edit', ['only' => 'update']);
-        // $this->middleware('permission:bank_delete', ['only' => ['destroy', 'forceDelete']]);
+        // $this->middleware('permission:job_level_access', ['only' => ['restore']]);
+        // $this->middleware('permission:job_level_read', ['only' => ['index', 'show']]);
+        // $this->middleware('permission:job_level_create', ['only' => 'store']);
+        // $this->middleware('permission:job_level_edit', ['only' => 'update']);
+        // $this->middleware('permission:job_level_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Bank::tenanted())
+        $datas = QueryBuilder::for(JobLevel::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 'name',
-                'account_no',
-                'account_holder',
                 'code',
-                'branch',
             ])
             ->allowedSorts([
                 'id',
                 'company_id',
                 'name',
-                'account_no',
-                'account_holder',
                 'code',
-                'branch',
                 'created_at',
             ])
             ->paginate($this->per_page);
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
