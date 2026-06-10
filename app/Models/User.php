@@ -42,7 +42,6 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
         'branch_id',
         'job_position_id',
         'job_level_id',
-        'level_id',
         'live_attendance_id',
         'department_id',
         'position_id',
@@ -675,10 +674,5 @@ class User extends Authenticatable implements TenantedInterface, HasMedia, MustV
             'url' => $url,
             'preview' => $preview
         ];
-    }
-
-    public function level(): BelongsTo
-    {
-        return $this->belongsTo(Level::class);
     }
 }
