@@ -31,7 +31,7 @@ class JobPositionController extends BaseController
 
         $grouped = $positions->groupBy('parent_id');
 
-        $buildTree = function ($parentId) use ($grouped) {
+        $buildTree = function ($parentId) use ($grouped, &$buildTree) {
             $nodes = $grouped->get($parentId, collect());
             return $nodes->values()->map(fn($node) => [
                 'id' => $node->id,

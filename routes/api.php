@@ -19,9 +19,9 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\ExtraOffController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\GuestBookController;
-use App\Http\Controllers\Api\IncidentController;
-use App\Http\Controllers\Api\IncidentTypeController;
-use App\Http\Controllers\Api\LevelController;
+// use App\Http\Controllers\Api\IncidentController;
+// use App\Http\Controllers\Api\IncidentTypeController;
+// use App\Http\Controllers\Api\LevelController;
 use App\Http\Controllers\Api\LiveAttendanceController;
 use App\Http\Controllers\Api\LiveAttendanceLocationController;
 use App\Http\Controllers\Api\LoanController;
@@ -32,10 +32,10 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\NppController;
 use App\Http\Controllers\Api\OvertimeController;
 use App\Http\Controllers\Api\OvertimeRequestController;
-use App\Http\Controllers\Api\PanicController;
-use App\Http\Controllers\Api\PatrolController;
-use App\Http\Controllers\Api\PatrolLocationController;
-use App\Http\Controllers\Api\PatrolTaskController;
+// use App\Http\Controllers\Api\PanicController;
+// use App\Http\Controllers\Api\PatrolController;
+// use App\Http\Controllers\Api\PatrolLocationController;
+// use App\Http\Controllers\Api\PatrolTaskController;
 use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PayrollProrateController;
 use App\Http\Controllers\Api\PayrollScheduleController;
@@ -75,10 +75,10 @@ use App\Http\Controllers\Api\UserCustomFieldController;
 use App\Http\Controllers\Api\UserEducationController;
 use App\Http\Controllers\Api\UserEventController;
 use App\Http\Controllers\Api\UserExperienceController;
-use App\Http\Controllers\Api\UserPatrolBatchController;
-use App\Http\Controllers\Api\UserPatrolMovementController;
-use App\Http\Controllers\Api\UserPatrolController;
-use App\Http\Controllers\Api\UserPatrolTaskController;
+// use App\Http\Controllers\Api\UserPatrolBatchController;
+// use App\Http\Controllers\Api\UserPatrolMovementController;
+// use App\Http\Controllers\Api\UserPatrolController;
+// use App\Http\Controllers\Api\UserPatrolTaskController;
 use App\Http\Controllers\Api\UserScheduleController;
 use App\Http\Controllers\Api\UserPayrollInfoController;
 use App\Http\Controllers\Api\UserTransferController;
@@ -366,49 +366,44 @@ Route::group(['middleware' => ['auth:api', 'verified']], function () {
     });
     Route::apiResource('user-transfers', UserTransferController::class);
 
-    Route::get('panics/export', [PanicController::class, 'export']);
-    Route::apiResource('panics', PanicController::class);
-    Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
+    // // Route::get('panics/export', [PanicController::class, 'export']);
+    // // Route::apiResource('panics', PanicController::class);
+    // // // // Route::get('panics/users/my-panic', [PanicController::class, 'myPanic']);
 
-    Route::apiResource('incident-types', IncidentTypeController::class);
+    // // Route::apiResource('incident-types', IncidentTypeController::class);
 
-    Route::get('incidents/export', [IncidentController::class, 'export']);
-    Route::apiResource('incidents', IncidentController::class);
-
-    // Route::get('clients/summaries', [ClientController::class, 'summary']);
-    // Route::apiResource('clients', ClientController::class);
-    // Route::get('client-locations/generate-qr-code', [ClientLocationController::class, 'generateQrCode']);
-    // Route::apiResource('client-locations', ClientLocationController::class);
+    // // Route::get('incidents/export', [IncidentController::class, 'export']);
+    // // Route::apiResource('incidents', IncidentController::class);
 
     Route::get('guest-books/export', [GuestBookController::class, 'export']);
     Route::apiResource('guest-books', GuestBookController::class);
 
-    Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
-    Route::get('patrols/test-export', [PatrolController::class, 'testExport']);
-    Route::get('patrols/users-location', [PatrolController::class, 'usersLocation']);
-    Route::group(['prefix' => 'patrols/{patrol}'], function () {
-        Route::get('export', [PatrolController::class, 'export']);
-        Route::get('users', [PatrolController::class, 'userIndex']);
-        Route::get('users/{user_patrol_id}', [PatrolController::class, 'userShow']);
-        Route::post('users', [PatrolController::class, 'userStore']);
-        Route::put('users/{user_patrol_id}', [PatrolController::class, 'userUpdate']);
-        Route::delete('users/{user_patrol_id}', [PatrolController::class, 'userDestroy']);
+    // Route::apiResource('user-patrol-tasks', UserPatrolTaskController::class);
+    // Route::get('patrols/test-export', [PatrolController::class, 'testExport']);
+    // Route::get('patrols/users-location', [PatrolController::class, 'usersLocation']);
+    // Route::group(['prefix' => 'patrols/{patrol}'], function () {
+    //     Route::get('export', [PatrolController::class, 'export']);
+    //     Route::get('users', [PatrolController::class, 'userIndex']);
+    //     Route::get('users/{user_patrol_id}', [PatrolController::class, 'userShow']);
+    //     Route::post('users', [PatrolController::class, 'userStore']);
+    //     Route::put('users/{user_patrol_id}', [PatrolController::class, 'userUpdate']);
+    //     Route::delete('users/{user_patrol_id}', [PatrolController::class, 'userDestroy']);
 
-        Route::group(['prefix' => 'locations/{location}'], function () {
-            Route::apiResource('tasks', PatrolTaskController::class);
-        });
-        Route::apiResource('locations', PatrolLocationController::class);
-        Route::post('locations/attend/manual', [PatrolLocationController::class, 'attend']);
-        Route::post('locations/attend/scan-qr-code', [PatrolLocationController::class, 'scanQrCode']);
-    });
-    Route::apiResource('patrols', PatrolController::class);
+    //     Route::group(['prefix' => 'locations/{location}'], function () {
+    //         Route::apiResource('tasks', PatrolTaskController::class);
+    //     });
+    //     Route::apiResource('locations', PatrolLocationController::class);
+    //     Route::post('locations/attend/manual', [PatrolLocationController::class, 'attend']);
+    //     Route::post('locations/attend/scan-qr-code', [PatrolLocationController::class, 'scanQrCode']);
+    // });
+    // Route::apiResource('patrols', PatrolController::class);
 
-    Route::apiResource('user-patrols', UserPatrolController::class);
+    // Route::apiResource('user-patrols', UserPatrolController::class);
 
-    Route::post('user-patrol-batches/sync', [UserPatrolBatchController::class, 'sync']);
-    Route::delete('user-patrol-batches/{user_patrol_batch}/force-delete', [UserPatrolBatchController::class, 'forceDelete']);
-    Route::apiResource('user-patrol-batches', UserPatrolBatchController::class);
-    Route::apiResource('user-patrol-movements', UserPatrolMovementController::class);
+    // Route::post('user-patrol-batches/sync', [UserPatrolBatchController::class, 'sync']);
+    // // // Route::delete('user-patrol-batches/{user_patrol_batch}/force-delete', [UserPatrolBatchController::class, 'forceDelete']);
+    // // Route::apiResource('user-patrol-batches', UserPatrolBatchController::class);
+    // // Route::apiResource('user-patrol-movements', UserPatrolMovementController::class);
 
     Route::apiResource('npp', NppController::class);
 
@@ -457,7 +452,7 @@ Route::group(['middleware' => ['auth:api', 'verified']], function () {
 
     Route::get('test/attendance', [\App\Http\Controllers\Api\TestController::class, 'getAttendance']);
 
-    Route::apiResource('levels', LevelController::class);
+    // Route::apiResource('levels', LevelController::class);
 
     Route::get('daily-activities/export', [DailyActivityController::class, 'export']);
     Route::apiResource('daily-activities', DailyActivityController::class)->except('update');
