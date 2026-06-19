@@ -27,12 +27,8 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_include_early_out',
         'is_flexible',
         'is_generate_timeoff',
-        'deleted_by',
         'description',
         'is_need_approval',
-        'approval_status',
-        'approved_by',
-        'approved_at',
     ];
 
     protected $casts = [
@@ -44,7 +40,6 @@ class Schedule extends BaseModel implements TenantedInterface
         'is_flexible' => 'boolean',
         'is_generate_timeoff' => 'boolean',
         'is_need_approval' => 'boolean',
-        'approval_status' => ApprovalStatus::class,
     ];
 
     public function scopeRequestTenanted(Builder $query, ?User $user = null): Builder

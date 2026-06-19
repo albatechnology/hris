@@ -221,7 +221,9 @@ class AuthController extends BaseController
     {
         // auth('api')->user()->updateQuietly(['fcm_token' => null]);
 
-        Token::query()->where('token', hash('sha256', $request->refresh_token))->delete();
+        if ($request->refresh_token) {
+            Token::query()->where('token', hash('sha256', $request->refresh_token))->delete();
+        }
 
         auth('api')->logout();
 
