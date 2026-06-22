@@ -30,14 +30,22 @@ class UserTransferService
                 $user->supervisors()->delete();
                 $user->supervisors()->create(['supervisor_id' => $userTransfer->supervisor_id]);
             }
-            if ($userTransfer->department_id && $userTransfer->position_id) {
+             if ($userTransfer->job_position_id || $userTransfer->job_level_id) {
                 $user->update([
-                    'department_id' => $userTransfer->department_id,
-                    'position_id' => $userTransfer->position_id,
+                    'job_position_id' => $userTransfer?->job_position_id ?? null,
+                    'job_level_id' => $userTransfer?->job_level_id ?? null,
                 ]);
                 // $user->positions()->delete();
                 // $user->positions()->create(['position_id' => $userTransfer->position_id, 'department_id' => $userTransfer->department_id]);
             }
+            // if ($userTransfer->department_id && $userTransfer->position_id) {
+            //     $user->update([
+            //         'department_id' => $userTransfer->department_id,
+            //         'position_id' => $userTransfer->position_id,
+            //     ]);
+            //     // $user->positions()->delete();
+            //     // $user->positions()->create(['position_id' => $userTransfer->position_id, 'department_id' => $userTransfer->department_id]);
+            // }
             if ($userTransfer->employment_status) {
                 $user->detail()->update([
                     'employment_status' => $userTransfer->employment_status

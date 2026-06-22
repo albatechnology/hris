@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('positions', function (Blueprint $table) {
-            $table->id();
-            // $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('company_id')->constrained();
-            $table->string('name', 100);
-            $table->unsignedSmallInteger('order')->default(1);
-            $table->timestamps();
+        // Schema::create('positions', function (Blueprint $table) {
+        //     $table->id();
+        //     // $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
+        //     $table->foreignId('company_id')->constrained();
+        //     $table->string('name', 100);
+        //     $table->unsignedSmallInteger('order')->default(1);
+        //     $table->timestamps();
 
-            // softDeletes must implement deleted_by
-            $table->unsignedInteger('deleted_by')->nullable();
-            $table->softDeletes();
-        });
+        //     // softDeletes must implement deleted_by
+        //     $table->unsignedInteger('deleted_by')->nullable();
+        //     $table->softDeletes();
+        // });
     }
 
     /**
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('positions');
+        // Schema::dropIfExists('positions');
     }
 };

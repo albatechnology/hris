@@ -52,15 +52,24 @@ class CompanyInitializeService
             'branch' => $company->city,
         ]);
 
-        $division = $company->divisions()->create([
+        $company->jobPositions()->create([
             'name' => 'Operational',
+            'code' => 'OP',
         ]);
-        $division = $division->departments()->create([
-            'name' => 'HR'
+        $company->jobLevel()->create([
+            'name' => 'Staff',
+            'code' => 'ST',
         ]);
-        $company->positions()->create([
-            'name' => 'Manager'
-        ]);
+       
+        // $division = $company->divisions()->create([
+        //     'name' => 'Operational',
+        // ]);
+        // $division = $division->departments()->create([
+        //     'name' => 'HR'
+        // ]);
+        // $company->positions()->create([
+        //     'name' => 'Manager'
+        // ]);
 
         $liveAttendance = $company->liveAttendances()->create([
             'name' => 'Live Attendance ' . $company->name,

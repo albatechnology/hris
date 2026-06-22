@@ -221,7 +221,8 @@ class RunPayrollController extends BaseController
         $runPayroll = RunPayroll::findTenanted($id);
         $runPayroll->load([
             'users.user' => function ($q) {
-                $q->select('id', 'nik', 'name', 'company_id', 'branch_id', 'position_id', 'department_id', 'join_date', 'resign_date')
+                // $q->select('id', 'nik', 'name', 'company_id', 'branch_id', 'position_id', 'department_id', 'join_date', 'resign_date')
+                $q->select('id', 'nik', 'name', 'company_id', 'branch_id', 'job_position_id', 'job_level_id', 'join_date', 'resign_date')
                     ->withTrashed()
                     ->with('branch', fn($q) => $q->select('id', 'name'))
                     ->with('payrollInfo', function ($q) {
@@ -229,8 +230,8 @@ class RunPayrollController extends BaseController
                             ->with('bank');
                     })
                     ->with([
-                        'department' => fn($q) => $q->select('id', 'name'),
-                        'position' => fn($q) => $q->select('id', 'name'),
+                        'jobPosition' => fn($q) => $q->select('id', 'name'),
+                        'jobLevel' => fn($q) => $q->select('id', 'name'),
                     ]);
                 // ->with(
                 //     'positions',

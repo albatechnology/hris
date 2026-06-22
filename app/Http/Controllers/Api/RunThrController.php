@@ -152,15 +152,15 @@ class RunThrController extends BaseController
         $runThr = RunThr::findTenanted($id);
         $runThr->load([
             'users.user' => function ($q) {
-                $q->select('id', 'nik', 'name', 'company_id', 'branch_id', 'position_id', 'department_id', 'join_date', 'resign_date')
+                $q->select('id', 'nik', 'name', 'company_id', 'branch_id', 'job_position_id', 'job_level_id', 'join_date', 'resign_date')
                     ->with('branch', fn($q) => $q->select('id', 'name'))
                     ->with('payrollInfo', function ($q) {
                         $q->select('user_id', 'bank_id', 'bank_name', 'bank_account_no', 'bank_account_holder', 'secondary_bank_name', 'secondary_bank_account_no', 'secondary_bank_account_holder', 'currency', 'ptkp_status', 'tax_method')
                             ->with('bank');
                     })
                     ->with([
-                        'department' => fn($q) => $q->select('id', 'name'),
-                        'position' => fn($q) => $q->select('id', 'name'),
+                        'jobPosition' => fn($q) => $q->select('id', 'name'),
+                        'jobLevel' => fn($q) => $q->select('id', 'name'),
                     ]);
                 // ->with(
                 //     'positions',

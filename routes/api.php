@@ -13,8 +13,8 @@ use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\JobLevelController;
 use App\Http\Controllers\Api\JobPositionController;
 use App\Http\Controllers\Api\DailyActivityController;
-use App\Http\Controllers\Api\DepartmentController;
-use App\Http\Controllers\Api\DivisionController;
+// use App\Http\Controllers\Api\DepartmentController;
+// use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\ExtraOffController;
 use App\Http\Controllers\Api\GroupController;
@@ -40,7 +40,7 @@ use App\Http\Controllers\Api\PayrollComponentController;
 use App\Http\Controllers\Api\PayrollProrateController;
 use App\Http\Controllers\Api\PayrollScheduleController;
 use App\Http\Controllers\Api\PayrollSettingController;
-use App\Http\Controllers\Api\PositionController;
+// use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\ReimbursementCategoryController;
 use App\Http\Controllers\Api\ReimbursementController;
 use App\Http\Controllers\Api\ReprimandController;
@@ -178,9 +178,9 @@ Route::group(['middleware' => ['auth:api', 'verified']], function () {
     Route::post('branch-locations/generate-qr-code', [BranchLocationController::class, 'generateQrCode']);
     Route::apiResource('branch-locations', BranchLocationController::class);
 
-    Route::apiResource('positions', PositionController::class);
-    Route::apiResource('divisions', DivisionController::class);
-    Route::apiResource('departments', DepartmentController::class);
+    // Route::apiResource('positions', PositionController::class);
+    // Route::apiResource('divisions', DivisionController::class);
+    // Route::apiResource('departments', DepartmentController::class);
 
     Route::get('announcements/export', [AnnouncementController::class, 'export']);
     Route::apiResource('announcements', AnnouncementController::class)->only(['index', 'show', 'store', 'destroy']);

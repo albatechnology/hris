@@ -38,8 +38,8 @@ class UserExport extends DefaultValueBinder implements FromQuery, WithHeadings, 
             'Supervisor NIK 4',
             'Role ID',
             'Branch ID',
-            'Department ID',
-            'Position ID',
+            // 'Department ID',
+            // 'Position ID',
             'Live Attendance ID',
             'Schedule ID',
             'NIK',
@@ -104,12 +104,12 @@ class UserExport extends DefaultValueBinder implements FromQuery, WithHeadings, 
             ->pad(4, null)
             ->values();
 
-        $department = $user->department_id;
-        $position = $user->position_id;
-        if (config('app.name') == 'SUNSHINE') {
-            $department = $user->department?->name ?? null;
-            $position = $user->position?->name ?? null;
-        }
+        // $department = $user->department_id;
+        // $position = $user->position_id;
+        // if (config('app.name') == 'SUNSHINE') {
+        //     $department = $user->department?->name ?? null;
+        //     $position = $user->position?->name ?? null;
+        // }
         // $department = $user->positions[0]?->department_id ?? null;
         // $position = $user->positions[0]?->position_id ?? null;
         // if (config('app.name') == 'SUNSHINE') {
@@ -120,8 +120,8 @@ class UserExport extends DefaultValueBinder implements FromQuery, WithHeadings, 
             ...$supervisorsNik,
             $user->roles[0]?->id ?? null,
             $user->branch_id,
-            $department,
-            $position,
+            // $department,
+            // $position,
             $user->live_attendance_id,
             null,
             $user->nik,

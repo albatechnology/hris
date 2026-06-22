@@ -27,10 +27,10 @@ class Announcement extends BaseModel implements TenantedInterface, HasMedia
         return $this->morphedByMany(Branch::class, 'announcementable');
     }
 
-    public function positions(): MorphToMany
-    {
-        return $this->morphedByMany(Position::class, 'announcementable');
-    }
+    // public function positions(): MorphToMany
+    // {
+    //     return $this->morphedByMany(Position::class, 'announcementable');
+    // }
 
     public function jobLevels(): HasMany
     {

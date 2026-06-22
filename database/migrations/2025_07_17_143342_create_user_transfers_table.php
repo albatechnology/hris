@@ -22,8 +22,10 @@ return new class extends Migration
             $table->integer('company_id')->unsigned()->nullable();
             $table->integer('branch_id')->unsigned()->nullable();
             $table->integer('supervisor_id')->unsigned()->nullable();
-            $table->integer('position_id')->unsigned()->nullable();
-            $table->integer('department_id')->unsigned()->nullable();
+            $table->integer('job_position_id')->unsigned()->nullable();
+            $table->integer('job_level_id')->unsigned()->nullable();
+            // $table->integer('position_id')->unsigned()->nullable();
+            // $table->integer('department_id')->unsigned()->nullable();
             $table->string('employment_status')->nullable();
             $table->text('reason')->nullable();
             $table->timestamp('executed_at')->nullable();

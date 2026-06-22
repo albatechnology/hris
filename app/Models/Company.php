@@ -82,14 +82,24 @@ class Company extends BaseModel implements TenantedInterface
         return $this->hasMany(Branch::class);
     }
 
-    public function positions(): HasMany
+    // public function positions(): HasMany
+    // {
+    //     return $this->hasMany(Position::class);
+    // }
+
+    // public function divisions(): HasMany
+    // {
+    //     return $this->hasMany(Division::class);
+    // }
+
+    public function jobPositions(): HasMany
     {
-        return $this->hasMany(Position::class);
+        return $this->hasMany(JobPosition::class);
     }
 
-    public function divisions(): HasMany
+    public function jobLevels(): HasMany
     {
-        return $this->hasMany(Division::class);
+        return $this->hasMany(JobLevel::class);
     }
 
     public function schedules(): HasMany

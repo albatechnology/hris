@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Division;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -13,27 +12,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreignIdFor(Division::class)
-                ->nullable()
-                ->after('overtime_id')
-                ->constrained()
-                ->nullOnDelete();
-        });
+        // Schema::table('users', function (Blueprint $table) {
+        //     $table->foreignIdFor(Division::class)
+        //         ->nullable()
+        //         ->after('overtime_id')
+        //         ->constrained()
+        //         ->nullOnDelete();
+        // });
 
-        /*
-        |--------------------------------------------------------------------------
-        | Copy division_id from departments
-        |--------------------------------------------------------------------------
-        */
+        // /*
+        // |--------------------------------------------------------------------------
+        // | Copy division_id from departments
+        // |--------------------------------------------------------------------------
+        // */
 
-        DB::statement("
-            UPDATE users u
-            INNER JOIN departments d
-                ON d.id = u.department_id
-            SET
-                u.division_id = d.division_id
-        ");
+        // DB::statement("
+        //     UPDATE users u
+        //     INNER JOIN departments d
+        //         ON d.id = u.department_id
+        //     SET
+        //         u.division_id = d.division_id
+        // ");
     }
 
     /**
@@ -41,12 +40,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['division_id']);
+        // Schema::table('users', function (Blueprint $table) {
+        //     $table->dropForeign(['division_id']);
 
-            $table->dropColumn([
-                'division_id',
-            ]);
-        });
+        //     $table->dropColumn([
+        //         'division_id',
+        //     ]);
+        // });
     }
 };

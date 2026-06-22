@@ -49,6 +49,11 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends BaseController
 {
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function __construct(private UserServiceInterface $service)
     {
         parent::__construct();
@@ -76,12 +81,18 @@ class UserController extends BaseController
             AllowedInclude::callback('branches', function ($query) {
                 $query->select('user_id', 'branch_id')->with('branch', fn($q) => $q->select('id', 'name'));
             }),
-            AllowedInclude::callback('department', function ($query) {
+            AllowedInclude::callback('job_position', function ($query) {
                 $query->select('id', 'name');
-            }),
-            AllowedInclude::callback('position', function ($query) {
+            }, 'jobPosition'),
+            AllowedInclude::callback('job_level', function ($query) {
                 $query->select('id', 'name');
-            }),
+            }, 'jobLevel'),
+            // AllowedInclude::callback('department', function ($query) {
+            //     $query->select('id', 'name');
+            // }),
+            // AllowedInclude::callback('position', function ($query) {
+            //     $query->select('id', 'name');
+            // }),
             // AllowedInclude::callback('positions', function ($query) {
             //     $query->select('user_id', 'department_id', 'position_id')->with([
             //         'department' => fn($q) => $q->select('id', 'name'),
@@ -117,6 +128,11 @@ class UserController extends BaseController
         ];
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function index()
     {
         $query = QueryBuilder::for(
@@ -234,6 +250,11 @@ class UserController extends BaseController
         return UserResource::collection($users);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function subordinates()
     {
         $datas = QueryBuilder::for(
@@ -253,6 +274,11 @@ class UserController extends BaseController
         return DefaultResource::collection($datas);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function me()
     {
         /** @var User $user */
@@ -264,6 +290,11 @@ class UserController extends BaseController
         return new UserMeResource($user);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function show(int $id)
     {
         if (auth()->id() == $id) {
@@ -279,12 +310,22 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function register(RegisterRequest $request)
     {
         $user = $this->service->register($request);
         return new UserResource($user);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function store(StoreRequest $request)
     {
         DB::beginTransaction();
@@ -325,6 +366,11 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function update(int $id, UpdateRequest $request)
     {
         $data = $request->validated();
@@ -374,6 +420,11 @@ class UserController extends BaseController
         return (new UserResource($user))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function destroy(int $id)
     {
         $user = User::findTenanted($id);
@@ -393,6 +444,11 @@ class UserController extends BaseController
         return $this->deletedResponse();
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function forceDelete(int $id)
     {
         if ($id == 1) {
@@ -404,6 +460,11 @@ class UserController extends BaseController
         return $this->deletedResponse();
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function restore(int $id)
     {
         $user = User::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
@@ -412,6 +473,11 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function detail(int $id, DetailStoreRequest $request)
     {
         $user = User::findTenanted($id);
@@ -454,6 +520,11 @@ class UserController extends BaseController
         return $this->updatedResponse();
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function companies(int $id)
     {
         $user = auth()->user();
@@ -475,6 +546,11 @@ class UserController extends BaseController
         return CompanyResource::collection($companies);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function branches(int $id)
     {
         $user = auth()->user();
@@ -496,6 +572,11 @@ class UserController extends BaseController
         return BranchResource::collection($branches);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function uploadPhoto(UploadPhotoRequest $request)
     {
         /** @var User $user */
@@ -516,6 +597,11 @@ class UserController extends BaseController
         return new UserResource($user);
     }
 
+    /**
+     * move to microservice
+     * pending/done
+     * pending
+     */
     public function requestChangeData(User $user, \App\Http\Requests\Api\User\RequestChangeDataRequest $request)
     {
         $requestChangeDataAllowes = \App\Models\RequestChangeDataAllowes::where('company_id', $user->company_id)->get();
@@ -647,6 +733,10 @@ class UserController extends BaseController
         return $this->createdResponse();
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function tasks()
     {
         $query = TaskHour::whereHas('users', fn($q) => $q->where('user_id', auth()->id()))->with('task');
@@ -659,6 +749,10 @@ class UserController extends BaseController
         return DefaultResource::collection($data);
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function fcmToken(FcmTokenRequest $request)
     {
         /** @var User $user */
@@ -670,6 +764,10 @@ class UserController extends BaseController
         return $this->updatedResponse();
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function verifyPassword(Request $request)
     {
         $request->validate([
@@ -689,6 +787,10 @@ class UserController extends BaseController
         ]);
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function updatePassword(UpdatePasswordRequest $request)
     {
         /** @var User $user */
@@ -705,6 +807,10 @@ class UserController extends BaseController
         return $this->errorResponse(message: 'Failed to update password', code: Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function updateDevice(UpdateDeviceRequest $request)
     {
         /** @var User $user */
@@ -731,6 +837,10 @@ class UserController extends BaseController
         // return (new UserResource($user->load('detail')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function getAvailableSupervisor(int $id, Request $request)
     {
         $user = User::findTenanted($id);
@@ -759,6 +869,10 @@ class UserController extends BaseController
         return UserResource::collection($users);
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function setSupervisors(int $id, SetSupervisorRequest $request)
     {
         $user = User::findTenanted($id);
@@ -781,6 +895,10 @@ class UserController extends BaseController
         return $this->updatedResponse();
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function payroll(int $id, PayrollRequest $request)
     {
         $user = User::findTenanted($id);
@@ -827,6 +945,10 @@ class UserController extends BaseController
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->name));
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function thr(int $id, PayrollRequest $request)
     {
         $user = User::findTenanted($id);
@@ -862,6 +984,10 @@ class UserController extends BaseController
         return $pdf->download(sprintf("Payroll-%s-%s-%s.pdf", $request->month, $request->year, $user->name));
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function resign(ResignRequest $request, int $id)
     {
         UserResignation::create($request->validated());
@@ -869,6 +995,10 @@ class UserController extends BaseController
         return $this->createdResponse();
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function cancelResign(int $id)
     {
         $user = User::select('id', 'resign_date')->findTenanted($id);
@@ -893,6 +1023,10 @@ class UserController extends BaseController
         return $this->updatedResponse();
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function rehire(RehireRequest $request, int $id)
     {
         UserResignation::create($request->validated());
@@ -900,6 +1034,10 @@ class UserController extends BaseController
         return $this->createdResponse();
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function import(Request $request, ?string $sample = null)
     {
         if ($sample) {
@@ -911,6 +1049,10 @@ class UserController extends BaseController
         return $this->createdResponse("Data imported successfully");
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function export(ExportRequest $request)
     {
         // $startDate = $request->filter['start_date'] ?? null;
@@ -939,8 +1081,10 @@ class UserController extends BaseController
                 'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
                 'roles' => fn($q) => $q->select('id'),
                 'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
-                'position' => fn($q) => $q->select('id', 'name'),
-                'department' => fn($q) => $q->select('id', 'name'),
+                'job_position' => fn($q) => $q->select('id', 'name'),
+                'job_level' => fn($q) => $q->select('id', 'name'),
+                // 'position' => fn($q) => $q->select('id', 'name'),
+                // 'department' => fn($q) => $q->select('id', 'name'),
                 // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
                 //     'position' => fn($q) => $q->select('id', 'name'),
                 //     'department' => fn($q) => $q->select('id', 'name'),
@@ -955,6 +1099,10 @@ class UserController extends BaseController
         return (new UserExport($query))->download('users.xlsx');
     }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     // public function backupPhoto()
     // {
     //     $users = User::where('company_id', 1)
@@ -1000,6 +1148,10 @@ class UserController extends BaseController
     //     });
     // }
 
+    /**
+    move to microservice
+    pending/done
+    pending */
     public function updateSupervisor()
     {
         return "AFAANTUH";

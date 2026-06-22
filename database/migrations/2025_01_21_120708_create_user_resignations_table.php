@@ -32,8 +32,10 @@ return new class extends Migration
             $table->string('nik')->nullable();
             $table->integer('branch_id')->nullable();
             $table->integer('schedule_id')->nullable();
-            $table->integer('department_id')->nullable();
-            $table->integer('position_id')->nullable();
+            $table->integer('job_position_id')->nullable();
+            $table->integer('job_level_id')->nullable();
+            // $table->integer('department_id')->nullable();
+            // $table->integer('position_id')->nullable();
             $table->char('employment_status', 10)->nullable();
             $table->double('basic_salary')->unsigned()->default(0);
 

@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
-            $table->id();
-            // $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('division_id')->constrained();
-            $table->string('name');
-            $table->timestamps();
+        // Schema::create('departments', function (Blueprint $table) {
+        //     $table->id();
+        //     // $table->foreignIdFor(User::class)->nullable()->constrained()->nullOnDelete();
+        //     $table->foreignId('division_id')->constrained();
+        //     $table->string('name');
+        //     $table->timestamps();
 
-            // softDeletes must implement deleted_by
-            $table->unsignedInteger('deleted_by')->nullable();
-            $table->softDeletes();
-        });
+        //     // softDeletes must implement deleted_by
+        //     $table->unsignedInteger('deleted_by')->nullable();
+        //     $table->softDeletes();
+        // });
     }
 
     /**
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        // Schema::dropIfExists('departments');
     }
 };

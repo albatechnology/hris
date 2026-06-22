@@ -40,7 +40,7 @@ enum FormulaComponentEnum: string
                 // 'holiday' => 'Company Holiday',
             ],
             self::EMPLOYEMENT_STATUS => EmploymentStatus::all(),
-            self::JOB_POSITION => \App\Models\Position::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
+            self::JOB_POSITION => \App\Models\JobPosition::tenanted()->get(['id', 'name'])->pluck('name', 'id')->toArray(),
             self::GENDER => Gender::all(),
             self::RELIGION => Religion::all(),
             self::MARITAL_STATUS => MaritalStatus::all(),

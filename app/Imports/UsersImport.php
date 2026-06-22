@@ -15,9 +15,9 @@ use App\Enums\TaxMethod;
 use App\Enums\TaxSalary;
 use App\Enums\UserType;
 use App\Models\Branch;
-use App\Models\Department;
+use App\Models\JobLevel;
+use App\Models\JobPosition;
 use App\Models\LiveAttendance;
-use App\Models\Position;
 use App\Models\Role;
 use App\Models\Schedule;
 use App\Models\User;
@@ -67,8 +67,10 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'supervisor_nik_3' => ['nullable', 'exists:users,nik'],
             'supervisor_nik_4' => ['nullable', 'exists:users,nik'],
             'role_id' => ['required', new CompanyTenantedRule(Role::class, 'Role not found')],
-            'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
-            'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            'job_position_id' => ['required', new CompanyTenantedRule(JobPosition::class, 'Job Position not found')],
+            'job_level_id' => ['required', new CompanyTenantedRule(JobLevel::class, 'Job Level not found')],
+            // 'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            // 'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'live_attendance_id' => ['nullable', new CompanyTenantedRule(LiveAttendance::class, 'Live attendance not found')],
             'schedule_id' => ['nullable', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
@@ -239,17 +241,24 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
 
         $user->roles()->syncWithPivotValues([$row['role_id']], ['group_id' => $user->group_id]);
 
-        if (isset($row['department_id']) && !empty($row['department_id']) && isset($row['position_id']) && !empty($row['position_id'])) {
+        if (isset($row['job_position_id']) && !empty($row['job_position_id']) || isset($row['job_level_id']) && !empty($row['job_level_id'])) {
             $user->update([
-                'department_id' => $row['department_id'],
-                'position_id' => $row['position_id'],
+                'job_position_id' => $row['job_position_id'] ?? null,
+                'job_level_id' => $row['job_level_id'] ?? null,
             ]);
-            // $user->positions()->delete();
-            // $user->positions()->create([
-            //     'department_id' => $row['department_id'],
-            //     'position_id' => $row['position_id'],
-            // ]);
         }
+
+        // if (isset($row['department_id']) && !empty($row['department_id']) && isset($row['position_id']) && !empty($row['position_id'])) {
+        //     $user->update([
+        //         'department_id' => $row['department_id'],
+        //         'position_id' => $row['position_id'],
+        //     ]);
+        //     // $user->positions()->delete();
+        //     // $user->positions()->create([
+        //     //     'department_id' => $row['department_id'],
+        //     //     'position_id' => $row['position_id'],
+        //     // ]);
+        // }
 
         if (isset($row['schedule_id']) && !empty($row['schedule_id'])) {
             $user->schedules()->syncWithoutDetaching([$row['schedule_id']]);

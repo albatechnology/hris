@@ -40,28 +40,28 @@ class GroupSeeder extends Seeder
         //     'updated_at' => now(),
         // ]);
         
-        $departments = [
-            [
-                'name' => 'Marketing',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Finance',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Legal',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'HR',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
+        // $departments = [
+        //     [
+        //         'name' => 'Marketing',
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        //     [
+        //         'name' => 'Finance',
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        //     [
+        //         'name' => 'Legal',
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        //     [
+        //         'name' => 'HR',
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        // ];
 
         // $group = Group::create([
         //     'name' => 'ATARA Corp',

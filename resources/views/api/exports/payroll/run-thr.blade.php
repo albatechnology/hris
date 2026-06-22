@@ -101,7 +101,7 @@
                     </td>
                     <td>{{ $runThrUser->user?->resign_date ? date('d-M-Y', strtotime($runThrUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runThrUser->user?->department->name .' / '. $runThrUser->user?->position->name }}</td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     {{-- <td>{{ $runThrUser->user?->positions
                         ?->map(function ($position) {
                             return ($position->department?->name ?? '') . ' / ' . ($position->position?->name ?? '');
@@ -238,7 +238,7 @@
                     </td>
                     <td>{{ $runThrUser->user?->resign_date ? date('d-M-Y', strtotime($runThrUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runThrUser->user?->department->name .' / '. $runThrUser->user?->position->name }}</td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     {{-- <td>{{ $runThrUser->user?->positions
                         ?->map(function ($position) {
                             return $position->department->name . ' / ' . $position->position->name;
@@ -375,7 +375,7 @@
                     </td>
                     <td>{{ $runThrUser->user?->resign_date ? date('d-M-Y', strtotime($runThrUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runThrUser->user?->department->name .' / '. $runThrUser->user?->position->name }}</td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     {{-- <td>{{ $runThrUser->user?->positions
                         ?->map(function ($position) {
                             return $position->department->name . ' / ' . $position->position->name;

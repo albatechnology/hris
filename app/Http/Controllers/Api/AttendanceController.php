@@ -854,19 +854,6 @@ class AttendanceController extends BaseController
         // return new AttendanceResource($attendance);
     }
 
-    // public function store(StoreRequest $request)
-    // {
-    //     try {
-    //         $user = auth('api')->user();
-    //         $attendance = $this->attendanceService->storeAttendance($request->validated(),$user);
-    //         return new AttendanceResource($attendance);
-    //     } catch (\DomainException $e) {
-    //         return $this->errorResponse($e->getMessage());
-    //     }catch(Exception $e){
-    //         return $this->errorResponse($e->getMessage());
-    //     }
-    // }
-
     public function manualAttendance(ManualAttendanceRequest $request)
     {
         /**

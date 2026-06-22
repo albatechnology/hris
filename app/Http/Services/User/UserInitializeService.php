@@ -34,12 +34,12 @@ class UserInitializeService
             'address' => $user->address,
         ]);
 
-        $division = $user->divisions()->create([
-            'name' => 'Operational',
-        ]);
-        $department = $division->departments()->create([
-            'name' => 'HR'
-        ]);
+        // $division = $user->divisions()->create([
+        //     'name' => 'Operational',
+        // ]);
+        // $department = $division->departments()->create([
+        //     'name' => 'HR'
+        // ]);
         // $user->positions()->create([
         //     'name' => 'Manager'
         // ]);

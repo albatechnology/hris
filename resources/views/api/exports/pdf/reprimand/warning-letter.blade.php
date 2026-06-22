@@ -62,11 +62,11 @@
         <p>
             To:<br>
             <span>{{ $user_name }}</span><br>
-            @if ($position)
-                <span>{{ $position }}</span><br>
+            @if ($job_position)
+                <span>{{ $job_position }}</span><br>
             @endif
-            @if ($department)
-                <span>{{ $department }}</span><br>
+            @if ($job_level)
+                <span>{{ $job_level }}</span><br>
             @endif
         </p>
     </div>

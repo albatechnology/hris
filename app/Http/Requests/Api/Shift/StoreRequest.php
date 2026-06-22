@@ -4,8 +4,8 @@ namespace App\Http\Requests\Api\Shift;
 
 use App\Enums\ScheduleType;
 use App\Models\Branch;
-use App\Models\Department;
-use App\Models\Position;
+use App\Models\JobLevel;
+use App\Models\JobPosition;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -62,10 +62,14 @@ class StoreRequest extends FormRequest
             'is_show_in_request_for_all' => 'nullable|boolean',
             'branch_ids' => 'nullable|array',
             'branch_ids.*' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
-            'department_ids' => 'nullable|array',
-            'department_ids.*' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
-            'position_ids' => 'nullable|array',
-            'position_ids.*' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            'job_position_ids' => 'nullable|array',
+            'job_position_ids.*' => ['required', new CompanyTenantedRule(JobPosition::class, 'Department not found')],
+            'job_level_ids' => 'nullable|array',
+            'job_level_ids.*' => ['required', new CompanyTenantedRule(JobLevel::class, 'Position not found')],
+            // 'department_ids' => 'nullable|array',
+            // 'department_ids.*' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            // 'position_ids' => 'nullable|array',
+            // 'position_ids.*' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             // 'is_enable_auto_overtime' => 'nullable|boolean',
             // 'overtime_before' => 'nullable|date_format:H:i',
             // 'overtime_after' => 'nullable|date_format:H:i',

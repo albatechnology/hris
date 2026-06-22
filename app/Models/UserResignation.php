@@ -34,8 +34,10 @@ class UserResignation extends BaseModel implements TenantedInterface
         'nik',
         'branch_id',
         'schedule_id',
-        'department_id',
-        'position_id',
+        'job_position_id',
+        'job_level_id',
+        // 'department_id',
+        // 'position_id',
         'employment_status',
         'basic_salary',
 
@@ -62,8 +64,8 @@ class UserResignation extends BaseModel implements TenantedInterface
                 $user->companies()->delete();
 
                 $user->update([
-                    'department_id' => $model->department_id ?? null,
-                    'position_id' => $model->position_id ?? null,
+                    'job_position_id' => $model->job_position_id ?? null,
+                    'job_level_id' => $model->job_level_id ?? null,
                     'nik' => $model->nik,
                     'branch_id' => $model->branch_id,
                     'resign_date' => null,
@@ -129,13 +131,13 @@ class UserResignation extends BaseModel implements TenantedInterface
         return $this->belongsTo(Schedule::class);
     }
 
-    public function department(): BelongsTo
+    public function jobPosition(): BelongsTo
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(JobPosition::class);
     }
 
-    public function position(): BelongsTo
+    public function jobLevel(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(JobLevel::class);
     }
 }

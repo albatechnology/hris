@@ -4,8 +4,8 @@ namespace App\Http\Requests\Api\User;
 
 use App\Enums\EmploymentStatus;
 use App\Models\Branch;
-use App\Models\Department;
-use App\Models\Position;
+use App\Models\JobLevel;
+use App\Models\JobPosition;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,8 +25,10 @@ class DetailStoreRequest extends FormRequest
             'nik' => 'nullable|string|unique:users,nik,' . $this->user,
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
             'join_date' => 'nullable|date',
-            'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
-            'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            'job_position_id' => ['required', new CompanyTenantedRule(JobPosition::class, 'Job Position not found')],
+            'job_level_id' => ['required', new CompanyTenantedRule(JobLevel::class, 'Job Level not found')],
+            // 'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            // 'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
             // 'positions' => 'nullable|array',
             // 'positions.*.position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             // 'positions.*.department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],

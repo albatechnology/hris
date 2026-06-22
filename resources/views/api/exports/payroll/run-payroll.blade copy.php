@@ -69,12 +69,7 @@
                 </td>
                 <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                 </td>
-                <td>{{ $runPayrollUser->user?->positions
-                    ?->map(function ($position) {
-                        return $position->department->name . ' / ' . $position->position->name;
-                    })
-                    ?->implode(', ') }}
-                </td>
+                <td>{{ $runPayrollUser->user->jobPosition->name . ' / ' . $runPayrollUser->user->jobLevel->name }}</td>
                 <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_holder ?? '' }}</td>
                 <td>{{ $runPayrollUser->user?->payrollInfo?->bank_account_no ?? '' }}</td>
                 <td>{{ $runPayrollUser->user?->payrollInfo?->secondary_bank_account_holder ?? '' }}</td>

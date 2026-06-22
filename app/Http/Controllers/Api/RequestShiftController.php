@@ -282,8 +282,8 @@ class RequestShiftController extends BaseController
         // $user = auth()->user()?->load('positions');
 
         $branchId = $user->branch_id;
-        $departmentIds = $user->department_id;
-        $positionIds = $user->position_id;
+        $jobPositionIds = [$user->job_position_id];
+        $jobLevelIds = [$user->job_level_id];
         // $departmentIds = $user->positions->pluck('department_id')?->toArray();
         // $positionIds = $user->positions->pluck('position_id')?->toArray();
 
@@ -293,16 +293,16 @@ class RequestShiftController extends BaseController
             ->where(
                 fn($q) =>
                 $q->when($schedule, fn($q) => $q->whereHas('schedules', fn($q) => $q->where('schedule_id', $schedule->id)))
-                    ->orWhere(function ($q) use ($branchId, $departmentIds, $positionIds) {
+                    ->orWhere(function ($q) use ($branchId, $jobLevelIds, $jobPositionIds) {
                         $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', true)
                             ->orWhere(function ($q) use ($branchId) {
                                 $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_branch_ids, ?)', json_encode($branchId));
                             })
-                            ->orWhere(function ($q) use ($departmentIds) {
-                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_department_ids, ?)', json_encode($departmentIds));
+                            ->orWhere(function ($q) use ($jobLevelIds) {
+                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_job_level_ids, ?)', json_encode($jobLevelIds));
                             })
-                            ->orWhere(function ($q) use ($positionIds) {
-                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_position_ids, ?)', json_encode($positionIds));
+                            ->orWhere(function ($q) use ($jobPositionIds) {
+                                $q->where('is_show_in_request', true)->where('is_show_in_request_for_all', false)->whereRaw('JSON_CONTAINS(show_in_request_job_position_ids, ?)', json_encode($jobPositionIds));
                             });
                     })
             )

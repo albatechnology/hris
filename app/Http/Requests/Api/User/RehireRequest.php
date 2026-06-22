@@ -5,8 +5,8 @@ namespace App\Http\Requests\Api\User;
 use App\Enums\EmploymentStatus;
 use App\Enums\ResignationType;
 use App\Models\Branch;
-use App\Models\Department;
-use App\Models\Position;
+use App\Models\JobLevel;
+use App\Models\JobPosition;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
@@ -42,8 +42,10 @@ class RehireRequest extends FormRequest
             'nik' => 'required|string',
             'branch_id' => ['required', new CompanyTenantedRule(Branch::class, 'Branch not found')],
             'schedule_id' => ['required', new CompanyTenantedRule(Schedule::class, 'Schedule not found')],
-            'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
-            'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
+            'job_position_id' => ['required', new CompanyTenantedRule(JobPosition::class, 'Job Position not found')],
+            'job_level_id' => ['required', new CompanyTenantedRule(JobLevel::class, 'Job Level not found')],
+            // 'department_id' => ['required', new CompanyTenantedRule(Department::class, 'Department not found')],
+            // 'position_id' => ['required', new CompanyTenantedRule(Position::class, 'Position not found')],
             'employment_status' => ['required', Rule::enum(EmploymentStatus::class)],
             'basic_salary' => 'required|numeric',
             'description' => 'nullable|string',

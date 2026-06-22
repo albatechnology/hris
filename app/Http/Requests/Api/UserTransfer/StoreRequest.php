@@ -5,8 +5,6 @@ namespace App\Http\Requests\Api\UserTransfer;
 use App\Enums\EmploymentStatus;
 use App\Enums\TransferType;
 use App\Models\Branch;
-use App\Models\Department;
-use App\Models\Position;
 use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Closure;
@@ -45,24 +43,26 @@ class StoreRequest extends FormRequest
                     $fail("Supervisor not found");
                 };
             }],
-            'position_id' => ['required_with:department_id', function ($attribute, $value, Closure $fail) {
-                if (
-                    Position::tenanted()->where('id', $value)
-                    // ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
-                    ->doesntExist()
-                ) {
-                    $fail("Position not found");
-                };
-            }],
-            'department_id' => ['required_with:position_id', function ($attribute, $value, Closure $fail) {
-                if (
-                    Department::tenanted()->where('id', $value)
-                    // ->when($this->company_id, fn($q) => $q->whereHas('division', fn($q) => $q->where('company_id', $this->company_id)))
-                    ->doesntExist()
-                ) {
-                    $fail("Department not found");
-                };
-            }],
+            'job_position_id' => ['required', 'exists:job_positions,id'],
+            'job_level_id' => ['required', 'exists:job_levels,id'],
+            // 'position_id' => ['required_with:department_id', function ($attribute, $value, Closure $fail) {
+            //     if (
+            //         Position::tenanted()->where('id', $value)
+            //         // ->when($this->company_id, fn($q) => $q->where('company_id', $this->company_id))
+            //         ->doesntExist()
+            //     ) {
+            //         $fail("Position not found");
+            //     };
+            // }],
+            // 'department_id' => ['required_with:position_id', function ($attribute, $value, Closure $fail) {
+            //     if (
+            //         Department::tenanted()->where('id', $value)
+            //         // ->when($this->company_id, fn($q) => $q->whereHas('division', fn($q) => $q->where('company_id', $this->company_id)))
+            //         ->doesntExist()
+            //     ) {
+            //         $fail("Department not found");
+            //     };
+            // }],
             'employment_status' => ['nullable', Rule::enum(EmploymentStatus::class)],
             'reason' => ['required', 'string'],
             'file' => ['nullable', 'mimes:' . config('app.file_mimes_types')],

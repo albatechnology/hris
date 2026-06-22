@@ -23,8 +23,8 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
         'branch_id',
         'employment_status',
         'supervisor_id',
-        'position_id',
-        'department_id',
+        'job_position_id',
+        'job_level_id',
         // 'approval_id',
         // 'parent_id',
         // 'branches',
@@ -40,8 +40,8 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
         'branch_id',
         'employment_status',
         'supervisor_id',
-        'position_id',
-        'department_id',
+        'job_position_id',
+        'job_level_id',
         'reason',
         'executed_at',
         // 'approval_id',
@@ -83,8 +83,8 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
                 'supervisors' => fn($q) => $q->with('supervisor', fn($q) => $q->select('id', 'name')),
                 'companies',
                 'branches',
-                'department' => fn($q) => $q->select('id', 'name'),
-                'position' => fn($q) => $q->select('id', 'name')
+                'jobPosition' => fn($q) => $q->select('id', 'name'),
+                'jobLevel' => fn($q) => $q->select('id', 'name'),
                 // 'positions' => fn($q) => $q->with([
                 //     'department' => fn($q) => $q->select('id', 'name'),
                 //     'position' => fn($q) => $q->select('id', 'name')
@@ -176,12 +176,12 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
                         }
                     }
 
-                    if ($column == 'department' && !empty($this->context['department'])) {
-                        $data['department'] = $this->context['department'] ?? '';
+                    if ($column == 'job_position' && !empty($this->context['job_position'])) {
+                        $data['job_position'] = $this->context['job_position'] ?? '';
                     }
 
-                    if ($column == 'position' && !empty($this->context['position'])) {
-                        $data['position'] = $this->context['position'] ?? '';
+                    if ($column == 'job_level' && !empty($this->context['job_level'])) {
+                        $data['job_level'] = $this->context['job_level'] ?? '';
                     }
                     // if ($column == 'department' && !empty($this->context['positions'])) {
                     //     $data['department'] = $this->context['positions'][0]['department'] ?? '';
@@ -220,12 +220,12 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
                         ];
                     }
 
-                    if ($column == 'position_id' && $this->position_id) {
-                        $data['position'] = $this->position()->select('id', 'name')->first();
+                    if ($column == 'job_position_id' && $this->job_position_id) {
+                        $data['job_position'] = $this->JobPosition()->select('id', 'name')->first();
                     }
 
-                    if ($column == 'department_id' && $this->department_id) {
-                        $data['department'] = $this->department()->select('id', 'name')->first();
+                    if ($column == 'job_level_id' && $this->job_level_id) {
+                        $data['job_level'] = $this->JobLevel()->select('id', 'name')->first();
                     }
 
                     if ($column == 'employment_status' && $this->employment_status) {
@@ -299,15 +299,25 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
         return $this->belongsTo(Branch::class);
     }
 
-    public function position(): BelongsTo
+    public function jobPosition(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(JobPosition::class);
     }
 
-    public function department(): BelongsTo
+    public function jobLevel(): BelongsTo
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(JobLevel::class);
     }
+   
+    // public function position(): BelongsTo
+    // {
+    //     return $this->belongsTo(Position::class);
+    // }
+
+    // public function department(): BelongsTo
+    // {
+    //     return $this->belongsTo(Department::class);
+    // }
 
     public function supervisor(): BelongsTo
     {

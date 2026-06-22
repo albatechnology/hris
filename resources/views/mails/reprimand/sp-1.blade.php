@@ -66,11 +66,11 @@
         <p>
             To:<br>
             <span class="highlight">{{ $user_name }}</span><br>
-            @if ($position)
-                <span class="highlight">{{ $position }}</span><br>
+            @if ($job_position)
+                <span class="highlight">{{ $job_position }}</span><br>
             @endif
-            @if ($department)
-                <span class="highlight">{{ $department }}</span><br>
+            @if ($job_level)
+                <span class="highlight">{{ $job_level }}</span><br>
             @endif
         </p>
     </div>

@@ -33,10 +33,10 @@ class AnnouncementController extends BaseController
             'branches' => function ($q) {
                 $q->select('branches.id', 'branches.name');
             },
-            'positions' => function ($q) {
-                $q->select('positions.id', 'positions.name');
-            },
-            'jobLevels',
+            // 'positions' => function ($q) {
+            //     $q->select('positions.id', 'positions.name');
+            // },
+            // 'jobLevels',
         ]))
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
@@ -60,10 +60,10 @@ class AnnouncementController extends BaseController
             'branches' => function ($q) {
                 $q->select('branches.id', 'branches.name');
             },
-            'positions' => function ($q) {
-                $q->select('positions.id', 'positions.name');
-            },
-            'jobLevels',
+            // 'positions' => function ($q) {
+            //     $q->select('positions.id', 'positions.name');
+            // },
+            // 'jobLevels',
             'media',
         ]))->firstOrFail();
 
@@ -89,21 +89,21 @@ class AnnouncementController extends BaseController
                 });
             }
 
-            if ($request->position_ids) {
-                $announcement->positions()->attach(explode(',', $request->position_ids));
-                $query->whereIn('position_id', explode(',', $request->position_ids));
-                // $query->whereHas('positions', function ($q) use ($request) {
-                //     $q->whereIn('position_id', explode(',', $request->position_ids));
-                // });
-            }
+            // if ($request->position_ids) {
+            //     $announcement->positions()->attach(explode(',', $request->position_ids));
+            //     $query->whereIn('position_id', explode(',', $request->position_ids));
+            //     // $query->whereHas('positions', function ($q) use ($request) {
+            //     //     $q->whereIn('position_id', explode(',', $request->position_ids));
+            //     // });
+            // }
 
-            if ($request->department_ids) {
-                $announcement->positions()->attach(explode(',', $request->department_ids));
-                $query->whereIn('department_id', explode(',', $request->department_ids));
-                // $query->whereHas('positions', function ($q) use ($request) {
-                //     $q->whereIn('department_id', explode(',', $request->department_ids));
-                // });
-            }
+            // if ($request->department_ids) {
+            //     $announcement->positions()->attach(explode(',', $request->department_ids));
+            //     $query->whereIn('department_id', explode(',', $request->department_ids));
+            //     // $query->whereHas('positions', function ($q) use ($request) {
+            //     //     $q->whereIn('department_id', explode(',', $request->department_ids));
+            //     // });
+            // }
 
             //   if ($request->job_levels) {
             //     collect(explode(',', $request->job_levels))->each(function($jobLevel) use($announcement) {
@@ -130,10 +130,10 @@ class AnnouncementController extends BaseController
             'branches' => function ($q) {
                 $q->select('branches.id', 'branches.name');
             },
-            'positions' => function ($q) {
-                $q->select('positions.id', 'positions.name');
-            },
-            'jobLevels',
+            // 'positions' => function ($q) {
+            //     $q->select('positions.id', 'positions.name');
+            // },
+            // 'jobLevels',
         ]));
     }
 

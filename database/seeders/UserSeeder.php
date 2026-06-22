@@ -6,9 +6,7 @@ use App\Enums\SettingKey;
 use App\Enums\UserType;
 use App\Models\Branch;
 use App\Models\Company;
-use App\Models\Department;
 use App\Models\Group;
-use App\Models\Position;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
@@ -123,8 +121,8 @@ class UserSeeder extends Seeder
                 'nik' => rand(16, 100),
                 'sign_date' => date('Y') . '-01-01',
                 'join_date' => date('Y') . '-01-01',
-                'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $company->id))->where('name', 'HR')->firstOrFail(['id'])->id,
-                'position_id' => Position::where('company_id', $company->id)->where('name', 'Manager')->firstOrFail(['id'])->id,
+                // 'department_id' => Department::whereHas('division', fn($q) => $q->where('company_id', $company->id))->where('name', 'HR')->firstOrFail(['id'])->id,
+                // 'position_id' => Position::where('company_id', $company->id)->where('name', 'Manager')->firstOrFail(['id'])->id,
             ]);
             $admin->payrollInfo()->create([
                 'basic_salary' => 10000000

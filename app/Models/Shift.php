@@ -36,6 +36,8 @@ class Shift extends BaseModel implements TenantedInterface
         'show_in_request_branch_ids',
         'show_in_request_department_ids',
         'show_in_request_position_ids',
+        'show_in_request_job_position_ids',
+        'show_in_request_job_level_ids',
         // 'is_enable_auto_overtime',
         // 'overtime_before',
         // 'overtime_after',
@@ -49,8 +51,8 @@ class Shift extends BaseModel implements TenantedInterface
         'is_show_in_request' => 'boolean',
         'is_show_in_request_for_all' => 'boolean',
         'show_in_request_branch_ids' => 'array',
-        'show_in_request_department_ids' => 'array',
-        'show_in_request_position_ids' => 'array',
+        'show_in_request_job_position_ids' => 'array',
+        'show_in_request_job_level_ids' => 'array',
         // 'is_enable_auto_overtime' => 'boolean',
     ];
 
@@ -74,16 +76,16 @@ class Shift extends BaseModel implements TenantedInterface
                 $model->show_in_request_branch_ids = null;
             }
 
-            if ($model->show_in_request_department_ids && gettype($model->show_in_request_department_ids) == 'array') {
-                $model->show_in_request_department_ids = array_map('intval', $model->show_in_request_department_ids);
+            if ($model->show_in_request_job_position_ids && gettype($model->show_in_request_job_position_ids) == 'array') {
+                $model->show_in_request_job_position_ids = array_map('intval', $model->show_in_request_job_position_ids);
             } else {
-                $model->show_in_request_department_ids = null;
+                $model->show_in_request_job_position_ids = null;
             }
 
-            if ($model->show_in_request_position_ids && gettype($model->show_in_request_position_ids) == 'array') {
-                $model->show_in_request_position_ids = array_map('intval', $model->show_in_request_position_ids);
+            if ($model->show_in_request_job_level_ids && gettype($model->show_in_request_job_level_ids) == 'array') {
+                $model->show_in_request_job_level_ids = array_map('intval', $model->show_in_request_job_level_ids);
             } else {
-                $model->show_in_request_position_ids = null;
+                $model->show_in_request_job_level_ids = null;
             }
             // if (! $model->is_enable_auto_overtime) {
             //     $model->overtime_before = null;

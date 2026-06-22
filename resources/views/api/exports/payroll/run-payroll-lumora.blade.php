@@ -72,12 +72,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runPayrollUser->user?->positions
-                        ?->map(function ($position) {
-                            return $position->department->name . ' / ' . $position->position->name;
-                        })
-                        ?->implode(', ') }}
-                    </td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
 
                     @foreach ($allowances as $allowance)
@@ -184,12 +179,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runPayrollUser->user?->positions
-                        ?->map(function ($position) {
-                            return $position->department->name . ' / ' . $position->position->name;
-                        })
-                        ?->implode(', ') }}
-                    </td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
 
                     @foreach ($allowances as $allowance)
@@ -296,12 +286,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runPayrollUser->user?->positions
-                        ?->map(function ($position) {
-                            return $position->department->name . ' / ' . $position->position->name;
-                        })
-                        ?->implode(', ') }}
-                    </td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     <td>{{ $runPayrollUser->basic_salary }}</td>
 
                     @foreach ($allowances as $allowance)

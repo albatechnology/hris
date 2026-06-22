@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Position;
 
 use App\Models\Department;
-use App\Models\User;
 use App\Rules\CompanyTenantedRule;
 use Illuminate\Foundation\Http\FormRequest;
 

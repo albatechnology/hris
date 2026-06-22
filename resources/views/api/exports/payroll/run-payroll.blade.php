@@ -72,7 +72,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runPayrollUser->user?->department->name .' / '. $runPayrollUser->user?->position->name }}</td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     {{-- <td>{{ $runPayrollUser->user?->positions
                         ?->map(function ($position) {
                             return ($position->department?->name ?? "-") . ' / ' . ($position->position?->name ?? "-");
@@ -171,7 +171,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runPayrollUser->user?->department->name .' / '. $runPayrollUser->user?->position->name }}</td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     {{-- <td>{{ $runPayrollUser->user?->positions
                         ?->map(function ($position) {
                             return ($position->department?->name ?? "-") . ' / ' . ($position->position?->name ?? "-");
@@ -270,7 +270,7 @@
                     </td>
                     <td>{{ $runPayrollUser->user?->resign_date ? date('d-M-Y', strtotime($runPayrollUser->user->resign_date)) : '' }}
                     </td>
-                    <td>{{ $runPayrollUser->user?->department->name .' / '. $runPayrollUser->user?->position->name }}</td>
+                    <td>{{ $runPayrollUser->user->jobPosition?->name . ' / ' . $runPayrollUser->user->jobLevel?->name }}</td>
                     {{-- <td>{{ $runPayrollUser->user?->positions
                         ?->map(function ($position) {
                             return ($position->department?->name ?? "-") . ' / ' . ($position->position?->name ?? "-");

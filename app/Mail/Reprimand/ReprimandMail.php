@@ -21,8 +21,8 @@ class ReprimandMail extends Mailable implements ShouldQueue
     public function __construct(private User $user, private Reprimand $reprimand)
     {
         $this->user->load([
-            'department' => fn($q) => $q->select('id', 'name'),
-            'position' => fn($q) => $q->select('id', 'name'),
+            'jobPosition' => fn($q) => $q->select('id', 'name'),
+            'jobLevel' => fn($q) => $q->select('id', 'name'),
         ]);
         // $this->user->load(['positions' => fn($q) => $q->with([
         //     'department' => fn($q) => $q->select('id', 'name'),
@@ -45,8 +45,8 @@ class ReprimandMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        $department = $this->user->department ? $this->user->department->name : null;
-        $position = $this->user->position ? $this->user->position->name : null;
+        $jobPosition = $this->user->jobPosition ? $this->user->jobPosition->name : null;
+        $jobLevel = $this->user->jobLevel ? $this->user->jobLevel->name : null;
         // $position = null;
         // $department = null;
         // if ($this->user->positions->count()) {
@@ -60,8 +60,8 @@ class ReprimandMail extends Mailable implements ShouldQueue
                 'number' => rand(100, 999),
                 'user_name' => $this->user->name,
                 'user_title' => $this->user->gender->getTitle(),
-                'department' => $department,
-                'position' => $position,
+                'job_position' => $jobPosition,
+                'job_level' => $jobLevel,
                 'download_url' => $this->reprimand->file  && isset($this->reprimand->file['url']) ?  $this->reprimand->file['url'] : null,
             ],
         );
