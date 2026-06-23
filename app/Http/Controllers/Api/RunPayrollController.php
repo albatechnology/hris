@@ -165,21 +165,7 @@ class RunPayrollController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $runPayroll = RunPayroll::findTenanted($id);
-        DB::beginTransaction();
-        try {
-            foreach ($runPayroll->users as $runPayrollUser) {
-                $runPayrollUser->components()?->delete();
-                $runPayrollUser->delete();
-            }
-
-            $runPayroll->delete();
-
-            DB::commit();
-        } catch (Exception $th) {
-            DB::rollBack();
-
-            return $this->errorResponse($th->getMessage());
-        }
+        $runPayroll->delete();
 
         return $this->deletedResponse();
     }
@@ -214,6 +200,36 @@ class RunPayrollController extends BaseController
         }
 
         return $this->deletedResponse();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $runPayroll = RunPayroll::findTenanted($id);
+        DB::beginTransaction();
+        try {
+            foreach ($runPayroll->users as $runPayrollUser) {
+                $runPayrollUser->components()?->delete();
+                $runPayrollUser->delete();
+            }
+
+            $runPayroll->delete();
+
+            DB::commit();
+        } catch (Exception $th) {
+            DB::rollBack();
+
+            return $this->errorResponse($th->getMessage());
+        }
+
+        return $this->deletedResponse();
+    }
+
+    public function restore(int $id)
+    {
+        $data = RunPayroll::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data->restore();
+
+        return $this->okResponse("Data restored successfully");
     }
 
     public function export(int $id)

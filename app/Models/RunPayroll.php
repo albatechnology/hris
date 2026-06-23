@@ -6,12 +6,13 @@ use App\Enums\RunPayrollStatus;
 use App\Traits\Models\BelongsToBranch;
 use App\Traits\Models\BelongsToUser;
 use App\Traits\Models\CompanyTenanted;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RunPayroll extends BaseModel
 {
-    use BelongsToUser, CompanyTenanted, BelongsToBranch;
+    use BelongsToUser, CompanyTenanted, BelongsToBranch, CustomSoftDeletes;
 
     protected $fillable = [
         'company_id',
