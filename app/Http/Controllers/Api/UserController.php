@@ -1081,8 +1081,8 @@ class UserController extends BaseController
                 'supervisors' => fn($q) => $q->select('user_id', 'supervisor_id')->with('supervisor', fn($q) => $q->select('id', 'nik')),
                 'roles' => fn($q) => $q->select('id'),
                 'branch' => fn($q) => $q->select('id', 'company_id')->with('company', fn($q) => $q->select('id')),
-                'job_position' => fn($q) => $q->select('id', 'name'),
-                'job_level' => fn($q) => $q->select('id', 'name'),
+                'jobPosition' => fn($q) => $q->select('id', 'name'),
+                'jobLevel' => fn($q) => $q->select('id', 'name'),
                 // 'position' => fn($q) => $q->select('id', 'name'),
                 // 'department' => fn($q) => $q->select('id', 'name'),
                 // 'positions' => fn($q) => $q->select('user_id', 'department_id', 'position_id')->with([
