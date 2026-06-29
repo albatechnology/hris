@@ -91,6 +91,7 @@ Route::get('subscriptions/info', [SubscriptionController::class, 'quotaInfo']);
 
 Route::group(['prefix' => 'auth', 'controller' => AuthController::class], function () {
     Route::post('token', 'login');
+    Route::post('refresh-token', 'refresh');
 });
 
 Route::post('notifications/test/{token}', [NotificationController::class, 'test']);
