@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Enums\TokenType;
+use App\Traits\Models\BelongsToUser;
 
 class Token extends BaseModel
 {
+    use BelongsToUser;
+    
     protected $fillable = [
         'user_id',
         'type',
