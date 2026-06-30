@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Enums\BloodType;
+use App\Enums\BpjsKesehatanFamilyNo;
 use App\Enums\EmploymentStatus;
 use App\Enums\Gender;
 use App\Enums\JaminanPensiunCost;
@@ -147,7 +148,11 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
             'bpjs_ketenagakerjaan_number' => 'nullable|min:6|max:50',
             'bpjs_ketenagakerjaan_date' => 'nullable|date',
             'bpjs_kesehatan_number' => 'nullable|min:6|max:50',
-            'bpjs_kesehatan_family_number' => 'nullable|min:6|max:50',
+            'bpjs_kesehatan_family_number' => ['nullable', function ($attribute, $value, $fail) {
+                if (!in_array($value, BpjsKesehatanFamilyNo::getValues())) {
+                    $fail('Invalid BPJS Family Number value.');
+                }
+            }],
             'bpjs_kesehatan_date' => 'nullable|date',
             'jaminan_pensiun_date' => 'nullable|date',
         ];
@@ -171,7 +176,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, WithMultip
                     'email' => $row['email']
                 ],
                 [
-                    'email' => 'required|email|unique:users,email'
+                    'email' => ['required','email','unique:users,email']
                 ]
             );
 
