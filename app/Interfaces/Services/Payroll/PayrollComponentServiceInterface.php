@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces\Services\PayrollComponent;
+namespace App\Interfaces\Services\Payroll;
 
 use App\Interfaces\Services\BaseServiceInterface;
 

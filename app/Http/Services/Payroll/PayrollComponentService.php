@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Services\PayrollComponent;
+namespace App\Http\Services\Payroll;
 
 use App\Http\Services\BaseService;
-use App\Interfaces\Repositories\PayrollComponent\PayrollComponentRepositoryInterface;
-use App\Interfaces\Services\PayrollComponent\PayrollComponentServiceInterface;
+use App\Interfaces\Repositories\Payroll\PayrollComponentRepositoryInterface;
+use App\Interfaces\Services\Payroll\PayrollComponentServiceInterface;
 use App\Models\PayrollComponent;
 use App\Services\FormulaService;
 use Exception;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces\Repositories\PayrollComponent;
+namespace App\Interfaces\Repositories\Payroll;
 
 use App\Interfaces\Repositories\BaseRepositoryInterface;
 

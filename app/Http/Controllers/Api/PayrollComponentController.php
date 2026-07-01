@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\PayrollComponent\StoreRequest;
 use App\Http\Requests\Api\PayrollComponent\UpdateRequest;
 use App\Http\Resources\PayrollComponent\PayrollComponentResource;
-use App\Interfaces\Services\PayrollComponent\PayrollComponentServiceInterface;
+use App\Interfaces\Services\Payroll\PayrollComponentServiceInterface;
 use App\Models\PayrollComponent;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Facades\Gate;
