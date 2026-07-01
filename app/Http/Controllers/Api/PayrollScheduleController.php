@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\PayrollSchedule\UpdateRequest;
-use App\Http\Resources\PayrollSchedule\PayrollScheduleResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\PayrollSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,7 +25,7 @@ class PayrollScheduleController extends BaseController
         ]);
 
         $payrollSetting = PayrollSetting::tenanted()->where('company_id', $request->filter['company_id'])->firstOrFail();
-        return new PayrollScheduleResource($payrollSetting);
+        return new DefaultResource($payrollSetting);
     }
 
     public function update(UpdateRequest $request)
@@ -33,6 +33,6 @@ class PayrollScheduleController extends BaseController
         $payrollSetting = PayrollSetting::tenanted()->where('company_id', $request->company_id)->firstOrFail();
         $payrollSetting->update($request->validated());
 
-        return (new PayrollScheduleResource($payrollSetting))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($payrollSetting))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 }

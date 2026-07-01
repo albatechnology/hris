@@ -4,13 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\TimeoffRenewType;
 use App\Http\Requests\Api\TimeoffRegulationMonth\StoreRequest;
-use App\Http\Resources\TimeoffRegulationMonth\TimeoffRegulationMonthResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Company;
 use App\Models\TimeoffPeriodRegulation;
 use App\Models\TimeoffRegulation;
 use App\Models\TimeoffRegulationMonth;
 use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class TimeoffRegulationMonthController extends BaseController
@@ -40,18 +39,21 @@ class TimeoffRegulationMonthController extends BaseController
             ])
             ->allowedIncludes(['timeoffPeriodRegulation'])
             ->allowedSorts([
-                'id', 'month', 'amount', 'created_at',
+                'id',
+                'month',
+                'amount',
+                'created_at',
             ])
             ->paginate($this->per_page);
 
-        return TimeoffRegulationMonthResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function show(Company $company, TimeoffPeriodRegulation $period, TimeoffRegulationMonth $month)
     {
         $month = $this->timeoffPeriodRegulation->timeoffRegulationMonths()->findOrFail($month->id);
 
-        return new TimeoffRegulationMonthResource($month);
+        return new DefaultResource($month);
     }
 
     public function update(Company $company, TimeoffPeriodRegulation $period, TimeoffRegulationMonth $month, StoreRequest $request)
@@ -59,6 +61,6 @@ class TimeoffRegulationMonthController extends BaseController
         $month = $this->timeoffPeriodRegulation->timeoffRegulationMonths()->findOrFail($month->id);
         $month->update($request->validated());
 
-        return (new TimeoffRegulationMonthResource($month))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 }

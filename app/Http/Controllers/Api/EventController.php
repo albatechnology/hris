@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Event\CalendarRequest;
 use App\Http\Requests\Api\Event\StoreRequest;
-use App\Http\Resources\Event\EventResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Event;
 use App\Models\Timeoff;
 use App\Models\User;
-use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -48,20 +47,20 @@ class EventController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return EventResource::collection($event);
+        return DefaultResource::collection($event);
     }
 
     public function show(int $id)
     {
         $event = Event::findTenanted($id);
-        return new EventResource($event);
+        return new DefaultResource($event);
     }
 
     public function store(StoreRequest $request)
     {
         $event = Event::create($request->validated());
 
-        return new EventResource($event);
+        return $this->createdResponse();
     }
 
     public function update(int $id, StoreRequest $request)
@@ -69,7 +68,7 @@ class EventController extends BaseController
         $event = Event::findTenanted($id);
         $event->update($request->validated());
 
-        return (new EventResource($event))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
@@ -93,7 +92,7 @@ class EventController extends BaseController
         $event = Event::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $event->restore();
 
-        return new EventResource($event);
+        return new DefaultResource($event);
     }
 
     public function calendar(CalendarRequest $request)

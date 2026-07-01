@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Group\StoreRequest;
-use App\Http\Resources\Group\GroupResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Group\GroupServiceInterface;
 use App\Models\Group;
 use Illuminate\Support\Facades\Gate;
@@ -33,7 +33,7 @@ class GroupController extends BaseController
             ],
         );
 
-        return GroupResource::collection($datas);
+        return DefaultResource::collection($datas);
     }
 
     public function show(string $id)
@@ -41,7 +41,7 @@ class GroupController extends BaseController
         $data = $this->service->findById($id);
         Gate::authorize('view', $data);
 
-        return new GroupResource($data);
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)

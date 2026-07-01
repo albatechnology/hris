@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\CustomField\StoreRequest;
-use App\Http\Resources\CustomField\CustomFieldResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\CustomField\CustomFieldServiceInterface;
 use App\Models\CustomField;
 use Illuminate\Support\Facades\Gate;
@@ -42,7 +42,7 @@ class CustomFieldController extends BaseController
             ],
         );
 
-        return CustomFieldResource::collection($datas);
+        return DefaultResource::collection($datas);
     }
 
     public function show(string $id)
@@ -50,7 +50,7 @@ class CustomFieldController extends BaseController
         $data = $this->service->findById($id);
         Gate::authorize('view', $data);
 
-        return new CustomFieldResource($data);
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)

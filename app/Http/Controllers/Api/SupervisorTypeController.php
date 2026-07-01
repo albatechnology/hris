@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\SupervisorType\StoreRequest;
-use App\Http\Resources\SupervisorType\SupervisorTypeResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\SupervisorType\SupervisorTypeServiceInterface;
 use App\Models\SupervisorType;
 use Illuminate\Support\Facades\Gate;
@@ -42,7 +42,7 @@ class SupervisorTypeController extends BaseController
             ],
         );
 
-        return SupervisorTypeResource::collection($datas);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
@@ -52,7 +52,7 @@ class SupervisorTypeController extends BaseController
 
         $data->load(['company']);
 
-        return new SupervisorTypeResource($data);
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
@@ -95,6 +95,6 @@ class SupervisorTypeController extends BaseController
     //     $data = SupervisorType::withTrashed()->findOrFail($id);
     //     $data->restore();
 
-    //     return new SupervisorTypeResource($data);
+    //     return new DefaultResource($data);
     // }
 }

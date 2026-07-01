@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\TimeoffRenewType;
 use App\Http\Requests\Api\TimeoffPeriodRegulation\StoreRequest;
-use App\Http\Resources\TimeoffPeriodRegulation\TimeoffPeriodRegulationResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Company;
 use App\Models\TimeoffPeriodRegulation;
 use App\Models\TimeoffRegulation;
@@ -43,14 +43,14 @@ class TimeoffPeriodRegulationController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return TimeoffPeriodRegulationResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function show(Company $company, TimeoffPeriodRegulation $period)
     {
         $period = $this->timeoffRegulation->timeoffPeriodRegulations()->findOrFail($period->id);
 
-        return new TimeoffPeriodRegulationResource($period);
+        return new DefaultResource($period);
     }
 
     public function store(Company $company, StoreRequest $request)
@@ -71,7 +71,7 @@ class TimeoffPeriodRegulationController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return new TimeoffPeriodRegulationResource($period);
+        return $this->createdResponse();
     }
 
     public function update(Company $company, TimeoffPeriodRegulation $period, StoreRequest $request)
@@ -102,7 +102,7 @@ class TimeoffPeriodRegulationController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new TimeoffPeriodRegulationResource($period))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(Company $company, TimeoffPeriodRegulation $period)

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Company\StoreRequest;
 use App\Http\Requests\Api\Company\UpdateRequest;
-use App\Http\Resources\Company\CompanyResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Company\CompanyServiceInterface;
 use App\Models\Company;
 use Illuminate\Support\Facades\Gate;
@@ -63,7 +63,7 @@ class CompanyController extends BaseController
             ],
         );
 
-        return CompanyResource::collection($datas);
+        return DefaultResource::collection($datas);
     }
 
     public function show(string $id)
@@ -71,7 +71,7 @@ class CompanyController extends BaseController
         $data = $this->service->findById($id);
         Gate::authorize('view', $data);
 
-        return new CompanyResource($data);
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
@@ -79,7 +79,7 @@ class CompanyController extends BaseController
         Gate::authorize('create', Company::class);
 
         $data = $this->service->create($request->validated());
-        return new CompanyResource($data);
+        return new DefaultResource($data);
     }
 
     public function update(string $id, UpdateRequest $request)

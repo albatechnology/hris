@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Resources\Notification\NotificationResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\DatabaseNotification;
 use Illuminate\Support\Facades\Crypt;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -24,7 +24,7 @@ class NotificationController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return NotificationResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function countTotal(\Illuminate\Http\Request $request)
@@ -52,7 +52,7 @@ class NotificationController extends BaseController
     public function show(DatabaseNotification $notification)
     {
         $notification->markAsRead();
-        return new NotificationResource($notification);
+        return new DefaultResource($notification);
     }
 
     public function destroy(DatabaseNotification $notification)

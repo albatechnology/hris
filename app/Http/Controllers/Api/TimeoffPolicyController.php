@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\TimeoffPolicy\StoreRequest;
-use App\Http\Resources\TimeoffPolicy\TimeoffPolicyResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\TimeoffPolicy\TimeoffPolicyServiceInterface;
 use App\Models\TimeoffPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -58,7 +58,7 @@ class TimeoffPolicyController extends BaseController
             ],
         );
 
-        return TimeoffPolicyResource::collection($datas);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
@@ -66,7 +66,7 @@ class TimeoffPolicyController extends BaseController
         $timeoffPolicy = $this->service->findByIdOrFail($id, null, ['company']);
         Gate::authorize('view', $timeoffPolicy);
 
-        return new TimeoffPolicyResource($timeoffPolicy);
+        return new DefaultResource($timeoffPolicy);
     }
 
     public function store(StoreRequest $request)

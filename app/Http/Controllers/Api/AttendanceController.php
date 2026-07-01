@@ -43,6 +43,7 @@ use App\Http\Requests\Api\Attendance\ManualAttendanceRequest;
 use App\Http\Requests\Api\Attendance\RequestAttendanceRequest;
 use App\Http\Resources\Attendance\AttendanceApprovalsResource;
 use App\Jobs\GenerateAttendancesOneMonthJob;
+use App\Models\OvertimeRequest;
 use App\Models\PayrollSetting;
 use App\Services\NewRunPayrollService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

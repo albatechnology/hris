@@ -10,7 +10,7 @@ use App\Http\Requests\Api\RunPayroll\StoreRequest;
 use App\Http\Requests\Api\RunPayroll\UpdateRequest;
 use App\Http\Requests\Api\RunPayroll\ExportRequest;
 use App\Http\Requests\Api\RunPayroll\ImportRequest;
-use App\Http\Resources\RunPayroll\RunPayrollResource;
+use App\Http\Resources\DefaultResource;
 use App\Imports\Payroll\ImportPayroll;
 use App\Interfaces\Services\Payroll\RunPayrollServiceInterface;
 use App\Models\Bank;
@@ -66,13 +66,13 @@ class RunPayrollController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return RunPayrollResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
-    public function show(int $id): RunPayrollResource
+    public function show(int $id): DefaultResource
     {
         $runPayroll = RunPayroll::findTenanted($id);
-        return new RunPayrollResource($runPayroll->load(['users' => fn($q) => $q->has('user')->with('user.payrollInfo'), 'users.components.payrollComponent']));
+        return new DefaultResource($runPayroll->load(['users' => fn($q) => $q->has('user')->with('user.payrollInfo'), 'users.components.payrollComponent']));
     }
 
     public function store(StoreRequest $request)
@@ -96,10 +96,10 @@ class RunPayrollController extends BaseController
         }
 
         if (!$runPayroll instanceof RunPayroll && !$runPayroll->getData()?->success) return response()->json($runPayroll->getData(), 400);
-        return new RunPayrollResource($runPayroll);
+        return new DefaultResource($runPayroll);
     }
 
-    public function update(UpdateRequest $request, int $id): RunPayrollResource|JsonResponse
+    public function update(UpdateRequest $request, int $id): DefaultResource|JsonResponse
     {
         $runPayroll = RunPayroll::findTenanted($id);
 
@@ -138,11 +138,11 @@ class RunPayrollController extends BaseController
             throw $e;
         }
 
-        return (new RunPayrollResource($runPayroll->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($runPayroll->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
 
-    public function updateUserComponent(RunPayrollUser $runPayrollUser, UpdateUserComponentRequest $request): RunPayrollResource|JsonResponse
+    public function updateUserComponent(RunPayrollUser $runPayrollUser, UpdateUserComponentRequest $request): DefaultResource|JsonResponse
     {
         DB::beginTransaction();
         try {
@@ -159,7 +159,7 @@ class RunPayrollController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new RunPayrollResource($runPayrollUser->runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($runPayrollUser->runPayroll->refresh()->loadMissing('users.user', 'users.components.payrollComponent')))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(int $id): JsonResponse

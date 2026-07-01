@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\TimeoffRenewType;
 use App\Http\Requests\Api\TimeoffRegulation\StoreRequest;
-use App\Http\Resources\TimeoffRegulation\TimeoffRegulationResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Company;
 use App\Models\TimeoffRegulation;
 use Illuminate\Http\Response;
@@ -26,7 +26,7 @@ class TimeoffRegulationController extends BaseController
 
     public function index(Company $company)
     {
-        return new TimeoffRegulationResource($this->timeoffRegulation);
+        return new DefaultResource($this->timeoffRegulation);
     }
 
     public function store(Company $company, StoreRequest $request)
@@ -46,7 +46,7 @@ class TimeoffRegulationController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new TimeoffRegulationResource($timeoffRegulation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->createdResponse();
     }
 
     public function update(Company $company, StoreRequest $request)
@@ -69,6 +69,6 @@ class TimeoffRegulationController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return (new TimeoffRegulationResource($timeoffRegulation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 }

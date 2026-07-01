@@ -6,7 +6,7 @@ use App\Enums\ApprovalStatus;
 use App\Enums\NotificationType;
 use App\Http\Requests\Api\AdvancedLeaveRequest\StoreRequest;
 use App\Http\Requests\Api\ApproveRequest;
-use App\Http\Resources\AdvancedLeaveRequest\AdvancedLeaveRequestResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\AdvancedLeaveRequest;
 use App\Models\User;
 use App\Services\AdvancedLeaveRequestService;
@@ -44,15 +44,15 @@ class AdvancedLeaveRequestController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return AdvancedLeaveRequestResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
-    public function show(AdvancedLeaveRequest $advancedLeaveRequest): AdvancedLeaveRequestResource
+    public function show(AdvancedLeaveRequest $advancedLeaveRequest): DefaultResource
     {
-        return new AdvancedLeaveRequestResource($advancedLeaveRequest);
+        return new DefaultResource($advancedLeaveRequest);
     }
 
-    public function store(StoreRequest $request): AdvancedLeaveRequestResource|JsonResponse
+    public function store(StoreRequest $request): DefaultResource|JsonResponse
     {
         $user = User::findOrFail($request->user_id);
 
@@ -75,10 +75,10 @@ class AdvancedLeaveRequestController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return new AdvancedLeaveRequestResource($advancedLeaveRequest);
+        return new DefaultResource($advancedLeaveRequest);
     }
 
-    public function approve(ApproveRequest $request, AdvancedLeaveRequest $advancedLeaveRequest): AdvancedLeaveRequestResource|JsonResponse
+    public function approve(ApproveRequest $request, AdvancedLeaveRequest $advancedLeaveRequest): DefaultResource|JsonResponse
     {
         if (!$advancedLeaveRequest->approval_status->is(ApprovalStatus::PENDING)) {
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -113,7 +113,7 @@ class AdvancedLeaveRequestController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return new AdvancedLeaveRequestResource($advancedLeaveRequest);
+        return new DefaultResource($advancedLeaveRequest);
     }
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)
@@ -137,7 +137,7 @@ class AdvancedLeaveRequestController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return AdvancedLeaveRequestResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function getAvailableDays()

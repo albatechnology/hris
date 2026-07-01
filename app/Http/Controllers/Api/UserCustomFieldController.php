@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\UserCustomField\StoreRequest;
 use App\Http\Requests\Api\UserCustomField\UpdateRequest;
-use App\Http\Resources\UserCustomField\UserCustomFieldResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\UserCustomField\UserCustomFieldServiceInterface;
 use App\Models\UserCustomField;
 use Illuminate\Http\Response;
@@ -20,13 +20,13 @@ class UserCustomFieldController extends BaseController
     {
         $datas = $this->service->listByUser($id);
 
-        return UserCustomFieldResource::collection($datas);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id, UserCustomField $customField)
     {
         $userCustomField = $this->service->findByUser($id, $customField->id);
-        return new UserCustomFieldResource($userCustomField);
+        return new DefaultResource($userCustomField);
     }
 
     public function store(int $id, StoreRequest $request)

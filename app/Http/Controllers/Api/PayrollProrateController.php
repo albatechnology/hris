@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\PayrollProrate\UpdateRequest;
-use App\Http\Resources\PayrollProrate\PayrollProrateResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\PayrollSetting;
 use Illuminate\Http\Request;
 
@@ -23,8 +23,8 @@ class PayrollProrateController extends BaseController
             'filter.company_id' => 'required',
         ]);
 
-        $payrollSetting = PayrollSetting::select('id','company_id','prorate_setting','prorate_custom_working_day','prorate_national_holiday_as_working_day')->tenanted()->where('company_id', $request->filter['company_id'])->firstOrFail();
-        return new PayrollProrateResource($payrollSetting);
+        $payrollSetting = PayrollSetting::select('id', 'company_id', 'prorate_setting', 'prorate_custom_working_day', 'prorate_national_holiday_as_working_day')->tenanted()->where('company_id', $request->filter['company_id'])->firstOrFail();
+        return new DefaultResource($payrollSetting);
     }
 
     public function update(UpdateRequest $request)

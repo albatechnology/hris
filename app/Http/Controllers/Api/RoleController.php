@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Role\StoreRequest;
-use App\Http\Resources\Role\RoleResource;
+use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Role\RoleServiceInterface;
 use App\Models\Role;
 use Illuminate\Support\Facades\Gate;
@@ -26,7 +26,7 @@ class RoleController extends BaseController
             ->allowedSorts(['id', 'name', 'group_id', 'created_at'])
             ->paginate($this->per_page);
 
-        return RoleResource::collection($roles);
+        return DefaultResource::collection($roles);
     }
 
     public function store(StoreRequest $request)
@@ -35,7 +35,7 @@ class RoleController extends BaseController
 
         $role = $this->service->create($request->validated());
 
-        return new RoleResource($role);
+        return new DefaultResource($role);
     }
 
     public function show(int $id)
@@ -43,7 +43,7 @@ class RoleController extends BaseController
         $role = $this->service->findById($id);
         Gate::authorize('view', $role);
 
-        return new RoleResource($role->load('permissions'));
+        return new DefaultResource($role->load('permissions'));
     }
 
     public function update(int $id, StoreRequest $request)
@@ -53,7 +53,7 @@ class RoleController extends BaseController
 
         $role = $this->service->update($id, $request->validated());
 
-        return new RoleResource($role);
+        return new DefaultResource($role);
     }
 
     public function destroy(int $id)

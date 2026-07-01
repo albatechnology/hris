@@ -7,7 +7,7 @@ use App\Enums\MediaCollection;
 use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\Timeoff\ApproveRequest;
 use App\Http\Requests\Api\Timeoff\StoreRequest;
-use App\Http\Resources\Timeoff\TimeoffResource;
+use App\Http\Resources\DefaultResource;
 use App\Models\Timeoff;
 use App\Models\TimeoffQuota;
 use App\Models\User;
@@ -66,7 +66,7 @@ class TimeoffController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return TimeoffResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function show(int $id)
@@ -79,7 +79,7 @@ class TimeoffController extends BaseController
             'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name'))
         ]);
 
-        return new TimeoffResource($timeoff);
+        return new DefaultResource($timeoff);
     }
 
     public function store(StoreRequest $request)
@@ -115,7 +115,7 @@ class TimeoffController extends BaseController
         }
 
         return $this->createdResponse();
-        // return new TimeoffResource($timeoff);
+        // return new DefaultResource($timeoff);
     }
 
     public function update(int $id, StoreRequest $request)
@@ -127,7 +127,7 @@ class TimeoffController extends BaseController
 
         $timeoff->update($request->validated());
 
-        return (new TimeoffResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function destroy(int $id)
@@ -151,7 +151,7 @@ class TimeoffController extends BaseController
         $timeoff = Timeoff::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
         $timeoff->restore();
 
-        return new TimeoffResource($timeoff);
+        return new DefaultResource($timeoff);
     }
 
     public function cancel(Timeoff $timeoff)
@@ -202,7 +202,7 @@ class TimeoffController extends BaseController
             }
         }
 
-        return (new TimeoffResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return (new DefaultResource($timeoff))->response()->setStatusCode(Response::HTTP_ACCEPTED);
     }
 
     public function approve(Timeoff $timeoff, ApproveRequest $request)
@@ -325,6 +325,6 @@ class TimeoffController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return TimeoffResource::collection($data);
+        return DefaultResource::collection($data);
     }
 }
