@@ -2,8 +2,7 @@
 
 namespace App\Http\Resources\Schedule;
 
-use App\Http\Resources\LiveAttendance\LiveAttendanceResource;
-use App\Http\Resources\Shift\ShiftResource;
+use App\Http\Resources\DefaultResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,8 +20,8 @@ class TodayScheduleResource extends JsonResource
 
         return [
             ...parent::toArray($request),
-            'shift' => new ShiftResource($this->whenLoaded('shift')),
-            'live_attendance' => new LiveAttendanceResource($liveAttendance),
+            'shift' => new DefaultResource($this->whenLoaded('shift')),
+            'live_attendance' => new DefaultResource($liveAttendance),
         ];
     }
 }
