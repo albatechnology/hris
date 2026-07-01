@@ -4,11 +4,11 @@ namespace App\Http\Repositories\Payroll;
 
 use App\Http\Repositories\BaseRepository;
 use App\Interfaces\Repositories\Payroll\PayrollComponentRepositoryInterface;
-use App\Models\RunPayroll;
+use App\Models\PayrollComponent;
 
 class PayrollComponentRepository extends BaseRepository implements PayrollComponentRepositoryInterface
 {
-    public function __construct(RunPayroll $model)
+    public function __construct(PayrollComponent $model)
     {
         parent::__construct($model);
     }
