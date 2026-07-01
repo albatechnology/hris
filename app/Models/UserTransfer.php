@@ -275,7 +275,7 @@ class UserTransfer extends BaseModel implements TenantedInterface, HasMedia
         //     return $query->orWhereHas('user', fn ($q) => $q->whereDescendantOf($user));
         // }
 
-        return $query->where(fn($q) => $q->whereHas('user', fn($q) => $q->tenanted())->orWhere('created_by', $user->id));
+        return $query->where(fn($q) => $q->whereHas('user', fn($q) => $q->tenanted())->orWhere('created_by_id', $user->id));
         // return $query->orWhereHas('user', fn($q) => $q->where('approval_id', $user->id));
     }
 

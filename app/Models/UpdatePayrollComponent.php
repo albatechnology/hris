@@ -23,8 +23,8 @@ class UpdatePayrollComponent extends BaseModel
         'effective_date',
         'end_date',
         'backpay_date',
-        'created_by',
-        'updated_by',
+        'created_by_id',
+        'updated_by_id',
     ];
 
     protected $casts = [
@@ -32,8 +32,8 @@ class UpdatePayrollComponent extends BaseModel
         'transaction_id' => 'integer',
         'type' => UpdatePayrollComponentType::class,
         'description' => 'string',
-        'created_by' => 'integer',
-        'updated_by' => 'integer',
+        'created_by_id' => 'integer',
+        'updated_by_id' => 'integer',
     ];
 
     protected static function booted(): void
@@ -48,11 +48,11 @@ class UpdatePayrollComponent extends BaseModel
             }
 
             $model->transaction_id = date('Y') . date('m') . date('d') . sprintf('%03d', $transactionIdIncrement);
-            $model->created_by = auth('api')->id();
+            $model->created_by_id = auth('api')->id();
         });
 
         static::updating(function (self $model) {
-            $model->updated_by = auth('api')->id();
+            $model->updated_by_id = auth('api')->id();
         });
     }
 

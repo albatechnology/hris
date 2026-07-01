@@ -18,9 +18,9 @@ return new class extends Migration
             $table->json('user_ids');
             $table->timestamps();
             // created/updated/deleted info
-            $table->unsignedInteger('created_by')->nullable();
-            // $table->unsignedInteger('updated_by')->nullable();
-            // $table->unsignedInteger('deleted_by')->nullable();
+            $table->unsignedInteger('created_by_id')->nullable();
+            // $table->unsignedInteger('updated_by_id')->nullable();
+            // $table->unsignedInteger('deleted_by_id')->nullable();
             // $table->softDeletes();
         });
     }

@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Http\Resources\Schedule\ScheduleResource;
 use App\Interfaces\Services\SupervisorRequestSchedule\SupervisorRequestScheduleServiceInterface;
-use App\Models\Schedule;
-use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 
 class SupervisorRequestScheduleController extends BaseController
@@ -32,7 +29,7 @@ class SupervisorRequestScheduleController extends BaseController
             fn($q) => $q->requestTenanted(),
             [
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('created_by'),
+                AllowedFilter::exact('created_by_id'),
                 AllowedFilter::exact('approved_by'),
                 'name',
                 'type',
@@ -40,11 +37,11 @@ class SupervisorRequestScheduleController extends BaseController
                 'approval_status',
                 'approved_at',
             ],
-            ['company', 'created_by', 'approved_by'],
+            ['company', 'created_by_id', 'approved_by'],
             [
                 'id',
                 'company_id',
-                'created_by',
+                'created_by_id',
                 'approved_by',
                 'name',
                 'effective_date',
@@ -61,7 +58,7 @@ class SupervisorRequestScheduleController extends BaseController
     {
         $requestSchedule = $this->service->findById($id, null, [
             'shifts' => fn($q) => $q->orderBy('order'),
-            'created_by' => fn($q) => $q->select('id', 'name'),
+            'created_by_id' => fn($q) => $q->select('id', 'name'),
             'approved_by' => fn($q) => $q->select('id', 'name'),
         ]);
 

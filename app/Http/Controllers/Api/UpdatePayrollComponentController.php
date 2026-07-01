@@ -66,8 +66,8 @@ class UpdatePayrollComponentController extends BaseController
                 'effective_date',
                 'end_date',
                 'backpay_date',
-                'created_by',
-                'updated_by',
+                'created_by_id',
+                'updated_by_id',
             ])
             ->paginate($this->per_page);
 

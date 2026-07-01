@@ -24,7 +24,7 @@ return new class extends Migration
             // $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->text('note')->nullable();
             $table->timestamps();
-            $table->unsignedInteger('deleted_by')->nullable();
+            $table->unsignedInteger('deleted_by_id')->nullable();
             $table->softDeletes();
         });
     }

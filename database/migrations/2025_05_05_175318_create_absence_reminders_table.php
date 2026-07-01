@@ -19,7 +19,7 @@ return new class extends Migration
             $table->smallInteger('minutes_before')->unsigned()->default(60);
             $table->smallInteger('minutes_repeat')->unsigned()->default(10);
             $table->timestamps();
-            $table->unsignedInteger('updated_by')->nullable();
+            $table->unsignedInteger('updated_by_id')->nullable();
         });
     }
 

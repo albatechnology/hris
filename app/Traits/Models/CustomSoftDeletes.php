@@ -14,18 +14,18 @@ trait CustomSoftDeletes
     {
         static::deleted(function (self $model) {
             if (! str_contains(request()->url(), 'force-delete')) {
-                $model->deleted_by = auth('api')->id();
+                $model->deleted_by_id = auth('api')->id();
                 $model->saveQuietly();
             }
         });
 
         static::restoring(function (self $model) {
-            $model->deleted_by = null;
+            $model->deleted_by_id = null;
         });
     }
 
     public function deletedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'deleted_by');
+        return $this->belongsTo(User::class, 'deleted_by_id');
     }
 }

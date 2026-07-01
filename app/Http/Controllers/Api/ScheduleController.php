@@ -38,7 +38,7 @@ class ScheduleController extends BaseController
         $data = QueryBuilder::for(Schedule::tenanted()->whereApproved())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
-                AllowedFilter::exact('created_by'),
+                AllowedFilter::exact('created_by_id'),
                 'name',
                 'type',
                 'effective_date',
@@ -51,7 +51,7 @@ class ScheduleController extends BaseController
             ->allowedSorts([
                 'id',
                 'company_id',
-                'created_by',
+                'created_by_id',
                 'name',
                 'effective_date',
                 'created_at',

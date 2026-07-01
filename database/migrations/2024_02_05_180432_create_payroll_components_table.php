@@ -35,11 +35,11 @@ return new class extends Migration
             // $table->boolean('is_calculateable')->default(1);
             $table->timestamps();
 
-             // created/updated/deleted info
-             $table->unsignedInteger('created_by')->nullable();
-             $table->unsignedInteger('updated_by')->nullable();
-             $table->unsignedInteger('deleted_by')->nullable();
-             $table->softDeletes();
+            // created/updated/deleted info
+            $table->unsignedInteger('created_by_id')->nullable();
+            $table->unsignedInteger('updated_by_id')->nullable();
+            $table->unsignedInteger('deleted_by_id')->nullable();
+            $table->softDeletes();
         });
     }
 

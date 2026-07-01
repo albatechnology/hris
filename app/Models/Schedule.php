@@ -56,7 +56,7 @@ class Schedule extends BaseModel implements TenantedInterface
 
         if ($user->is_admin) return $query;
 
-        return $query->where('created_by', $user->id);
+        return $query->where('created_by_id', $user->id);
     }
 
     public function scopeWhereApproved(Builder $query)

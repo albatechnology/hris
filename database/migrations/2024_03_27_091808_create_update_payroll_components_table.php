@@ -21,8 +21,8 @@ return new class extends Migration
             $table->date('effective_date');
             $table->date('end_date')->nullable();
             $table->date('backpay_date')->nullable();
-            $table->foreignId('created_by')->nullable();
-            $table->foreignId('updated_by')->nullable();
+            $table->foreignId('created_by_id')->nullable();
+            $table->foreignId('updated_by_id')->nullable();
             $table->timestamps();
         });
     }

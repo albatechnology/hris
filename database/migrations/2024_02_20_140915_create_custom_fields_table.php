@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('options')->nullable();
             $table->timestamps();
 
-            $table->unsignedInteger('deleted_by')->nullable();
+            $table->unsignedInteger('deleted_by_id')->nullable();
             $table->softDeletes();
         });
     }

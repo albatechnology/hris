@@ -22,8 +22,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
 
-            // softDeletes must implement deleted_by
-            $table->unsignedInteger('deleted_by')->nullable();
+            // softDeletes must implement deleted_by_id
+            $table->unsignedInteger('deleted_by_id')->nullable();
             $table->softDeletes();
         });
     }

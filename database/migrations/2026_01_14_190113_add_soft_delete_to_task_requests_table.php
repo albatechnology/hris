@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('task_requests', function (Blueprint $table) {
-            $table->unsignedInteger('deleted_by')->nullable();
+            $table->unsignedInteger('deleted_by_id')->nullable();
             $table->softDeletes();
         });
     }
@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('task_requests', function (Blueprint $table) {
             $table->dropSoftDeletes();
-            $table->dropColumn('deleted_by');
+            $table->dropColumn('deleted_by_id');
         });
     }
 };

@@ -19,8 +19,8 @@ return new class extends Migration
             $table->time('end_hour');
             $table->text('description')->nullable();
             $table->timestamps();
-            $table->integer('created_by')->unsigned()->nullable();
-            $table->integer('updated_by')->unsigned()->nullable();
+            $table->integer('created_by_id')->unsigned()->nullable();
+            $table->integer('updated_by_id')->unsigned()->nullable();
         });
     }
 

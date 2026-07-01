@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('announcements', function (Blueprint $table) {
-            $table->unsignedInteger('deleted_by')->nullable();
+            $table->unsignedInteger('deleted_by_id')->nullable();
             $table->softDeletes();
         });
     }
