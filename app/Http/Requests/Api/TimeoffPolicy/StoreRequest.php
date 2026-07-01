@@ -12,8 +12,6 @@ class StoreRequest extends FormRequest
 {
     use RequestToBoolean;
 
-    
-
     /**
      * Prepare inputs for validation.
      *
@@ -23,8 +21,8 @@ class StoreRequest extends FormRequest
     {
         $this->merge([
             'is_allow_halfday' => $this->toBoolean($this->is_allow_halfday),
-            'is_for_all_user' => $this->toBoolean($this->is_for_all_user),
-            'is_enable_block_leave' => $this->toBoolean($this->is_enable_block_leave),
+            // 'is_for_all_user' => $this->toBoolean($this->is_for_all_user),
+            // 'is_enable_block_leave' => $this->toBoolean($this->is_enable_block_leave),
             // 'is_unlimited_day' => $this->toBoolean($this->is_unlimited_day),
         ]);
     }
@@ -46,13 +44,13 @@ class StoreRequest extends FormRequest
             'expired_date' => 'nullable|date',
             'max_consecutively_day' => 'nullable|integer',
             'is_allow_halfday' => 'nullable|boolean',
-            'is_for_all_user' => 'nullable|boolean',
-            'is_enable_block_leave' => 'nullable|boolean',
+            // 'is_for_all_user' => 'nullable|boolean',
+            // 'is_enable_block_leave' => 'nullable|boolean',
             'block_leave_take_days' => 'nullable|integer',
             'block_leave_min_working_month' => 'nullable|integer',
-            'max_used' => 'nullable|integer',
+            // 'max_used' => 'nullable|integer',
 
-            'user_ids' => ['required_if:is_for_all_user,false', 'array'],
+            'user_ids' => ['nullable', 'array'],
             'user_ids.*' => 'required|exists:users,id',
         ];
     }
