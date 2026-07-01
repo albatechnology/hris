@@ -23,9 +23,9 @@ return new class extends Migration
             $table->date('effective_date')->nullable();
             // $table->char('min_join_date_day', 2)->nullable();
             // $table->char('min_join_date_month', 2)->nullable();
-            $table->char('expired_date_day', 2)->nullable();
-            $table->char('expired_date_month', 2)->nullable();
-            $table->char('expired_date_year', 4)->nullable();
+            // $table->char('expired_date_day', 2)->nullable();
+            // $table->char('expired_date_month', 2)->nullable();
+            // $table->char('expired_date_year', 4)->nullable();
             $table->unsignedSmallInteger('max_consecutively_day')->nullable();
             $table->boolean('is_allow_halfday')->default(0);
             // $table->boolean('is_for_all_user')->default(1)->comment('jika false, maka harus isi list user nya di table user_timeoff_policies');
