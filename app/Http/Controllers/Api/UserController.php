@@ -843,29 +843,50 @@ class UserController extends BaseController
     public function getAvailableSupervisor(int $id, Request $request)
     {
         $user = User::findTenanted($id);
-        $user->load(['position' => fn($q) => $q->select('id', 'order')]);
-        $order = $user->position ? $user->position->order : null;
+        // $user->load(['position' => fn($q) => $q->select('id', 'order')]);
+        // $order = $user->position ? $user->position->order : null;
         // $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
         // $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
 
-        if (!is_null($order)) {
-            $name = $request->filter['name'] ?? null;
-            $users = User::select('id', 'name')
-                ->tenanted()->where('id', '!=', $user->id)
-                ->when($request->filter['company_id'] ?? null, fn($q) => $q->where('company_id', $request->filter['company_id']))
-                ->whereHas('position', fn($q) => $q->where('order', '>=', $order));
-            // ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
+        $name = $request->filter['name'] ?? null;
+        $users = User::select('id', 'name')
+            ->tenanted()->where('id', '!=', $user->id)
+            ->when($request->filter['company_id'] ?? null, fn($q) => $q->where('company_id', $request->filter['company_id']));
+        // ->whereHas('position', fn($q) => $q->where('order', '>=', $order));
+        // ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
 
-            if ($name) {
-                $users = $users->whereLike('name', $name);
-            }
-
-            $users = $users->paginate($this->per_page);
-        } else {
-            $users = User::where('id', '<', 0)->paginate($this->per_page);
+        if ($name) {
+            $users = $users->whereLike('name', $name);
         }
 
+        $users = $users->paginate($this->per_page);
+
         return UserResource::collection($users);
+
+        // $user = User::findTenanted($id);
+        // $user->load(['position' => fn($q) => $q->select('id', 'order')]);
+        // $order = $user->position ? $user->position->order : null;
+        // // $user->load(['positions' => fn($q) => $q->select('user_id', 'position_id')->with('position', fn($q) => $q->select('id', 'order'))]);
+        // // $order = $user->positions->sortByDesc(fn($userPosition) => $userPosition->position->order)->first()?->position?->order;
+
+        // if (!is_null($order)) {
+        //     $name = $request->filter['name'] ?? null;
+        //     $users = User::select('id', 'name')
+        //         ->tenanted()->where('id', '!=', $user->id)
+        //         ->when($request->filter['company_id'] ?? null, fn($q) => $q->where('company_id', $request->filter['company_id']))
+        //         ->whereHas('position', fn($q) => $q->where('order', '>=', $order));
+        //     // ->whereHas('positions', fn($q) => $q->whereHas('position', fn($q) => $q->where('order', '>=', $order)));
+
+        //     if ($name) {
+        //         $users = $users->whereLike('name', $name);
+        //     }
+
+        //     $users = $users->paginate($this->per_page);
+        // } else {
+        //     $users = User::where('id', '<', 0)->paginate($this->per_page);
+        // }
+
+        // return UserResource::collection($users);
     }
 
     /**
