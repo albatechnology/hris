@@ -105,6 +105,9 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Repositories\TaskHour\TaskHourRepositoryInterface::class => \App\Http\Repositories\TaskHour\TaskHourRepository::class,
         \App\Interfaces\Services\TaskHour\TaskHourServiceInterface::class => \App\Http\Services\TaskHour\TaskHourService::class,
 
+        \App\Interfaces\Repositories\TimeoffPolicy\TimeoffPolicyRepositoryInterface::class => \App\Http\Repositories\TimeoffPolicy\TimeoffPolicyRepository::class,
+        \App\Interfaces\Services\TimeoffPolicy\TimeoffPolicyServiceInterface::class => \App\Http\Services\TimeoffPolicy\TimeoffPolicyService::class,
+
         \App\Interfaces\Repositories\UserCustomField\UserCustomFieldRepositoryInterface::class => \App\Http\Repositories\UserCustomField\UserCustomFieldRepository::class,
         \App\Interfaces\Services\UserCustomField\UserCustomFieldServiceInterface::class => \App\Http\Services\UserCustomField\UserCustomFieldService::class,
 
