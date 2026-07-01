@@ -5,94 +5,82 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\TaskHour\StoreRequest;
 use App\Http\Requests\Api\TaskHour\StoreUsersRequest;
 use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\TaskHour\TaskHourServiceInterface;
 use App\Models\TaskHour;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class TaskHourController extends BaseController
 {
-    public function __construct()
+    public function __construct(private TaskHourServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:task_access', ['only' => ['restore']]);
-        $this->middleware('permission:task_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:task_create', ['only' => 'store']);
-        $this->middleware('permission:task_edit', ['only' => 'update']);
-        $this->middleware('permission:task_delete', ['only' => ['destroy', 'forceDelete']]);
-    }
-
-    private function getTaskHour(int $id)
-    {
-        return TaskHour::findTenanted($id);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(TaskHour::tenanted()->withCount('users'))
-            ->allowedFilters([
+        Gate::authorize('viewAny', TaskHour::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 AllowedFilter::exact('task_id'),
                 'name',
-            ])
-            ->allowedIncludes(['task'])
-            ->allowedSorts([
+            ],
+            ['task'],
+            [
                 'id',
-                'name'
-            ])
-            ->paginate($this->per_page);
+                'name',
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $taskHour = $this->getTaskHour($id);
-        return new DefaultResource($taskHour->loadCount('users'));
+        $data = $this->service->findByIdOrFail($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data->loadCount('users'));
     }
 
     public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $taskHour = TaskHour::create($request->validated());
-            if ($request->user_ids) $taskHour->users()->attach($request->user_ids, ['task_id' => $taskHour->task_id]);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
-        }
+        Gate::authorize('create', TaskHour::class);
 
-        return new DefaultResource($taskHour);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $taskHour = $this->getTaskHour($id);
+        $data = $this->service->findByIdOrFail($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        DB::beginTransaction();
-        try {
-            $taskHour->update($request->validated());
-            if ($request->user_ids) $taskHour->users()->syncWithPivotValues($request->user_ids, ['task_id' => $taskHour->task_id]);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->update($id, $request->validated());
 
         return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $taskHour = $this->getTaskHour($id);
+        $data = $this->service->findByIdOrFail($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
 
-        $taskHour->delete();
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function users(int $id)
     {
+        $taskHour = $this->service->findByIdOrFail($id, fn($q) => $q->select('id'));
+        Gate::authorize('view', $taskHour);
+
         $query = \App\Models\User::select('id', 'name', 'nik', 'branch_id', 'company_id')
             ->tenanted()
             ->whereHas('tasks', fn($q) => $q->where('task_hour_id', $id))
@@ -101,7 +89,7 @@ class TaskHourController extends BaseController
                 'branch' => fn($q) => $q->select('id', 'name'),
             ]);
 
-        $data = QueryBuilder::for($query)
+        $datas = QueryBuilder::for($query)
             ->allowedFilters([
                 'name'
             ])
@@ -111,31 +99,25 @@ class TaskHourController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function addUsers(int $id, StoreUsersRequest $request)
     {
-        $taskHour = $this->getTaskHour($id);
+        $data = $this->service->findByIdOrFail($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        try {
-            $taskHour->users()->attach($request->user_ids, ['task_id' => $taskHour->task_id]);
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->addUsers($id, $request->user_ids);
 
         return $this->createdResponse();
     }
 
     public function deleteUsers(int $id, StoreUsersRequest $request)
     {
-        $taskHour = $this->getTaskHour($id);
+        $data = $this->service->findByIdOrFail($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        try {
-            $taskHour->users()->toggle($request->user_ids);
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->deleteUsers($id, $request->user_ids);
 
         return $this->deletedResponse();
     }

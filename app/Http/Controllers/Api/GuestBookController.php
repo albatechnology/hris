@@ -6,42 +6,42 @@ use App\Http\Requests\Api\GuestBook\StoreRequest;
 use App\Http\Requests\Api\GuestBook\UpdateRequest;
 use App\Http\Requests\Api\GuestBook\ExportRequest;
 use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\GuestBook\GuestBookServiceInterface;
 use App\Models\GuestBook;
-use Exception;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
-use Spatie\QueryBuilder\QueryBuilder;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 
 class GuestBookController extends BaseController
 {
-    // public function __construct()
-    // {
-    //     parent::__construct();
-    //     $this->middleware('permission:guest_book_access', ['only' => ['restore']]);
-    //     $this->middleware('permission:guest_book_read', ['only' => ['index', 'show']]);
-    //     $this->middleware('permission:guest_book_create', ['only' => 'store']);
-    //     $this->middleware('permission:guest_book_edit', ['only' => 'update']);
-    //     $this->middleware('permission:guest_book_delete', ['only' => ['destroy', 'forceDelete']]);
-    // }
+    public function __construct(private GuestBookServiceInterface $service)
+    {
+        parent::__construct();
+    }
+
+    private function allowedIncludes(): array
+    {
+        return [
+            AllowedInclude::callback('branch', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('user', function ($query) {
+                $query->select('id', 'name');
+            }),
+            AllowedInclude::callback('checkOutBy', function ($query) {
+                $query->select('id', 'name');
+            })
+        ];
+    }
 
     public function index()
     {
-        $data = QueryBuilder::for(GuestBook::tenanted())
-            ->allowedIncludes([
-                AllowedInclude::callback('branch', function ($query) {
-                    $query->select('id', 'name');
-                }),
-                AllowedInclude::callback('user', function ($query) {
-                    $query->select('id', 'name');
-                }),
-                AllowedInclude::callback('checkOutBy', function ($query) {
-                    $query->select('id', 'name');
-                })
-            ])
-            ->allowedFilters([
+        Gate::authorize('viewAny', GuestBook::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::scope('created_at_start', 'createdAtStart'),
@@ -53,8 +53,9 @@ class GuestBookController extends BaseController
                 'room',
                 'person_destination',
                 'description',
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'user_id',
                 'branch_id',
@@ -66,17 +67,19 @@ class GuestBookController extends BaseController
                 'person_destination',
                 'description',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+            ['id', 'name'],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $guestBook = GuestBook::findTenanted($id);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
 
-        return new DefaultResource($guestBook->load([
+        return new DefaultResource($data->load([
             'branch' => fn($q) => $q->select('id', 'name'),
             'user' => fn($q) => $q->select('id', 'name'),
             'checkOutBy' => fn($q) => $q->select('id', 'name'),
@@ -85,140 +88,74 @@ class GuestBookController extends BaseController
 
     public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $guestBook = GuestBook::create($request->validated());
+        Gate::authorize('create', GuestBook::class);
 
-            // if ($request->hasFile('files')) {
-            //     foreach ($request->file('files') as $file) {
-            //         if ($file->isValid()) {
-            //             $guestBook->addMedia($file)->toMediaCollection(MediaCollection::GUEST_BOOK_CHECK_IN->value);
-            //         }
-            //     }
-            // }
+        $data = $request->validated();
+        $data['files'] = $request->file('files');
 
-            if ($request->hasFile('files')) {
-                $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
-                foreach ($request->file('files') as $file) {
-                    if ($file->isValid()) {
-                        // Resize & compress
-                        $optimized = $manager->read($file)
-                            ->scaleDown(1280)
-                            ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
-
-                        // Upload hasil optimized langsung ke S3
-                        $guestBook
-                            ->addMediaFromStream($optimized)
-                            ->usingFileName(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg')
-                            ->toMediaCollection(\App\Enums\MediaCollection::GUEST_BOOK_CHECK_IN->value);
-                    }
-                }
-            }
-
-            DB::commit();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-            DB::rollBack();
-        }
+        $this->service->create($data);
 
         return $this->createdResponse();
     }
 
-    public function update(int $id, UpdateRequest $request)
+    public function update(string $id, UpdateRequest $request)
     {
-        $guestBook = GuestBook::findTenanted($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        DB::beginTransaction();
-        try {
-            $guestBook->update([
-                'is_check_out' => true,
-                'check_out_at' => now(),
-                'check_out_by' => auth()->id(),
-            ]);
+        $updateData = [];
+        $updateData['files'] = $request->file('files');
 
-            if ($request->hasFile('files')) {
-                $manager = new ImageManager(new Driver()); // ✅ pakai GD atau Imagick
-
-                foreach ($request->file('files') as $file) {
-                    if ($file->isValid()) {
-                        // Resize & compress
-                        $optimized = $manager->read($file)
-                            ->scaleDown(1280)
-                            ->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 60));
-
-                        // Upload hasil optimized langsung ke S3
-                        $guestBook
-                            ->addMediaFromStream($optimized)
-                            ->usingFileName(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.jpg')
-                            ->toMediaCollection(\App\Enums\MediaCollection::GUEST_BOOK_CHECK_OUT->value);
-                    }
-                }
-            }
-
-            DB::commit();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-            DB::rollBack();
-        }
+        $this->service->update($id, $updateData);
 
         return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $guestBook = GuestBook::findTenanted($id);
-        $guestBook->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
+    public function forceDelete(string $id)
+    {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
+
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
+    }
+
+    public function restore(string $id)
+    {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
+
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
+    }
+
     public function export(ExportRequest $request)
     {
-        $companyId = $this->request['filter']['company_id'] ?? null;
-        $branchId = $this->request['filter']['branch_id'] ?? null;
-        $checkInStartDate = $this->request['filter']['check_in_start_date'] ?? null;
-        $checkInEndDate = $this->request['filter']['check_in_end_date'] ?? null;
-
-        $guestBooks = GuestBook::tenanted()
-            ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($checkInStartDate, fn($q) => $q->whereDate('created_at', '>=', $checkInStartDate))
-            ->when($checkInEndDate, fn($q) => $q->whereDate('created_at', '<=', $checkInEndDate))
-            ->with([
-                'branch' => fn($q) => $q->withTrashed()->select('id', 'name'),
-                'user' => fn($q) => $q->withTrashed()->select('id', 'name'),
-                'checkOutBy' => fn($q) => $q->withTrashed()->select('id', 'name'),
-                'media'
-            ])->get();
+        $filters = $this->request['filter'] ?? [];
+        $guestBooks = $this->service->export($filters);
 
         $html = view('api.exports.guest-book.guest-book', compact('guestBooks'))->render();
 
         $filename = 'guest books.xls';
-        if ($checkInStartDate && $checkInEndDate) {
-            $filename = 'guest books ' . $checkInStartDate . ' to ' . $checkInEndDate . '.xls';
+        if (isset($filters['check_in_start_date']) && isset($filters['check_in_end_date'])) {
+            $filename = 'guest books ' . $filters['check_in_start_date'] . ' to ' . $filters['check_in_end_date'] . '.xls';
         }
 
         return response($html)
             ->header('Content-Type', 'application/vnd.ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Cache-Control', 'max-age=0');
-
-        // return (new \App\Exports\GuestBook\ExportGuestBook($request))->download('guest-books.xlsx');
     }
-
-    // public function forceDelete(int $id)
-    // {
-    //     $guestBook = GuestBook::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-    //     $guestBook->forceDelete();
-
-    //     return $this->deletedResponse();
-    // }
-
-    // public function restore(int $id)
-    // {
-    //     $guestBook = GuestBook::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-    //     $guestBook->restore();
-
-    //     return new DefaultResource($guestBook);
-    // }
 }

@@ -24,7 +24,6 @@ use App\Http\Requests\Api\User\ResignRequest;
 use App\Http\Requests\Api\User\SetSupervisorRequest;
 use App\Http\Requests\Api\User\UpdateDeviceRequest;
 use App\Http\Requests\Api\User\UpdatePasswordRequest;
-use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserMeResource;
@@ -569,7 +568,7 @@ class UserController extends BaseController
             $branches = Branch::whereIn('id', $user->branches?->pluck('branch_id') ?? [])->get();
         }
 
-        return BranchResource::collection($branches);
+        return DefaultResource::collection($branches);
     }
 
     /**

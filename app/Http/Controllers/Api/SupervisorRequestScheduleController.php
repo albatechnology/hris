@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\ApprovalStatus;
 use App\Http\Requests\Api\ApproveRequest;
 use App\Http\Requests\Api\Schedule\StoreRequest;
 use App\Http\Resources\DefaultResource;
 use App\Http\Resources\Schedule\ScheduleResource;
+use App\Interfaces\Services\SupervisorRequestSchedule\SupervisorRequestScheduleServiceInterface;
 use App\Models\Schedule;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class SupervisorRequestScheduleController extends BaseController
 {
-    public function __construct()
+    public function __construct(private SupervisorRequestScheduleServiceInterface $service)
     {
         parent::__construct();
+
         $this->middleware('permission:supervisor_request_schedule_access', ['only' => ['restore']]);
         $this->middleware('permission:supervisor_request_schedule_read', ['only' => ['index', 'show']]);
         $this->middleware('permission:supervisor_request_schedule_create', ['only' => 'store']);
@@ -29,8 +27,10 @@ class SupervisorRequestScheduleController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Schedule::requestTenanted())
-            ->allowedFilters([
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->requestTenanted(),
+            [
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('created_by'),
                 AllowedFilter::exact('approved_by'),
@@ -39,9 +39,9 @@ class SupervisorRequestScheduleController extends BaseController
                 'effective_date',
                 'approval_status',
                 'approved_at',
-            ])
-            ->allowedIncludes(['company', 'created_by', 'approved_by'])
-            ->allowedSorts([
+            ],
+            ['company', 'created_by', 'approved_by'],
+            [
                 'id',
                 'company_id',
                 'created_by',
@@ -51,105 +51,68 @@ class SupervisorRequestScheduleController extends BaseController
                 'approval_status',
                 'created_at',
                 'approved_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $requestSchedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
-        $requestSchedule->load([
+        $requestSchedule = $this->service->findById($id, null, [
             'shifts' => fn($q) => $q->orderBy('order'),
             'created_by' => fn($q) => $q->select('id', 'name'),
             'approved_by' => fn($q) => $q->select('id', 'name'),
         ]);
+
         return new DefaultResource($requestSchedule);
     }
 
     public function store(StoreRequest $request)
     {
-        $validated = $request->safe()->merge([
-            'is_need_approval' => true,
-            'approval_status' => ApprovalStatus::PENDING,
-        ]);
+        $schedule = $this->service->create($request->validated());
 
-        DB::beginTransaction();
-        try {
-            $schedule = Schedule::create($validated->input());
-
-            $order = 1;
-            foreach ($request->shifts ?? [] as $shift) {
-                $schedule->shifts()->attach($shift['id'], ['order' => $order++]);
-            }
-
-            DB::commit();
-        } catch (Exception $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage());
-        }
-
-        return new ScheduleResource($schedule);
+        return $this->createdResponse();
     }
+
     public function update(int $id, StoreRequest $request)
     {
-        $schedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
-        DB::beginTransaction();
-        try {
-            $schedule->shifts()->sync([]);
-            $schedule->update($request->validated());
+        $this->service->update($id, $request->validated());
 
-            $order = 1;
-            foreach ($request->shifts ?? [] as $shift) {
-                $schedule->shifts()->attach($shift['id'], ['order' => $order++]);
-            }
-
-            DB::commit();
-        } catch (Exception $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage());
-        }
-
-        return (new ScheduleResource($schedule))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $schedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
-        $schedule->delete();
+        $schedule = $this->service->findById($id);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $schedule = Schedule::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $schedule->forceDelete();
+        $schedule = $this->service->findById($id, fn($q) => $q->withTrashed());
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
-        $schedule = Schedule::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $schedule->restore();
+        $schedule = $this->service->findById($id, fn($q) => $q->withTrashed());
 
-        return new ScheduleResource($schedule);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 
     public function approve(ApproveRequest $request, int $id)
     {
-        $schedule = Schedule::requestTenanted()->where('id', $id)->firstOrFail();
-        DB::beginTransaction();
-        try {
-            $schedule->update($request->validated());
-            DB::commit();
-        } catch (\Exception $th) {
-            DB::rollBack();
-            return $this->errorResponse($th->getMessage());
-        }
+        $this->service->approve($id, $request->validated());
 
-        return $this->updatedResponse();
+        return $this->updatedResponse("Schedule approved successfully.");
     }
 }

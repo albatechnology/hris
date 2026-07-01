@@ -4,85 +4,101 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\CustomField\StoreRequest;
 use App\Http\Resources\CustomField\CustomFieldResource;
+use App\Interfaces\Services\CustomField\CustomFieldServiceInterface;
 use App\Models\CustomField;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class CustomFieldController extends BaseController
 {
-    public function __construct()
+    public function __construct(private CustomFieldServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:custom_field_access', ['only' => ['restore']]);
-        $this->middleware('permission:custom_field_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:custom_field_create', ['only' => 'store']);
-        $this->middleware('permission:custom_field_edit', ['only' => 'update']);
-        $this->middleware('permission:custom_field_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return ['company'];
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(CustomField::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', CustomField::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('company_id'),
-            ])
-            ->allowedIncludes(['company'])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'key',
                 'type',
                 'options',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return CustomFieldResource::collection($data);
+        return CustomFieldResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $customField = CustomField::findTenanted($id);
-        return new CustomFieldResource($customField);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new CustomFieldResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $customField = CustomField::create($request->validated());
+        Gate::authorize('create', CustomField::class);
 
-        return new CustomFieldResource($customField);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $customField = CustomField::findTenanted($id);
-        $customField->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new CustomFieldResource($customField))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $customField = CustomField::findTenanted($id);
-        $customField->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $customField = CustomField::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $customField->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $customField = CustomField::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $customField->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new CustomFieldResource($customField);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

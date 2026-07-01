@@ -6,6 +6,7 @@ use App\Enums\JobLevel;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
+use App\Traits\Models\CustomSoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Spatie\MediaLibrary\HasMedia;
@@ -13,7 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Announcement extends BaseModel implements TenantedInterface, HasMedia
 {
-    use CompanyTenanted, InteractsWithMedia, CreatedUpdatedInfo;
+    use CompanyTenanted, InteractsWithMedia, CreatedUpdatedInfo, CustomSoftDeletes;
 
     protected $fillable = [
         'company_id',

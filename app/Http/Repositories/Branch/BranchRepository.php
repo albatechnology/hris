@@ -12,4 +12,27 @@ class BranchRepository extends BaseRepository implements BranchRepositoryInterfa
     {
         parent::__construct($model);
     }
+
+    public function findBranchForSummary(int $branchId): ?Branch
+    {
+        return $this->query()
+            ->where('id', $branchId)
+            ->first(['id', 'is_main']);
+    }
+
+    public function countParentBranches(): int
+    {
+        return $this->query()
+            ->whereIsParent()
+            ->where('is_main', false)
+            ->count();
+    }
+
+    public function countClients(int $branchId, bool $isMain): int
+    {
+        return $this->query()
+            ->when(!$isMain, fn ($q) => $q->where('parent_id', $branchId))
+            ->whereIsParent(false)
+            ->count();
+    }
 }

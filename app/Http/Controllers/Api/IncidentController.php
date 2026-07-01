@@ -3,70 +3,78 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Incident\StoreRequest;
-use App\Http\Resources\DefaultResource;
-use App\Models\Incident;
-use Exception;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
-use App\Enums\MediaCollection;
 use App\Http\Requests\Api\Incident\ExportRequest;
+use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\Incident\IncidentServiceInterface;
+use App\Models\Incident;
+use App\Enums\MediaCollection;
+use Exception;
+use Illuminate\Support\Facades\Gate;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class IncidentController extends BaseController
 {
-    public function __construct()
+    public function __construct(private IncidentServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:incident_access', ['only' => ['restore']]);
-        $this->middleware('permission:incident_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:incident_create', ['only' => 'store']);
-        $this->middleware('permission:incident_edit', ['only' => 'update']);
-        $this->middleware('permission:incident_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
     {
-        $query = Incident::tenanted()->with(['user' => fn($q) => $q->selectMinimalist()->with(
-            'branch',
-            fn($q) => $q->selectMinimalist()
-        ), 'incidentType', 'media']);
+        Gate::authorize('viewAny', Incident::class);
 
-        $data = QueryBuilder::for($query)
-            ->allowedFilters([
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->with([
+                'user' => fn($q) => $q->selectMinimalist()->with(
+                    'branch',
+                    fn($q) => $q->selectMinimalist()
+                ),
+                'incidentType',
+                'media'
+            ]),
+            [
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('incident_type_id'),
-            ])
-            ->allowedSorts([
+            ],
+            allowedSorts: [
                 'id',
                 'company_id',
                 'branch_id',
                 'user_id',
                 'incident_type_id',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $incident = Incident::findTenanted($id);
-        $incident->load(['user' => fn($q) => $q->selectMinimalist()->with('branch', fn($q) => $q->selectMinimalist()), 'incidentType', 'media']);
-        return new DefaultResource($incident);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        $data->load(['user' => fn($q) => $q->selectMinimalist()->with('branch', fn($q) => $q->selectMinimalist()), 'incidentType', 'media']);
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
+        Gate::authorize('create', Incident::class);
+
         try {
-            $incident = auth('api')->user()->incidents()->create($request->validated());
+            $data = $this->service->create(array_merge($request->validated(), [
+                'user_id' => auth('sanctum')->id(),
+            ]));
 
             if ($request->hasFile('file')) {
                 foreach ($request->file('file') as $file) {
                     if ($file->isValid()) {
-                        $incident->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
+                        $data->addMedia($file)->toMediaCollection(MediaCollection::DEFAULT->value);
                     }
                 }
             }
@@ -74,57 +82,47 @@ class IncidentController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
 
-        return new DefaultResource($incident);
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $incident = Incident::findTenanted($id);
-        try {
-            $incident->update($request->validated());
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new DefaultResource($incident))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $incident = Incident::findTenanted($id);
-        try {
-            $incident->delete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $incident = Incident::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        try {
-            $incident->forceDelete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->forceDelete($id);
 
-        return $this->deletedResponse();
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $incident = Incident::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        try {
-            $incident->restore();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->restore($id);
 
-        return new DefaultResource($incident);
+        return $this->restoredResponse();
     }
 
     public function export123(ExportRequest $request)
@@ -144,19 +142,18 @@ class IncidentController extends BaseController
         $branchId = $request->filter['branch_id'] ?? null;
         $createdAtStartDate = $request->filter['created_at_start_date'] ?? null;
         $createdAtEndDate = $request->filter['created_at_end_date'] ?? null;
-        $incidentTypeId = $request->filter['incident_type_id'] ?? null;
+        $data = $request->filter['incident_type_id'] ?? null;
 
-        $incidents =  Incident::tenanted()
+        $data =  Incident::tenanted()
             ->when($companyId, fn($q) => $q->whereHas('branch', fn($q) => $q->where('company_id', $companyId)))
             ->when($createdAtStartDate, fn($q) => $q->createdAtStart($createdAtStartDate))
             ->when($createdAtEndDate, fn($q) => $q->createdAtEnd($createdAtEndDate))
-            ->when($incidentTypeId, fn($q) => $q->whereHas('incidentType', fn($q) => $q->where('id', $incidentTypeId)))
+            ->when($data, fn($q) => $q->whereHas('incidentType', fn($q) => $q->where('id', $data)))
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->with('user', fn($q) => $q->withTrashed()->select('id', 'name'))
             ->with('incidentType', fn($q) => $q->withTrashed()->select('id', 'name'))
             ->with('media')
             ->get();
-        // dd($incidents);
 
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel',

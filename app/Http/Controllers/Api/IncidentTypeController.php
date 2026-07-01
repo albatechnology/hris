@@ -24,7 +24,7 @@ class IncidentTypeController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(IncidentType::tenanted())
+        $datas = QueryBuilder::for(IncidentType::tenanted())
             ->allowedFilters([
                 AllowedFilter::exact('company_id'),
                 'name'
@@ -37,74 +37,55 @@ class IncidentTypeController extends BaseController
             ])
             ->paginate($this->per_page);
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $incidentType = IncidentType::findTenanted($id);
-        $incidentType->load('company');
-        return new DefaultResource($incidentType);
+        $data = IncidentType::findTenanted($id);
+        $data->load('company');
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        try {
-            $incidentType = IncidentType::create($request->validated());
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        IncidentType::create($request->validated());
 
-        return new DefaultResource($incidentType);
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $incidentType = IncidentType::findTenanted($id);
-        try {
-            $incidentType->update($request->validated());
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $data = IncidentType::findTenanted($id);
 
-        return (new DefaultResource($incidentType))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $data->update($request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $incidentType = IncidentType::findTenanted($id);
-        try {
-            $incidentType->delete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $data = IncidentType::findTenanted($id);
+        $data->delete();
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $incidentType = IncidentType::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data = IncidentType::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
-        try {
-            $incidentType->forceDelete();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $data->forceDelete();
 
-        return $this->deletedResponse();
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $incidentType = IncidentType::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
+        $data = IncidentType::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
 
-        try {
-            $incidentType->restore();
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage());
-        }
+        $data->restore();
 
-        return new DefaultResource($incidentType);
+        return $this->restoredResponse();
     }
 }

@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\SupervisorType\StoreRequest;
 use App\Http\Resources\SupervisorType\SupervisorTypeResource;
+use App\Interfaces\Services\SupervisorType\SupervisorTypeServiceInterface;
 use App\Models\SupervisorType;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class SupervisorTypeController extends BaseController
 {
-    public function __construct()
+    public function __construct(private SupervisorTypeServiceInterface $service)
     {
         parent::__construct();
 
@@ -24,65 +24,77 @@ class SupervisorTypeController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(SupervisorType::tenanted())
-            ->allowedFilters([
-                AllowedFilter::exact('company_id'),
-            ])
-            ->allowedIncludes(['company'])
-            ->allowedSorts([
-                'id', 'company_id', 'name', 'order', 'created_at',
-            ])
-            ->paginate($this->per_page);
+        Gate::authorize('viewAny', SupervisorType::class);
 
-        return SupervisorTypeResource::collection($data);
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
+                AllowedFilter::exact('company_id'),
+            ],
+            ['company'],
+            [
+                'id',
+                'company_id',
+                'name',
+                'order',
+                'created_at',
+            ],
+        );
+
+        return SupervisorTypeResource::collection($datas);
     }
 
     public function show(int $id)
     {
-        $supervisorType = SupervisorType::findTenanted($id);
-        $data = QueryBuilder::for(SupervisorType::findTenanted($supervisorType->id))
-            ->allowedIncludes(['company'])
-            ->firstOrFail();
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        $data->load(['company']);
 
         return new SupervisorTypeResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $supervisorType = SupervisorType::create($request->validated());
+        Gate::authorize('create', SupervisorType::class);
 
-        return new SupervisorTypeResource($supervisorType);
+        $data = $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $supervisorType = SupervisorType::findTenanted($id);
-        $supervisorType->update($request->validated());
+        $data = $this->service->findById($id);
+        Gate::authorize('update', $data);
 
-        return (new SupervisorTypeResource($supervisorType))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
     // public function destroy(int $id)
     // {
-        // $supervisorType = SupervisorType::findTenanted($id);
-    //     $supervisorType->delete();
+    // $data = SupervisorType::findTenanted($id);
+    //     $data->delete();
 
     //     return $this->deletedResponse();
     // }
 
     // public function forceDelete($id)
     // {
-    //     $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
-    //     $supervisorType->forceDelete();
+    //     $data = SupervisorType::withTrashed()->findOrFail($id);
+    //     $data->forceDelete();
 
     //     return $this->deletedResponse();
     // }
 
     // public function restore($id)
     // {
-    //     $supervisorType = SupervisorType::withTrashed()->findOrFail($id);
-    //     $supervisorType->restore();
+    //     $data = SupervisorType::withTrashed()->findOrFail($id);
+    //     $data->restore();
 
-    //     return new SupervisorTypeResource($supervisorType);
+    //     return new SupervisorTypeResource($data);
     // }
 }

@@ -4,27 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Branch\StoreRequest;
 use App\Http\Requests\Api\Branch\UpdateRequest;
-use App\Http\Resources\Branch\BranchResource;
 use App\Http\Resources\DefaultResource;
 use App\Interfaces\Services\Branch\BranchServiceInterface;
 use App\Models\Branch;
-use App\Models\BranchLocation;
-use App\Models\User;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class BranchController extends BaseController
 {
     public function __construct(private BranchServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:branch_access', ['only' => ['restore']]);
-        $this->middleware('permission:branch_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:branch_create', ['only' => 'store']);
-        $this->middleware('permission:branch_edit', ['only' => 'update']);
-        $this->middleware('permission:branch_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     private function allowedIncludes(): array
@@ -34,8 +25,12 @@ class BranchController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Branch::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Branch::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('parent_id'),
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::callback('company_ids', fn($q, $value) => $q->whereIn('company_id', $value)),
@@ -46,10 +41,9 @@ class BranchController extends BaseController
                 'city',
                 'zip_code',
                 'address',
-            ])
-            ->allowedFields(['id', 'parent_id', 'name'])
-            ->allowedIncludes($this->allowedIncludes())
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'name',
@@ -59,82 +53,74 @@ class BranchController extends BaseController
                 'zip_code',
                 'address',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+            ['id', 'name'],
+        );
 
-        return BranchResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $data = QueryBuilder::for(Branch::tenanted()->where('id', $id))
-            ->allowedIncludes($this->allowedIncludes())
-            ->firstOrFail();
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
 
-        return new BranchResource($data);
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $branch = $this->service->create($request->validated());
-        return new BranchResource($branch);
+        Gate::authorize('create', Branch::class);
+
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(int $id, UpdateRequest $request)
+    public function update(string $id, UpdateRequest $request)
     {
-        $branch = Branch::findTenanted($id);
-        $branch->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new BranchResource($branch))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $branch = Branch::findTenanted($id);
-        $branch->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $branch = Branch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $branch->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $branch = Branch::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $branch->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new BranchResource($branch);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 
-    public function summary()
+    public function summary(Request $request)
     {
-        $branchId = request()->filter['branch_id'] ?? null;
+        $branchId = $request->query('branch_id');
 
-        $data = Cache::remember('branch_summary_' . $branchId, now()->addSecond(), function () use ($branchId) {
-            $branch = Branch::tenanted()->where('id', $branchId)->first(['id', 'is_main']);
-
-            if (!$branch) {
-                return [
-                    'branch' => 0,
-                    'client' => 0,
-                    'users' => 0,
-                ];
-            }
-
-            $totalBranch = $branch->is_main ? Branch::tenanted()->whereIsParent()->where('is_main', false)->count() : 0;
-            return [
-                'branch' => $totalBranch,
-                'client' => Branch::tenanted()->whereIsParent(false)->when(!$branch->is_main, fn($q) => $q->where('parent_id', $branchId))->count(),
-                'users' => User::tenanted()->where('branch_id', $branchId)->whereNull('resign_date')->count(),
-            ];
-        });
-
-        return new DefaultResource($data);
+        return new DefaultResource($this->service->summary($branchId ? (int) $branchId : null));
     }
 }

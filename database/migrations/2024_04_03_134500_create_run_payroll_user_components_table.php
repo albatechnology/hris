@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('run_payroll_user_components', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('run_payroll_user_id')->constrained();
+            $table->foreignId('run_payroll_user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('payroll_component_id')->constrained();
             $table->double('amount', 13, 2)->unsigned()->nullable();
             $table->boolean('is_editable')->default(0);

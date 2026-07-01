@@ -4,72 +4,76 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\LiveAttendanceLocation\StoreRequest;
 use App\Http\Requests\Api\LiveAttendanceLocation\UpdateRequest;
-use App\Http\Resources\LiveAttendance\LiveAttendanceLocationResource;
-use App\Models\LiveAttendance;
+use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\LiveAttendanceLocation\LiveAttendanceLocationServiceInterface;
 use App\Models\LiveAttendanceLocation;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Gate;
 
 class LiveAttendanceLocationController extends BaseController
 {
-    public function __construct()
+    public function __construct(private LiveAttendanceLocationServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:live_attendance_access', ['only' => ['restore']]);
-        $this->middleware('permission:live_attendance_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:live_attendance_create', ['only' => 'store']);
-        $this->middleware('permission:live_attendance_edit', ['only' => 'update']);
-        $this->middleware('permission:live_attendance_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
-    public function index(int $id)
+    public function index(string $id)
     {
-        $liveAttendance = LiveAttendance::findTenanted($id);
-        $data = QueryBuilder::for(LiveAttendanceLocation::where('live_attendance_id', $liveAttendance->id))
-            ->allowedFilters([
+        Gate::authorize('viewAny', LiveAttendanceLocation::class);
+
+        $data = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->where('live_attendance_id', $id),
+            [
                 'radius',
                 'lat',
                 'lng',
-            ])
-            ->allowedIncludes(['liveAttendance'])
-            ->allowedSorts([
+            ],
+            ['liveAttendance'],
+            [
                 'id',
                 'radius',
                 'lat',
                 'lng',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return LiveAttendanceLocationResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
-    public function show(int $liveAttendanceId, int $id)
+    public function show(string $liveAttendanceId, string $id)
     {
-        $liveAttendanceLocation = LiveAttendanceLocation::findTenanted($id);
-        return new LiveAttendanceLocationResource($liveAttendanceLocation);
+        $data = $this->service->findById($id, fn($q) => $q->where('live_attendance_id', $liveAttendanceId));
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data);
     }
 
-    public function store(int $id, StoreRequest $request)
+    public function store(string $id, StoreRequest $request)
     {
-        $liveAttendance = LiveAttendance::findTenanted($id);
-        $liveAttendance->locations()->createMany($request->locations);
+        Gate::authorize('create', LiveAttendanceLocation::class);
+
+        $this->service->createMany($id, $request->locations ?? []);
 
         return $this->createdResponse();
     }
 
-    public function update(int $liveAttendanceId, int $id, UpdateRequest $request)
+    public function update(string $liveAttendanceId, string $id, UpdateRequest $request)
     {
-        $liveAttendanceLocation = LiveAttendanceLocation::findTenanted($id);
-        $liveAttendanceLocation->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id')->where('live_attendance_id', $liveAttendanceId));
+        Gate::authorize('update', $data);
 
-        return (new LiveAttendanceLocationResource($liveAttendanceLocation))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $liveAttendanceId, int $id)
+    public function destroy(string $liveAttendanceId, string $id)
     {
-        $liveAttendance = LiveAttendance::findTenanted($liveAttendanceId);
-        $liveAttendance->locations()->findOrFail($id)->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id')->where('live_attendance_id', $liveAttendanceId));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }

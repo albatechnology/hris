@@ -12,6 +12,7 @@ use App\Models\Reimbursement;
 use Exception;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -22,17 +23,23 @@ class ReimbursementController extends BaseController
         parent::__construct();
     }
 
-    public function index(GetUserReimbursementRequest $request): ResourceCollection
+    private function allowedIncludes(): array
     {
-        $data = QueryBuilder::for(
-            Reimbursement::tenanted()
-                ->with([
-                    'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')),
-                    'user' => fn($q) => $q->select('id', 'name'),
-                    'reimbursementCategory' => fn($q) => $q->select('id', 'name'),
-                ])
-        )
-            ->allowedFilters([
+        return [];
+    }
+
+    public function index(GetUserReimbursementRequest $request)
+    {
+        Gate::authorize('viewAny', Reimbursement::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->with([
+                'approvals' => fn($q) => $q->with('user', fn($q) => $q->select('id', 'name')),
+                'user' => fn($q) => $q->select('id', 'name'),
+                'reimbursementCategory' => fn($q) => $q->select('id', 'name'),
+            ]),
+            [
                 AllowedFilter::exact('user_id'),
                 AllowedFilter::exact('reimbursement_category_id'),
                 AllowedFilter::scope('approval_status', 'whereApprovalStatus'),
@@ -41,52 +48,57 @@ class ReimbursementController extends BaseController
                 AllowedFilter::scope('year', 'whereYearIs'),
                 AllowedFilter::scope('month', 'whereMonthIs'),
                 'date',
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'user_id',
                 'reimbursement_category_id',
                 'date',
                 'amount',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
     public function show(int $id): DefaultResource
     {
-        $reimbursement = Reimbursement::findTenanted($id);
-        $reimbursement->load(['user', 'reimbursementCategory']);
-        return new DefaultResource($reimbursement);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $reimbursement = $this->service->create($request->validated());
+        Gate::authorize('create', Reimbursement::class);
 
-        return new DefaultResource($reimbursement);
+        $data = $this->service->create($request->validated());
+
+        return new DefaultResource($data);
     }
 
     public function destroy(int $id)
     {
-        $reimbursement = Reimbursement::findTenanted($id);
-        // if (!$reimbursement->approval_status->is(ApprovalStatus::PENDING)) return $this->errorResponse(message: 'Cannot delete pending overtime request', code: 422);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
 
-        $reimbursement->delete();
+        $this->service->delete($id);
+
         return $this->deletedResponse();
     }
 
     public function approve(NewApproveRequest $request, int $id)
     {
-        $reimbursement = Reimbursement::findTenanted($id);
-        $requestApproval = $reimbursement->approvals()->where('user_id', auth()->id())->first();
+        $data = Reimbursement::findTenanted($id);
+        $requestApproval = $data->approvals()->where('user_id', auth()->id())->first();
 
         if (!$requestApproval) return $this->errorResponse(message: 'You are not registered as approved', code: Response::HTTP_NOT_FOUND);
 
-        if (!$reimbursement->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (!$data->isDescendantApproved()) return $this->errorResponse(message: 'You have to wait for your subordinates to approve', code: Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        if ($reimbursement->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
+        if ($data->approval_status == ApprovalStatus::APPROVED->value || $requestApproval->approval_status->in([ApprovalStatus::APPROVED, ApprovalStatus::REJECTED])) {
             return $this->errorResponse(message: 'Status can not be changed', code: Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -96,7 +108,7 @@ class ReimbursementController extends BaseController
             return $this->errorResponse($th->getMessage());
         }
 
-        return new DefaultResource($reimbursement);
+        return new DefaultResource($data);
     }
 
     public function countTotalApprovals(\App\Http\Requests\ApprovalStatusRequest $request)

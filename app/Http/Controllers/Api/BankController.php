@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Bank\StoreRequest;
 use App\Http\Requests\Api\Bank\UpdateRequest;
 use App\Http\Resources\DefaultResource;
-use App\Interfaces\Services\BankServiceInterface;
+use App\Interfaces\Services\Bank\BankServiceInterface;
 use App\Models\Bank;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class BankController extends BaseController
 {
@@ -22,18 +22,28 @@ class BankController extends BaseController
         // $this->middleware('permission:bank_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
+    private function allowedIncludes(): array
+    {
+        return [];
+    }
+
     public function index()
     {
-        $data = QueryBuilder::for(Bank::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Bank::class);
+
+        $data = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('company_id'),
                 'name',
                 'account_no',
                 'account_holder',
                 'code',
                 'branch',
-            ])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'name',
@@ -42,52 +52,76 @@ class BankController extends BaseController
                 'code',
                 'branch',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+            [
+                'id',
+                'company_id',
+                'name',
+                'account_no',
+                'account_holder',
+                'code',
+                'branch',
+                'created_at',
+            ],
+        );
 
         return DefaultResource::collection($data);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
         $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
         return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
+        Gate::authorize('create', Bank::class);
+
         $data = $this->service->create($request->validated());
 
         return new DefaultResource($data);
     }
 
-    public function update(int $id, UpdateRequest $request)
+    public function update(string $id, UpdateRequest $request)
     {
-        $this->service->findById($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
+
         $this->service->update($id, $request->validated());
 
         return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $this->service->findById($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
         $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
+
         $this->service->forceDelete($id);
 
-        return $this->deletedResponse();
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
+
         $this->service->restore($id);
 
-        return $this->okResponse();
+        return $this->restoredResponse();
     }
 }

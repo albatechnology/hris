@@ -3,57 +3,66 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\NationalHoliday\StoreRequest;
-use App\Http\Resources\NationalHoliday\NationalHolidayResource;
+use App\Http\Resources\DefaultResource;
+use App\Interfaces\Services\NationalHoliday\NationalHolidayServiceInterface;
 use App\Models\NationalHoliday;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Gate;
 
 class NationalHolidayController extends BaseController
 {
-    public function __construct()
+    public function __construct(private NationalHolidayServiceInterface $service)
     {
         parent::__construct();
-
-        $this->middleware('permission:national_holiday_access', ['only' => 'restore']);
-        $this->middleware('permission:national_holiday_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:national_holiday_create', ['only' => 'store']);
-        $this->middleware('permission:national_holiday_edit', ['only' => 'update']);
-        $this->middleware('permission:national_holiday_delete', ['only' => 'destroy']);
     }
 
     public function index()
     {
-        $nationalHoliday = QueryBuilder::for(NationalHoliday::class)
-            ->allowedSorts([
-                'id', 'name', 'date', 'created_at',
-            ])
-            ->paginate($this->per_page);
+        Gate::authorize('viewAny', NationalHoliday::class);
 
-        return NationalHolidayResource::collection($nationalHoliday);
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [],
+            [],
+            ['id', 'name', 'date', 'created_at'],
+        );
+
+        return DefaultResource::collection($datas);
     }
 
-    public function show(NationalHoliday $nationalHoliday)
+    public function show(string $id)
     {
-        return new NationalHolidayResource($nationalHoliday);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $nationalHoliday = NationalHoliday::create($request->validated());
+        Gate::authorize('create', NationalHoliday::class);
 
-        return new NationalHolidayResource($nationalHoliday);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(NationalHoliday $nationalHoliday, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $nationalHoliday->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new NationalHolidayResource($nationalHoliday))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(NationalHoliday $nationalHoliday)
+    public function destroy(string $id)
     {
-        $nationalHoliday->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }

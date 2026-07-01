@@ -4,80 +4,92 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Group\StoreRequest;
 use App\Http\Resources\Group\GroupResource;
+use App\Interfaces\Services\Group\GroupServiceInterface;
 use App\Models\Group;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Support\Facades\Gate;
 
 class GroupController extends BaseController
 {
-    public function __construct()
+    public function __construct(private GroupServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:group_access', ['only' => ['restore']]);
-        $this->middleware('permission:group_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:group_create', ['only' => 'store']);
-        $this->middleware('permission:group_edit', ['only' => 'update']);
-        $this->middleware('permission:group_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(Group::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Group::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            null,
+            [
                 'name',
-            ])
-            ->allowedSorts([
+            ],
+            [],
+            [
                 'id',
                 'name',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return GroupResource::collection($data);
+        return GroupResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $group = Group::findTenanted($id);
-        return new GroupResource($group);
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new GroupResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $group = Group::create($request->validated());
+        Gate::authorize('create', Group::class);
 
-        return new GroupResource($group);
+        $this->service->create($request->validated());
+
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $group = Group::findTenanted($id);
-        $group->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        return (new GroupResource($group))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        $this->service->update($id, $request->validated());
+
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $group = Group::findTenanted($id);
-        $group->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $group = Group::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $group->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $group = Group::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $group->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new GroupResource($group);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

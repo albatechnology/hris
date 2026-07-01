@@ -3,144 +3,117 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\LiveAttendance\StoreRequest;
-use App\Http\Resources\LiveAttendance\LiveAttendanceResource;
+use App\Http\Resources\DefaultResource;
 use App\Http\Resources\User\UserResource;
+use App\Interfaces\Services\LiveAttendance\LiveAttendanceServiceInterface;
 use App\Models\LiveAttendance;
 use App\Models\User;
-use Exception;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class LiveAttendanceController extends BaseController
 {
-    public function __construct()
+    public function __construct(private LiveAttendanceServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:live_attendance_access', ['only' => ['restore']]);
-        $this->middleware('permission:live_attendance_read', ['only' => ['index', 'show', 'users']]);
-        $this->middleware('permission:live_attendance_create', ['only' => 'store']);
-        $this->middleware('permission:live_attendance_edit', ['only' => 'update']);
-        $this->middleware('permission:live_attendance_delete', ['only' => ['destroy', 'forceDelete']]);
     }
 
     public function index()
     {
-        $data = QueryBuilder::for(LiveAttendance::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', LiveAttendance::class);
+
+        $data = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
                 AllowedFilter::exact('id'),
                 AllowedFilter::exact('company_id'),
                 'name',
                 'is_flexible',
-            ])
-            ->allowedIncludes(['company', 'locations', 'users'])
-            ->allowedSorts([
+            ],
+            ['company', 'locations', 'users'],
+            [
                 'id',
                 'name',
                 'is_flexible',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return LiveAttendanceResource::collection($data);
+        return DefaultResource::collection($data);
     }
 
     public function show(int $id)
     {
-        $liveAttendance = LiveAttendance::findTenanted($id);
-        return new LiveAttendanceResource($liveAttendance->load(['company', 'locations']));
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
+
+        return new DefaultResource($data->load(['company', 'locations']));
     }
 
     public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $liveAttendance = LiveAttendance::create($request->validated());
+        Gate::authorize('create', LiveAttendance::class);
 
-            if ($request->locations && count($request->locations) > 0) {
-                $liveAttendance->locations()->createMany($request->locations);
-            }
+        $this->service->createWithRelations(
+            $request->validated(),
+            $request->locations ?? [],
+            $request->user_ids ?? [],
+        );
 
-            if ($request->user_ids && count($request->user_ids) > 0) {
-                User::whereIn('id', $request->user_ids)->update(['live_attendance_id' => $liveAttendance->id]);
-            }
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return new LiveAttendanceResource($liveAttendance);
+        return $this->createdResponse();
     }
 
     public function update(int $id, StoreRequest $request)
     {
-        $liveAttendance = LiveAttendance::findTenanted($id);
-        // $userIds =
-        $userIds = $liveAttendance->users()->select('id')->get()->pluck('id')->toArray();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        DB::beginTransaction();
-        try {
-            $liveAttendance->update($request->validated());
+        $this->service->updateWithRelations(
+            $id,
+            $request->validated(),
+            $request->locations ?? [],
+            $request->user_ids ?? [],
+        );
 
-            $liveAttendance->locations()->delete();
-            if (!$liveAttendance->is_flexible) {
-                $liveAttendance->locations()->createMany($request->locations);
-            }
-
-            if ($request->user_ids && count($request->user_ids) > 0) {
-                User::whereIn('id', $request->user_ids)->update(['live_attendance_id' => $liveAttendance->id]);
-                User::whereIn('id', $userIds)->whereNotIn('id', $request->user_ids)->update(['live_attendance_id' => null]);
-            } else {
-                User::whereIn('id', $userIds)->update(['live_attendance_id' => null]);
-            }
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return (new LiveAttendanceResource($liveAttendance))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
     public function destroy(int $id)
     {
-        $liveAttendance = LiveAttendance::findTenanted($id);
-        DB::beginTransaction();
-        try {
-            $liveAttendance->locations()->delete();
-            $liveAttendance->delete();
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
 
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
     public function forceDelete(int $id)
     {
-        $liveAttendance = LiveAttendance::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $liveAttendance->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
     public function restore(int $id)
     {
-        $liveAttendance = LiveAttendance::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $liveAttendance->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new LiveAttendanceResource($liveAttendance);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 
     public function users()
     {
+        Gate::authorize('viewAny', LiveAttendance::class);
+
         $query = User::select('id', 'name', 'nik', 'branch_id', 'company_id', 'live_attendance_id')
             ->tenanted()
             ->with([

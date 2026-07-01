@@ -5,42 +5,47 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\PayrollComponent\StoreRequest;
 use App\Http\Requests\Api\PayrollComponent\UpdateRequest;
 use App\Http\Resources\PayrollComponent\PayrollComponentResource;
+use App\Interfaces\Services\PayrollComponent\PayrollComponentServiceInterface;
 use App\Models\PayrollComponent;
-use App\Services\FormulaService;
-use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class PayrollComponentController extends BaseController
 {
-    public function __construct()
+    public function __construct(private PayrollComponentServiceInterface $service)
     {
         parent::__construct();
 
-        $this->middleware('permission:payroll_setting_access', ['only' => ['restore']]);
-        $this->middleware('permission:payroll_setting_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:payroll_setting_create', ['only' => 'store']);
-        $this->middleware('permission:payroll_setting_edit', ['only' => 'update']);
-        $this->middleware('permission:payroll_setting_delete', ['only' => ['destroy', 'forceDelete']]);
+        // $this->middleware('permission:payroll_setting_access', ['only' => ['restore']]);
+        // $this->middleware('permission:payroll_setting_read', ['only' => ['index', 'show']]);
+        // $this->middleware('permission:payroll_setting_create', ['only' => 'store']);
+        // $this->middleware('permission:payroll_setting_edit', ['only' => 'update']);
+        // $this->middleware('permission:payroll_setting_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return ['company'];
     }
 
     public function index(): ResourceCollection
     {
-        $data = QueryBuilder::for(PayrollComponent::tenanted()->where('is_hidden', false))
-            ->allowedFilters([
+        Gate::authorize('viewAny', PayrollComponent::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->where('is_hidden', false),
+            [
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::exact('branch_id'),
                 AllowedFilter::exact('type'),
                 AllowedFilter::exact('is_active'),
                 AllowedFilter::scope('has_formulas'),
                 AllowedFilter::scope('available_for_update_payroll_component'),
-            ])
-            ->allowedIncludes(['company'])
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'branch_id',
@@ -56,91 +61,64 @@ class PayrollComponentController extends BaseController
                 // 'daily_maximum_amount',
                 // 'is_one_time_bonus',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return PayrollComponentResource::collection($data);
+        return PayrollComponentResource::collection($datas);
     }
 
     public function show(int $id): PayrollComponentResource
     {
-        $payrollComponent = PayrollComponent::findTenanted($id);
-        return new PayrollComponentResource($payrollComponent);
+        $data = PayrollComponent::findTenanted($id);
+        return new PayrollComponentResource($data);
     }
 
-    public function store(StoreRequest $request): PayrollComponentResource|JsonResponse
+    public function store(StoreRequest $request)
     {
-        DB::beginTransaction();
-        try {
-            $payrollComponent = PayrollComponent::create($request->validated());
+        Gate::authorize('create', PayrollComponent::class);
 
-            if ($request->includes) {
-                foreach ($request->includes as $include) {
-                    $payrollComponent->includes()->create([
-                        'included_payroll_component_id' => $include['payroll_component_id'],
-                        'type' => $include['type'],
-                    ]);
-                }
-            }
+        $this->service->create($request->validated());
 
-            FormulaService::sync($payrollComponent, $request->formulas);
-
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return new PayrollComponentResource($payrollComponent->refresh());
+        return $this->createdResponse();
     }
 
-    public function update(UpdateRequest $request, int $id): PayrollComponentResource|JsonResponse
+    public function update(UpdateRequest $request, int $id)
     {
-        $payrollComponent = PayrollComponent::findTenanted($id);
-        DB::beginTransaction();
-        try {
-            $payrollComponent->update($request->validated());
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-            $payrollComponent->includes()->delete();
-            if ($request->includes) {
-                foreach ($request->includes as $include) {
-                    $payrollComponent->includes()->create([
-                        'included_payroll_component_id' => $include['payroll_component_id'],
-                        'type' => $include['type'],
-                    ]);
-                }
-            }
+        $this->service->update($id, $request->validated());
 
-            FormulaService::sync($payrollComponent, $request->formulas);
-
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse($e->getMessage());
-        }
-
-        return (new PayrollComponentResource($payrollComponent->refresh()))->response()->setStatusCode(Response::HTTP_ACCEPTED);
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(string $id)
     {
-        $payrollComponent = PayrollComponent::findTenanted($id);
-        try {
-            $payrollComponent->update(['name' => $payrollComponent->name . '-deleted-' . date('YmdHis')]);
-            // sync with empty data []
-            $payrollComponent->includes()->delete();
-            FormulaService::sync($payrollComponent, []);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
 
-            // delete payroll component
-            $payrollComponent->delete();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse($e->getMessage());
-        }
+        $this->service->delete($id);
 
         return $this->deletedResponse();
+    }
+
+    public function forceDelete(string $id)
+    {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
+
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
+    }
+
+    public function restore(string $id)
+    {
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
+
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }

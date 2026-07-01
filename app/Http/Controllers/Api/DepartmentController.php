@@ -4,22 +4,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Department\StoreRequest;
 use App\Http\Resources\DefaultResource;
-use App\Models\Department;
-use App\Models\Division;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedInclude;
-use Spatie\QueryBuilder\QueryBuilder;
+use App\Interfaces\Services\Department\DepartmentServiceInterface;
+use App\Models\Department;
+use Illuminate\Support\Facades\Gate;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class DepartmentController extends BaseController
 {
-    public function __construct()
+    public function __construct(private DepartmentServiceInterface $service)
     {
         parent::__construct();
-        $this->middleware('permission:department_access', ['only' => ['restore']]);
-        $this->middleware('permission:department_read', ['only' => ['index', 'show']]);
-        $this->middleware('permission:department_create', ['only' => 'store']);
-        $this->middleware('permission:department_edit', ['only' => 'update']);
-        $this->middleware('permission:department_delete', ['only' => ['destroy', 'forceDelete']]);
+    }
+
+    private function allowedIncludes(): array
+    {
+        return ['division'];
     }
 
     private function getAllowedIncludes()
@@ -39,90 +39,86 @@ class DepartmentController extends BaseController
 
     public function index()
     {
-        $data = QueryBuilder::for(Department::tenanted())
-            ->allowedFilters([
+        Gate::authorize('viewAny', Department::class);
+
+        $datas = $this->service->findAllPaginate(
+            $this->per_page,
+            fn($q) => $q->tenanted(),
+            [
+                AllowedFilter::exact('division_id'),
                 AllowedFilter::scope('company_id'),
                 AllowedFilter::exact('division_id'),
                 AllowedFilter::exact('user_id'),
                 'name',
-            ])
-            ->allowedIncludes($this->getAllowedIncludes())
-            ->allowedSorts([
+            ],
+            $this->allowedIncludes(),
+            [
                 'id',
                 'company_id',
                 'division_id',
                 'user_id',
                 'name',
                 'created_at',
-            ])
-            ->paginate($this->per_page);
+            ],
+        );
 
-        return DefaultResource::collection($data);
+        return DefaultResource::collection($datas);
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $data = QueryBuilder::for(Department::tenanted()->where('id', $id))
-            ->allowedIncludes($this->getAllowedIncludes())
-            ->firstOrFail();
+        $data = $this->service->findById($id);
+        Gate::authorize('view', $data);
 
         return new DefaultResource($data);
     }
 
     public function store(StoreRequest $request)
     {
-        $companyId = Division::findTenanted($request->division_id)->company_id;
-        if (!$companyId) {
-            return $this->errorResponse('Division ID is required');
-        }
+        Gate::authorize('create', Department::class);
 
-        $updatedData = $request->validated();
-        $updatedData['company_id'] = $companyId;
+        $this->service->create($request->validated());
 
-        $data = Department::create($updatedData);
-
-        return new DefaultResource($data);
+        return $this->createdResponse();
     }
 
-    public function update(int $id, StoreRequest $request)
+    public function update(string $id, StoreRequest $request)
     {
-        $data = Department::findTenanted($id);
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('update', $data);
 
-        $divisionId = $request->division_id ?? $data->division_id;
-        if (!$divisionId) {
-            return $this->errorResponse('Division ID is required');
-        }
+        $this->service->update($id, $request->validated());
 
-        $companyId = Division::findTenanted($divisionId)->company_id;
-
-        $updatedData = $request->validated();
-        $updatedData['company_id'] = $companyId;
-        $data->update($updatedData);
-
-        return new DefaultResource($data);
+        return $this->updatedResponse();
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $data = Department::findTenanted($id);
-        $data->delete();
+        $data = $this->service->findById($id, fn($q) => $q->select('id'));
+        Gate::authorize('delete', $data);
+
+        $this->service->delete($id);
 
         return $this->deletedResponse();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(string $id)
     {
-        $data = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $data->forceDelete();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('forceDelete', $data);
 
-        return $this->deletedResponse();
+        $this->service->forceDelete($id);
+
+        return $this->forceDeletedResponse();
     }
 
-    public function restore(int $id)
+    public function restore(string $id)
     {
-        $data = Department::withTrashed()->tenanted()->where('id', $id)->firstOrFail();
-        $data->restore();
+        $data = $this->service->findById($id, fn($q) => $q->withTrashed()->select('id'));
+        Gate::authorize('restore', $data);
 
-        return new DefaultResource($data);
+        $this->service->restore($id);
+
+        return $this->restoredResponse();
     }
 }
