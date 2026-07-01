@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\TimeoffPolicyType;
+use App\Enums\TimeoffPolicyBalanceAllocationFrequency;
 use App\Interfaces\TenantedInterface;
 use App\Traits\Models\CompanyTenanted;
 use App\Traits\Models\CreatedUpdatedInfo;
@@ -16,31 +16,46 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
     use CustomSoftDeletes, CompanyTenanted, CreatedUpdatedInfo;
 
     protected $fillable = [
+        // phase 1
         'company_id',
-        'type',
+        // 'type',
         'name',
         'code',
         'description',
-        'default_quota',
         'effective_date',
-        'expired_date',
+
+        // phase 2
+        'is_has_balance',
+        'balance_allocation_frequency',
+
+        'renewal_date_day', // used when balance_allocation_frequency is annualy
+        'renewal_date_month', // used when balance_allocation_frequency is annualy
+
+        'default_quota', // in talenta is base_balance`bere
+        'is_enable_block_leave',
+        'block_leave_take_days', // filled when is_enable_block_leave is true
+
+        // phase 3
+        // 'is_show_in_request_form', from talenta but not required for now
+        'is_allow_halfday_request', // from is_allow_halfday
+        'max_consecutively_day',
+        'is_required_file_attachment',
+        'is_allow_negative_balance', // allow for hutang cuti
+        // 'expired_date',
         // 'expired_date_day',
         // 'expired_date_month',
         // 'expired_date_year',
-        'max_consecutively_day',
-        'is_allow_halfday',
         // 'is_for_all_user',
-        // 'is_enable_block_leave',
-        'block_leave_take_days',
         // 'block_leave_min_working_month',
         // 'max_used',
     ];
 
     protected $casts = [
-        'type' => TimeoffPolicyType::class,
+        'balance_allocation_frequency' => TimeoffPolicyBalanceAllocationFrequency::class,
         'is_allow_halfday' => 'boolean',
+        // 'type' => TimeoffPolicyType::class,
         // 'is_for_all_user' => 'boolean',
-        // 'is_enable_block_leave' => 'boolean',
+        'is_enable_block_leave' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -93,6 +108,6 @@ class TimeoffPolicy extends BaseModel implements TenantedInterface
 
     public function scopeSelectMinimalist(Builder $query, array $additionalColumns = [])
     {
-        $query->select(['id', 'type', 'name', 'code', ...$additionalColumns]);
+        $query->select(['id', 'name', 'code', ...$additionalColumns]);
     }
 }

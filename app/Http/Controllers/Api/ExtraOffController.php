@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\TimeoffPolicyType;
 use App\Http\Requests\Api\ExtraOff\EligibleUsersRequest;
 use App\Http\Requests\Api\ExtraOff\StoreRequest;
 use App\Http\Resources\DefaultResource;
@@ -71,9 +70,8 @@ class ExtraOffController extends BaseController
                 ->where('is_automatic', true)
                 ->whereDate('created_at', '>=', $startDate->format('Y-m-d'))
                 ->whereDate('created_at', '<=', $today->format('Y-m-d'))
-                ->whereHas('timeoffQuota.timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::EXTRA_OFF))
+                // ->whereHas('timeoffQuota.timeoffPolicy', fn($q) => $q->where('type', TimeoffPolicyType::EXTRA_OFF))
                 ->exists();
-            // dump('username:'.$fail);
             if ($fail) continue;
 
             $attendances = Attendance::where('user_id', $user->id)
@@ -166,11 +164,11 @@ class ExtraOffController extends BaseController
                 AllowedFilter::exact('company_id'),
                 AllowedFilter::scope('start_effective_date'),
                 AllowedFilter::scope('end_effective_date'),
-                AllowedFilter::callback('has_quota', function ($query, bool $value) {
-                    if ($value == true) {
-                        $query->whereIn('type', TimeoffPolicyType::hasQuotas());
-                    }
-                }),
+                // AllowedFilter::callback('has_quota', function ($query, bool $value) {
+                //     if ($value == true) {
+                //         $query->whereIn('type', TimeoffPolicyType::hasQuotas());
+                //     }
+                // }),
                 'type',
                 'name',
                 'code',
@@ -217,7 +215,9 @@ class ExtraOffController extends BaseController
     {
         $userIds = array_values($request->user_ids);
         $description = "Extra off quota added by " . auth()->user()->name;
-        $timeoffPolicyId = TimeoffPolicy::tenanted()->where('type', TimeoffPolicyType::EXTRA_OFF)->firstOrFail(['id'])->id;
+        $timeoffPolicyId = TimeoffPolicy::tenanted()
+            // ->where('type', TimeoffPolicyType::EXTRA_OFF)
+            ->firstOrFail(['id'])->id;
 
         DB::beginTransaction();
         try {

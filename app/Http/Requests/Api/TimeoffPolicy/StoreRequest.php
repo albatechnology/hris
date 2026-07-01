@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\TimeoffPolicy;
 
-use App\Enums\TimeoffPolicyType;
 use App\Rules\CompanyTenantedRule;
 use App\Traits\Requests\RequestToBoolean;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,7 +35,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'company_id' => ['required', new CompanyTenantedRule()],
-            'type' => ['required', Rule::enum(TimeoffPolicyType::class)],
+            // 'type' => ['required', Rule::enum(TimeoffPolicyType::class)],
             'name' => 'required|string',
             'code' => 'required|string',
             'description' => 'nullable|string',

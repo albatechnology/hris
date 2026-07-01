@@ -4,7 +4,6 @@ namespace App\Http\Services\Company;
 
 use App\Enums\BankName;
 use App\Enums\EventType;
-use App\Enums\TimeoffPolicyType;
 use App\Models\Company;
 use App\Services\EventService;
 use App\Services\SettingService;
@@ -114,7 +113,7 @@ class CompanyInitializeService
         $company->timeoffPolicies()->create([
             'name' => 'Annual Leave',
             'code' => 'AL',
-            'type' => TimeoffPolicyType::ANNUAL_LEAVE,
+            // 'type' => TimeoffPolicyType::ANNUAL_LEAVE,
             'effective_date' => date('Y-m-d'),
             'is_allow_halfday' => true,
             'max_consecutively_day' => 5,
